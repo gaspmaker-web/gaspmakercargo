@@ -1,12 +1,18 @@
 import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma"; 
-import { auth } from "@/auth";
-import { customAlphabet } from 'nanoid';
 
-const nanoid = customAlphabet('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ', 8);
+// 👇 VACUNA 1: Optimización Serverless (Evita ejecución en Build)
+export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
   try {
+    // 👇 VACUNA 2: Lazy Loading (Carga bajo demanda)
+    const { auth } = await import("@/auth");
+    const prisma = (await import("@/lib/prisma")).default;
+    const { customAlphabet } = await import("nanoid");
+
+    // Inicializamos nanoid aquí adentro
+    const nanoid = customAlphabet('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ', 8);
+
     const session = await auth();
     if (!session?.user?.id) return NextResponse.json({ message: "No autorizado." }, { status: 401 });
     
