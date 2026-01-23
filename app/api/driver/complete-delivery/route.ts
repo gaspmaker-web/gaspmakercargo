@@ -1,10 +1,15 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
-import prisma from "@/lib/prisma";
-import { sendNotification } from "@/lib/notifications";
+
+// 👇 VACUNA 1: Forzar modo dinámico
+export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
   try {
+    // 👇 VACUNA 2: Imports dentro de la función (Lazy Loading)
+    const { auth } = await import("@/auth");
+    const prisma = (await import("@/lib/prisma")).default;
+    // Importamos sendNotification aquí, pero también lo usaremos en la función auxiliar
+    
     const session = await auth();
     
     // 1. Seguridad
@@ -163,8 +168,11 @@ export async function POST(req: Request) {
   }
 }
 
+// Helper optimizado para importar notificaciones bajo demanda
 async function notifyClient(userId: string, type: string, refId: string) {
     if (!userId) return;
+    const { sendNotification } = await import("@/lib/notifications");
+    
     await sendNotification({
         userId,
         title: "¡Entrega Completada! 🏁",
