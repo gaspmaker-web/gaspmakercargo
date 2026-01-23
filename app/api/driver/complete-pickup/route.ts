@@ -1,10 +1,15 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
-import prisma from "@/lib/prisma";
-import { sendNotification } from "@/lib/notifications";
+
+// 👇 VACUNA 1: Forzar modo dinámico (Evita ejecución en Build)
+export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
   try {
+    // 👇 VACUNA 2: Imports dentro de la función (Lazy Loading)
+    const { auth } = await import("@/auth");
+    const prisma = (await import("@/lib/prisma")).default;
+    const { sendNotification } = await import("@/lib/notifications");
+
     const session = await auth();
     // Validar que sea Chofer o Admin
     if (!session || (session.user.role !== 'DRIVER' && session.user.role !== 'ADMIN')) {
@@ -34,7 +39,6 @@ export async function POST(req: Request) {
     });
 
     // 2. NOTIFICAMOS AL CLIENTE
-    // Corrección: Eliminamos 'notifyAdmin: true' porque no existe en la definición de tipos
     await sendNotification({
         userId: task.userId,
         title: "📦 Paquete Recogido",
