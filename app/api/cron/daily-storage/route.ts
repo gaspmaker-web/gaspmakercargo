@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
+
+// 👇 VACUNA 1: Forzar modo dinámico (Vital para Cron Jobs)
+export const dynamic = 'force-dynamic';
 
 export async function GET(req: Request) {
+  // 👇 VACUNA 2: Lazy Loading de la base de datos
+  const prisma = (await import("@/lib/prisma")).default;
+
   // 1. Seguridad: Verificar que solo Vercel (o tú) pueda llamar a este robot
   const authHeader = req.headers.get("authorization");
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
