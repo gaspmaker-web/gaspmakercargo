@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { auth } from "@/auth";
 
+// 👇 ESTA LÍNEA ES LA SOLUCIÓN
+export const dynamic = 'force-dynamic';
+
 function generateTrackingNumber() {
     return 'GMC-PK-' + Math.floor(100000 + Math.random() * 900000);
 }
