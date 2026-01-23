@@ -1,9 +1,14 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
-import prisma from "@/lib/prisma";
+
+// 👇 VACUNA 1: Forzar modo dinámico
+export const dynamic = 'force-dynamic';
 
 export async function PUT(req: Request) {
   try {
+    // 👇 VACUNA 2: Imports dentro de la función (Lazy Loading)
+    const { auth } = await import("@/auth");
+    const prisma = (await import("@/lib/prisma")).default;
+
     const session = await auth();
     
     // 1. Seguridad: Solo Admin o Warehouse pueden editar paquetes
