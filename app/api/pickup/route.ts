@@ -1,10 +1,15 @@
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
-import { auth } from '@/auth';
-import { sendPaymentReceiptEmail } from '@/lib/notifications';
+
+// 👇 VACUNA 1: Forzar modo dinámico (Para que Vercel ignore esto en el Build)
+export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request) {
   try {
+    // 👇 VACUNA 2: Imports dentro de la función (Lazy Loading)
+    const prisma = (await import('@/lib/prisma')).default;
+    const { auth } = await import('@/auth');
+    const { sendPaymentReceiptEmail } = await import('@/lib/notifications');
+
     const session = await auth();
     // 1. Seguridad: Verificar que el usuario esté logueado
     if (!session || !session.user?.id) {
