@@ -1,16 +1,21 @@
-// app/api/user/update-name/route.ts
-import prisma from "@/lib/prisma"; 
 import { NextResponse } from "next/server";
 
-// --- CAMBIO DE NEXTAUTH v5 ---
-// 1. Importa 'auth' desde tu archivo auth.ts en la RAÍZ (usando el alias '@/')
-import { auth } from "@/auth";
-// -----------------------------
+// 👇 VACUNA 1: Forzar modo dinámico (Vital para evitar el error de Build)
+export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
     console.log("API: Recibida solicitud POST para /api/user/update-name");
 
     try {
+        // 👇 VACUNA 2: Imports dentro de la función (Lazy Loading)
+        // Esto evita que Vercel intente conectar la DB durante la construcción
+        const prisma = (await import("@/lib/prisma")).default;
+        
+        // --- CAMBIO DE NEXTAUTH v5 ---
+        // 1. Importa 'auth' dinámicamente
+        const { auth } = await import("@/auth");
+        // -----------------------------
+
         // --- CAMBIO DE NEXTAUTH v5 ---
         // 2. Obtén la sesión directamente con la función 'auth'
         const session = await auth();
@@ -32,7 +37,7 @@ export async function POST(req: Request) {
         // 4. Obtener el ID de usuario de la sesión
         const userId = session.user.id;
         
-        console.log(`API: Actualizando nombre para userId: ${userId} a \"${name}\"`);
+        console.log(`API: Actualizando nombre para userId: ${userId} a "${name}"`);
 
         // 5. Actualizar la base de datos
         const updatedUser = await prisma.user.update({
@@ -50,7 +55,6 @@ export async function POST(req: Request) {
         return NextResponse.json({ message: 'Error interno del servidor al actualizar el nombre', error }, { status: 500 });
     }
 }
-
 
 
 
