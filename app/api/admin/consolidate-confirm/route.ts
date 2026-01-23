@@ -1,12 +1,15 @@
 import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
-import { auth } from "@/auth";
 
-// 👇 ESTA LÍNEA ES LA SOLUCIÓN AL ERROR DE BUILD
+// 1. Mantenemos esto para seguridad
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
   try {
+    // 👇 TRUCO DE MAGIA: Importamos Auth y Prisma AQUÍ DENTRO, no arriba.
+    // Esto evita que Vercel intente conectarse durante el Build.
+    const { auth } = await import("@/auth");
+    const prisma = (await import("@/lib/prisma")).default;
+
     const session = await auth();
 
     // 1. Seguridad
@@ -14,14 +17,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "No autorizado." }, { status: 401 });
     }
 
-    // 👇 AQUÍ AGREGAMOS 'finalValue' PARA RECIBIRLO DEL MODAL
     const { consolidationId, finalWeight, finalDimensions, finalValue } = await req.json();
 
-    // 2. CORRECCIÓN: No calculamos precio aquí.
-    // El precio depende del courier que el cliente elija después.
-    // Inicializamos en 0.
-    
-    // 3. Actualizar la Consolidación
+    // 2. Actualizar la Consolidación
     const updatedConsolidation = await prisma.consolidatedShipment.update({
       where: { id: consolidationId },
       data: {
@@ -29,11 +27,8 @@ export async function POST(req: Request) {
         lengthIn: finalDimensions.length,
         widthIn: finalDimensions.width,
         heightIn: finalDimensions.height,
-        
-        // 🔥 NUEVO: Guardamos el Valor Declarado para el seguro (Default 0 si no se envía)
         declaredValue: finalValue ? parseFloat(finalValue) : 0,
-
-        totalAmount: 0, // <--- CAMBIO CLAVE: Se inicia en 0
+        totalAmount: 0,
         status: "PENDIENTE_PAGO",
       },
     });
