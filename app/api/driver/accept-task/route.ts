@@ -1,10 +1,16 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
-import prisma from "@/lib/prisma";
-import { sendNotification } from "@/lib/notifications"; // 👈 Usamos el helper de notificaciones
+
+// 👇 VACUNA 1: Forzar modo dinámico (Para que no se ejecute en el Build)
+export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
   try {
+    // 👇 VACUNA 2: Lazy Loading (Carga perezosa de librerías)
+    const { auth } = await import("@/auth");
+    const prisma = (await import("@/lib/prisma")).default;
+    // Importamos la notificación solo cuando se necesita
+    const { sendNotification } = await import("@/lib/notifications");
+
     const session = await auth();
     
     // 1. SEGURIDAD: Solo Choferes pueden aceptar tareas
