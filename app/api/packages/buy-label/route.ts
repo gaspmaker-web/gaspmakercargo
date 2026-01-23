@@ -1,10 +1,16 @@
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
-import easypost from '@/lib/easypost';
-import { auth } from '@/auth';
+
+// 👇 VACUNA 1: Forzar modo dinámico (Para que Vercel no intente comprar en el Build)
+export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
   try {
+    // 👇 VACUNA 2: Imports dentro de la función (Lazy Loading)
+    // Así solo cargamos las herramientas cuando realmente vamos a comprar
+    const { auth } = await import("@/auth");
+    const prisma = (await import("@/lib/prisma")).default;
+    const easypost = (await import("@/lib/easypost")).default;
+
     const session = await auth();
     if (!session?.user) return NextResponse.json({ message: "No autorizado" }, { status: 401 });
 
