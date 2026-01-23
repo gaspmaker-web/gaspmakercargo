@@ -1,8 +1,5 @@
 import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
-import { auth } from "@/auth";
 
-// 👇 ESTA LÍNEA ES LA SOLUCIÓN
 export const dynamic = 'force-dynamic';
 
 function generateTrackingNumber() {
@@ -19,6 +16,10 @@ const weightMap: Record<string, string> = {
 
 export async function POST(req: Request) {
   try {
+    // 👇 LA CURA: Imports dentro de la función
+    const { auth } = await import("@/auth");
+    const prisma = (await import("@/lib/prisma")).default;
+
     const session = await auth();
     // 1. Seguridad
     if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'WAREHOUSE')) {
@@ -34,11 +35,9 @@ export async function POST(req: Request) {
 
     if (!pickup) return NextResponse.json({ message: "Pickup no encontrado" }, { status: 404 });
     
-    // 🛑 VALIDACIÓN ANTI-DUPLICADOS 🛑
-    // Si ya es PROCESADO (Admin lo hizo) o ENTREGADO (Chofer lo hizo), no creamos otro.
     if (pickup.status === 'PROCESADO' || pickup.status === 'ENTREGADO') {
         return NextResponse.json({ 
-            message: "⚠️ Este pickup ya fue procesado por el Chofer o el Admin. Busca el paquete en Inventario." 
+            message: "⚠️ Este pickup ya fue procesado." 
         }, { status: 400 });
     }
 
@@ -49,43 +48,27 @@ export async function POST(req: Request) {
     const createdPackagesIds: string[] = [];
     const createdTrackingNumbers: string[] = [];
 
-    // 3. Transacción: Crear Paquetes + Cerrar Pickup
+    // 3. Transacción
     await prisma.$transaction(async (tx) => {
-        
         for (let i = 0; i < quantity; i++) {
             const newTracking = generateTrackingNumber();
             const suffix = quantity > 1 ? ` (Pieza ${i + 1} de ${quantity})` : '';
-            
             const finalDescription = `${pickup.description || 'Sin descripción'} ${suffix} \n${notaBase}`.trim();
 
             const newPackage = await tx.package.create({
                 data: {
                     gmcTrackingNumber: newTracking,
                     userId: pickup.userId,
-                    
-                    // Estado INVISIBLE para que nazca oculto hasta medirlo
                     status: 'EN_PROCESAMIENTO', 
-                    
                     description: finalDescription,
-                    
-                    weightLbs: 0,
-                    widthIn: 0,
-                    heightIn: 0,
-                    lengthIn: 0,
-                    
+                    weightLbs: 0, widthIn: 0, heightIn: 0, lengthIn: 0,
                     photoUrlMiami: pickup.photoPickupUrl || null 
                 }
             });
-
             createdPackagesIds.push(newPackage.id);
             createdTrackingNumbers.push(newTracking);
         }
-
-        // Marcar pickup como procesado
-        await tx.pickupRequest.update({
-            where: { id: pickupId },
-            data: { status: 'PROCESADO' } 
-        });
+        await tx.pickupRequest.update({ where: { id: pickupId }, data: { status: 'PROCESADO' } });
     });
 
     return NextResponse.json({ 
