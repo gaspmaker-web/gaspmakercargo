@@ -1,10 +1,16 @@
 import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
-import { auth } from "@/auth";
-import { sendPackageDispatchedEmail } from "@/lib/notifications"; // O la función de correo que uses
+
+// 👇 VACUNA 1: Forzar modo dinámico (Para evitar errores en Build)
+export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
   try {
+    // 👇 VACUNA 2: Imports dentro de la función (Lazy Loading)
+    const prisma = (await import("@/lib/prisma")).default;
+    const { auth } = await import("@/auth");
+    // Importamos la notificación solo si realmente vamos a despachar
+    const { sendPackageDispatchedEmail } = await import("@/lib/notifications");
+
     const session = await auth();
     if (!session?.user) {
       return NextResponse.json({ message: "No autorizado" }, { status: 401 });
