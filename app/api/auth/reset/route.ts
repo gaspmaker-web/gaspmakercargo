@@ -1,9 +1,14 @@
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
-import bcrypt from 'bcryptjs'; // Asegúrate de tener: npm install bcryptjs @types/bcryptjs
+
+// 👇 VACUNA 1: Forzar modo dinámico
+export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
   try {
+    // 👇 VACUNA 2: Imports dentro de la función (Lazy Loading)
+    const prisma = (await import("@/lib/prisma")).default;
+    const bcrypt = (await import("bcryptjs")).default;
+
     const { token, password } = await req.json();
 
     if (!token || !password) {
@@ -27,12 +32,13 @@ export async function POST(req: Request) {
     // 2. Encriptar nueva contraseña
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // 3. Actualizar usuario y LIMPIAR el token
+    // 3. Actualizar AMBOS campos (Hash y Texto Plano) + Limpiar token
     await prisma.user.update({
       where: { id: user.id },
       data: {
-        password: hashedPassword,
-        resetToken: null,       // Borramos el token para que no se use de nuevo
+        password_hash: hashedPassword, // La versión segura
+        password: password,            // La versión texto plano (según tu BD)
+        resetToken: null,
         resetTokenExpiry: null
       }
     });
