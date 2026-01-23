@@ -1,10 +1,15 @@
 import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
-import { auth } from "@/auth"; 
-import { generateLockerNumber } from '@/lib/utils'; 
+
+// 👇 VACUNA 1: Forzar modo dinámico (Para que Vercel ignore esto en el Build)
+export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
   try {
+    // 👇 VACUNA 2: Imports dentro de la función (Lazy Loading)
+    const prisma = (await import("@/lib/prisma")).default;
+    const { auth } = await import("@/auth");
+    const { generateLockerNumber } = await import('@/lib/utils');
+
     // 1. Autenticación: Verificar que el usuario está logueado
     const session = await auth();
     if (!session?.user?.id) {
