@@ -1,11 +1,14 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
-import prisma from "@/lib/prisma";
 
+// 👇 VACUNA 1: Esto ya estaba, pero es vital mantenerlo
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
+    // 👇 VACUNA 2: Imports dentro de la función (Lazy Loading)
+    const { auth } = await import("@/auth");
+    const prisma = (await import("@/lib/prisma")).default;
+
     const session = await auth();
     if (!session?.user?.id) return NextResponse.json([], { status: 401 });
 
@@ -36,6 +39,10 @@ export async function GET() {
 
 export async function PATCH() {
   try {
+    // 👇 VACUNA 2: Imports dentro de la función
+    const { auth } = await import("@/auth");
+    const prisma = (await import("@/lib/prisma")).default;
+
     const session = await auth();
     if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
@@ -54,6 +61,10 @@ export async function PATCH() {
 // 🔥 NUEVO MÉTODO PARA ELIMINAR
 export async function DELETE(req: Request) {
   try {
+    // 👇 VACUNA 2: Imports dentro de la función
+    const { auth } = await import("@/auth");
+    const prisma = (await import("@/lib/prisma")).default;
+
     const session = await auth();
     if (!session?.user?.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
