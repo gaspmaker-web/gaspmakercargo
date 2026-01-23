@@ -1,0 +1,175 @@
+import { NextResponse } from "next/server";
+import { auth } from "@/auth";
+import prisma from "@/lib/prisma";
+import { sendNotification } from "@/lib/notifications";
+
+export async function POST(req: Request) {
+  try {
+    const session = await auth();
+    
+    // 1. Seguridad
+    if (!session || (session.user.role !== 'DRIVER' && session.user.role !== 'ADMIN')) {
+        return NextResponse.json({ message: "No autorizado" }, { status: 403 });
+    }
+
+    const body = await req.json();
+    const { packageId, photoUrl, signatureBase64 } = body; 
+
+    if (!packageId || !photoUrl) {
+        return NextResponse.json({ message: "Faltan datos (ID o Foto)" }, { status: 400 });
+    }
+
+    let resultUser = null; 
+    let type = "";
+
+    // -----------------------------------------------------------------------
+    // INTENTO 1: ES UN PICKUP (La magia ocurre aquí) 🚚 ✨
+    // -----------------------------------------------------------------------
+    try {
+        // A. Actualizamos el Pickup a ENTREGADO
+        const updatedPickup = await prisma.pickupRequest.update({
+            where: { id: packageId },
+            data: {
+                status: 'ENTREGADO',       
+                photoDeliveryUrl: photoUrl, 
+                signatureUrl: signatureBase64, 
+                updatedAt: new Date()
+            },
+            include: { user: true }
+        });
+        
+        resultUser = updatedPickup.user;
+        type = "Delivery Local";
+
+        // B. 🧠 LÓGICA BLINDADA (Dirección + Servicio)
+        
+        // 1. Chequeo de Dirección (Backup)
+        // ✅ CORREGIDO: Usamos 'dropOffAddress' que es el nombre real en tu Schema
+        const dest = (updatedPickup.dropOffAddress || "").toLowerCase();
+        const isAddressMatch = dest.includes("1861") && (dest.includes("22") || dest.includes("33142") || dest.includes("miami"));
+
+        // 2. Chequeo de Servicio (Principal)
+        // Si el cliente pagó 'SHIPPING', es porque quiere envío internacional
+        const service = (updatedPickup.serviceType || "").toUpperCase();
+        const isServiceMatch = service === 'SHIPPING' || service === 'PICKUP' || service === 'ENVIO_INTERNACIONAL';
+
+        console.log(`🔍 Análisis: Servicio=${service}, Dirección=${dest}`);
+
+        if (isAddressMatch || isServiceMatch) {
+            // 🔥 CREAMOS PAQUETE (Si coincide dirección O es servicio de shipping)
+            const trackingGenerado = `GMC-PK-${Math.floor(100000 + Math.random() * 900000)}`;
+            
+            await prisma.package.create({
+                data: {
+                    userId: resultUser.id,
+                    status: 'EN_PROCESAMIENTO', // Nace invisible (Naranja en Admin)
+                    description: `Origen: Pickup ${service} #${updatedPickup.id.slice(0,6).toUpperCase()}`,
+                    courier: 'Gasp Maker Cargo',
+                    gmcTrackingNumber: trackingGenerado,
+                    carrierTrackingNumber: `PICKUP-${updatedPickup.id.slice(0,6).toUpperCase()}`,
+                    weightLbs: 0, lengthIn: 0, widthIn: 0, heightIn: 0,
+                    photoUrlMiami: photoUrl 
+                }
+            });
+            type = "Pickup Recibido en Bodega";
+            console.log(`✅ Pickup convertido a Paquete: ${trackingGenerado}`);
+        } else {
+            // 🛑 SOLO SI ES 'DELIVERY' LOCAL Y NO VA A LA BODEGA
+            console.log("🚚 Delivery Local finalizado. No entra en inventario.");
+        }
+
+        // ✅ Notificamos éxito
+        await notifyClient(resultUser.id, type, packageId);
+        return NextResponse.json({ success: true, data: updatedPickup });
+
+    } catch (error: any) {
+        if (error.code !== 'P2025') {
+            console.error("Error en Pickup Update:", error);
+            throw error; 
+        }
+    }
+
+    // -----------------------------------------------------------------------
+    // INTENTO 2: ES UNA CONSOLIDACIÓN (Shipment Padre) 📦📦📦
+    // -----------------------------------------------------------------------
+    try {
+        // 1. Actualizamos la Consolidación a ENTREGADO
+        const updatedShipment = await prisma.consolidatedShipment.update({
+            where: { id: packageId },
+            data: {
+                status: 'ENTREGADO',
+                updatedAt: new Date()
+            },
+            include: { user: true }
+        });
+
+        // 2. 🔥 MAGIA: Actualizamos TODOS los paquetes hijos a ENTREGADO 🔥
+        // También les pegamos la foto y firma para que quede registro individual
+        await prisma.package.updateMany({
+            where: { consolidatedShipmentId: packageId },
+            data: {
+                status: 'ENTREGADO',
+                deliveryPhotoUrl: photoUrl,
+                deliverySignature: signatureBase64,
+                updatedAt: new Date()
+            }
+        });
+
+        resultUser = updatedShipment.user;
+        type = "Consolidación";
+
+        await notifyClient(resultUser.id, type, updatedShipment.gmcShipmentNumber);
+        return NextResponse.json({ success: true, data: updatedShipment });
+
+    } catch (error: any) {
+        if (error.code !== 'P2025') {
+             // Si no es error de "No encontrado", lo lanzamos
+             throw error;
+        }
+        // Si no se encontró, seguimos al siguiente intento (Paquete Individual)
+    }
+
+    // -----------------------------------------------------------------------
+    // INTENTO 3: PAQUETE INDIVIDUAL (Last Mile) 📦
+    // -----------------------------------------------------------------------
+    try {
+        const updatedPackage = await prisma.package.update({
+            where: { id: packageId },
+            data: {
+                status: 'ENTREGADO',
+                deliveryPhotoUrl: photoUrl, 
+                deliverySignature: signatureBase64,
+                updatedAt: new Date()
+            },
+            include: { user: true }
+        });
+
+        resultUser = updatedPackage.user;
+        type = "Paquete";
+
+        await notifyClient(resultUser.id, type, updatedPackage.gmcTrackingNumber);
+        return NextResponse.json({ success: true, data: updatedPackage });
+
+    } catch (error: any) {
+         if (error.code === 'P2025') {
+            return NextResponse.json({ message: "Tarea no encontrada (Ni Pickup, Ni Consolidación, Ni Paquete)." }, { status: 404 });
+         }
+         throw error;
+    }
+
+  } catch (error) {
+    console.error("Error crítico:", error);
+    return NextResponse.json({ message: "Error interno" }, { status: 500 });
+  }
+}
+
+async function notifyClient(userId: string, type: string, refId: string) {
+    if (!userId) return;
+    await sendNotification({
+        userId,
+        title: "¡Entrega Completada! 🏁",
+        message: `Tu ${type} ha sido completado exitosamente.`,
+        href: "/dashboard-cliente/historial-solicitudes",
+        type: "SUCCESS"
+    });
+}

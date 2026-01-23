@@ -1,0 +1,48 @@
+/* 1. IMPORTACIONES DE LIBRERÍAS EXTERNAS (DEBEN IR PRIMERO) */
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css');
+@import url('https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.0.0/css/flag-icons.min.css');
+
+/* 2. DIRECTIVAS DE TAILWIND */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 3. ESTILOS PERSONALIZADOS (@layer base) */
+@layer base {
+  :root {
+    --gasp-maker-gold: #E4B349;
+    --gasp-maker-dark-gray: #3C3C3B;
+    --gasp-maker-light-beige: #F4DBA7;
+    --gasp-maker-white: #FFFFFF;
+    --gasp-maker-black: #000000;
+  }
+  
+  body {
+    font-family: var(--font-montserrat), sans-serif;
+    /* Aplicamos el fondo negro semi-transparente para la calculadora */
+    background-color: var(--gasp-maker-dark-gray); 
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-garamond), serif;
+  }
+}
+
+/* --- ESTILOS PARA EL INTERRUPTOR (TOGGLE SWITCH) --- */
+@layer components {
+    .toggle-checkbox:checked {
+        @apply: right-0 border-gasp-maker-gold;
+        right: 0;
+        border-color: var(--gasp-maker-gold);
+    }
+    .toggle-checkbox:checked + .toggle-label {
+        @apply: bg-gasp-maker-gold;
+        background-color: var(--gasp-maker-gold);
+    }
+    .toggle-label {
+        transition: background-color 0.2s ease-in-out;
+    }
+    .toggle-checkbox {
+        transition: all 0.2s ease-in-out;
+    }
+}

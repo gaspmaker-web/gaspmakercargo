@@ -1,0 +1,44 @@
+import React from "react";
+import type { ReactNode } from "react";
+
+/**
+ * Layout seguro para app/[locale]
+ * - intenta cargar los mensajes JSON para el locale desde ../../messages
+ * - si falla, hace logging y usa {} como fallback en lugar de llamar notFound()
+ */
+
+async function loadMessages(locale: string) {
+  try {
+    // Ruta CORREGIDA: desde app/[locale]/layout.tsx -> ../../messages/{locale}.json
+    const msgs = await import(`../../messages/${locale}.json`);
+    return msgs?.default ?? msgs;
+  } catch (e) {
+    console.error("[layout] no se pudieron cargar mensajes para:", locale, e);
+    return {};
+  }
+}
+
+export default async function RootLayout({
+  children,
+  params,
+}: {
+  children: ReactNode;
+  params: { locale: string };
+}) {
+  const locale = params?.locale ?? "es";
+  const messages = await loadMessages(locale);
+
+  return (
+    <html lang={locale}>
+      <head />
+      <body>
+        {children}
+      </body>
+    </html>
+  );
+}
+
+
+
+
+

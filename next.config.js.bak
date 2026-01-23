@@ -1,0 +1,11 @@
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  reactStrictMode: true,
+  i18n: {
+    locales: ['en', 'es', 'fr', 'pt'],
+    defaultLocale: 'es',
+    localeDetection: false, // desactiva la detección automática de Next (evita duplicar prefijos)
+  },
+};
+
+module.exports = nextConfig;

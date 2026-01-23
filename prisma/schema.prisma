@@ -1,0 +1,223 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL") // Transaction Mode (Puerto 6543 - Supabase)
+  directUrl = env("DIRECT_URL")   // Session Mode (Puerto 5432 - Supabase)
+}
+
+// -----------------------------------------------------------------------------------------
+
+model User {
+  id                    String                @id @default(uuid())
+  name                  String?
+  
+  // ✅ CAMPO IMAGEN (Avatar)
+  image                 String?               
+
+  // ✅ EMAIL (Único)
+  email                 String                @unique
+  
+  // 🔐 AUTENTICACIÓN
+  password              String?
+  password_hash         String?
+
+  // 🔄 RECUPERACIÓN
+  resetToken            String?               @unique 
+  resetTokenExpiry      DateTime? 
+
+  role                  String                @default("CLIENTE")
+  createdAt             DateTime              @default(now())
+
+  // Campos de Perfil
+  countryCode           String?
+  suiteNo               String?               @unique 
+  dateOfBirth           DateTime?
+  address               String?
+  cityZip               String?
+  country               String?
+  phone                 String?
+ 
+  // 💰 BILLETERA & REFERIDOS
+  referralCode          String?               @unique 
+  referredBy            String?
+  walletBalance         Float                 @default(0.0) 
+  shippingBalance       Float                 @default(0.0) 
+
+  // --- STRIPE ---
+  stripeCustomerId      String?               @unique 
+
+  // Relaciones
+  packages              Package[]
+  consolidatedShipments ConsolidatedShipment[]
+  pickupRequests        PickupRequest[]       
+  paymentMethods        PaymentMethod[]
+  
+  // Tareas asignadas como Chofer
+  assignedTasks         PickupRequest[]       @relation("DriverAssignments")
+
+  // Notificaciones
+  notifications         Notification[]
+}
+
+// -----------------------------------------------------------------------------------------
+
+model PaymentMethod {
+  id                    String   @id @default(uuid())
+  createdAt             DateTime @default(now())
+  
+  stripePaymentMethodId String   @unique 
+  brand                 String   
+  last4                 String   
+  expMonth              Int
+  expYear               Int
+  
+  isDefault             Boolean  @default(false)
+  isBackup              Boolean  @default(false)
+
+  userId                String
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Package {
+  id                     String   @id @default(uuid())
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+  
+  status                 String   
+  description            String?
+  storagePaidUntil       DateTime? 
+  storageDebt            Float    @default(0.0) 
+  
+  courier                String?   
+  declaredValue          Float?   @default(0.0) 
+  
+  selectedCourier        String?   
+  courierService         String?   
+
+  shippingSubtotal       Float?   @default(0.0) 
+  shippingProcessingFee  Float?   @default(0.0) 
+  shippingTotalPaid      Float?   @default(0.0) 
+  stripePaymentId        String?   
+
+  weightLbs              Float?
+  lengthIn               Float?
+  widthIn                Float?
+  heightIn               Float?
+  photoUrlMiami          String?
+  receiptUrl             String?
+  invoiceUrl             String?
+  
+  deliveryPhotoUrl       String?   
+  deliverySignature      String?   
+  tookanLink             String?   
+  
+  carrierTrackingNumber  String?   
+  gmcTrackingNumber      String    @unique 
+  
+  finalTrackingNumber    String?
+  estimatedArrival       DateTime?
+  
+  userId                 String
+  user                   User     @relation(fields: [userId], references: [id])
+
+  consolidatedShipmentId String?
+  consolidatedShipment   ConsolidatedShipment? @relation(fields: [consolidatedShipmentId], references: [id])
+}
+
+model ConsolidatedShipment {
+  id                     String   @id @default(uuid())
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  gmcShipmentNumber      String   @unique 
+  destinationCountryCode String?
+  status                 String   
+  
+  serviceType            String   @default("CONSOLIDATION")
+
+  storagePaidUntil       DateTime?
+  selectedCourier        String?
+  courierService         String?
+  finalTrackingNumber    String?
+  shippingLabelUrl       String?
+  
+  paymentId              String?
+  weightLbs              Float?
+  
+  declaredValue          Float?   @default(0.0)
+
+  subtotalAmount         Float?   @default(0.0) 
+  processingFee          Float?   @default(0.0) 
+  totalAmount            Float?
+  widthIn                Float?
+  heightIn               Float?
+  lengthIn               Float?
+  
+  userId                 String
+  user                   User     @relation(fields: [userId], references: [id])
+
+  packages               Package[]
+}
+
+model PickupRequest {
+  id               String   @id @default(uuid())
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  
+  serviceType      String   @default("SHIPPING") 
+
+  originAddress    String
+  originCity       String
+  pickupDate       DateTime 
+  description      String   
+  contactPhone     String
+
+  dropOffAddress   String?
+  dropOffCity      String?
+  dropOffContact   String?
+  dropOffPhone     String?
+  
+  subtotal         Float?   @default(0.0) 
+  processingFee    Float?   @default(0.0) 
+  totalPaid        Float?   @default(0.0) 
+  
+  stripePaymentId  String?
+  weightInfo       String?
+  volumeInfo       String?
+
+  photoPickupUrl   String?  
+  photoDeliveryUrl String?
+  
+  signatureUrl     String?   
+  tookanLink       String?   
+  
+  status           String   @default("PENDIENTE") 
+
+  driverId         String?  
+  driver           User?    @relation("DriverAssignments", fields: [driverId], references: [id])
+  
+  userId           String
+  user             User     @relation(fields: [userId], references: [id])
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  
+  title     String
+  message   String
+  href      String?
+  isRead    Boolean  @default(false)
+  type      String   @default("INFO") 
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, isRead]) 
+}

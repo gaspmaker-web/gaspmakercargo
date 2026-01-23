@@ -1,0 +1,44 @@
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+
+const LOCALES = ["en", "es", "fr", "pt"];
+
+export function middleware(req: NextRequest) {
+  const { pathname, locale: nextUrlLocale } = req.nextUrl;
+
+  // Excluir internals, api y archivos con extensión
+  if (
+    pathname.startsWith("/api") ||
+    pathname.startsWith("/_next") ||
+    pathname.startsWith("/favicon.ico") ||
+    pathname.startsWith("/_next/static") ||
+    pathname.startsWith("/_next/image") ||
+    /\.[^/]+$/.test(pathname)
+  ) {
+    return NextResponse.next();
+  }
+
+  // Si Next ya resolvió un locale para esta request, no redirigir
+  if (nextUrlLocale && LOCALES.includes(nextUrlLocale)) {
+    return NextResponse.next();
+  }
+
+  // Si la ruta ya contiene un locale al inicio, no redirigir
+  if (LOCALES.some((l) => pathname === `/${l}` || pathname.startsWith(`/${l}/`))) {
+    return NextResponse.next();
+  }
+
+  // Detectar Accept-Language y redirigir a /{locale}
+  const accept = req.headers.get("accept-language") || "";
+  const detected = accept.split(",")[0]?.split("-")[0] || "es";
+  const locale = LOCALES.includes(detected) ? detected : "es";
+
+  const url = req.nextUrl.clone();
+  url.pathname = `/${locale}${pathname === "/" ? "" : pathname}`;
+
+  return NextResponse.redirect(url);
+}
+
+export const config = {
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
+};
