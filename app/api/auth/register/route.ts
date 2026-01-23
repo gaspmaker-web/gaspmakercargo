@@ -1,10 +1,16 @@
 import { NextResponse } from "next/server";
-import bcrypt from "bcryptjs";
-import prisma from "@/lib/prisma"; 
-import { generateLockerNumber } from "@/lib/utils"; 
+
+// 👇 VACUNA 1: Forzar modo dinámico
+export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
   try {
+    // 👇 VACUNA 2: Imports dentro de la función (Lazy Loading)
+    // Esto evita que Vercel ejecute esto durante el Build
+    const prisma = (await import("@/lib/prisma")).default;
+    const bcrypt = (await import("bcryptjs")).default;
+    const { generateLockerNumber } = await import("@/lib/utils");
+
     const body = await req.json();
     // Ya no esperamos day/month/year por separado, sino dateOfBirth directo
     const { email, password, name, countryCode, phone, dateOfBirth } = body;
@@ -23,7 +29,6 @@ export async function POST(req: Request) {
     const suiteNo = generateLockerNumber(country);
 
     // Convertimos el string ISO a objeto Date de JS
-    // Si el string viene vacío o inválido, esto será null, pero el frontend ya valida que no esté vacío.
     const finalDate = dateOfBirth ? new Date(dateOfBirth) : null;
 
     const newUser = await prisma.user.create({
@@ -35,7 +40,7 @@ export async function POST(req: Request) {
         role: "CLIENTE",
         countryCode: country,
         phone,
-        dateOfBirth: finalDate // Guardado directo y limpio
+        dateOfBirth: finalDate
       },
     });
 
@@ -52,7 +57,6 @@ export async function POST(req: Request) {
     );
   }
 }
-
 
 
 
