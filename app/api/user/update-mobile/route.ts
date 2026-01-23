@@ -1,16 +1,20 @@
-// app/api/user/update-mobile/route.ts
-import prisma from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
-// --- CAMBIO DE NEXTAUTH v5 ---
-// 1. Importa 'auth' desde tu archivo auth.ts en la RAÍZ (usando el alias '@/')
-import { auth } from "@/auth";
-// -----------------------------
+// 👇 VACUNA 1: Forzar modo dinámico
+export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
     console.log("API: Recibida solicitud POST para /api/user/update-mobile");
 
     try {
+        // 👇 VACUNA 2: Imports dentro de la función (Lazy Loading)
+        const prisma = (await import("@/lib/prisma")).default;
+        
+        // --- CAMBIO DE NEXTAUTH v5 ---
+        // 1. Importa 'auth' de forma dinámica
+        const { auth } = await import("@/auth");
+        // -----------------------------
+
         // --- CAMBIO DE NEXTAUTH v5 ---
         // 2. Obtén la sesión directamente con la función 'auth'
         const session = await auth();
