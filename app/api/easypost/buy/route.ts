@@ -1,9 +1,15 @@
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
-import easypost from '@/lib/easypost';
+
+// 👇 VACUNA 1: Forzar modo dinámico (Evita ejecución en Build)
+export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
   try {
+    // 👇 VACUNA 2: Imports dentro de la función (Lazy Loading)
+    // Esto es crucial para APIs externas como EasyPost
+    const prisma = (await import("@/lib/prisma")).default;
+    const easypost = (await import("@/lib/easypost")).default;
+
     const { packageId } = await req.json();
 
     // 1. Buscar datos del paquete y usuario
@@ -59,7 +65,6 @@ export async function POST(req: Request) {
 
     if (!selectedRate) {
         // Fallback: Si no hay tarifa exacta, devolvemos error (Más seguro)
-        // Eliminada la línea conflictiva 'shipment.buy' que causaba el error de compilación
         return NextResponse.json({ error: "No se encontró tarifa exacta. Revisa los datos." }, { status: 400 });
     }
 
