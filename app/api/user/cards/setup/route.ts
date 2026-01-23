@@ -1,13 +1,20 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
-import prisma from "@/lib/prisma";
-import Stripe from "stripe";
 
-// 🚨 CORRECCIÓN: Agregamos 'as any' para evitar el conflicto de versiones de TypeScript
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2024-06-20" as any });
+// 👇 VACUNA 1: Forzar modo dinámico (Para evitar errores de Build)
+export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
   try {
+    // 👇 VACUNA 2: Imports e Inicialización dentro de la función (Lazy Loading)
+    const { auth } = await import("@/auth");
+    const prisma = (await import("@/lib/prisma")).default;
+    const Stripe = (await import("stripe")).default;
+
+    // 🚨 Instancia de Stripe protegida dentro de la función
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { 
+        apiVersion: "2024-06-20" as any 
+    });
+
     const session = await auth();
     if (!session?.user?.id) return new NextResponse("Unauthorized", { status: 401 });
 
