@@ -1,12 +1,18 @@
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
-import { Resend } from 'resend';
-import { v4 as uuidv4 } from 'uuid'; // Necesitas: npm install uuid @types/uuid
+import { v4 as uuidv4 } from 'uuid'; 
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// 👇 VACUNA 1: Forzar modo dinámico
+export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
   try {
+    // 👇 VACUNA 2: Imports dentro de la función (Lazy Loading)
+    // Así evitamos que se ejecuten durante el "npm run build"
+    const prisma = (await import("@/lib/prisma")).default;
+    const { Resend } = await import("resend");
+
+    const resend = new Resend(process.env.RESEND_API_KEY);
+
     const { email } = await req.json();
 
     // 1. Verificar si el usuario existe
@@ -33,7 +39,6 @@ export async function POST(req: Request) {
     });
 
     // 4. Construir el Link
-    // Usamos NEXT_PUBLIC_BASE_URL de tu .env
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
     const resetLink = `${baseUrl}/es/restablecer-contrasena?token=${token}`;
 
