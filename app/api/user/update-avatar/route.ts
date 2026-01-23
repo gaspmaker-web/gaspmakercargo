@@ -1,18 +1,22 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth"; 
-import prisma from "@/lib/prisma"; 
-import { v2 as cloudinary } from 'cloudinary';
 
-// 1. Configuración de Cloudinary (CORREGIDA)
-cloudinary.config({
-  // 🔥 AQUÍ ESTABA EL ERROR: Usamos el nombre exacto de tu .env
-  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME, 
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
+// 👇 VACUNA 1: Forzar modo dinámico
+export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
   try {
+    // 👇 VACUNA 2: Imports e Inicialización dentro de la función (Lazy Loading)
+    const { auth } = await import("@/auth"); 
+    const prisma = (await import("@/lib/prisma")).default; 
+    const { v2: cloudinary } = await import('cloudinary');
+
+    // 1. Configuración de Cloudinary (Ahora dentro de la función)
+    cloudinary.config({
+      cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME, 
+      api_key: process.env.CLOUDINARY_API_KEY,
+      api_secret: process.env.CLOUDINARY_API_SECRET,
+    });
+
     // 2. Verificar Sesión
     const session = await auth();
     
