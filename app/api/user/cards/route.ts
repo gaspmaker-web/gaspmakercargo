@@ -1,10 +1,14 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
-import prisma from "@/lib/prisma";
-import { stripe } from "@/lib/stripe";
+
+// 👇 VACUNA 1: Forzar modo dinámico (Vital para Stripe)
+export const dynamic = 'force-dynamic';
 
 // GET: Listar tarjetas guardadas
 export async function GET(req: Request) {
+  // 👇 VACUNA 2: Imports dentro de la función (Lazy Loading)
+  const { auth } = await import("@/auth");
+  const prisma = (await import("@/lib/prisma")).default;
+
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ message: "No autorizado" }, { status: 401 });
 
@@ -19,6 +23,11 @@ export async function GET(req: Request) {
 // POST: Guardar referencia de tarjeta nueva
 export async function POST(req: Request) {
   try {
+    // 👇 VACUNA 2: Imports dentro de la función
+    const { auth } = await import("@/auth");
+    const prisma = (await import("@/lib/prisma")).default;
+    const { stripe } = await import("@/lib/stripe");
+
     const session = await auth();
     if (!session?.user?.id) return NextResponse.json({ message: "No autorizado" }, { status: 401 });
 
@@ -69,6 +78,11 @@ export async function POST(req: Request) {
 
 // DELETE: Borrar tarjeta
 export async function DELETE(req: Request) {
+    // 👇 VACUNA 2: Imports dentro de la función
+    const { auth } = await import("@/auth");
+    const prisma = (await import("@/lib/prisma")).default;
+    const { stripe } = await import("@/lib/stripe");
+
     const session = await auth();
     if (!session?.user?.id) return NextResponse.json({ status: 401 });
 
