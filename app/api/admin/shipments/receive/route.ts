@@ -1,9 +1,14 @@
 import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
-import { auth } from "@/auth";
+
+// 👇 VACUNA 1: Forzamos a Next.js a no "pre-fabricar" esta ruta
+export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
   try {
+    // 👇 VACUNA 2: Importamos Prisma y Auth SOLO cuando se usa la ruta
+    const { auth } = await import("@/auth");
+    const prisma = (await import("@/lib/prisma")).default;
+
     const session = await auth();
     // Validar permisos
     if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'WAREHOUSE')) {
