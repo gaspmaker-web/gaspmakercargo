@@ -1,9 +1,14 @@
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
-import { auth } from '@/auth';
+
+// 👇 VACUNA 1: Forzar modo dinámico (Evita ejecución en Build)
+export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
   try {
+    // 👇 VACUNA 2: Imports dentro de la función (Lazy Loading)
+    const prisma = (await import('@/lib/prisma')).default;
+    const { auth } = await import('@/auth');
+
     // 1. Verificar sesión
     const session = await auth();
     if (!session || !session.user?.id) {
