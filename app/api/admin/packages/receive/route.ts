@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { auth } from "@/auth"; 
 
+// 👇 ESTA LÍNEA ES LA SOLUCIÓN (La vacuna para el error de Build)
+export const dynamic = 'force-dynamic';
+
 export async function POST(req: Request) {
   try {
     const session = await auth();
