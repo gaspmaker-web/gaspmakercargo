@@ -1,10 +1,16 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
-import prisma from "@/lib/prisma";
-import { stripe } from "@/lib/stripe";
+
+// 👇 VACUNA 1: Forzar modo dinámico (Vital para transacciones financieras)
+export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
   try {
+    // 👇 VACUNA 2: Imports dentro de la función (Lazy Loading)
+    // Evita que Stripe o Prisma se inicien durante el Build
+    const { auth } = await import("@/auth");
+    const prisma = (await import("@/lib/prisma")).default;
+    const { stripe } = await import("@/lib/stripe");
+
     const session = await auth();
     if (!session?.user?.id) return NextResponse.json({ message: "No autorizado" }, { status: 401 });
 
