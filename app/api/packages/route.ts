@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth"; // Importamos autenticación
-import prisma from "@/lib/prisma";
-import { generateGmcTracking } from '@/lib/utils';
 import { z } from 'zod';
 
-// --- Schema Actualizado ---
+// 👇 VACUNA 1: Forzar modo dinámico (Evita que Vercel ejecute esto en el Build)
+export const dynamic = 'force-dynamic';
+
+// --- Schema Actualizado --- (Zod es seguro, puede quedarse aquí)
 const PackageSchema = z.object({
   userId: z.string().min(1, "El ID de usuario es obligatorio"),
   // Bajamos la exigencia a 1 caracter para evitar errores por "ropw"
@@ -26,6 +26,11 @@ const PackageSchema = z.object({
 
 export async function POST(req: Request) {
   try {
+    // 👇 VACUNA 2: Imports dentro de la función (Lazy Loading)
+    const { auth } = await import("@/auth");
+    const prisma = (await import("@/lib/prisma")).default;
+    const { generateGmcTracking } = await import('@/lib/utils');
+
     // 1. Verificar sesión (Seguridad)
     const session = await auth();
     if (!session || (session.user.role !== "ADMIN" && session.user.role !== "WAREHOUSE")) {
