@@ -1,9 +1,9 @@
 import CalculadoraClient from './CalculadoraClient';
 
-// 👇 AQUÍ SÍ FUNCIONA LA MAGIA
-// Al estar separado, Next.js obedece esto y no intenta compilar el formulario estáticamente.
+// 🛑 ESTA ES LA LÍNEA QUE VERCEL ESTÁ IGNORANDO POR CULPA DEL "USE CLIENT"
+// Al quitar "use client" de este archivo, Vercel obedecerá esta orden.
 export const dynamic = 'force-dynamic';
 
-export default function CalculatorPage() {
-    return <CalculadoraClient />;
+export default function Page() {
+  return <CalculadoraClient />;
 }
