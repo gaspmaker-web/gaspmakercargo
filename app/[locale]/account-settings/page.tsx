@@ -1,22 +1,12 @@
-import dynamicImport from 'next/dynamic';
+// app/[locale]/account-settings/page.tsx
 
-// 🛑 ESTA ES LA LÍNEA MÁGICA 🛑
-// Obliga a Next.js a saltarse la generación estática por completo para esta página.
-export const dynamic = 'force-dynamic';
-export const fetchCache = 'force-no-store';
-
-// Importamos el contenido desactivando el SSR (Server Side Rendering)
-const AccountContent = dynamicImport(() => import('./AccountContent'), { 
-  ssr: false,
-  loading: () => (
-    <div className="flex h-screen w-full items-center justify-center bg-gray-50">
-      <div className="text-gray-500 font-medium animate-pulse">
-        Cargando configuración...
-      </div>
+export default function AccountSettingsPage() {
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center p-8">
+      <h1 className="text-2xl font-bold mb-4">Configuración de Cuenta</h1>
+      <p className="text-gray-600">
+        Esta sección se está actualizando. Por favor, vuelve en unos minutos.
+      </p>
     </div>
-  )
-});
-
-export default function AccountSettingsPage({ params }: { params: { locale: string } }) {
-  return <AccountContent />;
+  );
 }
