@@ -1,5 +1,8 @@
 "use client"; 
 
+// 👇 VACUNA: Forzar modo dinámico (Evita que Vercel intente construir esto estáticamente)
+export const dynamic = "force-dynamic";
+
 import { useState, useEffect } from 'react'; 
 import { useSession } from "next-auth/react"; 
 import { Edit, Plus, Settings } from 'lucide-react'; 
