@@ -1,23 +1,35 @@
 // app/[locale]/account-settings/page.tsx
+import dynamic from 'next/dynamic';
 
-// 👇 1. Importamos la función para carga dinámica con un ALIAS para no chocar nombres
-import dynamicLoader from 'next/dynamic';
+// 👇 DEFENSA 1: Configuraciones para evitar cache estático
+export const dynamicParams = true;
+export const revalidate = 0;
 
-// 👇 2. Importamos el componente de contenido PERO desactivando el SSR (Server Side Rendering)
-// Esto es la clave: evita que el Build intente ejecutar el código y falle.
-const AccountContent = dynamicLoader(() => import('./AccountContent'), { 
+// 👇 DEFENSA 2: "El Truco Mágico"
+// Esta función le dice a Next.js: "No intentes generar rutas estáticas para esta página ahora, hazlo bajo demanda".
+// Esto suele arreglar el error de "Failed to collect page data" en rutas [locale].
+export function generateStaticParams() {
+  return [];
+}
+
+// 👇 DEFENSA 3: Importación sin SSR (Server Side Rendering)
+// Cargamos el contenido SOLO en el navegador, nunca en el servidor de build.
+const AccountContent = dynamic(() => import('./AccountContent'), { 
   ssr: false,
-  loading: () => <div className="p-10 text-center">Cargando ajustes...</div>
+  loading: () => (
+    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <div className="text-gmc-dorado-principal font-bold text-lg animate-pulse">
+        Cargando ajustes...
+      </div>
+    </div>
+  )
 });
 
-// 👇 3. Configuración estándar de página
-export const dynamic = "force-dynamic";
-
+// Definimos los tipos para los parámetros
 interface Props {
   params: { locale: string };
 }
 
 export default function AccountSettingsPage({ params }: Props) {
-  // Ahora renderizamos el componente "seguro" que solo carga en el cliente
   return <AccountContent />;
 }
