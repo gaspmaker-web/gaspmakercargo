@@ -1,24 +1,22 @@
-import dynamic from 'next/dynamic';
+import dynamicImport from 'next/dynamic';
 
-// 1. ESTAS LÍNEAS SON VITALES:
-// Le dicen a Next.js: "No intentes generar esto estáticamente, hazlo dinámico siempre"
-export const dynamicParams = true;
-export const revalidate = 0; 
+// 🛑 ESTA ES LA LÍNEA MÁGICA 🛑
+// Obliga a Next.js a saltarse la generación estática por completo para esta página.
+export const dynamic = 'force-dynamic';
+export const fetchCache = 'force-no-store';
 
-// 2. Importamos el contenido con "ssr: false"
-// Esto evita que el servidor intente ejecutar la lógica del usuario durante el build
-const AccountContent = dynamic(() => import('./AccountContent'), { 
+// Importamos el contenido desactivando el SSR (Server Side Rendering)
+const AccountContent = dynamicImport(() => import('./AccountContent'), { 
   ssr: false,
   loading: () => (
     <div className="flex h-screen w-full items-center justify-center bg-gray-50">
-      <div className="text-gray-500 font-medium">Cargando configuración...</div>
+      <div className="text-gray-500 font-medium animate-pulse">
+        Cargando configuración...
+      </div>
     </div>
   )
 });
 
-// 3. Componente Padre "Tonto"
-// Este componente no hace NADA de lógica, solo muestra el contenido dinámico.
-// Así el Build de Vercel pasa sin errores.
 export default function AccountSettingsPage({ params }: { params: { locale: string } }) {
   return <AccountContent />;
 }
