@@ -1,17 +1,23 @@
-import AccountContent from "./AccountContent";
+// app/[locale]/account-settings/page.tsx
 
-// 👇 1. Mantenemos esto: Es VITAL para que Vercel no intente "congelar" la página
+// 👇 1. Importamos la función para carga dinámica con un ALIAS para no chocar nombres
+import dynamicLoader from 'next/dynamic';
+
+// 👇 2. Importamos el componente de contenido PERO desactivando el SSR (Server Side Rendering)
+// Esto es la clave: evita que el Build intente ejecutar el código y falle.
+const AccountContent = dynamicLoader(() => import('./AccountContent'), { 
+  ssr: false,
+  loading: () => <div className="p-10 text-center">Cargando ajustes...</div>
+});
+
+// 👇 3. Configuración estándar de página
 export const dynamic = "force-dynamic";
 
-// 👇 2. Eliminamos imports raros. Solo definimos los tipos básicos.
 interface Props {
   params: { locale: string };
 }
 
-// 👇 3. Componente Servidor Limpio
 export default function AccountSettingsPage({ params }: Props) {
-  // Simplemente pasamos el control al componente Cliente.
-  // Al tener 'force-dynamic' arriba, Next.js sabe que no debe generar esto estáticamente.
+  // Ahora renderizamos el componente "seguro" que solo carga en el cliente
   return <AccountContent />;
 }
-
