@@ -4,7 +4,7 @@
     "services": "Services",
     "calculator": "Calculatrice",
     "aboutUs": "À propos de nous",
-    "faq": "FAQ's",
+    "faq": "FAQ",
     "testimonials": "Témoignages",
     "locations": "Emplacements",
     "access": "Accès"
@@ -253,7 +253,7 @@
     "signedDigitally": "Signé Numériquement"
   },
   "PendingBills": {
-    "title": "Facturas en Attente",
+    "title": "Factures en Attente",
     "subtitle": "Choisissez un transporteur et payez votre consolidation.",
     "backDashboard": "Retour au Tableau de Bord",
     "statusPending": "Sélection En Attente",
@@ -541,7 +541,7 @@
     "alertError": "Erreur lors de l'inscription :",
     "months": {
       "1": "Janvier", "2": "Février", "3": "Mars", "4": "Avril", "5": "Mai", "6": "Juin",
-      "7": "Juillet", "8": "Août", "9": "Septembre", "10": "Octubre", "11": "Novembre", "12": "Décembre"
+      "7": "Juillet", "8": "Août", "9": "Septembre", "10": "Octobre", "11": "Novembre", "12": "Décembre"
     }
   },
   "HistoryPage": {

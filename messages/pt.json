@@ -4,7 +4,7 @@
     "services": "Serviços",
     "calculator": "Calculadora",
     "aboutUs": "Sobre Nós",
-    "faq": "FAQ's",
+    "faq": "FAQ",
     "testimonials": "Depoimentos",
     "locations": "Localizações",
     "access": "Entrar"
@@ -420,8 +420,8 @@
     "tagGuarantee": "Garantia GMC",
     "ctaFooterTitle": "Pronto para começar a importar?",
     "ctaFooterText": "Junte-se a milhares de clientes que já confiam na Gasp Maker Cargo para mover seus pacotes com segurança.",
-    "ctaBtnLocker": "Abrir meu Casillero Grátis",
-    "ctaBtnCalc": "Calcular Envíos"
+    "ctaBtnLocker": "Abrir meu Cacifo Grátis",
+    "ctaBtnCalc": "Calcular Envios"
   },
 "CalculatorPage": {
     "title": "Calculadora de Envio",

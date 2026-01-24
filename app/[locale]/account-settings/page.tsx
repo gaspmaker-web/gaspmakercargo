@@ -1,35 +1,21 @@
 // app/[locale]/account-settings/page.tsx
+"use client"; // Agregamos esto para asegurar contexto, aunque usaremos dynamic import
+
 import dynamic from 'next/dynamic';
 
-// 👇 DEFENSA 1: Configuraciones para evitar cache estático
-export const dynamicParams = true;
-export const revalidate = 0;
+// 👇 CONFIGURACIÓN CRÍTICA: Forzamos a Next.js a no cachear nada de esta ruta
+export const dynamicParams = true; // Permite rutas dinámicas no generadas
+export const revalidate = 0;       // No cachear datos
 
-// 👇 DEFENSA 2: "El Truco Mágico"
-// Esta función le dice a Next.js: "No intentes generar rutas estáticas para esta página ahora, hazlo bajo demanda".
-// Esto suele arreglar el error de "Failed to collect page data" en rutas [locale].
-export function generateStaticParams() {
-  return [];
-}
-
-// 👇 DEFENSA 3: Importación sin SSR (Server Side Rendering)
-// Cargamos el contenido SOLO en el navegador, nunca en el servidor de build.
+// 👇 IMPORTACIÓN DINÁMICA SIN SSR
+// Esto carga el componente AccountContent SOLAMENTE en el navegador del usuario.
+// Vercel NO intentará leerlo ni ejecutarlo durante el "npm run build".
 const AccountContent = dynamic(() => import('./AccountContent'), { 
   ssr: false,
-  loading: () => (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-gmc-dorado-principal font-bold text-lg animate-pulse">
-        Cargando ajustes...
-      </div>
-    </div>
-  )
+  loading: () => <div className="p-10 text-center">Cargando...</div>
 });
 
-// Definimos los tipos para los parámetros
-interface Props {
-  params: { locale: string };
-}
-
-export default function AccountSettingsPage({ params }: Props) {
+// 👇 Componente Página (Contenedor tonto)
+export default function AccountSettingsPage() {
   return <AccountContent />;
 }
