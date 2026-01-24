@@ -1,14 +1,20 @@
 // app/api/user/update-profile/route.ts
 import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
 
-// --- CAMBIO DE NEXTAUTH v5 ---
-// 1. Importa 'auth' desde tu archivo auth.ts en la RAÍZ (usando el alias '@/')
-import { auth } from "@/auth";
-// -----------------------------
+// 👇 VACUNA 1: Forzar modo dinámico (Vital para evitar el error de Build)
+export const dynamic = 'force-dynamic';
 
 export async function PATCH(req: Request) {
   try {
+    // 👇 VACUNA 2: Imports dentro de la función (Lazy Loading)
+    // Esto evita que Vercel intente conectar la DB durante la construcción
+    const prisma = (await import("@/lib/prisma")).default;
+    
+    // --- CAMBIO DE NEXTAUTH v5 ---
+    // 1. Importa 'auth' dinámicamente desde tu archivo auth.ts
+    const { auth } = await import("@/auth");
+    // -----------------------------
+
     // --- CAMBIO DE NEXTAUTH v5 ---
     // 2. Obtén la sesión directamente con la función 'auth'
     const session = await auth();
