@@ -1,5 +1,9 @@
 "use client";
 
+// 👇 AGREGA ESTA LÍNEA OBLIGATORIAMENTE
+// Esto fuerza a que esta página se salte el proceso de generación estática que está fallando.
+export const dynamic = 'force-dynamic';
+
 import React from 'react';
 import { useTranslations } from 'next-intl';
 import { Target, Eye, Users, ShieldCheck, Clock } from 'lucide-react';
