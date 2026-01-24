@@ -1,17 +1,17 @@
 import AccountContent from "./AccountContent";
-// 👇 Importamos esta función especial para arreglar el conflicto de build con [locale]
-import { unstable_setRequestLocale } from 'next-intl/server';
 
-// Forzamos modo dinámico
+// 👇 1. Mantenemos esto: Es VITAL para que Vercel no intente "congelar" la página
 export const dynamic = "force-dynamic";
 
-// 👇 Recibimos 'params' con el locale (es OBLIGATORIO en carpetas [locale])
-export default function AccountSettingsPage({ params: { locale } }: { params: { locale: string } }) {
-  
-  // 👇 VACUNA FINAL: Le decimos a next-intl "Oye, usa este idioma y no molestes en el Build"
-  unstable_setRequestLocale(locale); 
-  
-  return <AccountContent />;
+// 👇 2. Eliminamos imports raros. Solo definimos los tipos básicos.
+interface Props {
+  params: { locale: string };
 }
 
+// 👇 3. Componente Servidor Limpio
+export default function AccountSettingsPage({ params }: Props) {
+  // Simplemente pasamos el control al componente Cliente.
+  // Al tener 'force-dynamic' arriba, Next.js sabe que no debe generar esto estáticamente.
+  return <AccountContent />;
+}
 
