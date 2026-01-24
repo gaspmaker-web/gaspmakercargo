@@ -1,11 +1,17 @@
 import AccountContent from "./AccountContent";
+// 👇 Importamos esta función especial para arreglar el conflicto de build con [locale]
+import { unstable_setRequestLocale } from 'next-intl/server';
 
-// 👇 VACUNA INFALIBLE: Esto obliga a Next.js a no construir esta página estáticamente
+// Forzamos modo dinámico
 export const dynamic = "force-dynamic";
 
-export default function AccountSettingsPage() {
+// 👇 Recibimos 'params' con el locale (es OBLIGATORIO en carpetas [locale])
+export default function AccountSettingsPage({ params: { locale } }: { params: { locale: string } }) {
+  
+  // 👇 VACUNA FINAL: Le decimos a next-intl "Oye, usa este idioma y no molestes en el Build"
+  unstable_setRequestLocale(locale); 
+  
   return <AccountContent />;
 }
-
 
 
