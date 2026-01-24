@@ -11,6 +11,11 @@ import SessionWrapper from '../../components/SessionWrapper';
 // 👇 IMPORTAR EL WIDGET DE CHAT
 import TawkToWidget from '../../components/TawkToWidget';
 
+// 👇 ESTA LÍNEA SOLUCIONA TU ERROR DE BUILD EN VERCEL
+// Obliga a que todo el layout se renderice en el servidor bajo demanda,
+// evitando fallos por falta de sesión/usuario durante el build.
+export const dynamic = 'force-dynamic';
+
 const inter = Inter({ subsets: ['latin'] });
 const validLocales = ['es', 'en', 'pt', 'fr'];
 
