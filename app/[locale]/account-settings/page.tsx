@@ -1,4 +1,5 @@
-// app/[locale]/account-settings/page.tsx
+// 👇 ESTA LÍNEA ES EL ESLABÓN PERDIDO
+export const dynamic = 'force-dynamic';
 
 export default function AccountSettingsPage() {
   return (
