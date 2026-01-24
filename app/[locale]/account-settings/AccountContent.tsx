@@ -7,6 +7,7 @@ import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 
 // --- Imports ---
+// Asegúrate de que estas rutas sean correctas en tu proyecto
 import LanguageSwitcher from '@/components/LanguageSwitcher'; 
 import { ALL_COUNTRIES } from '@/lib/countries'; 
 import EditNameModal from '@/components/modals/EditNameModal'; 
@@ -17,25 +18,28 @@ import EditAddressModal from '@/components/modals/EditAddressModal';
 import PaymentMethods from '@/components/account/PaymentMethods';
 
 export default function AccountContent() {
-    // 🔥 Hook para traducciones
+    // 🔥 Hook para traducciones (Debe coincidir con la clave en tus JSONs)
     const t = useTranslations('ProfilePage');
     
     const router = useRouter(); 
     const { data: session, status, update } = useSession({
         required: true,
-        onUnauthenticated() { if (typeof window !== 'undefined') window.location.href = '/login-cliente'; },
+        onUnauthenticated() { 
+            // Redirigir al login si no hay sesión
+            if (typeof window !== 'undefined') window.location.href = '/login-cliente'; 
+        },
     });
 
     const [smsToggle, setSmsToggle] = useState(false); 
     
-    // Modales
+    // Estados para los Modales
     const [isEditNameModalOpen, setIsEditNameModalOpen] = useState(false);
     const [isEditMobileModalOpen, setIsEditMobileModalOpen] = useState(false);
     const [isEditCountryModalOpen, setIsEditCountryModalOpen] = useState(false);
     const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
     const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
 
-    // Datos Usuario
+    // Estado de Datos de Usuario
     const [userData, setUserData] = useState({
         name: '...',
         email: '...',
@@ -49,12 +53,14 @@ export default function AccountContent() {
         addressCountry: ''
     });
 
+    // Control de Montaje para evitar errores de hidratación
     const [isMounted, setIsMounted] = useState(false);
 
     useEffect(() => {
         setIsMounted(true);
     }, []);
 
+    // Cargar datos cuando la sesión esté lista
     useEffect(() => {
         if (session?.user) {
             const user = session.user as any;
@@ -84,15 +90,23 @@ export default function AccountContent() {
         }
     }, [session]);
 
-    if (!isMounted || status === "loading") return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+    // Mostrar "Loading" mientras se verifica la sesión o el componente se monta
+    if (!isMounted || status === "loading") {
+        return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+    }
 
-    // --- Handlers ---
+    // --- Handlers para actualizaciones ---
+    
     const handleSaveName = async (newName: string) => {
         try {
             const res = await fetch('/api/user/update-name', {
                 method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: newName }),
             });
-            if (res.ok) { await update({ ...session, user: { ...session?.user, name: newName } }); router.refresh(); setIsEditNameModalOpen(false); }
+            if (res.ok) { 
+                await update({ ...session, user: { ...session?.user, name: newName } }); 
+                router.refresh(); 
+                setIsEditNameModalOpen(false); 
+            }
         } catch(e) { console.error(e); }
     };
 
@@ -101,7 +115,11 @@ export default function AccountContent() {
             const res = await fetch('/api/user/update-mobile', {
                 method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone: newMobile }),
             });
-            if (res.ok) { await update({ ...session, user: { ...session?.user, phone: newMobile } }); router.refresh(); setIsEditMobileModalOpen(false); }
+            if (res.ok) { 
+                await update({ ...session, user: { ...session?.user, phone: newMobile } }); 
+                router.refresh(); 
+                setIsEditMobileModalOpen(false); 
+            }
         } catch(e) { console.error(e); }
     };
 
@@ -110,11 +128,16 @@ export default function AccountContent() {
             const res = await fetch('/api/user/update-country', {
                 method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ countryCode: newCode }),
             });
-            if (res.ok) { await update({ ...session, user: { ...session?.user, countryCode: newCode } }); router.refresh(); setIsEditCountryModalOpen(false); }
+            if (res.ok) { 
+                await update({ ...session, user: { ...session?.user, countryCode: newCode } }); 
+                router.refresh(); 
+                setIsEditCountryModalOpen(false); 
+            }
         } catch(e) { console.error(e); }
     };
 
     const handleSaveAddress = async (data: { address: string; cityZip: string; country: string; phone: string }) => {
+        // Actualización optimista en la UI
         setUserData(prev => ({ ...prev, address: data.address, cityZip: data.cityZip, addressCountry: data.country, phone: data.phone }));
         setIsAddressModalOpen(false);
 
@@ -148,6 +171,8 @@ export default function AccountContent() {
     return (
         <div className="bg-gray-100 min-h-screen p-4 sm:p-6 lg:p-8 font-montserrat">
             <div className="max-w-2xl mx-auto">
+                
+                {/* Header */}
                 <div className="flex justify-center items-center mb-8">
                     <div className="flex items-center gap-3">
                         <div className="bg-white p-3 rounded-full text-gmc-dorado-principal shadow-sm border border-gray-100">
@@ -159,6 +184,7 @@ export default function AccountContent() {
                     </div>
                 </div>
 
+                {/* SECCIÓN PERFIL */}
                 <div className="bg-white p-6 rounded-xl shadow-md mb-6">
                     <h2 className="text-xl font-bold text-gmc-gris-oscuro mb-6 font-garamond">{t('sectionProfile')}</h2>
                     <div className="space-y-5">
@@ -187,12 +213,14 @@ export default function AccountContent() {
                     </div>
                 </div>
 
+                {/* SECCIÓN CUENTA */}
                 <div className="bg-white p-6 rounded-xl shadow-md mb-6">
                     <h2 className="text-xl font-bold text-gmc-gris-oscuro mb-6 font-garamond">{t('sectionAccount')}</h2>
                     <div className="space-y-5">
                         <div><label className="block text-sm font-medium text-gray-500">{t('email')}</label><p className="text-lg text-gmc-gris-oscuro">{userData.email}</p></div>
                         <div className="flex justify-between items-center"><div><label className="block text-sm font-medium text-gray-500">{t('mobileNumber')}</label><p className="text-lg text-gmc-gris-oscuro">{userData.phone}</p></div><button onClick={() => setIsEditMobileModalOpen(true)}><Edit size={18} className="text-gray-400 hover:text-gmc-dorado-principal" /></button></div>
                         
+                        {/* Checkbox SMS */}
                         <div className="flex justify-between items-center">
                             <label className="text-sm font-medium text-gray-700 pr-4">{t('sendSms')}</label>
                             <div className="relative inline-block w-10 mr-2 align-middle select-none">
@@ -206,6 +234,7 @@ export default function AccountContent() {
                     </div>
                 </div>
                 
+                {/* SECCIÓN DIRECCIONES */}
                 <div className="bg-white p-6 rounded-xl shadow-md mb-6">
                     <h2 className="text-xl font-bold text-gmc-gris-oscuro mb-6 font-garamond">
                         {t('sectionAddresses')}
@@ -238,12 +267,14 @@ export default function AccountContent() {
                     )}
                 </div>
 
+                {/* --- SECCIÓN MÉTODOS DE PAGO (STRIPE) --- */}
                 <div className="mb-6">
                     <PaymentMethods />
                 </div>
 
             </div>
 
+            {/* MODALES */}
             <EditNameModal isOpen={isEditNameModalOpen} onClose={() => setIsEditNameModalOpen(false)} onSave={handleSaveName} currentName={userData.name} />
             <ChangePasswordModal isOpen={isPasswordModalOpen} onClose={() => setIsPasswordModalOpen(false)} />
             <EditMobileModal isOpen={isEditMobileModalOpen} onClose={() => setIsEditMobileModalOpen(false)} onSave={handleSaveMobile} currentMobile={userData.phone} />
@@ -260,6 +291,7 @@ export default function AccountContent() {
                     phone: userData.phone
                 }}
             />
+
         </div>
     );
 }

@@ -1,22 +1,33 @@
 // app/[locale]/account-settings/page.tsx
 import dynamic from 'next/dynamic';
 
-// 👇 1. Forzamos a que esta ruta sea dinámica (se genera al momento, no en el build)
-export const dynamicParams = true;
+// 👇 ESTA ES LA CLAVE DEL ARREGLO:
+// Le decimos explícitamente a Next.js qué idiomas existen para que no falle al intentar adivinar.
+export async function generateStaticParams() {
+  return [
+    { locale: 'en' },
+    { locale: 'es' },
+    { locale: 'fr' },
+    { locale: 'pt' }
+  ];
+}
+
+// Configuración para evitar cacheo agresivo
 export const revalidate = 0;
 
-// 👇 2. Importamos el contenido del cliente SIN SSR (Server Side Rendering)
-// Esto aísla completamente la lógica de usuario (sesión, traducciones) del proceso de Build.
+// Importación dinámica SIN SSR (Server Side Rendering)
+// Esto aísla la lógica del cliente para que no rompa el build del servidor.
 const AccountContent = dynamic(() => import('./AccountContent'), { 
   ssr: false,
   loading: () => (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="animate-pulse text-gray-500">Cargando ajustes...</div>
+    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <div className="text-gray-500 font-medium">Cargando ajustes...</div>
     </div>
   )
 });
 
-// 👇 3. Definimos la página como un Server Component simple
+// Componente de Página
 export default function AccountSettingsPage({ params }: { params: { locale: string } }) {
+  // Simplemente renderizamos el componente cliente
   return <AccountContent />;
 }
