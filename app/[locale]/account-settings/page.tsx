@@ -1,21 +1,22 @@
 // app/[locale]/account-settings/page.tsx
-"use client"; // Agregamos esto para asegurar contexto, aunque usaremos dynamic import
-
 import dynamic from 'next/dynamic';
 
-// 👇 CONFIGURACIÓN CRÍTICA: Forzamos a Next.js a no cachear nada de esta ruta
-export const dynamicParams = true; // Permite rutas dinámicas no generadas
-export const revalidate = 0;       // No cachear datos
+// 👇 1. Forzamos a que esta ruta sea dinámica (se genera al momento, no en el build)
+export const dynamicParams = true;
+export const revalidate = 0;
 
-// 👇 IMPORTACIÓN DINÁMICA SIN SSR
-// Esto carga el componente AccountContent SOLAMENTE en el navegador del usuario.
-// Vercel NO intentará leerlo ni ejecutarlo durante el "npm run build".
+// 👇 2. Importamos el contenido del cliente SIN SSR (Server Side Rendering)
+// Esto aísla completamente la lógica de usuario (sesión, traducciones) del proceso de Build.
 const AccountContent = dynamic(() => import('./AccountContent'), { 
   ssr: false,
-  loading: () => <div className="p-10 text-center">Cargando...</div>
+  loading: () => (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="animate-pulse text-gray-500">Cargando ajustes...</div>
+    </div>
+  )
 });
 
-// 👇 Componente Página (Contenedor tonto)
-export default function AccountSettingsPage() {
+// 👇 3. Definimos la página como un Server Component simple
+export default function AccountSettingsPage({ params }: { params: { locale: string } }) {
   return <AccountContent />;
 }
