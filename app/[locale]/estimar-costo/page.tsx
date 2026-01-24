@@ -1,8 +1,9 @@
 import CalculadoraClient from './CalculadoraClient';
 
-// 👇 Esta es la línea que Vercel obedecerá en la nueva carpeta
 export const dynamic = 'force-dynamic';
 
 export default function Page() {
   return <CalculadoraClient />;
 }
+
+// Comentario para forzar deploy
