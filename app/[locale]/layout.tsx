@@ -40,10 +40,10 @@ export default async function RootLayout({
         <NextIntlClientProvider locale={locale} messages={messages}>
           <Providers>
             
-            {/* Header recuperado */}
             <Header /> 
             
-            <main className="min-h-screen pt-[72px]"> 
+            {/* 🔴 CORRECCIÓN: Quitamos pt-[72px] para eliminar el espacio blanco */}
+            <main className="min-h-screen"> 
               {children}
             </main>
 
