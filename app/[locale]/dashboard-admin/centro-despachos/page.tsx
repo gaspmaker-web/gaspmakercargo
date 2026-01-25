@@ -2,7 +2,10 @@ import prisma from '@/lib/prisma';
 import { Package, Box, Truck } from 'lucide-react';
 import BotonDespachar from '@/components/admin/BotonDespachar'; 
 
+// 👇 ESCUDO NUCLEAR: Configuración obligatoria para Vercel
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
 
 export default async function AdminDespachosPage() {
   
