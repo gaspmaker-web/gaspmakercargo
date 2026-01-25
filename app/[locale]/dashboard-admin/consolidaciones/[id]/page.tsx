@@ -3,8 +3,7 @@ import prisma from '@/lib/prisma';
 import { notFound, redirect } from 'next/navigation';
 import ProcessConsolidationClient from '@/components/admin/ProcessConsolidationClient';
 
-// 👇 ESTA LÍNEA ES LA CLAVE DEL ÉXITO
-// Le dice a Vercel: "Esta página depende de datos en vivo, no la construyas estáticamente".
+// 👇 Protección de Build
 export const dynamic = 'force-dynamic';
 
 export default async function ProcessConsolidationPage({ params }: { params: { id: string } }) {
@@ -14,7 +13,7 @@ export default async function ProcessConsolidationPage({ params }: { params: { i
     redirect('/login-cliente');
   }
 
-  // Buscar la consolidación específica
+  // Buscar la consolidación
   const consolidation = await prisma.consolidatedShipment.findUnique({
     where: { id: params.id },
     include: {
@@ -32,7 +31,7 @@ export default async function ProcessConsolidationPage({ params }: { params: { i
           Finalizar Consolidación #{consolidation.gmcShipmentNumber}
         </h1>
         
-        {/* Componente Cliente para manejar el formulario final */}
+        {/* Formulario */}
         <ProcessConsolidationClient consolidation={consolidation} />
       </div>
     </div>

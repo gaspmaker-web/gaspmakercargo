@@ -26,10 +26,10 @@ export default async function ConsolidacionesPage({
   // 1. TRAEMOS TODO (FILTRADO POR TIPO)
   const consolidaciones = await prisma.consolidatedShipment.findMany({
     where: {
-        // 🔥 FILTRO AGREGADO: Solo mostramos 'CONSOLIDATION'
+        // Solo mostramos 'CONSOLIDATION'
         serviceType: 'CONSOLIDATION',
 
-        // Mantenemos la búsqueda original
+        // Búsqueda
         ...(query ? {
             OR: [
                 { user: { name: { contains: query, mode: 'insensitive' } } },
@@ -45,9 +45,9 @@ export default async function ConsolidacionesPage({
     orderBy: { updatedAt: 'desc' } 
   });
 
-  // 2. CLASIFICACIÓN INTELIGENTE
+  // 2. CLASIFICACIÓN
 
-  // A. Listos para Despachar (Pagados con dinero real)
+  // A. Listos para Despachar
   const listosParaDespachar = consolidaciones.filter(c => {
     const s = c.status;
     const isPaidState = s === 'PAGADO' || s === 'POR_ENVIAR' || s === 'PAID' || s === 'LISTO_PARA_ENVIO' || s === 'LISTO PARA ENVIO';
@@ -60,30 +60,20 @@ export default async function ConsolidacionesPage({
     c.status === 'PENDIENTE_PAGO'
   );
 
-  // Helper local para detectar errores de precio
   function isZeroError(envio: any) {
       return (envio.totalAmount || 0) === 0 && (envio.status === 'LISTO_PARA_ENVIO' || envio.status === 'LISTO PARA ENVIO');
   }
 
-  // C. Pendientes de Procesar (FILTRO MEJORADO)
+  // C. Pendientes de Procesar
   const pendientesProcesar = consolidaciones.filter(c => {
     const s = c.status;
     const isPaidState = s === 'PAGADO' || s === 'POR_ENVIAR' || s === 'PAID' || s === 'LISTO_PARA_ENVIO' || s === 'LISTO PARA ENVIO';
     const isZeroMoney = (c.totalAmount || 0) === 0;
 
-    // 1. Descartar estados finales o de pago pendiente
     if (s === 'PENDIENTE_PAGO') return false;
-    
-    // Si está pagado y tiene dinero, NO es pendiente (se va a Listos para Despachar)
     if (isPaidState && !isZeroMoney) return false; 
-    
-    // 🔥 CORRECCIÓN AQUÍ: Excluir también lo que ya salió a reparto o destino
     if (s === 'ENVIADO' || s === 'ENTREGADO' || s === 'CANCELADO' || s === 'EN_REPARTO' || s === 'EN_ALMACEN_DESTINO') return false;
-
-    // 2. FILTRO ANTI-INDIVIDUALES
-    if ((!c.packages || c.packages.length <= 1) && !isZeroError(c)) {
-        return false; 
-    }
+    if ((!c.packages || c.packages.length <= 1) && !isZeroError(c)) return false; 
 
     return true;
   });
@@ -114,9 +104,9 @@ export default async function ConsolidacionesPage({
 
         <div className="space-y-10">
 
-            {/* --- 1. CARRUSEL DE PENDIENTES DE PROCESAR --- */}
+            {/* --- 1. CARRUSEL DE PENDIENTES --- */}
             {pendientesProcesar.length > 0 && (
-                <div className="bg-white rounded-2xl p-6 shadow-md border-l-4 border-orange-500 animate-in fade-in slide-in-from-bottom-4 duration-500 relative overflow-hidden">
+                <div className="bg-white rounded-2xl p-6 shadow-md border-l-4 border-orange-500 relative overflow-hidden">
                     <div className="flex justify-between items-center mb-4">
                         <h2 className="text-xl font-bold flex items-center gap-2 text-orange-800">
                             <AlertCircle className="text-orange-600"/> Pendientes de Procesar ({pendientesProcesar.length})
@@ -127,19 +117,14 @@ export default async function ConsolidacionesPage({
                             </span>
                         )}
                     </div>
-                    <p className="text-sm text-gray-500 mb-4">
-                        Solicitudes nuevas o envíos que necesitan cotización (Peso/Medidas).
-                    </p>
                     
-                    {/* CONTENEDOR DEL CARRUSEL */}
-                    <div className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-4 -mx-2 px-2 scroll-smooth scrollbar-thin scrollbar-thumb-orange-200 scrollbar-track-transparent">
+                    <div className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-4 -mx-2 px-2 scroll-smooth">
                         {pendientesProcesar.map((envio) => {
                              const isError = isZeroError(envio);
-                             
                              return (
                                 <div key={envio.id} className="relative snap-start shrink-0 w-full md:w-[400px]">
                                     {isError && (
-                                        <div className="absolute -top-2 -right-1 z-10 bg-red-100 text-red-600 text-[10px] font-bold px-2 py-1 rounded-full border border-red-200 flex items-center gap-1 shadow-sm animate-bounce-slow">
+                                        <div className="absolute -top-2 -right-1 z-10 bg-red-100 text-red-600 text-[10px] font-bold px-2 py-1 rounded-full border border-red-200 flex items-center gap-1 shadow-sm">
                                             <FileWarning size={12}/> Requiere Precio
                                         </div>
                                     )}
@@ -202,7 +187,6 @@ export default async function ConsolidacionesPage({
                                          <p className="text-xs text-gray-400 uppercase font-bold">Total Pagado</p>
                                          <p className="font-bold text-green-700 text-lg">${envio.totalAmount?.toFixed(2)}</p>
                                      </div>
-                                     {/* 🔥 AQUÍ PASAMOS EL OBJETO COMPLETO 'shipment' 🔥 */}
                                      <MenuAccionesConsolidacion shipment={envio} />
                                 </div>
                             </div>
@@ -215,7 +199,6 @@ export default async function ConsolidacionesPage({
                     <p className="text-sm text-gray-400">No hay envíos pagados listos para despachar.</p>
                 </div>
             )}
-            
         </div>
       </div>
     </div>
