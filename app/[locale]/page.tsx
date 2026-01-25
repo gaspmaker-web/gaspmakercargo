@@ -1,4 +1,4 @@
-app/[locale]/page.tsx original , "use client";
+ "use client";
 
 
 
