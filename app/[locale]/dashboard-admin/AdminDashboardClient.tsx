@@ -1,8 +1,9 @@
+// FIX: Forzando actualización de Vercel
 'use client';
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useSession } from 'next-auth/react'; // Usamos esto para obtener el usuario en el cliente
+import { useSession } from 'next-auth/react'; 
 import { 
   Package, Users, Truck, MapPin, PlusCircle, Layers, 
   FileText, TrendingUp, Activity, DollarSign, ClipboardList, Car, Loader2 
@@ -24,7 +25,6 @@ export default function AdminDashboardClient({ locale }: { locale: string }) {
   });
 
   useEffect(() => {
-    // Pedimos los datos a la API segura que creamos antes
     fetch('/api/admin/stats')
       .then(res => res.json())
       .then(data => {
@@ -59,7 +59,8 @@ export default function AdminDashboardClient({ locale }: { locale: string }) {
             </h1>
             <p className="text-gray-500 mt-1">
               Bienvenido, <span className="font-bold text-gmc-dorado-principal uppercase">{session?.user?.name || 'Admin'}</span>. 
-              Rol: <span className="text-xs bg-gray-200 px-2 py-1 rounded-full ml-1">{session?.user?.role || '...'}</span>
+              {/* ✅ CORRECCIÓN ACTIVADA: Usamos 'as any' para evitar el error de TypeScript */}
+              Rol: <span className="text-xs bg-gray-200 px-2 py-1 rounded-full ml-1">{(session?.user as any)?.role || '...'}</span>
             </p>
           </div>
           <div className="text-right">
