@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+// ⚠️ ASEGÚRATE DE QUE ESTE ARCHIVO EXISTA O EL BUILD FALLARÁ
 import EditPackageAdminModal from './EditPackageAdminModal';
 
 interface PackageActionsProps {
@@ -50,19 +51,15 @@ export default function PackageActions({ pkg, locale }: PackageActionsProps) {
   const isStorePickup = pkg.status === 'PENDIENTE_RETIRO' || pkg.selectedCourier === 'CLIENTE_RETIRO';
 
   // ========================================================================
-  // 🖨️ FUNCIÓN PARA IMPRIMIR (CONECTADA A TU PÁGINA)
+  // 🖨️ FUNCIÓN PARA IMPRIMIR
   // ========================================================================
   const openPrintWindow = (type: '4x6' | 'mini') => {
-      // 1. Determinar el formato que espera tu archivo ShippingLabel.tsx
       const format = type === 'mini' ? '30334' : '4x6';
       
-      // 2. Determinar el Tracking correcto 
-      // (Si acabamos de despachar, usamos el nuevo. Si no, el del paquete)
       const currentTracking = (dispatchSuccess && trackingNumber) 
           ? trackingNumber 
           : (pkg.gmcTrackingNumber || pkg.gmcShipmentNumber || 'PENDING');
 
-      // 3. Construir los parámetros URL con los datos del paquete
       const params = new URLSearchParams({
           tracking: currentTracking,
           clientName: pkg.user?.name || 'Cliente',
@@ -74,8 +71,6 @@ export default function PackageActions({ pkg, locale }: PackageActionsProps) {
           format: format
       });
 
-      // 4. Abrir tu página de impresión
-      // Asegúrate de que el archivo 'page.tsx' que me diste esté en 'app/print/label/page.tsx'
       const url = `/print/label?${params.toString()}`; 
       window.open(url, '_blank');
   };
@@ -212,7 +207,7 @@ export default function PackageActions({ pkg, locale }: PackageActionsProps) {
               <Printer size={16} className="text-gray-400" /> Imprimir Etiqueta
             </button>
 
-            <Link href={`/${locale}/dashboard-admin/clientes/${pkg.user.id}`} className="w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center gap-3 text-gray-700">
+            <Link href={`/${locale}/dashboard-admin/clientes/${pkg.user?.id}`} className="w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center gap-3 text-gray-700">
                <User size={16} className="text-gray-400" /> Ver Perfil Cliente
             </Link>
 
@@ -291,7 +286,6 @@ export default function PackageActions({ pkg, locale }: PackageActionsProps) {
                 </div>
 
                 {consolidateSuccess ? (
-                    // ✅ VISTA DE ÉXITO CON BOTONES DE IMPRIMIR
                     <div className="text-center">
                         <div className="mx-auto w-12 h-12 bg-green-100 rounded-full flex items-center justify-center text-green-600 mb-3">
                             <CheckCircle size={32}/>
@@ -305,7 +299,6 @@ export default function PackageActions({ pkg, locale }: PackageActionsProps) {
                         </button>
                     </div>
                 ) : (
-                    // 📝 VISTA DE FORMULARIO
                     <>
                         <div className="bg-indigo-50 p-4 rounded-lg mb-4 text-xs text-indigo-800">
                             <p>Ingresa las medidas finales de la caja consolidada.</p>
@@ -329,6 +322,7 @@ export default function PackageActions({ pkg, locale }: PackageActionsProps) {
         </div>
       )}
 
+      {/* 🛑 AQUI USAMOS EL MODAL DE EDICIÓN (DEBE EXISTIR) */}
       {isEditOpen && <EditPackageAdminModal isOpen={isEditOpen} onClose={() => setIsEditOpen(false)} pkg={pkg} />}
       
       {/* --- MODAL DESPACHO --- */}
@@ -343,7 +337,6 @@ export default function PackageActions({ pkg, locale }: PackageActionsProps) {
                 </div>
 
                 {dispatchSuccess ? (
-                    // ✅ VISTA DE ÉXITO CON BOTONES DE IMPRIMIR
                     <div className="text-center">
                         <div className="mx-auto w-12 h-12 bg-green-100 rounded-full flex items-center justify-center text-green-600 mb-3">
                             <CheckCircle size={32}/>
@@ -358,7 +351,6 @@ export default function PackageActions({ pkg, locale }: PackageActionsProps) {
                         </button>
                     </div>
                 ) : (
-                    // 📝 VISTA DE FORMULARIO
                     <>
                         <div className="bg-blue-50 p-3 rounded-lg mb-4 text-sm"><p className="font-bold text-blue-800">{pkg.selectedCourier}</p></div>
                         <input type="text" value={trackingNumber} onChange={(e) => setTrackingNumber(e.target.value)} placeholder="Tracking..." className="w-full border p-3 rounded-lg mb-4 font-mono text-lg"/>

@@ -8,19 +8,17 @@ import { useRouter } from 'next/navigation';
 interface EditPackageModalProps {
   isOpen: boolean;
   onClose: () => void;
-  pkg: any; // El objeto del paquete que vas a editar
+  pkg: any; 
 }
 
 export default function EditPackageAdminModal({ isOpen, onClose, pkg }: EditPackageModalProps) {
   const router = useRouter();
   
-  // Agregamos declaredValue y description al estado único formData
   const [formData, setFormData] = useState({
     weight: pkg.weightLbs || '',
     length: pkg.lengthIn || '',
     width: pkg.widthIn || '',
     height: pkg.heightIn || '',
-    // 🔥 NUEVOS DATOS
     declaredValue: pkg.declaredValue || '',
     description: pkg.description || ''
   });
@@ -31,7 +29,6 @@ export default function EditPackageAdminModal({ isOpen, onClose, pkg }: EditPack
 
   if (!isOpen) return null;
 
-  // 1. Manejo de Subida de Foto (Igual que en el cliente, pero para Admin)
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]; 
     if (!file) return; 
@@ -52,7 +49,6 @@ export default function EditPackageAdminModal({ isOpen, onClose, pkg }: EditPack
     finally { setIsUploading(false); }
   };
 
-  // 2. Guardar Cambios
   const handleSave = async () => {
     setIsSaving(true);
     try {
@@ -66,7 +62,6 @@ export default function EditPackageAdminModal({ isOpen, onClose, pkg }: EditPack
                 width: formData.width,
                 height: formData.height,
                 photoUrl: photoUrl,
-                // 🔥 ENVIAMOS LOS NUEVOS DATOS AL BACKEND
                 declaredValue: parseFloat(formData.declaredValue) || 0,
                 description: formData.description
             })
@@ -74,7 +69,7 @@ export default function EditPackageAdminModal({ isOpen, onClose, pkg }: EditPack
 
         if (res.ok) {
             alert("✅ Paquete corregido con éxito");
-            router.refresh(); // Refresca la página para ver los cambios
+            router.refresh(); 
             onClose();
         } else {
             alert("Error al guardar cambios");
@@ -91,7 +86,6 @@ export default function EditPackageAdminModal({ isOpen, onClose, pkg }: EditPack
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
       <div className="bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 font-montserrat">
         
-        {/* Header */}
         <div className="bg-[#222b3c] p-4 flex justify-between items-center text-white">
             <h3 className="font-bold text-lg flex items-center gap-2">
                 <span className="text-yellow-400">⚡</span> Corregir Paquete: {pkg.trackingNumber || pkg.gmcTrackingNumber}
@@ -101,7 +95,6 @@ export default function EditPackageAdminModal({ isOpen, onClose, pkg }: EditPack
 
         <div className="p-6 space-y-6 max-h-[85vh] overflow-y-auto">
             
-            {/* Sección de Foto */}
             <div className="flex gap-4 items-start">
                 <div className="relative w-32 h-32 bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden flex-shrink-0">
                     {photoUrl ? (
@@ -122,7 +115,6 @@ export default function EditPackageAdminModal({ isOpen, onClose, pkg }: EditPack
 
             <hr className="border-gray-100"/>
 
-            {/* Sección de Medidas y Peso */}
             <div className="grid grid-cols-2 gap-4">
                 <div>
                     <label className="block text-xs font-bold text-gray-500 uppercase mb-1 flex items-center gap-1"><Scale size={12}/> Peso (Lbs)</label>
@@ -134,7 +126,6 @@ export default function EditPackageAdminModal({ isOpen, onClose, pkg }: EditPack
                     />
                 </div>
                 <div>
-                     {/* Espacio vacío usado para equilibrio visual */}
                 </div>
             </div>
 
@@ -151,7 +142,6 @@ export default function EditPackageAdminModal({ isOpen, onClose, pkg }: EditPack
 
             <hr className="border-gray-100"/>
 
-            {/* 🔥 SECCIÓN DE DATOS DE RECEPCIÓN (VALOR Y DESCRIPCIÓN) */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-blue-50/50 p-4 rounded-xl border border-blue-100">
                 <div className="col-span-1">
                     <label className="block text-xs font-bold text-blue-600 uppercase mb-1 flex items-center gap-1">
@@ -179,7 +169,6 @@ export default function EditPackageAdminModal({ isOpen, onClose, pkg }: EditPack
                 </div>
             </div>
 
-            {/* Botón Guardar */}
             <button 
                 onClick={handleSave}
                 disabled={isSaving || isUploading}
