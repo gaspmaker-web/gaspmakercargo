@@ -80,7 +80,8 @@ export default function TestimonialsClient() {
                                     {review.initial}
                                 </div>
                                 <div>
-                                    <h4 className="font-bold text-gray-900 text-sm">{review.name}</h4>
+                                    {/* 🔥 CORRECCIÓN AQUÍ: font-montserrat y lining-nums para números rectos */}
+                                    <h4 className="font-bold text-gray-900 text-sm font-montserrat lining-nums">{review.name}</h4>
                                     <p className="text-[10px] text-gmc-dorado-principal font-bold uppercase tracking-wider">{review.role}</p>
                                 </div>
                             </div>
@@ -99,7 +100,8 @@ export default function TestimonialsClient() {
                             <Globe size={32} className="text-blue-600" />
                         </div>
                         
-                        <h3 className="text-2xl md:text-3xl font-bold font-garamond text-gray-900 max-w-2xl">
+                        {/* 🔥 CORRECCIÓN AQUÍ: lining-nums para que el "5" no cuelgue */}
+                        <h3 className="text-2xl md:text-3xl font-bold font-garamond text-gray-900 max-w-2xl lining-nums">
                             {t('yearsExperience')}
                         </h3>
                         
