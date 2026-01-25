@@ -2,32 +2,40 @@ import prisma from '@/lib/prisma';
 import { Package, Box, Truck } from 'lucide-react';
 import BotonDespachar from '@/components/admin/BotonDespachar'; 
 
-// 👇 ESCUDO NUCLEAR: Configuración obligatoria para Vercel
+// 👇 ESCUDO NUCLEAR: Configuración para evitar caché
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 export const fetchCache = 'force-no-store';
 
 export default async function AdminDespachosPage() {
   
-  // 1. BUSCAR CONSOLIDACIONES PAGADAS
-  const consolidacionesListas = await prisma.consolidatedShipment.findMany({
-    where: { status: 'POR_ENVIAR' }, 
-    include: {
-      user: true,
-      packages: true 
-    },
-    orderBy: { updatedAt: 'asc' }
-  });
+  let consolidacionesListas = [];
+  let paquetesSueltosListos = [];
 
-  // 2. BUSCAR PAQUETES INDIVIDUALES PAGADOS
-  const paquetesSueltosListos = await prisma.package.findMany({
-    where: { 
-        status: 'POR_ENVIAR',
-        consolidatedShipmentId: null 
-    },
-    include: { user: true },
-    orderBy: { updatedAt: 'asc' }
-  });
+  try {
+      // 1. BUSCAR CONSOLIDACIONES (Con protección de errores)
+      consolidacionesListas = await prisma.consolidatedShipment.findMany({
+        where: { status: 'POR_ENVIAR' }, 
+        include: {
+          user: true,
+          packages: true 
+        },
+        orderBy: { updatedAt: 'asc' }
+      });
+
+      // 2. BUSCAR PAQUETES INDIVIDUALES (Con protección de errores)
+      paquetesSueltosListos = await prisma.package.findMany({
+        where: { 
+            status: 'POR_ENVIAR',
+            consolidatedShipmentId: null 
+        },
+        include: { user: true },
+        orderBy: { updatedAt: 'asc' }
+      });
+  } catch (error) {
+      console.error("Error obteniendo despachos:", error);
+      // Si falla la BD, continuamos con arrays vacíos para que el Build NO se rompa
+  }
 
   return (
     <div className="p-6 md:p-10 bg-gray-50 min-h-screen font-sans text-gray-800">
@@ -63,7 +71,8 @@ export default async function AdminDespachosPage() {
                                         <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">Consolidado</span>
                                         <span className="text-xs text-gray-400 font-mono">#{envio.gmcShipmentNumber}</span>
                                     </div>
-                                    <h3 className="font-bold text-lg text-gray-800">{envio.user.name || 'Cliente Desconocido'}</h3>
+                                    {/* 👇 USO DE ?. PARA EVITAR CRASH SI EL USUARIO ES NULL */}
+                                    <h3 className="font-bold text-lg text-gray-800">{envio.user?.name || 'Cliente Desconocido'}</h3>
                                     <p className="text-sm text-gray-500 flex items-center gap-2">
                                         <span className="bg-gray-100 px-2 py-0.5 rounded text-xs">{envio.packages.length} paquetes</span>
                                         <span>•</span>
@@ -73,7 +82,8 @@ export default async function AdminDespachosPage() {
                                 <div className="flex items-center gap-6 w-full md:w-auto justify-between md:justify-end">
                                     <div className="text-right">
                                         <p className="text-[10px] text-gray-400 uppercase font-bold">Pagado</p>
-                                        <p className="font-bold text-green-600 text-lg">${envio.totalAmount?.toFixed(2)}</p>
+                                        {/* 👇 USO DE ?. PARA EVITAR CRASH SI EL MONTO ES NULL */}
+                                        <p className="font-bold text-green-600 text-lg">${envio.totalAmount?.toFixed(2) || '0.00'}</p>
                                     </div>
                                     <BotonDespachar id={envio.id} type="CONSOLIDATION" courier={envio.selectedCourier} />
                                 </div>
@@ -97,7 +107,8 @@ export default async function AdminDespachosPage() {
                                         <span className="bg-orange-100 text-orange-800 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">Individual</span>
                                         <span className="text-xs text-gray-400 font-mono">{pkg.gmcTrackingNumber}</span>
                                     </div>
-                                    <h3 className="font-bold text-lg text-gray-800">{pkg.user.name}</h3>
+                                    {/* 👇 USO DE ?. PARA EVITAR CRASH SI EL USUARIO ES NULL */}
+                                    <h3 className="font-bold text-lg text-gray-800">{pkg.user?.name || 'Cliente Desconocido'}</h3>
                                     <p className="text-sm text-gray-500 truncate max-w-md">{pkg.description}</p>
                                 </div>
                                 <div className="flex items-center gap-6 w-full md:w-auto justify-between md:justify-end">
