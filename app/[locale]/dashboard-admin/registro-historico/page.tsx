@@ -5,7 +5,6 @@ import {
   Calendar, ExternalLink, User, Package as PackageIcon, Truck
 } from 'lucide-react';
 
-// 👇 ESTA LÍNEA ES LA QUE SALVA EL BUILD
 export const dynamic = 'force-dynamic';
 
 export default async function HistorialEnviosPage({
