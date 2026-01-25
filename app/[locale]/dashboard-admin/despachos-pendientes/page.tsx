@@ -1,16 +1,8 @@
 import prisma from '@/lib/prisma';
 import { Package, Box, Truck, AlertTriangle } from 'lucide-react';
-import dynamicImport from 'next/dynamic';
+import BotonDespachar from '@/components/admin/BotonDespachar'; 
 
-// 👇 LA SOLUCIÓN TÉCNICA (Respetando tu nombre original)
-// Importamos BotonDespachar pero desactivamos SSR (Server Side Rendering) para este componente.
-// Esto evita que rompa el Build si Git tiene conflictos de mayúsculas o caché.
-const BotonDespachar = dynamicImport(
-  () => import('@/components/admin/BotonDespachar'),
-  { ssr: false }
-);
-
-// 👇 Configuración obligatoria
+// 👇 Configuración obligatoria para que Vercel no intente cachear la BD
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
@@ -60,7 +52,7 @@ export default async function AdminDespachosPage() {
         <div className="flex items-center justify-between mb-8">
             <div>
                 <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
-                    <Truck className="text-blue-600"/> Centro de Despachos
+                    <Truck className="text-blue-600"/> Despachos Pendientes
                 </h1>
                 <p className="text-gray-500 mt-1">
                     Gestiona los envíos que ya han sido pagados y necesitan Tracking Number.
@@ -99,7 +91,6 @@ export default async function AdminDespachosPage() {
                                         <p className="text-[10px] text-gray-400 uppercase font-bold">Pagado</p>
                                         <p className="font-bold text-green-600 text-lg">${envio.totalAmount?.toFixed(2) || '0.00'}</p>
                                     </div>
-                                    {/* Componente cargado dinámicamente con nombre original */}
                                     <BotonDespachar id={envio.id} type="CONSOLIDATION" courier={envio.selectedCourier} />
                                 </div>
                             </div>
@@ -130,7 +121,6 @@ export default async function AdminDespachosPage() {
                                         <p className="text-[10px] text-gray-400 uppercase font-bold">Peso</p>
                                         <p className="font-bold text-gray-700 text-lg">{pkg.weightLbs} lb</p>
                                     </div>
-                                    {/* Componente cargado dinámicamente con nombre original */}
                                     <BotonDespachar id={pkg.id} type="PACKAGE" courier={pkg.selectedCourier} />
                                 </div>
                             </div>
