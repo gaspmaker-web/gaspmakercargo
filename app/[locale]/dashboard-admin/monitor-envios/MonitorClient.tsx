@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { Package, Box, Truck, Loader2 } from 'lucide-react';
-// Nota: Si BotonDespachar sigue dando error, mantenlo comentado hasta el final
+
+// 🛑 IMPORTANTE: MANTÉN ESTO COMENTADO. 
+// Este componente es el que rompe el Build porque llama a la base de datos.
 // import BotonDespachar from '@/components/admin/BotonDespachar'; 
 
 export default function MonitorClient() {
@@ -12,7 +14,7 @@ export default function MonitorClient() {
   useEffect(() => {
     const loadData = async () => {
         try {
-            // Llamamos a la API que creamos antes
+            // Usamos la API segura que ya creaste
             const response = await fetch('/api/admin/envios-pendientes');
             const result = await response.json();
             
@@ -55,24 +57,62 @@ export default function MonitorClient() {
         </div>
 
         <div className="space-y-8">
-            {/* AQUÍ VA TU UI DE TABLAS (Copia el resto del JSX que tenías antes) */}
-            {/* Por ahora ponemos un resumen simple para asegurar que el build pasa */}
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-white p-6 rounded-xl border shadow-sm">
-                    <h2 className="text-xl font-bold mb-4 flex items-center gap-2 text-blue-800">
+            {/* CONSOLIDACIONES */}
+            {consolidaciones.length > 0 && (
+                <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
+                    <h2 className="text-xl font-bold mb-4 flex items-center gap-2 text-blue-800 border-b pb-2">
                         <Box className="text-blue-600"/> Consolidaciones ({consolidaciones.length})
                     </h2>
-                    <p className="text-gray-500">Listado de consolidaciones pendientes...</p>
+                    <div className="grid gap-4">
+                        {consolidaciones.map((envio: any) => (
+                            <div key={envio.id} className="bg-white p-4 rounded-xl border flex justify-between items-center">
+                                <div>
+                                    <span className="text-xs font-bold text-blue-600">#{envio.gmcShipmentNumber}</span>
+                                    <div className="font-bold">{envio.user?.name || 'Cliente'}</div>
+                                    <div className="text-xs text-gray-500">{envio.packages?.length || 0} paquetes</div>
+                                </div>
+                                
+                                {/* 🛡️ BOTÓN SEGURO (HTML) */}
+                                {/* Usamos este botón simple para que el Build pase a VERDE. */}
+                                {/* Luego arreglaremos el componente BotonDespachar. */}
+                                <button className="bg-gray-100 text-gray-400 px-4 py-2 rounded text-sm cursor-not-allowed border">
+                                    Despachar (En mantenimiento)
+                                </button>
+                                
+                            </div>
+                        ))}
+                    </div>
                 </div>
+            )}
 
-                <div className="bg-white p-6 rounded-xl border shadow-sm">
-                    <h2 className="text-xl font-bold mb-4 flex items-center gap-2 text-orange-800">
+            {/* PAQUETES */}
+            {paquetes.length > 0 && (
+                <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
+                    <h2 className="text-xl font-bold mb-4 flex items-center gap-2 text-orange-800 border-b pb-2">
                         <Package className="text-orange-600"/> Paquetes Individuales ({paquetes.length})
                     </h2>
-                    <p className="text-gray-500">Listado de paquetes pendientes...</p>
+                    <div className="grid gap-4">
+                        {paquetes.map((pkg: any) => (
+                            <div key={pkg.id} className="bg-white p-4 rounded-xl border flex justify-between items-center">
+                                <div>
+                                    <span className="text-xs font-bold text-orange-600">{pkg.gmcTrackingNumber}</span>
+                                    <div className="font-bold">{pkg.user?.name || 'Cliente'}</div>
+                                </div>
+                                
+                                {/* 🛡️ BOTÓN SEGURO (HTML) */}
+                                <button className="bg-gray-100 text-gray-400 px-4 py-2 rounded text-sm cursor-not-allowed border">
+                                    Despachar (En mantenimiento)
+                                </button>
+
+                            </div>
+                        ))}
+                    </div>
                 </div>
-            </div>
+            )}
+            
+             {total === 0 && (
+                 <div className="text-center py-20 text-gray-400">Todo despachado.</div>
+             )}
         </div>
        </div>
     </div>
