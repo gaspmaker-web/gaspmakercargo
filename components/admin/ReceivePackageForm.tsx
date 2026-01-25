@@ -123,7 +123,7 @@ export default function ReceivePackageForm({ pkg }: ReceivePackageFormProps) {
   return (
     <div className="space-y-6 animate-fadeIn">
       
-      {/* 1. INFORMACIÓN DE LA PRE-ALERTA (DATOS DEL CLIENTE) */}
+      {/* 1. INFORMACIÓN DE LA PRE-ALERTA */}
       <div className="bg-blue-50 border border-blue-200 rounded-xl p-5 shadow-sm">
         <h3 className="text-blue-900 font-bold flex items-center gap-2 mb-4 text-lg border-b border-blue-200 pb-2">
             <Info size={20} className="text-blue-600"/> Datos de la Pre-Alerta
@@ -131,7 +131,6 @@ export default function ReceivePackageForm({ pkg }: ReceivePackageFormProps) {
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm text-blue-900">
              
-             {/* COLUMNA 1: CLIENTE */}
              <div className="space-y-2">
                 <div className="flex items-center gap-2">
                     <User size={14} className="text-blue-400"/>
@@ -149,7 +148,6 @@ export default function ReceivePackageForm({ pkg }: ReceivePackageFormProps) {
                 </div>
              </div>
 
-             {/* COLUMNA 2: DETALLES DE ENVÍO (LO QUE FALTABA) */}
              <div className="space-y-2 border-l border-blue-200 pl-0 md:pl-4">
                 <div className="flex items-center gap-2">
                     <Truck size={14} className="text-blue-400"/>
@@ -167,7 +165,6 @@ export default function ReceivePackageForm({ pkg }: ReceivePackageFormProps) {
                 </div>
              </div>
 
-             {/* COLUMNA 3: TRACKING Y NOTAS */}
              <div className="space-y-2 border-l border-blue-200 pl-0 md:pl-4">
                  <div>
                     <p className="font-bold text-blue-500 uppercase text-[10px] mb-1">Tracking Original (Carrier)</p>
@@ -188,7 +185,7 @@ export default function ReceivePackageForm({ pkg }: ReceivePackageFormProps) {
         </div>
       </div>
 
-      {/* 2. AREA DE TRABAJO (INPUTS) */}
+      {/* 2. AREA DE TRABAJO */}
       <div className="bg-white p-6 rounded-xl shadow-md border-l-4 border-gmc-dorado-principal">
         <div className="flex items-center gap-3 mb-6 border-b border-gray-100 pb-4">
             <div className="bg-yellow-100 p-3 rounded-full text-yellow-700">
@@ -202,11 +199,9 @@ export default function ReceivePackageForm({ pkg }: ReceivePackageFormProps) {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             
-            {/* COLUMNA IZQUIERDA: DATOS FÍSICOS */}
             <div className="space-y-6">
                 <h4 className="font-bold text-gray-800 border-b pb-2 mb-4">📦 Datos Reales (Medidos)</h4>
                 
-                {/* PESO */}
                 <div>
                     <label className="block text-xs font-bold text-gray-500 uppercase mb-2 flex items-center gap-1"><Scale size={14}/> Peso (Libras)</label>
                     <div className="relative">
@@ -221,7 +216,6 @@ export default function ReceivePackageForm({ pkg }: ReceivePackageFormProps) {
                     </div>
                 </div>
 
-                {/* MEDIDAS */}
                 <div>
                     <label className="block text-xs font-bold text-gray-500 uppercase mb-2 flex items-center gap-1"><Ruler size={14}/> Dimensiones (Pulgadas)</label>
                     <div className="flex gap-2 items-center">
@@ -242,7 +236,6 @@ export default function ReceivePackageForm({ pkg }: ReceivePackageFormProps) {
                     </div>
                 </div>
 
-                {/* FOTO EVIDENCIA (PAQUETE) */}
                 <div>
                     <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Foto Evidencia (Paquete)</label>
                     {!formData.photoUrlMiami ? (
@@ -278,13 +271,11 @@ export default function ReceivePackageForm({ pkg }: ReceivePackageFormProps) {
                 </div>
             </div>
 
-            {/* COLUMNA DERECHA: DOCUMENTACIÓN Y NOTAS */}
             <div className="space-y-6">
                 <h4 className="font-bold text-gray-800 border-b pb-2 mb-4 flex items-center gap-2">
                     <FileText size={18}/> Documentación & Notas
                 </h4>
 
-                {/* FACTURA COMERCIAL */}
                 <div className="bg-yellow-50 p-4 rounded-xl border border-yellow-100">
                     <label className="block text-xs font-bold text-yellow-800 uppercase mb-2">Factura Comercial</label>
                     <p className="text-[11px] text-yellow-700 mb-3 leading-tight">
@@ -315,7 +306,6 @@ export default function ReceivePackageForm({ pkg }: ReceivePackageFormProps) {
                     </label>
                 </div>
 
-                {/* Notas Internas */}
                 <div>
                     <label className="block text-xs font-bold text-gray-500 uppercase mb-2 flex items-center gap-1"><FileText size={14}/> Notas Internas</label>
                     <textarea 

@@ -64,7 +64,7 @@ export default function PackageStatusManager({ pkg }: { pkg: any }) {
   }
 
   // 2. GATILLO BARBADOS: Si está en tránsito/enviado -> Recibir y sacar a Reparto
-  // 👇 AQUÍ ESTÁ EL ARREGLO: Agregamos 'ENVIADO' para que reconozca tu estado actual
+  // Agregamos 'ENVIADO' para que reconozca tu estado actual
   if (pkg.status === 'EN_TRANSITO' || pkg.status === 'ENVIADO') {
     return (
         <div className="bg-purple-50 p-4 rounded-xl border border-purple-200 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm animate-in fade-in ring-2 ring-purple-100 mb-6">
