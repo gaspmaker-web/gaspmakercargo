@@ -1,16 +1,21 @@
-import { unstable_noStore as noStore } from 'next/cache';
 import prisma from '@/lib/prisma';
 import { Package, Box, Truck, AlertTriangle } from 'lucide-react';
-// 👇 IMPORTAMOS EL COMPONENTE CON EL NUEVO NOMBRE PARA EVITAR ERRORES DE GIT
-import DispatchButton from '@/components/admin/DispatchButton'; 
+import dynamicImport from 'next/dynamic';
 
-// 👇 Configuración obligatoria para Vercel
+// 👇 LA SOLUCIÓN TÉCNICA (Respetando tu nombre original)
+// Importamos BotonDespachar pero desactivamos SSR (Server Side Rendering) para este componente.
+// Esto evita que rompa el Build si Git tiene conflictos de mayúsculas o caché.
+const BotonDespachar = dynamicImport(
+  () => import('@/components/admin/BotonDespachar'),
+  { ssr: false }
+);
+
+// 👇 Configuración obligatoria
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export default async function AdminDespachosPage() {
-  noStore(); // Cancelamos caché
-
+  
   let consolidacionesListas: any[] = [];
   let paquetesSueltosListos: any[] = [];
   let dbError = false;
@@ -25,22 +30,25 @@ export default async function AdminDespachosPage() {
 
       // 2. BUSCAR PAQUETES INDIVIDUALES
       paquetesSueltosListos = await prisma.package.findMany({
-        where: { status: 'POR_ENVIAR', consolidatedShipmentId: null },
+        where: { 
+            status: 'POR_ENVIAR',
+            consolidatedShipmentId: null 
+        },
         include: { user: true },
         orderBy: { updatedAt: 'asc' }
       });
   } catch (error) {
-      console.error("Error DB:", error);
+      console.error("Error BD:", error);
       dbError = true;
   }
 
   // Protección visual si la BD falla
   if (dbError) {
       return (
-          <div className="p-10 text-center flex flex-col items-center">
+          <div className="p-10 text-center flex flex-col items-center justify-center min-h-[50vh]">
               <AlertTriangle className="text-yellow-500 mb-4" size={40}/>
-              <h2 className="text-xl font-bold">Base de Datos no disponible</h2>
-              <p className="text-gray-500">Estamos reconectando. Intenta recargar la página.</p>
+              <h2 className="text-xl font-bold text-gray-800">Conexión interrumpida</h2>
+              <p className="text-gray-500 mt-2">No se pudo acceder al inventario. Intenta recargar.</p>
           </div>
       );
   }
@@ -81,7 +89,7 @@ export default async function AdminDespachosPage() {
                                     </div>
                                     <h3 className="font-bold text-lg text-gray-800">{envio.user?.name || 'Cliente'}</h3>
                                     <p className="text-sm text-gray-500 flex items-center gap-2">
-                                        <span className="bg-gray-100 px-2 py-0.5 rounded text-xs">{envio.packages.length} paquetes</span>
+                                        <span className="bg-gray-100 px-2 py-0.5 rounded text-xs">{envio.packages?.length || 0} paquetes</span>
                                         <span>•</span>
                                         <span className="font-medium text-gray-700">{envio.selectedCourier || 'N/A'}</span>
                                     </p>
@@ -91,7 +99,8 @@ export default async function AdminDespachosPage() {
                                         <p className="text-[10px] text-gray-400 uppercase font-bold">Pagado</p>
                                         <p className="font-bold text-green-600 text-lg">${envio.totalAmount?.toFixed(2) || '0.00'}</p>
                                     </div>
-                                    <DispatchButton id={envio.id} type="CONSOLIDATION" courier={envio.selectedCourier} />
+                                    {/* Componente cargado dinámicamente con nombre original */}
+                                    <BotonDespachar id={envio.id} type="CONSOLIDATION" courier={envio.selectedCourier} />
                                 </div>
                             </div>
                         ))}
@@ -121,7 +130,8 @@ export default async function AdminDespachosPage() {
                                         <p className="text-[10px] text-gray-400 uppercase font-bold">Peso</p>
                                         <p className="font-bold text-gray-700 text-lg">{pkg.weightLbs} lb</p>
                                     </div>
-                                    <DispatchButton id={pkg.id} type="PACKAGE" courier={pkg.selectedCourier} />
+                                    {/* Componente cargado dinámicamente con nombre original */}
+                                    <BotonDespachar id={pkg.id} type="PACKAGE" courier={pkg.selectedCourier} />
                                 </div>
                             </div>
                         ))}
