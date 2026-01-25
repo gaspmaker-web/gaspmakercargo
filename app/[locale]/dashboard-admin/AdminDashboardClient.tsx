@@ -1,5 +1,6 @@
-// FIX: Forzando actualización de Vercel
+// INTENTO FINAL DEPLOY 123
 'use client';
+// ... (el resto del código igual)
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
