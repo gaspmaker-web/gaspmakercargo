@@ -1,8 +1,12 @@
 import { auth } from '@/auth';
 import { redirect } from 'next/navigation';
 import CreatePackageForm from '@/components/admin/CreatePackageForm';
-import Link from 'next/link'; // Importamos Link
-import { ArrowLeft } from 'lucide-react'; // Importamos el icono
+import Link from 'next/link';
+import { ArrowLeft } from 'lucide-react';
+
+// 👇 ESTA LÍNEA ARREGLA EL BUILD
+// Obliga a Next.js a no intentar generar esto estáticamente (porque depende de la sesión)
+export const dynamic = 'force-dynamic';
 
 export default async function CreateShipmentPage({ params }: { params: { locale: string } }) {
   const session = await auth();
