@@ -3,7 +3,9 @@
 import { useEffect, useState } from 'react';
 import { Package, Box, Truck, Loader2 } from 'lucide-react';
 import BotonDespachar from '@/components/admin/BotonDespachar'; 
-import { obtenerDespachos } from './actions'; 
+
+// ❌ BORRA LA IMPORTACIÓN DE ACTIONS
+// import { obtenerDespachos } from './actions'; 
 
 export default function ControlEnviosClient() {
   const [loading, setLoading] = useState(true);
@@ -11,15 +13,24 @@ export default function ControlEnviosClient() {
 
   useEffect(() => {
     const loadData = async () => {
-        const result = await obtenerDespachos();
-        if (result.success) {
-            setData(result.data);
+        try {
+            // ✅ USAMOS FETCH: Esto es seguro, el build no lo ejecuta
+            const response = await fetch('/api/admin/envios-pendientes');
+            const result = await response.json();
+            
+            if (result.success) {
+                setData(result.data);
+            }
+        } catch (error) {
+            console.error("Error cargando envios", error);
+        } finally {
+            setLoading(false);
         }
-        setLoading(false);
     };
     loadData();
   }, []);
 
+  // ... (El resto del código de renderizado (return) se queda IGUAL) ...
   if (loading) {
       return (
           <div className="p-10 flex flex-col items-center justify-center min-h-[50vh] text-gray-500">
@@ -34,8 +45,11 @@ export default function ControlEnviosClient() {
 
   return (
     <div className="p-6 md:p-10 bg-gray-50 min-h-screen font-sans text-gray-800">
-      <div className="max-w-6xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
+       {/* ... Pega aquí el resto de tu JSX tal cual estaba ... */}
+       {/* Solo asegúrate de copiar la parte del return del archivo anterior */}
+       <div className="max-w-6xl mx-auto">
+          {/* ... Cabecera, Tablas, Botones ... */}
+          <div className="flex items-center justify-between mb-8">
             <div>
                 <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
                     <Truck className="text-blue-600"/> Control de Envíos
@@ -92,7 +106,7 @@ export default function ControlEnviosClient() {
                  <div className="text-center py-20 text-gray-400">Todo despachado.</div>
              )}
         </div>
-      </div>
+       </div>
     </div>
   );
 }
