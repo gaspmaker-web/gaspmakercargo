@@ -9,22 +9,14 @@ import { useLocale, useTranslations } from "next-intl";
 // --- LÓGICA MAESTRA DE IDIOMAS ---
 const getLocaleFromCountry = (countryCode: string) => {
     const code = countryCode.toLowerCase();
-    
-    // 1. Grupo ESPAÑOL
     const esCountries = ['es', 'mx', 'co', 'ar', 'pe', 've', 'cl', 'ec', 'gt', 'cu', 'bo', 'do', 'hn', 'py', 'sv', 'ni', 'cr', 'pa', 'uy', 'gq'];
-    
-    // 2. Grupo PORTUGUÉS
     const ptCountries = ['pt', 'br', 'ao', 'mz', 'gw', 'cv', 'st', 'tl'];
-    
-    // 3. Grupo FRANCÉS
     const frCountries = ['fr', 'ht', 'sn', 'ml', 'cd', 'be', 'ch', 'mc'];
 
-    // REGLAS DE NEGOCIO:
     if (esCountries.includes(code)) return 'es';
     if (ptCountries.includes(code)) return 'pt';
     if (frCountries.includes(code)) return 'fr';
 
-    // 4. DEFAULT GLOBAL (Inglés)
     return 'en'; 
 };
 
@@ -44,7 +36,6 @@ export default function LoginClient() {
     setError(null);
 
     try {
-      // 1. Autenticación
       const result = await signIn("credentials", {
         email,
         password,
@@ -54,16 +45,12 @@ export default function LoginClient() {
       if (result?.ok) {
         const session = await getSession();
         
-        // 2. DETECCIÓN DE PAÍS -> IDIOMA
         let targetLocale = locale; 
         
-        // 🚨 CORRECCIÓN: Usamos (as any) porque TypeScript base no conoce 'countryCode'
         if ((session?.user as any)?.countryCode) {
             targetLocale = getLocaleFromCountry((session!.user as any).countryCode);
         }
         
-        // 3. REDIRECCIÓN FINAL
-        // También aseguramos el rol con (as any) para evitar futuros errores
         const userRole = (session?.user as any)?.role;
 
         if (userRole === "ADMIN" || userRole === "WAREHOUSE") {
