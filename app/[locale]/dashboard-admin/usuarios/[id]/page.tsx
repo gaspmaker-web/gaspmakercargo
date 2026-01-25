@@ -2,7 +2,6 @@ import { auth } from '@/auth';
 import prisma from '@/lib/prisma';
 import { redirect, notFound } from 'next/navigation';
 import Link from 'next/link';
-// ⚠️ CORRECCIÓN: Agregamos 'AlertCircle' que faltaba aquí abajo 👇
 import { 
   ArrowLeft, 
   Mail, 
@@ -15,7 +14,9 @@ import {
   Image as ImageIcon 
 } from 'lucide-react';
 
+// 👇 ESTO ASEGURA QUE VERCEL NO INTENTE CONSTRUIRLA ESTÁTICAMENTE
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export default async function AdminClientDetailPage({ params }: { params: { id: string, locale: string } }) {
   const session = await auth();
@@ -38,8 +39,9 @@ export default async function AdminClientDetailPage({ params }: { params: { id: 
       <div className="max-w-6xl mx-auto">
         
         <div className="mb-6">
+          {/* 👇 ACTUALIZADO: Apunta a la nueva ruta 'usuarios' */}
           <Link 
-            href={`/${params.locale}/dashboard-admin/clientes`}
+            href={`/${params.locale}/dashboard-admin/usuarios`}
             className="inline-flex items-center text-gray-500 hover:text-gmc-dorado-principal transition-colors font-bold"
           >
             <ArrowLeft size={20} className="mr-2" /> Volver a la lista
@@ -112,7 +114,6 @@ export default async function AdminClientDetailPage({ params }: { params: { id: 
                                                     <ExternalLink size={12} className="opacity-50"/>
                                                 </a>
                                             ) : (
-                                                // Aquí es donde se usa AlertCircle
                                                 <span className="inline-flex items-center gap-1 text-gray-400 text-xs bg-gray-100 px-2 py-1 rounded border border-gray-200">
                                                     <AlertCircle size={12} /> Pendiente
                                                 </span>
