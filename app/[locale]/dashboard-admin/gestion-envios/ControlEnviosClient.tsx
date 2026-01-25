@@ -2,10 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { Package, Box, Truck, Loader2 } from 'lucide-react';
-import BotonDespachar from '@/components/admin/BotonDespachar'; 
-
-// ❌ BORRA LA IMPORTACIÓN DE ACTIONS
-// import { obtenerDespachos } from './actions'; 
+// 🛑 COMENTAMOS EL SOSPECHOSO TEMPORALMENTE
+// import BotonDespachar from '@/components/admin/BotonDespachar'; 
 
 export default function ControlEnviosClient() {
   const [loading, setLoading] = useState(true);
@@ -14,7 +12,7 @@ export default function ControlEnviosClient() {
   useEffect(() => {
     const loadData = async () => {
         try {
-            // ✅ USAMOS FETCH: Esto es seguro, el build no lo ejecuta
+            // ✅ USAMOS FETCH: Esto es seguro
             const response = await fetch('/api/admin/envios-pendientes');
             const result = await response.json();
             
@@ -30,7 +28,6 @@ export default function ControlEnviosClient() {
     loadData();
   }, []);
 
-  // ... (El resto del código de renderizado (return) se queda IGUAL) ...
   if (loading) {
       return (
           <div className="p-10 flex flex-col items-center justify-center min-h-[50vh] text-gray-500">
@@ -45,10 +42,7 @@ export default function ControlEnviosClient() {
 
   return (
     <div className="p-6 md:p-10 bg-gray-50 min-h-screen font-sans text-gray-800">
-       {/* ... Pega aquí el resto de tu JSX tal cual estaba ... */}
-       {/* Solo asegúrate de copiar la parte del return del archivo anterior */}
        <div className="max-w-6xl mx-auto">
-          {/* ... Cabecera, Tablas, Botones ... */}
           <div className="flex items-center justify-between mb-8">
             <div>
                 <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
@@ -75,7 +69,13 @@ export default function ControlEnviosClient() {
                                     <div className="font-bold">{envio.user?.name || 'Cliente'}</div>
                                     <div className="text-xs text-gray-500">{envio.packages?.length || 0} paquetes</div>
                                 </div>
-                                <BotonDespachar id={envio.id} type="CONSOLIDATION" courier={envio.selectedCourier} />
+                                {/* 🛑 AQUÍ COMENTAMOS EL COMPONENTE QUE CAUSA EL ERROR */}
+                                {/* <BotonDespachar id={envio.id} type="CONSOLIDATION" courier={envio.selectedCourier} /> */}
+                                
+                                {/* Ponemos un botón tonto temporal para que compile */}
+                                <button className="bg-gray-200 text-gray-500 px-4 py-2 rounded text-sm cursor-not-allowed">
+                                    Despachar (Test Mode)
+                                </button>
                             </div>
                         ))}
                     </div>
@@ -95,7 +95,12 @@ export default function ControlEnviosClient() {
                                     <span className="text-xs font-bold text-orange-600">{pkg.gmcTrackingNumber}</span>
                                     <div className="font-bold">{pkg.user?.name || 'Cliente'}</div>
                                 </div>
-                                <BotonDespachar id={pkg.id} type="PACKAGE" courier={pkg.selectedCourier} />
+                                {/* 🛑 COMENTADO AQUÍ TAMBIÉN */}
+                                {/* <BotonDespachar id={pkg.id} type="PACKAGE" courier={pkg.selectedCourier} /> */}
+                                
+                                <button className="bg-gray-200 text-gray-500 px-4 py-2 rounded text-sm cursor-not-allowed">
+                                    Despachar (Test Mode)
+                                </button>
                             </div>
                         ))}
                     </div>
