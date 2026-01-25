@@ -39,7 +39,7 @@ export default function ProcessConsolidationClient({ consolidation }: ProcessCon
 
       if (!res.ok) throw new Error('Error al procesar');
 
-      router.push('/dashboard-admin/consolidaciones'); // Volver a la lista
+      router.push('/dashboard-admin/procesar-consolidacion'); // Ajustado para coincidir con la carpeta creada
       router.refresh();
     } catch (error) {
       console.error(error);
