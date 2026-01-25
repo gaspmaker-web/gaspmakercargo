@@ -1,19 +1,10 @@
-import { auth } from '@/auth'; 
-import { redirect } from 'next/navigation'; 
-import LoginClient from '@/components/auth/LoginClient'; 
+import LoginClient from '@/components/auth/LoginClient';
 
-// 🛡️ ESCUDO CRÍTICO: Evita que el build falle si la BD no responde
+// 🛡️ MODO SEGURO:
+// Hemos quitado la verificación de sesión del servidor (auth)
+// para que Vercel pueda construir la página sin errores de base de datos.
 export const dynamic = 'force-dynamic';
 
-export default async function LoginPage({ params: { locale } }: { params: { locale: string } }) {
-  // 1. Obtenemos la sesión en el servidor
-  const session = await auth();
-
-  // 2. Si EL USUARIO YA EXISTE, lo mandamos al Dashboard
-  if (session?.user) {
-    redirect(`/${locale}/dashboard-cliente`);
-  }
-
-  // 3. Si no está logueado, mostramos el formulario
+export default function LoginPage() {
   return <LoginClient />;
 }
