@@ -3,6 +3,10 @@ import prisma from '@/lib/prisma';
 import { notFound, redirect } from 'next/navigation';
 import ProcessConsolidationClient from '@/components/admin/ProcessConsolidationClient';
 
+// 👇 ESTA LÍNEA ES LA CLAVE DEL ÉXITO
+// Le dice a Vercel: "Esta página depende de datos en vivo, no la construyas estáticamente".
+export const dynamic = 'force-dynamic';
+
 export default async function ProcessConsolidationPage({ params }: { params: { id: string } }) {
   const session = await auth();
 
