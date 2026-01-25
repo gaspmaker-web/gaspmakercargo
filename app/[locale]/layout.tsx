@@ -1,12 +1,11 @@
 import React from 'react';
 import { NextIntlClientProvider } from 'next-intl';
-import { Inter, Montserrat, Cormorant_Garamond } from 'next/font/google'; // Agregué tus fuentes
+import { Inter, Montserrat, Cormorant_Garamond } from 'next/font/google';
 import '../globals.css';
-import Header from '@/components/Header'; // Importamos tu Header recuperado
-import Providers from '@/components/Providers'; // El enchufe de sesión
-import { Toaster } from 'sonner'; // Si usas notificaciones (opcional)
+import Header from '@/components/Header';
+import Providers from '@/components/Providers';
 
-// Configuración de fuentes (basado en lo que vi en tu código)
+// Configuración de fuentes
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const montserrat = Montserrat({ subsets: ['latin'], variable: '--font-montserrat' });
 const garamond = Cormorant_Garamond({ 
@@ -28,7 +27,6 @@ export default async function RootLayout({
   params: { locale: string };
 }) {
   
-  // Carga segura de idiomas
   let messages;
   try {
     messages = (await import(`../../messages/${locale}.json`)).default;
@@ -40,22 +38,19 @@ export default async function RootLayout({
     <html lang={locale}>
       <body className={`${inter.variable} ${montserrat.variable} ${garamond.variable} font-sans bg-gray-50`}>
         <NextIntlClientProvider locale={locale} messages={messages}>
-          <Providers> {/* Envolvemos todo en la Sesión */}
+          <Providers>
             
-            {/* AQUÍ ESTÁ TU HEADER RECUPERADO */}
+            {/* Header recuperado */}
             <Header /> 
             
             <main className="min-h-screen pt-[72px]"> 
-              {/* pt-[72px] es para que el Header fijo no tape el contenido */}
               {children}
             </main>
 
-            {/* Footer temporal simple (luego ponemos el tuyo) */}
             <footer className="bg-gmc-gris-oscuro text-white p-8 text-center mt-auto">
               <p className="text-sm opacity-50">© 2026 GaspMakerCargo - Sistema en Reconstrucción</p>
             </footer>
 
-            <Toaster position="top-right" />
           </Providers>
         </NextIntlClientProvider>
       </body>
