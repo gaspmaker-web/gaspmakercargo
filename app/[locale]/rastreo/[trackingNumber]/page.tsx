@@ -1,9 +1,11 @@
-// import prisma from '@/lib/prisma'; // 👈 COMENTADO: Desconectamos la BD para que Vercel no llore
+import prisma from '@/lib/prisma'; // ✅ REACTIVADO
 import { notFound } from 'next/navigation';
 import TrackingClient from './TrackingClient';
 
-// 🛡️ MODO DINÁMICO
+// 🟢 EL SECRETO: Esto arregla el error de Vercel sin desconectar la BD
+// Le dice a Next.js: "No intentes construir esto estáticamente, hazlo al momento de la visita"
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export default async function TrackingPage({ 
   params, 
@@ -13,39 +15,38 @@ export default async function TrackingPage({
   searchParams?: { from?: string } 
 }) {
   const { trackingNumber } = params;
+  let pkg;
 
-  // 🚧 MODO MANTENIMIENTO: DATOS DE PRUEBA 🚧
-  // Como Vercel falla al construir con la BD, usamos este objeto temporalmente
-  // para asegurar que el despliegue sea EXITOSO.
-  const pkg = {
-    gmcTrackingNumber: trackingNumber,
-    status: 'EN TRANSITO', // Puedes cambiar esto a 'ENTREGADO' para probar la otra vista
-    description: 'Paquete de demostración (Modo Seguro)',
-    courierService: 'GMC Express',
-    weight: 5.5,
-    volumetricWeight: 4.2,
-    updatedAt: new Date().toISOString(), // Usamos string ISO para evitar problemas
-    user: { 
-        name: 'Cliente Demo', 
-        country: 'República Dominicana',
-        suiteNo: 'GMC-0000',
-        countryCode: 'DO'
-    },
-    tookanLink: null,
-    deliveryPhotoUrl: null,
-    deliverySignature: null,
-    selectedCourier: 'GMC'
-  };
+  try {
+    // 1. Buscamos el paquete REAL en la base de datos
+    // Usamos findFirst para buscar por el Tracking de GMC
+    const pkgData = await prisma.package.findFirst({
+      where: { gmcTrackingNumber: trackingNumber },
+      include: {
+        user: {
+            select: {
+                name: true,
+                country: true,
+                suiteNo: true,
+                countryCode: true
+            }
+        }
+      }
+    });
 
-  // Cuando reactivemos la BD, borraremos el bloque de arriba y descomentaremos este:
-  /*
-  const pkgData = await prisma.package.findFirst({
-    where: { gmcTrackingNumber: trackingNumber },
-    include: { user: true }
-  });
-  if (!pkgData) return notFound();
-  const pkg = JSON.parse(JSON.stringify(pkgData));
-  */
+    // 2. Si no existe, mandamos a página 404
+    if (!pkgData) {
+      return notFound();
+    }
+
+    // 3. Serializamos las fechas (Truco vital para evitar errores de "Date object" entre Servidor y Cliente)
+    pkg = JSON.parse(JSON.stringify(pkgData));
+
+  } catch (error) {
+    console.error("⚠️ Error conectando a BD en Rastreo:", error);
+    // Si la base de datos falla, mostramos 404 en vez de romper la página entera
+    return notFound();
+  }
 
   return (
     <TrackingClient 
