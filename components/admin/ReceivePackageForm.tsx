@@ -88,11 +88,12 @@ export default function ReceivePackageForm({ pkg }: ReceivePackageFormProps) {
 
     setLoading(true);
     try {
-      const res = await fetch('/api/admin/packages/update', {
-        method: 'PUT',
+      // 🔥 CORRECCIÓN CLAVE: Enviamos a la ruta 'receive' usando POST
+      const res = await fetch('/api/admin/packages/receive', {
+        method: 'POST', // Cambiado de PUT a POST porque la ruta receive.ts es POST
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          id: pkg.id,
+          packageId: pkg.id, // 🔥 Cambiamos 'id' por 'packageId' para coincidir con el backend
           weightLbs: parseFloat(formData.weightLbs),
           lengthIn: parseFloat(formData.lengthIn),
           widthIn: parseFloat(formData.widthIn),
@@ -100,7 +101,7 @@ export default function ReceivePackageForm({ pkg }: ReceivePackageFormProps) {
           description: formData.description,
           photoUrlMiami: formData.photoUrlMiami, 
           invoiceUrl: formData.invoiceUrl,       
-          status: 'RECIBIDO_MIAMI' 
+          // status: 'RECIBIDO_MIAMI' <-- El backend ya lo pone automático
         })
       });
 
@@ -110,7 +111,7 @@ export default function ReceivePackageForm({ pkg }: ReceivePackageFormProps) {
         router.push('/dashboard-admin/paquetes'); 
       } else {
         const err = await res.json();
-        alert("Error al guardar: " + err.message);
+        alert("Error al guardar: " + (err.message || err.error));
       }
     } catch (error) {
       console.error(error);
