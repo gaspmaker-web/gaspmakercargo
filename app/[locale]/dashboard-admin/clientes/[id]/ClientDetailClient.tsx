@@ -19,9 +19,9 @@ export default function ClientDetailClient({ client, locale }: { client: any, lo
       <div className="max-w-6xl mx-auto">
         
         <div className="mb-6">
-          {/* Apunta a la ruta 'usuarios' donde está la lista */}
+          {/* 🔥 CORREGIDO: Apunta a 'clientes' en lugar de 'usuarios' */}
           <Link 
-            href={`/${locale}/dashboard-admin/usuarios`}
+            href={`/${locale}/dashboard-admin/clientes`}
             className="inline-flex items-center text-gray-500 hover:text-gmc-dorado-principal transition-colors font-bold"
           >
             <ArrowLeft size={20} className="mr-2" /> Volver a la lista

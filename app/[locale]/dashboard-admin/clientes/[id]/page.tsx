@@ -12,7 +12,7 @@ export default async function AdminClientDetailPage({ params }: { params: { id: 
 
   // Seguridad
   if (session && (session.user.role !== 'ADMIN' && session.user.role !== 'WAREHOUSE')) {
-    // redirect('/login-cliente'); // Comentado para proteger build
+    // redirect('/login-cliente'); 
   }
 
   let client;
@@ -30,10 +30,10 @@ export default async function AdminClientDetailPage({ params }: { params: { id: 
     client = null;
   }
 
-  // 🚨 MOCK DATA FALLBACK (Si la BD falla en build)
+  // 🚨 MOCK DATA FALLBACK (Si la BD falla en build o el ID es inválido)
   if (!client) {
       if (process.env.NODE_ENV === 'production') {
-          // Cliente falso para que la página se construya
+          // Cliente falso para que la página se construya si falla la conexión
           client = {
               id: params.id,
               name: 'Usuario Cargando...',

@@ -19,9 +19,9 @@ export default async function GestionClientesPage({
     
     const session = await auth();
 
-    // Seguridad
+    // Seguridad (descomenta en producción si es necesario)
     if (!session) {
-        // redirect('/login-cliente'); // Comentado por seguridad de build
+        // redirect('/login-cliente'); 
     }
 
     if (session?.user?.role !== 'ADMIN' && session?.user?.role !== 'WAREHOUSE') {
@@ -33,7 +33,7 @@ export default async function GestionClientesPage({
     let allUsers: any[] = [];
 
     try {
-        // Consulta con filtros dinámicos (Protegida)
+        // Consulta con filtros dinámicos
         allUsers = await prisma.user.findMany({
             where: query ? {
                 OR: [
@@ -56,7 +56,7 @@ export default async function GestionClientesPage({
         });
     } catch (error) {
         console.error("⚠️ Error cargando usuarios (Build):", error);
-        allUsers = []; // Fallback seguro
+        allUsers = []; 
     }
 
     // Serialización simple para evitar errores de fechas
@@ -92,7 +92,7 @@ export default async function GestionClientesPage({
                         <div className="bg-white px-4 py-1 rounded-full shadow-sm border border-gray-200 text-xs font-bold text-gray-500 mb-1">
                             {serializedUsers.length} {serializedUsers.length === 1 ? 'Usuario' : 'Usuarios'}
                         </div>
-                        {/* Aquí va el buscador */}
+                        {/* Buscador */}
                         <ClientSearch />
                     </div>
                 </div>
