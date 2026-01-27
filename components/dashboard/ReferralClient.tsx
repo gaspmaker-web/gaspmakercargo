@@ -39,12 +39,13 @@ export default function ReferralClient({ referralCode, walletBalance, referralLi
     };
 
     return (
-        <div className="max-w-5xl mx-auto space-y-8 pb-20 animate-in fade-in duration-500">
+        // 🔥 APLICAMOS FONT-MONTSERRAT A TODO EL CONTENEDOR
+        <div className="max-w-5xl mx-auto space-y-8 pb-20 animate-in fade-in duration-500 font-montserrat">
             
             {/* 1. HEADER & BALANCE */}
             <div className="flex flex-col md:flex-row justify-between items-center gap-6">
                 <div>
-                    <h1 className="text-3xl font-bold text-gmc-gris-oscuro font-garamond">
+                    <h1 className="text-3xl font-bold text-gmc-gris-oscuro tracking-tight">
                         {t('title')}
                     </h1>
                     <p className="text-gray-500 mt-1">{t('subtitle')}</p>
@@ -57,7 +58,10 @@ export default function ReferralClient({ referralCode, walletBalance, referralLi
                     </div>
                     <div>
                         <p className="text-[10px] text-gray-300 uppercase font-bold tracking-wider mb-1">{t('creditAvailable')}</p>
-                        <p className="text-4xl font-bold text-white font-mono">${walletBalance.toFixed(2)}</p>
+                        {/* 🔥 NÚMEROS RECTOS Y MODERNOS (lining-nums) */}
+                        <p className="text-4xl font-extrabold text-white lining-nums tracking-tight font-montserrat">
+                            ${walletBalance.toFixed(2)}
+                        </p>
                     </div>
                 </div>
             </div>
@@ -66,14 +70,14 @@ export default function ReferralClient({ referralCode, walletBalance, referralLi
             <div className="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden">
                 <div className="bg-blue-50 p-8 text-center border-b border-blue-100">
                     <Gift size={64} className="mx-auto text-blue-600 mb-4 animate-bounce" />
-                    <h2 className="text-2xl md:text-3xl font-bold text-gmc-gris-oscuro mb-2 font-garamond">
+                    
+                    <h2 className="text-2xl md:text-3xl font-bold text-gmc-gris-oscuro mb-2 tracking-tight">
                         {t('heroTitle')}
                     </h2>
                     <p className="text-gray-600 max-w-2xl mx-auto text-lg leading-relaxed mb-4">
                         {t('heroText')}
                     </p>
 
-                    {/* 🔥 ALERTA DE PEDIDO MÍNIMO (MULTILINGÜE) 🔥 */}
                     <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-800 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wide border border-blue-200">
                         <AlertCircle size={14} />
                         <span>{t('minOrderBadge')}</span>
@@ -87,6 +91,7 @@ export default function ReferralClient({ referralCode, walletBalance, referralLi
                     </label>
                     
                     <div className="flex flex-col md:flex-row gap-4 max-w-2xl mx-auto">
+                        {/* El link se mantiene en font-mono solo para legibilidad técnica, pero limpio */}
                         <div className="flex-1 bg-gray-50 border-2 border-dashed border-gmc-dorado-principal/50 rounded-xl p-4 flex items-center justify-center text-gray-700 font-mono text-sm md:text-base break-all text-center">
                             {referralLink}
                         </div>
@@ -161,22 +166,32 @@ export default function ReferralClient({ referralCode, walletBalance, referralLi
                 </ul>
             </div>
 
-            {/* 5. PREGUNTAS FRECUENTES (FAQ) - Restauradas para usar las traducciones */}
+            {/* 5. PREGUNTAS FRECUENTES (FAQ) */}
             <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
-                <h3 className="text-xl font-bold text-gmc-gris-oscuro mb-6 font-garamond flex items-center gap-2">
+                <h3 className="text-xl font-bold text-gmc-gris-oscuro mb-6 flex items-center gap-2">
                     <HelpCircle className="text-gmc-dorado-principal"/> {t('faqTitle')}
                 </h3>
                 <div className="space-y-6 divide-y divide-gray-100">
                     <div className="pt-2">
-                        <p className="font-bold text-gray-800 mb-1 flex gap-2"><span className="text-gmc-dorado-principal">Q:</span> {t('faq1Q')}</p>
+                        <p className="font-bold text-gray-800 mb-1 flex gap-2">
+                            {/* 🔥 LA Q MODERNA: font-montserrat + font-extrabold = Q geométrica perfecta */}
+                            <span className="text-gmc-dorado-principal font-extrabold font-montserrat">Q:</span> 
+                            {t('faq1Q')}
+                        </p>
                         <p className="text-gray-600 text-sm pl-6">{t('faq1A')}</p>
                     </div>
                     <div className="pt-4">
-                        <p className="font-bold text-gray-800 mb-1 flex gap-2"><span className="text-gmc-dorado-principal">Q:</span> {t('faq2Q')}</p>
+                        <p className="font-bold text-gray-800 mb-1 flex gap-2">
+                            <span className="text-gmc-dorado-principal font-extrabold font-montserrat">Q:</span> 
+                            {t('faq2Q')}
+                        </p>
                         <p className="text-gray-600 text-sm pl-6">{t('faq2A')}</p>
                     </div>
                     <div className="pt-4">
-                        <p className="font-bold text-gray-800 mb-1 flex gap-2"><span className="text-gmc-dorado-principal">Q:</span> {t('faq3Q')}</p>
+                        <p className="font-bold text-gray-800 mb-1 flex gap-2">
+                            <span className="text-gmc-dorado-principal font-extrabold font-montserrat">Q:</span> 
+                            {t('faq3Q')}
+                        </p>
                         <p className="text-gray-600 text-sm pl-6">{t('faq3A')}</p>
                     </div>
                 </div>

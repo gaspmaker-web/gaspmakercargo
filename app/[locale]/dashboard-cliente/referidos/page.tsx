@@ -79,8 +79,14 @@ export default async function ReferralPage({ params }: { params: { locale: strin
   const referralLink = `${protocol}://${host}/${params.locale}/registro-cliente?ref=${finalReferralCode}`;
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8 font-montserrat">
-       
+    // 🔥 CAMBIO CLAVE AQUÍ:
+    // 1. font-montserrat: Fuente moderna.
+    // 2. lining-nums: Números alineados (rectos, no antiguos).
+    // 3. style={{...}}: Fuerza bruta para que el navegador no use Times New Roman en la "Q".
+    <div 
+        className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8 font-montserrat lining-nums"
+        style={{ fontFamily: "'Montserrat', sans-serif" }}
+    >
        {/* Pasamos los datos listos al componente visual */}
        <ReferralClient 
           referralCode={finalReferralCode || 'ERROR'} 
