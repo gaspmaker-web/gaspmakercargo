@@ -1,4 +1,4 @@
-import { auth } from '@/auth';
+import { auth } from '@/auth'; // Ya no necesitamos signOut del servidor aquí
 import prisma from '@/lib/prisma';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
@@ -8,23 +8,23 @@ import {
 } from 'lucide-react';
 
 import AcceptTaskButton from '@/components/driver/AcceptTaskButton'; 
+import DriverLogoutButton from '@/components/DriverLogoutButton'; // 👈 IMPORTAMOS EL BOTÓN NUEVO
 
 export const dynamic = 'force-dynamic';
 
-export default async function DriverDashboardPage({ params }: { params: { locale: string } }) {
+export default async function DriverDashboardPage(props: any) {
   const session = await auth();
+  const params = await props.params;
+  const locale = params?.locale || 'en';
 
   // ===========================================================================
-  // 🔐 CORRECCIÓN DE SEGURIDAD (Trim + UpperCase)
+  // 🔐 SEGURIDAD
   // ===========================================================================
-  // Limpiamos el rol antes de comparar para evitar errores por espacios invisibles.
-  // Esto evita que la página expulse al chofer y cause el bucle de redirección.
   const userRole = session?.user?.role?.trim()?.toUpperCase();
 
   if (!session || userRole !== 'DRIVER') {
-    redirect('/login-cliente');
+    redirect(`/${locale}/login-cliente`);
   }
-  // ===========================================================================
 
   const driverId = session.user.id;
 
@@ -42,6 +42,11 @@ export default async function DriverDashboardPage({ params }: { params: { locale
             <ShieldAlert size={64} className="text-red-500 mb-4"/>
             <h1 className="text-2xl font-bold">Zona No Asignada</h1>
             <p className="text-slate-400">Tu usuario no tiene un código de país (Ej: US) asignado.</p>
+            
+            {/* Usamos el botón de cliente para asegurar limpieza total */}
+            <div className="mt-6">
+                <DriverLogoutButton locale={locale} />
+            </div>
         </div>
     );
   }
@@ -75,7 +80,6 @@ export default async function DriverDashboardPage({ params }: { params: { locale
   });
 
   // C. MIS ENTREGAS (Paquetes y Consolidaciones)
-  // 1. Traemos los paquetes "crudos" de la base de datos
   const rawPackages = await prisma.package.findMany({
     where: { 
         status: { in: ['EN_REPARTO', 'OUT_FOR_DELIVERY', 'EN_CAMINO'] },
@@ -83,54 +87,38 @@ export default async function DriverDashboardPage({ params }: { params: { locale
     },
     include: { 
         user: { select: { name: true, address: true } },
-        consolidatedShipment: true // Necesario para agrupar
+        consolidatedShipment: true 
     },
     orderBy: { updatedAt: 'desc' }
   });
 
-  // 2. LOGICA DE AGRUPACIÓN (Aquí ocurre la magia ✨)
+  // 2. LOGICA DE AGRUPACIÓN
   const processedDeliveries: any[] = [];
-  const processedShipments = new Set(); // Para no repetir consolidaciones
+  const processedShipments = new Set(); 
 
   for (const pkg of rawPackages) {
-      // Caso 1: Es parte de una consolidación
       if (pkg.consolidatedShipmentId && pkg.consolidatedShipment) {
-          
-          // 🔥 FILTRO DE SEGURIDAD 🔥
-          // Si la consolidación padre YA FUE ENTREGADA, saltamos este paquete.
           const parentStatus = pkg.consolidatedShipment.status;
           if (parentStatus === 'ENTREGADO' || parentStatus === 'DELIVERED' || parentStatus === 'COMPLETADO') {
               continue;
           }
-
-          // Si ya procesamos esta consolidación (para no repetirla por cada paquete hijo), continuamos
-          if (processedShipments.has(pkg.consolidatedShipmentId)) {
-              continue;
-          }
+          if (processedShipments.has(pkg.consolidatedShipmentId)) continue;
           
-          // Marcamos como procesada
           processedShipments.add(pkg.consolidatedShipmentId);
 
-          // Contamos cuántos paquetes reales hay en esta carga y extraemos sus trackings
           const childPackages = rawPackages.filter(p => p.consolidatedShipmentId === pkg.consolidatedShipmentId);
           const count = childPackages.length;
           const childTrackings = childPackages.map(p => p.gmcTrackingNumber).filter(t => t);
 
           processedDeliveries.push({
-              // 🔥 CAMBIO CLAVE AQUÍ: 🔥
-              // Usamos el ID de la CONSOLIDACIÓN, no del primer paquete.
-              // Esto asegura que al entrar a "Finalizar Entrega", se procese el grupo entero.
               id: pkg.consolidatedShipment.id, 
-              
               type: 'CONSOLIDATION',
               tracking: pkg.consolidatedShipment.gmcShipmentNumber || 'Consolidación',
               user: pkg.user,
               count: count,
               childTrackings: childTrackings 
           });
-      } 
-      // Caso 2: Es un paquete individual
-      else {
+      } else {
           processedDeliveries.push({
               id: pkg.id,
               type: 'PACKAGE',
@@ -160,8 +148,14 @@ export default async function DriverDashboardPage({ params }: { params: { locale
                     Zona Operativa: <span className="text-white font-bold">{driverZone}</span>
                 </p>
             </div>
-            <div className="bg-white/10 p-3 rounded-full backdrop-blur-md border border-white/5">
-                <Truck size={28} className="text-gmc-dorado-principal"/>
+            
+            <div className="flex items-center gap-3">
+                <div className="bg-white/10 p-3 rounded-full backdrop-blur-md border border-white/5 hidden sm:block">
+                    <Truck size={28} className="text-gmc-dorado-principal"/>
+                </div>
+
+                {/* 🔥 AQUÍ USAMOS EL NUEVO BOTÓN QUE LIMPIA TODO 🔥 */}
+                <DriverLogoutButton locale={locale} />
             </div>
         </div>
       </div>
@@ -202,7 +196,7 @@ export default async function DriverDashboardPage({ params }: { params: { locale
                                     <div className="flex items-center gap-3 text-xs bg-gray-50 p-2 rounded-lg text-gray-600 border border-gray-100">
                                         <div className="flex items-center gap-1 font-bold text-gray-700">
                                             <Calendar size={12} className="text-gmc-dorado-principal"/>
-                                            {new Date(task.pickupDate).toLocaleDateString()}
+                                            {task.pickupDate ? new Date(task.pickupDate).toISOString().split('T')[0] : 'Fecha Pendiente'}
                                         </div>
                                         <div className="w-px h-3 bg-gray-300"></div>
                                         <div className="flex items-center gap-1">
@@ -242,12 +236,11 @@ export default async function DriverDashboardPage({ params }: { params: { locale
                     </div>
                 ) : (
                     <>
-                        {/* A. SOLICITUDES LOCALES (Pickups) */}
                         {myPickupTasks.map((task) => (
                             <Link 
                                 key={task.id}
-                                href={`/${params.locale}/dashboard-driver/tareas/${task.id}`}
-                                className="block bg-white p-4 rounded-xl shadow-sm border border-gray-100 active:scale-[0.98] transition-all hover:shadow-md relative overflow-hidden group"
+                                href={`/${locale}/dashboard-driver/tareas/${task.id}`}
+                                className="block bg-white p-4 rounded-xl shadow-sm border border-gray-100 active:scale-[0.98] transition-all hover:shadow-md relative overflow-hidden group z-0"
                             >
                                 <div className="absolute top-0 bottom-0 left-0 w-1 bg-gmc-dorado-principal group-hover:w-2 transition-all"></div>
                                 
@@ -261,7 +254,7 @@ export default async function DriverDashboardPage({ params }: { params: { locale
                                 <div className="pl-3 mb-2">
                                      <div className="flex items-center gap-2 text-xs font-medium text-gray-600 mb-2">
                                         <Calendar size={12} className="text-gmc-dorado-principal"/>
-                                        {new Date(task.pickupDate).toLocaleDateString()}
+                                        {task.pickupDate ? new Date(task.pickupDate).toISOString().split('T')[0] : ''}
                                     </div>
                                     <p className="font-bold text-gray-800 text-sm truncate">{task.originAddress}</p>
                                     <p className="text-xs text-gray-500 truncate">Destino: {task.dropOffAddress || 'Almacén'}</p>
@@ -273,26 +266,21 @@ export default async function DriverDashboardPage({ params }: { params: { locale
                             </Link>
                         ))}
 
-                        {/* B. PAQUETES (Delivery) - AHORA CON ID DE CONSOLIDACIÓN */}
                         {processedDeliveries.map((item) => (
                             <Link 
                                 key={item.id} 
-                                // 🔥 AHORA EL ENLACE ES: /entregas/[CONSOLIDATION_ID]
-                                href={`/${params.locale}/dashboard-driver/entregas/${item.id}`}
-                                className="block bg-white p-4 rounded-xl shadow-sm border border-gray-100 active:scale-[0.98] transition-all hover:shadow-md relative overflow-hidden group"
+                                href={`/${locale}/dashboard-driver/entregas/${item.id}`}
+                                className="block bg-white p-4 rounded-xl shadow-sm border border-gray-100 active:scale-[0.98] transition-all hover:shadow-md relative overflow-hidden group z-0"
                             >
-                                {/* Barra lateral: Morado para Consolidación, Azul para Individual */}
                                 <div className={`absolute top-0 bottom-0 left-0 w-1 ${item.type === 'CONSOLIDATION' ? 'bg-purple-600' : 'bg-blue-500'} group-hover:w-2 transition-all`}></div>
                                 
                                 <div className="flex justify-between items-start mb-2 pl-3">
                                     
                                     <div className="flex flex-col min-w-0 pr-2">
-                                        {/* Tracking Principal */}
                                         <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider truncate">
                                             {item.tracking}
                                         </span>
                                         
-                                        {/* Lista de hijos en consolidaciones */}
                                         {item.type === 'CONSOLIDATION' && item.childTrackings?.length > 0 && (
                                             <div className="flex flex-col mt-1 space-y-0.5">
                                                 {item.childTrackings.map((t: string) => (
@@ -304,7 +292,6 @@ export default async function DriverDashboardPage({ params }: { params: { locale
                                         )}
                                     </div>
                                     
-                                    {/* Badge con contador */}
                                     <div className="shrink-0">
                                          {item.type === 'CONSOLIDATION' ? (
                                             <span className="bg-purple-100 text-purple-800 px-2 py-0.5 rounded text-[10px] font-bold flex items-center gap-1 border border-purple-200">
