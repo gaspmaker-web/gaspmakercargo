@@ -100,8 +100,8 @@ export default auth((req: any) => {
 });
 
 export const config = {
-  // ✅ MATCHER OPTIMIZADO:
+  // ✅ MATCHER OPTIMIZADO: Agregamos '|print' para excluir la ruta de impresión
   matcher: [
-    '/((?!api|_next|_vercel|.*\\..*).*)'
+    '/((?!api|_next|_vercel|.*\\..*|print).*)'
   ]
 };
