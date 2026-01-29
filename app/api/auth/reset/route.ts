@@ -32,12 +32,12 @@ export async function POST(req: Request) {
     // 2. Encriptar nueva contraseña
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // 3. Actualizar AMBOS campos (Hash y Texto Plano) + Limpiar token
+    // 3. Actualizar (CORREGIDO: Guardamos el hash en 'password')
     await prisma.user.update({
       where: { id: user.id },
       data: {
-        password_hash: hashedPassword, // La versión segura
-        password: password,            // La versión texto plano (según tu BD)
+        // password_hash: hashedPassword, <--- ❌ ELIMINADO PORQUE NO EXISTE EN DB
+        password: hashedPassword,         // ✅ GUARDAMOS EL HASH AQUÍ
         resetToken: null,
         resetTokenExpiry: null
       }
