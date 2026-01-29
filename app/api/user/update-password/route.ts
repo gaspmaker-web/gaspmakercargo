@@ -27,12 +27,14 @@ export async function POST(req: Request) {
       where: { id: session.user.id },
     });
 
-    if (!user || !user.password_hash) {
+    // 🔴 CAMBIO: Usamos 'password' en lugar de 'password_hash'
+    if (!user || !user.password) {
       return NextResponse.json({ message: "Usuario no encontrado" }, { status: 404 });
     }
 
     // 2. Verificar que la contraseña actual sea correcta
-    const isValid = await bcrypt.compare(currentPassword, user.password_hash);
+    // 🔴 CAMBIO: Comparamos contra 'user.password'
+    const isValid = await bcrypt.compare(currentPassword, user.password);
     if (!isValid) {
       return NextResponse.json({ message: "La contraseña actual es incorrecta" }, { status: 400 });
     }
@@ -41,9 +43,10 @@ export async function POST(req: Request) {
     const newPasswordHash = await bcrypt.hash(newPassword, 10);
 
     // 4. Actualizar en BD
+    // 🔴 CAMBIO: Guardamos en 'password'
     await prisma.user.update({
       where: { id: session.user.id },
-      data: { password_hash: newPasswordHash },
+      data: { password: newPasswordHash },
     });
 
     return NextResponse.json({ message: "Contraseña actualizada" }, { status: 200 });
