@@ -12,15 +12,19 @@ export async function POST(req: Request) {
     const { sendNotification } = await import("@/lib/notifications");
 
     const session = await auth();
-    
-    // 🛡️ CORRECCIÓN DE SEGURIDAD:
-    // 1. Usamos (session?.user as any) para leer el rol sin que TypeScript se queje.
-    // 2. Usamos .toUpperCase() para que acepte "Driver", "driver" o "DRIVER".
-    const userRole = (session?.user as any)?.role?.toUpperCase();
 
+    // 🛡️ CORRECCIÓN DE SEGURIDAD:
+    // 1. Usamos (session?.user as any) para leer el rol aunque TypeScript se queje.
+    // 2. Convertimos a String para evitar errores si es null.
+    // 3. .toUpperCase() para ignorar mayúsculas/minúsculas.
+    // 4. .trim() para ELIMINAR ESPACIOS INVISIBLES (Esta es la clave).
+    const rawRole = (session?.user as any)?.role;
+    const userRole = String(rawRole || '').toUpperCase().trim();
+    
     // 1. SEGURIDAD: Solo Choferes pueden aceptar tareas
     if (!session || userRole !== 'DRIVER') {
-        console.error("🚫 Bloqueo de Seguridad: Usuario intentó aceptar tarea sin ser DRIVER. Rol detectado:", userRole);
+        // Dejamos un log por si vuelve a fallar, saber exactamente qué llegó
+        console.error(`🚫 ACCESO DENEGADO. Se esperaba 'DRIVER', se recibió: '${userRole}'`);
         return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
