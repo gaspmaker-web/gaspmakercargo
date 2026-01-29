@@ -14,9 +14,17 @@ export const dynamic = 'force-dynamic';
 export default async function DriverDashboardPage({ params }: { params: { locale: string } }) {
   const session = await auth();
 
-  if (!session || session.user.role !== 'DRIVER') {
+  // ===========================================================================
+  // 🔐 CORRECCIÓN DE SEGURIDAD (Trim + UpperCase)
+  // ===========================================================================
+  // Limpiamos el rol antes de comparar para evitar errores por espacios invisibles.
+  // Esto evita que la página expulse al chofer y cause el bucle de redirección.
+  const userRole = session?.user?.role?.trim()?.toUpperCase();
+
+  if (!session || userRole !== 'DRIVER') {
     redirect('/login-cliente');
   }
+  // ===========================================================================
 
   const driverId = session.user.id;
 

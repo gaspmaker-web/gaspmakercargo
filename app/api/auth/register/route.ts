@@ -35,7 +35,8 @@ export async function POST(req: Request) {
       data: {
         email,
         name,
-        password_hash: hashedPassword,
+        // 🔥 CORRECCIÓN CRÍTICA: Ahora guardamos en 'password', no en 'password_hash'
+        password: hashedPassword,
         suiteNo,
         role: "CLIENTE",
         countryCode: country,

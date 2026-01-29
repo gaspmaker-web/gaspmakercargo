@@ -19,13 +19,22 @@ export default async function GestionClientesPage({
     
     const session = await auth();
 
-    // Seguridad (descomenta en producción si es necesario)
+    // 1. 🛡️ SEGURIDAD BÁSICA: Si no hay sesión, fuera.
     if (!session) {
-        // redirect('/login-cliente'); 
+        redirect('/login-cliente'); 
     }
 
-    if (session?.user?.role !== 'ADMIN' && session?.user?.role !== 'WAREHOUSE') {
-        // redirect('/dashboard-cliente'); 
+    // 2. 🛡️ SEGURIDAD ESPECÍFICA (La Regla de Oro)
+    // El personal de Bodega (WAREHOUSE) NO debe ver datos sensibles de clientes.
+    // Si intentan entrar aquí, los devolvemos al dashboard principal.
+    if (session.user.role === 'WAREHOUSE') {
+        redirect(`/${params.locale}/dashboard-admin`);
+    }
+
+    // 3. 🛡️ SEGURIDAD FINAL
+    // Si por alguna razón no es ADMIN (y tampoco era Warehouse que ya filtramos), fuera.
+    if (session.user.role !== 'ADMIN') {
+        redirect(`/${params.locale}/dashboard-cliente`);
     }
 
     // Obtener término de búsqueda

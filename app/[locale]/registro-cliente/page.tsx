@@ -13,11 +13,15 @@ export default async function RegisterPage({ params }: { params: { locale: strin
   // 2. 🛡️ BLOQUEO DE SEGURIDAD:
   // Si el usuario YA está logueado, lo expulsamos al dashboard correspondiente.
   if (session?.user) {
-    // Si es admin o warehouse -> Dashboard Admin
+    // A. Si es admin o warehouse -> Dashboard Admin (Panel unificado)
     if (session.user.role === 'ADMIN' || session.user.role === 'WAREHOUSE') {
         redirect(`/${params.locale}/dashboard-admin`);
     } 
-    // Si es cliente normal -> Dashboard Cliente
+    // B. 🔥 AGREGADO: Si es Chofer -> Dashboard Driver (Su panel exclusivo)
+    else if (session.user.role === 'DRIVER') {
+        redirect(`/${params.locale}/dashboard-driver`);
+    }
+    // C. Si es cliente normal -> Dashboard Cliente
     else {
         redirect(`/${params.locale}/dashboard-cliente`);
     }

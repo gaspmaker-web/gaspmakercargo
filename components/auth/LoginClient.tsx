@@ -2,13 +2,12 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { signIn, getSession } from "next-auth/react"; 
 import { useLocale, useTranslations } from "next-intl";
 
-// --- LÓGICA MAESTRA DE IDIOMAS ---
+// 1. ✅ HE RESTAURADO TU LÓGICA DE PAÍSES (INTACTA)
 const getLocaleFromCountry = (countryCode: string) => {
-    const code = countryCode.toLowerCase();
+    const code = countryCode?.toLowerCase() || 'us'; 
     const esCountries = ['es', 'mx', 'co', 'ar', 'pe', 've', 'cl', 'ec', 'gt', 'cu', 'bo', 'do', 'hn', 'py', 'sv', 'ni', 'cr', 'pa', 'uy', 'gq'];
     const ptCountries = ['pt', 'br', 'ao', 'mz', 'gw', 'cv', 'st', 'tl'];
     const frCountries = ['fr', 'ht', 'sn', 'ml', 'cd', 'be', 'ch', 'mc'];
@@ -16,12 +15,10 @@ const getLocaleFromCountry = (countryCode: string) => {
     if (esCountries.includes(code)) return 'es';
     if (ptCountries.includes(code)) return 'pt';
     if (frCountries.includes(code)) return 'fr';
-
     return 'en'; 
 };
 
 export default function LoginClient() {
-  const router = useRouter();
   const locale = useLocale(); 
   const t = useTranslations("LoginPage"); 
 
@@ -35,7 +32,10 @@ export default function LoginClient() {
     setIsLoading(true);
     setError(null);
 
+    console.log("🚀 [LOGIN] Iniciando autenticación...");
+
     try {
+      // Intento de Login
       const result = await signIn("credentials", {
         email,
         password,
@@ -43,30 +43,57 @@ export default function LoginClient() {
       });
 
       if (result?.ok) {
-        const session = await getSession();
+        console.log("✅ [LOGIN] Credenciales válidas. Analizando sesión...");
         
-        let targetLocale = locale; 
+        // 2. ✅ ESTRATEGIA MIXTA: INTENTAR LEER ROL, SINO RECARGAR
+        // Intentamos obtener la sesión actualizada
+        let session = await getSession();
         
-        if ((session?.user as any)?.countryCode) {
-            targetLocale = getLocaleFromCountry((session!.user as any).countryCode);
+        // Pequeño retardo táctico para dar tiempo a la cookie (500ms)
+        if (!session?.user) {
+             await new Promise(r => setTimeout(r, 500));
+             session = await getSession();
         }
-        
-        const userRole = (session?.user as any)?.role;
 
-        if (userRole === "ADMIN" || userRole === "WAREHOUSE") {
-            router.push(`/${targetLocale}/dashboard-admin`);
+        const user = session?.user as any;
+        const userRole = user?.role?.toUpperCase(); 
+        const countryCode = user?.countryCode;
+
+        // Si logramos leer el usuario, aplicamos TU lógica de idiomas
+        if (userRole) {
+            let targetLocale = locale; 
+            // 3. ✅ APLICAMOS TU LÓGICA DE IDIOMA POR PAÍS
+            if (countryCode) {
+                targetLocale = getLocaleFromCountry(countryCode);
+            }
+
+            console.log(`👤 [LOGIN] Rol: ${userRole} | País: ${countryCode} -> Idioma: ${targetLocale}`);
+
+            if (userRole === "ADMIN" || userRole === "WAREHOUSE") {
+                window.location.href = `/${targetLocale}/dashboard-admin`;
+            } 
+            else if (userRole === "DRIVER") { 
+                window.location.href = `/${targetLocale}/dashboard-driver`;
+            } 
+            else {
+                // Cliente por defecto
+                window.location.href = `/${targetLocale}/dashboard-cliente`;
+            }
         } else {
-            router.push(`/${targetLocale}/dashboard-cliente`);
+            // 4. 🛡️ FALLBACK (PLAN B): 
+            // Si next-auth tarda en darnos la sesión, hacemos reload.
+            // El Middleware (auth.config.ts) se encargará de redirigir (aunque quizás sin el cambio de idioma).
+            console.warn("⚠️ [LOGIN] Sesión lenta. Forzando recarga segura.");
+            window.location.reload();
         }
         
-        router.refresh();
       } else {
-        setError(t("errors.invalidCredentials") || "Correo o contraseña incorrectos.");
+        setError(t("errors.invalidCredentials") || "Credenciales inválidas.");
         setIsLoading(false);
       }
     } catch (err) {
-      console.error("SignIn error:", err);
-      setError(t("errors.unexpected") || "Error al iniciar sesión.");
+      console.error(err);
+      setError(t("errors.unexpected") || "Error inesperado.");
       setIsLoading(false);
     }
   };
@@ -74,56 +101,47 @@ export default function LoginClient() {
   return (
     <main className="min-h-screen py-12 px-4 flex items-start justify-center">
       <div className="container max-w-md mx-auto bg-white p-6 md:p-8 rounded-xl shadow-2xl text-gasp-maker-dark-gray">
-        <h1 className="text-center font-garamond text-4xl mb-2">{t("title") ?? "Acceso de Cliente"}</h1>
-        <p className="text-center text-gray-600 mb-8">{t("subtitle") ?? "Por favor, ingresa tus credenciales."}</p>
-
-        {error && <p role="alert" className="text-red-500 text-center mb-4">{error}</p>}
+        <h1 className="text-center font-garamond text-4xl mb-2">{t("title") ?? "Acceso"}</h1>
+        
+        {error && (
+            <div className="bg-red-50 text-red-600 p-3 rounded mb-4 text-sm font-bold text-center">
+                {error}
+            </div>
+        )}
 
         <form onSubmit={handleFormSubmit}>
-          <label className="sr-only" htmlFor="email">{t("emailLabel") ?? "Correo Electrónico"}</label>
           <input
-            id="email"
-            type="email"
-            placeholder={t("emailPlaceholder") ?? "Correo Electrónico"}
+            type="email" 
+            placeholder={t("emailPlaceholder") ?? "Email"} 
             required
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg mb-4"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            aria-invalid={!!error}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg mb-4 focus:ring-2 focus:ring-gmc-dorado-principal outline-none"
+            value={email} onChange={(e) => setEmail(e.target.value)} disabled={isLoading}
           />
-
-          <label className="sr-only" htmlFor="password">{t("passwordLabel") ?? "Contraseña"}</label>
           <input
-            id="password"
-            type="password"
-            placeholder={t("passwordPlaceholder") ?? "Contraseña"}
+            type="password" 
+            placeholder={t("passwordPlaceholder") ?? "Password"} 
             required
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg mb-4"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            aria-invalid={!!error}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg mb-4 focus:ring-2 focus:ring-gmc-dorado-principal outline-none"
+            value={password} onChange={(e) => setPassword(e.target.value)} disabled={isLoading}
           />
-
-          <p className="text-right -mt-2 mb-4">
-            <Link href={`/${locale}/recuperar-contrasena`} className="text-gmc-dorado-principal hover:underline text-sm">
-              {t("forgotPassword") ?? "¿Olvidaste tu contraseña?"}
-            </Link>
-          </p>
 
           <button
             type="submit"
             disabled={isLoading}
-            aria-busy={isLoading}
-            className="w-full py-3 bg-gmc-dorado-principal text-white font-bold rounded-lg disabled:opacity-60"
+            className="w-full py-3 bg-gmc-dorado-principal text-white font-bold rounded-lg disabled:opacity-50 hover:bg-opacity-90 transition-all flex justify-center items-center gap-2"
           >
-            {isLoading ? (t("loading") ?? "Cargando...") : (t("submit") ?? "Iniciar Sesión")}
+            {isLoading ? (
+                <>
+                 <span className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></span>
+                 <span>Procesando...</span>
+                </>
+            ) : (t("submit") ?? "Ingresar")}
           </button>
         </form>
-
+        
         <p className="text-center text-sm mt-6">
-          {t("noAccount") ?? "¿No tienes cuenta?"}{" "}
-          <Link href={`/${locale}/registro-cliente`} className="text-gmc-dorado-principal hover:underline">
-            {t("registerHere") ?? "Regístrate aquí."}
+           <Link href={`/${locale}/registro-cliente`} className="text-gmc-dorado-principal hover:underline font-bold">
+            {t("registerHere") ?? "Crear Cuenta"}
           </Link>
         </p>
       </div>

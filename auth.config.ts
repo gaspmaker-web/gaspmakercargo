@@ -11,9 +11,77 @@ export const authConfig = {
   },
   providers: [], // Se deja vacío aquí intencionalmente
   callbacks: {
+    // 🔥 NUEVO: El "Portero" que permite entrar a Choferes y Bodega
+    authorized({ auth, request: { nextUrl } }: any) {
+      const isLoggedIn = !!auth?.user;
+      
+      // 🧹 CORRECCIÓN CRÍTICA: (Trim + UpperCase)
+      // Limpiamos el rol igual que en el middleware. Esto evita el "Too many redirects".
+      // Ahora 'DRIVER ' (con espacio) se convierte en 'DRIVER' y el sistema lo deja pasar.
+      const role = auth?.user?.role?.trim()?.toUpperCase();
+      
+      // Definimos las rutas protegidas (usamos includes para ignorar el idioma /es/ o /en/)
+      const isOnDashboardAdmin = nextUrl.pathname.includes('/dashboard-admin');
+      const isOnDashboardDriver = nextUrl.pathname.includes('/dashboard-driver');
+      const isOnDashboardClient = nextUrl.pathname.includes('/dashboard-cliente');
+      const isOnLoginPage = nextUrl.pathname.includes('/login-cliente');
+
+      // 🚀 NUEVO: REDIRECCIÓN AUTOMÁTICA AL LOGUEARSE
+      // Si el usuario YA está logueado y trata de entrar al Login, lo mandamos a su sitio.
+      if (isLoggedIn && isOnLoginPage) {
+        if (role === 'DRIVER') {
+          return Response.redirect(new URL('/dashboard-driver', nextUrl));
+        }
+        if (role === 'ADMIN' || role === 'WAREHOUSE') {
+          return Response.redirect(new URL('/dashboard-admin', nextUrl));
+        }
+        return Response.redirect(new URL('/dashboard-cliente', nextUrl));
+      }
+
+      // A. LÓGICA PARA ADMIN Y BODEGA (Comparten dashboard-admin)
+      if (isOnDashboardAdmin) {
+        if (isLoggedIn) {
+            // ✅ Permitimos entrar a ADMIN y a WAREHOUSE
+            return role === 'ADMIN' || role === 'WAREHOUSE';
+        }
+        return false; // Redirigir al login
+      }
+
+      // B. LÓGICA PARA CHOFERES (Ruta exclusiva)
+      if (isOnDashboardDriver) {
+        if (isLoggedIn) {
+            // ✅ Solo dejamos pasar si es DRIVER
+            return role === 'DRIVER';
+        }
+        return false; // Redirigir al login
+      }
+
+      // C. LÓGICA PARA CLIENTES
+      if (isOnDashboardClient) {
+        if (isLoggedIn) {
+            // 🛡️ PROTECCIÓN EXTRA: Si un Chofer intenta ir al dashboard de cliente, lo devolvemos al suyo
+            if (role === 'DRIVER') {
+                return Response.redirect(new URL('/dashboard-driver', nextUrl));
+            }
+            // Si un Admin intenta ir al dashboard de cliente, lo devolvemos al suyo (Opcional)
+            if (role === 'ADMIN' || role === 'WAREHOUSE') {
+                return Response.redirect(new URL('/dashboard-admin', nextUrl));
+            }
+            return true;
+        } 
+        return false; // Redirigir al login
+      }
+
+      return true;
+    },
+
+    // 👇 TUS CALLBACKS ORIGINALES (INTACTOS)
     async jwt({ token, user, trigger, session }: any) { // Agregamos :any para evitar quejas
       // 1. Al iniciar sesión (primer carga)
       if (user) {
+        // 🕵️ DEBUG: Verificamos en la terminal que el rol llegue desde auth.ts
+        console.log("✅ AUTH CONFIG: Recibiendo usuario:", user.email, "| Rol:", (user as any).role);
+
         token.id = user.id;
         token.role = (user as any).role;
         // 🔥 Guardamos la imagen en el token

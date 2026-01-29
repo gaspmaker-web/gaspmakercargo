@@ -1,18 +1,21 @@
-import NextAuth, { DefaultSession, User } from "next-auth";
+import NextAuth, { DefaultSession } from "next-auth";
+import { JWT } from "next-auth/jwt";
 
-// Extiende el tipo 'User' de NextAuth para que coincida con tu BD
-interface IUser extends DefaultSession {
-  id: string;
-  suiteNo: string;
-  role: string;
-}
-
-// Extiende el tipo 'Session'
 declare module "next-auth" {
+  /**
+   * Retorna por useSession, getSession y recibida como prop en el Provider de Session
+   */
   interface Session {
-    user: IUser;
+    user: {
+      id: string;
+      suiteNo: string;
+      role: string;
+    } & DefaultSession["user"]; // Mantiene propiedades por defecto (name, email, image)
   }
-  // Extiende el tipo 'User' que se pasa a los callbacks
+
+  /**
+   * La forma del usuario en la base de datos y lo que retorna el adaptador.
+   */
   interface User {
     id: string;
     suiteNo: string;
@@ -20,12 +23,13 @@ declare module "next-auth" {
   }
 }
 
-// Extiende el tipo 'JWT'
 declare module "next-auth/jwt" {
+  /**
+   * Retornado por el callback `jwt` y `getToken`, cuando se usan sesiones JWT
+   */
   interface JWT {
     id: string;
     suiteNo: string;
     role: string;
   }
 }
-

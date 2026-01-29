@@ -9,6 +9,11 @@ import { authConfig } from "./auth.config"; // 👈 Importamos la config del pas
 export const { handlers, signIn, signOut, auth } = (NextAuth as any)({
   ...authConfig, // Heredamos tus callbacks y session
   adapter: PrismaAdapter(prisma),
+  
+  // 🔥 AGREGADO CRÍTICO: Forzamos la estrategia JWT.
+  // Sin esto, Prisma intenta usar sesiones de base de datos y se salta tu lógica de roles.
+  session: { strategy: "jwt" },
+
   providers: [
     Credentials({
       name: "Credentials",
@@ -21,31 +26,34 @@ export const { handlers, signIn, signOut, auth } = (NextAuth as any)({
           return null;
         }
 
+        // 🔥 MEJORA: Convertimos el email a minúsculas para evitar errores de "Usuario no encontrado"
+        const email = (credentials.email as string).toLowerCase();
+
         const user = await prisma.user.findUnique({
-          where: { email: credentials.email as string },
+          where: { email },
         });
 
-        // ✅ CORRECCIÓN: Buscamos la contraseña en CUALQUIERA de las dos columnas
-        const passwordInDb = user?.password || user?.password_hash;
-
-        // Si no existe el usuario o no tiene ninguna contraseña, rechazamos
-        if (!user || !passwordInDb) {
+        // ✅ CORRECCIÓN FINAL: Ya no existe 'password_hash'.
+        // Ahora validamos directamente contra 'user.password' que contiene el hash.
+        if (!user || !user.password) {
           return null;
         }
 
         const isPasswordValid = await bcrypt.compare(
           credentials.password as string,
-          passwordInDb // Usamos la contraseña encontrada (sea vieja o nueva)
+          user.password // Usamos la única columna de contraseña válida
         );
 
         if (isPasswordValid) {
+          // 🚀 RETORNO EXPLÍCITO:
+          // Al devolver este objeto, le pasamos los datos a auth.config.ts
           return {
             id: user.id,
             name: user.name,
             email: user.email,
             // 🔥 AGREGADO: Pasamos la imagen de la DB al objeto usuario inicial
             image: user.image, 
-            role: user.role,
+            role: user.role, // 👈 ¡Esto es lo que busca auth.config.ts!
             suiteNo: user.suiteNo,
             phone: user.phone,
             countryCode: user.countryCode,

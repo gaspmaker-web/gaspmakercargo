@@ -15,7 +15,8 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 // Usamos la instancia existente o creamos una nueva si no existe
-const prisma = globalForPrisma.prisma ?? prismaClientSingleton();
+// 🟢 CAMBIO: Agregamos "export" aquí. Esto soluciona el error "prisma is not exported"
+export const prisma = globalForPrisma.prisma ?? prismaClientSingleton();
 
 export default prisma;
 

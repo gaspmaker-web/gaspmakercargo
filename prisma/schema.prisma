@@ -22,9 +22,10 @@ model User {
   // ✅ EMAIL (Único)
   email                 String                @unique
   
-  // 🔐 AUTENTICACIÓN
+  // 🔐 AUTENTICACIÓN (CORREGIDO)
+  // Aquí guardaremos el hash encriptado ($2b$10$...). 
+  // Eliminamos 'password_hash' para evitar conflictos.
   password              String?
-  password_hash         String?
 
   // 🔄 RECUPERACIÓN
   resetToken            String?               @unique 

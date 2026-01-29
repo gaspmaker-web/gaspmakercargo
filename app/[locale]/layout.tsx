@@ -4,6 +4,7 @@ import { Inter, Montserrat, Cormorant_Garamond } from 'next/font/google';
 import '../globals.css';
 import Header from '@/components/Header';
 import Providers from '@/components/Providers';
+import HeaderWrapper from '@/components/HeaderWrapper'; // 👈 NUEVO IMPORT
 
 // Configuración de fuentes
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
@@ -40,7 +41,10 @@ export default async function RootLayout({
         <NextIntlClientProvider locale={locale} messages={messages}>
           <Providers>
             
-            <Header /> 
+            {/* 🔴 CAMBIO: Envolvemos el Header con la lógica condicional */}
+            <HeaderWrapper>
+              <Header /> 
+            </HeaderWrapper>
             
             {/* 🔴 CORRECCIÓN: Quitamos pt-[72px] para eliminar el espacio blanco */}
             <main className="min-h-screen"> 
