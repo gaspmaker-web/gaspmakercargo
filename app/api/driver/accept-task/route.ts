@@ -13,8 +13,14 @@ export async function POST(req: Request) {
 
     const session = await auth();
     
+    // 🛡️ CORRECCIÓN DE SEGURIDAD:
+    // 1. Usamos (session?.user as any) para leer el rol sin que TypeScript se queje.
+    // 2. Usamos .toUpperCase() para que acepte "Driver", "driver" o "DRIVER".
+    const userRole = (session?.user as any)?.role?.toUpperCase();
+
     // 1. SEGURIDAD: Solo Choferes pueden aceptar tareas
-    if (!session || session.user.role !== 'DRIVER') {
+    if (!session || userRole !== 'DRIVER') {
+        console.error("🚫 Bloqueo de Seguridad: Usuario intentó aceptar tarea sin ser DRIVER. Rol detectado:", userRole);
         return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
