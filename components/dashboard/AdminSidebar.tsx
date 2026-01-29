@@ -21,7 +21,8 @@ export default function AdminSidebar() {
   const { data: session } = useSession();
   
   // 1. Obtenemos el rol (Si no ha cargado, ponemos string vacío)
-  const userRole = session?.user?.role || '';
+  // 🟢 CORRECCIÓN: Usamos 'as any' para evitar el error de TypeScript en Vercel
+  const userRole = (session?.user as any)?.role || '';
 
   // 2. Definimos el Menú Maestro
   const menuItems = [
@@ -51,8 +52,8 @@ export default function AdminSidebar() {
     },
     // 🔒 ZONA EXCLUSIVA ADMIN
     {
-      name: "Clientes", // 👈 CAMBIO: Renombrado de "Usuarios" a "Clientes"
-      href: "/dashboard-admin/clientes", // 👈 CAMBIO: Apunta a la carpeta existente
+      name: "Clientes", 
+      href: "/dashboard-admin/clientes", 
       icon: Users,
       roles: ["ADMIN"] 
     },
