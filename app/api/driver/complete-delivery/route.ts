@@ -11,9 +11,16 @@ export async function POST(req: Request) {
     // Importamos sendNotification aquí, pero también lo usaremos en la función auxiliar
     
     const session = await auth();
+
+    // 🛡️ CORRECCIÓN DE SEGURIDAD:
+    // 1. Usamos (session?.user as any) para leer el rol sin errores de TypeScript.
+    // 2. Convertimos a String, Mayúsculas y Trim (Eliminar espacios invisibles).
+    const rawRole = (session?.user as any)?.role;
+    const userRole = String(rawRole || '').toUpperCase().trim();
     
-    // 1. Seguridad
-    if (!session || (session.user.role !== 'DRIVER' && session.user.role !== 'ADMIN')) {
+    // 1. Seguridad (Validamos contra el rol limpio 'userRole')
+    if (!session || (userRole !== 'DRIVER' && userRole !== 'ADMIN')) {
+        console.error(`🚫 Complete-Delivery: Acceso denegado. Rol detectado: '${userRole}'`);
         return NextResponse.json({ message: "No autorizado" }, { status: 403 });
     }
 

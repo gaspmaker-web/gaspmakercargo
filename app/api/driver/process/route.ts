@@ -10,7 +10,18 @@ export async function POST(req: Request) {
     const { auth } = await import("@/auth");
 
     const session = await auth();
-    if (!session?.user?.id) return NextResponse.json({ message: "No autorizado" }, { status: 401 });
+
+    // 🛡️ CORRECCIÓN DE SEGURIDAD (Igual que en accept-task):
+    // 1. Usamos (session?.user as any) para leer el rol sin errores de TypeScript.
+    // 2. Convertimos a String, Mayúsculas y Trim (Eliminar espacios invisibles).
+    const rawRole = (session?.user as any)?.role;
+    const userRole = String(rawRole || '').toUpperCase().trim();
+
+    // Validamos que tenga sesión y que sea DRIVER (robusto)
+    if (!session?.user?.id || userRole !== 'DRIVER') {
+        console.error(`🚫 Process Error: Acceso denegado. Rol detectado: '${userRole}'`);
+        return NextResponse.json({ message: "No autorizado" }, { status: 401 });
+    }
 
     const { requestId, action, photoUrl } = await req.json();
 
