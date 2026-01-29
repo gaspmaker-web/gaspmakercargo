@@ -8,15 +8,11 @@ function PrintLabelContent() {
   const searchParams = useSearchParams();
   const [isReady, setIsReady] = useState(false);
 
-  // 1. Detectar Formato
+  // Leemos el formato (4x6 o 30334)
   const formatParam = searchParams.get('format');
-  const isMini = formatParam === '30334' || formatParam === 'mini';
-  const format: '4x6' | '30334' = isMini ? '30334' : '4x6';
+  const format: '4x6' | '30334' = (formatParam === '30334') ? '30334' : '4x6';
 
-  // 2. Medidas Exactas
-  const widthCss = isMini ? '2.25in' : '4in';
-  const heightCss = isMini ? '1.25in' : '6in';
-
+  // Reconstruimos los datos del paquete desde la URL
   const data: LabelData = {
     tracking: searchParams.get('tracking') || '',
     clientName: searchParams.get('clientName') || '',
@@ -28,86 +24,43 @@ function PrintLabelContent() {
     format: format,
   };
 
+  // Definimos el tamaño de la hoja CSS para que la impresora lo detecte
+  const pageSizeCss = format === '30334' ? '2.25in 1.25in' : '4in 6in';
+
   useEffect(() => {
     setIsReady(true);
+    // Esperamos un momento breve para asegurar que el código de barras se renderizó
     const timer = setTimeout(() => {
       window.print();
-    }, 800);
+      // Opcional: window.close(); // Si quieres que se cierre sola después de imprimir
+    }, 500);
     return () => clearTimeout(timer);
   }, []);
 
-  if (!isReady) return <div className="p-4">Cargando...</div>;
+  if (!isReady) return <div style={{ padding: 20, fontFamily: 'sans-serif' }}>Generando etiqueta...</div>;
 
   return (
-    <>
-      <div id="print-root" className="screen-layout">
-        <ShippingLabel data={data} />
-      </div>
+    <div style={{ 
+      display: 'flex', 
+      justifyContent: 'center', 
+      alignItems: 'flex-start', 
+      minHeight: '100vh',
+      margin: 0,
+      padding: 0
+    }}>
+      <ShippingLabel data={data} />
       
       <style jsx global>{`
-        /* --- REGLAS BASE --- */
         @page {
-          size: ${widthCss} ${heightCss};
-          margin: 0; /* IMPRESCINDIBLE: Elimina márgenes de impresora */
+          size: ${pageSizeCss};
+          margin: 0;
         }
-
-        /* --- VISTA EN PANTALLA --- */
-        @media screen {
-          html, body {
-            background-color: #f0f0f0;
-            min-height: 100vh;
-          }
-          .screen-layout {
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            padding-top: 40px;
-          }
-        }
-
-        /* --- VISTA DE IMPRESIÓN (LA SOLUCIÓN NUCLEAR) --- */
-        @media print {
-          /* 1. Resetear HTML y BODY para que no tengan altura fantasma */
-          html, body {
-            width: ${widthCss} !important;
-            height: ${heightCss} !important;
-            overflow: hidden !important; /* Corta cualquier exceso */
-            margin: 0 !important;
-            padding: 0 !important;
-            background: white !important;
-          }
-
-          /* 2. Ocultar todo lo demás de forma agresiva */
-          body * {
-            visibility: hidden;
-          }
-
-          /* 3. Sacar la etiqueta del flujo normal usando FIXED */
-          #print-root {
-            visibility: visible !important;
-            position: fixed !important; /* <--- ESTO ES LA CLAVE */
-            top: 0 !important;
-            left: 0 !important;
-            z-index: 9999 !important;
-            
-            /* Forzar medidas exactas */
-            width: ${widthCss} !important;
-            height: ${heightCss} !important;
-            
-            margin: 0 !important;
-            padding: 0 !important;
-            
-            /* Asegurar que el contenido interno también se vea */
-            display: block !important;
-          }
-          
-          /* Asegurar que los hijos del root también se vean */
-          #print-root * {
-            visibility: visible !important;
-          }
+        body {
+          margin: 0;
+          padding: 0;
         }
       `}</style>
-    </>
+    </div>
   );
 }
 
