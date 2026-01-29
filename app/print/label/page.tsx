@@ -13,11 +13,10 @@ function PrintLabelContent() {
   const isMini = formatParam === '30334' || formatParam === 'mini';
   const format: '4x6' | '30334' = isMini ? '30334' : '4x6';
 
-  // 2. Medidas
+  // 2. Medidas Exactas
   const widthCss = isMini ? '2.25in' : '4in';
   const heightCss = isMini ? '1.25in' : '6in';
 
-  // 3. Datos
   const data: LabelData = {
     tracking: searchParams.get('tracking') || '',
     clientName: searchParams.get('clientName') || '',
@@ -41,7 +40,6 @@ function PrintLabelContent() {
 
   return (
     <>
-      {/* Usamos una CLASE en lugar de estilos en línea para poder anularla al imprimir */}
       <div id="print-root" className="screen-layout">
         <ShippingLabel data={data} />
       </div>
@@ -50,56 +48,62 @@ function PrintLabelContent() {
         /* --- REGLAS BASE --- */
         @page {
           size: ${widthCss} ${heightCss};
-          margin: 0;
+          margin: 0; /* IMPRESCINDIBLE: Elimina márgenes de impresora */
         }
 
-        html, body {
-          margin: 0;
-          padding: 0;
-          background-color: white;
-        }
-
-        /* --- VISTA EN PANTALLA (Tu monitor) --- */
+        /* --- VISTA EN PANTALLA --- */
         @media screen {
-          /* Solo en pantalla usamos flex y altura completa para centrarlo */
+          html, body {
+            background-color: #f0f0f0;
+            min-height: 100vh;
+          }
           .screen-layout {
             display: flex;
             justify-content: center;
-            align-items: flex-start; /* Alineado arriba para evitar problemas */
-            padding-top: 20px;
-            min-height: 100vh; /* Esto es lo que causaba las 5 páginas, aquí solo afecta a pantalla */
-            background-color: #f0f0f0;
+            align-items: flex-start;
+            padding-top: 40px;
           }
         }
 
-        /* --- VISTA DE IMPRESIÓN (La impresora) --- */
+        /* --- VISTA DE IMPRESIÓN (LA SOLUCIÓN NUCLEAR) --- */
         @media print {
-          /* 1. Ocultamos todo */
+          /* 1. Resetear HTML y BODY para que no tengan altura fantasma */
+          html, body {
+            width: ${widthCss} !important;
+            height: ${heightCss} !important;
+            overflow: hidden !important; /* Corta cualquier exceso */
+            margin: 0 !important;
+            padding: 0 !important;
+            background: white !important;
+          }
+
+          /* 2. Ocultar todo lo demás de forma agresiva */
           body * {
             visibility: hidden;
-            height: 0; /* Colapsamos alturas */
           }
 
-          /* 2. Mostramos solo la etiqueta */
-          #print-root, #print-root * {
-            visibility: visible;
-            height: auto; /* Restauramos altura natural */
-          }
-
-          /* 3. Posicionamiento ABSOLUTO y ESTRICTO */
+          /* 3. Sacar la etiqueta del flujo normal usando FIXED */
           #print-root {
-            position: absolute;
-            top: 0;
-            left: 0;
+            visibility: visible !important;
+            position: fixed !important; /* <--- ESTO ES LA CLAVE */
+            top: 0 !important;
+            left: 0 !important;
+            z-index: 9999 !important;
+            
+            /* Forzar medidas exactas */
             width: ${widthCss} !important;
             height: ${heightCss} !important;
             
-            /* 🔥 ESTAS 3 LINEAS SON LA CLAVE PARA 1 SOLA PÁGINA: */
             margin: 0 !important;
             padding: 0 !important;
-            overflow: hidden !important; /* Corta cualquier cosa que sobre */
             
-            display: block !important; /* Quitamos el flex que centra */
+            /* Asegurar que el contenido interno también se vea */
+            display: block !important;
+          }
+          
+          /* Asegurar que los hijos del root también se vean */
+          #print-root * {
+            visibility: visible !important;
           }
         }
       `}</style>
