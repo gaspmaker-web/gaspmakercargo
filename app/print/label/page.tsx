@@ -8,20 +8,16 @@ function PrintLabelContent() {
   const searchParams = useSearchParams();
   const [isReady, setIsReady] = useState(false);
 
-  // 1. LÓGICA DE MEDIDAS EXACTAS
+  // 1. Detectar Formato
   const formatParam = searchParams.get('format');
-  
-  // Si la URL dice format=30334 (o mini), usamos las medidas pequeñas.
-  // Si no dice nada, usamos 4x6.
   const isMini = formatParam === '30334' || formatParam === 'mini';
-  
   const format: '4x6' | '30334' = isMini ? '30334' : '4x6';
 
-  // 🔥 AQUÍ ESTÁN LAS MEDIDAS QUE ME PEDISTE:
+  // 2. Medidas
   const widthCss = isMini ? '2.25in' : '4in';
   const heightCss = isMini ? '1.25in' : '6in';
 
-  // 2. Reconstrucción de datos
+  // 3. Datos
   const data: LabelData = {
     tracking: searchParams.get('tracking') || '',
     clientName: searchParams.get('clientName') || '',
@@ -41,62 +37,73 @@ function PrintLabelContent() {
     return () => clearTimeout(timer);
   }, []);
 
-  if (!isReady) return <div style={{ padding: 20 }}>Cargando etiqueta...</div>;
+  if (!isReady) return <div className="p-4">Cargando...</div>;
 
   return (
-    // 3. Contenedor Principal (ID print-root para aislarlo)
-    <div id="print-root" style={{ 
-      display: 'flex', 
-      justifyContent: 'center', 
-      alignItems: 'flex-start', 
-      minHeight: '100vh',
-      margin: 0,
-      padding: 0,
-      backgroundColor: 'white'
-    }}>
-      <ShippingLabel data={data} />
+    <>
+      {/* Usamos una CLASE en lugar de estilos en línea para poder anularla al imprimir */}
+      <div id="print-root" className="screen-layout">
+        <ShippingLabel data={data} />
+      </div>
       
-      {/* 4. ESTILOS GLOBALES DINÁMICOS */}
       <style jsx global>{`
-        /* Configuración para la Impresora */
+        /* --- REGLAS BASE --- */
         @page {
-          /* Aquí se inyectan tus variables: 4in 6in O 2.25in 1.25in */
-          size: ${widthCss} ${heightCss}; 
-          margin: 0; 
+          size: ${widthCss} ${heightCss};
+          margin: 0;
         }
 
         html, body {
-          margin: 0 !important;
-          padding: 0 !important;
-          width: 100%;
-          height: 100%;
-          background-color: white !important;
+          margin: 0;
+          padding: 0;
+          background-color: white;
         }
 
-        /* Bloqueo para IMPRESIÓN */
-        @media print {
-            body * {
-                visibility: hidden; /* Oculta todo lo demás */
-            }
-            
-            #print-root, #print-root * {
-                visibility: visible; /* Muestra solo la etiqueta */
-            }
+        /* --- VISTA EN PANTALLA (Tu monitor) --- */
+        @media screen {
+          /* Solo en pantalla usamos flex y altura completa para centrarlo */
+          .screen-layout {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Alineado arriba para evitar problemas */
+            padding-top: 20px;
+            min-height: 100vh; /* Esto es lo que causaba las 5 páginas, aquí solo afecta a pantalla */
+            background-color: #f0f0f0;
+          }
+        }
 
-            #print-root {
-                position: absolute;
-                left: 0;
-                top: 0;
-                /* Fuerza las medidas exactas al imprimir */
-                width: ${widthCss} !important;
-                height: ${heightCss} !important;
-                margin: 0 !important;
-                padding: 0 !important;
-                overflow: hidden !important; /* Corta cualquier sobrante */
-            }
+        /* --- VISTA DE IMPRESIÓN (La impresora) --- */
+        @media print {
+          /* 1. Ocultamos todo */
+          body * {
+            visibility: hidden;
+            height: 0; /* Colapsamos alturas */
+          }
+
+          /* 2. Mostramos solo la etiqueta */
+          #print-root, #print-root * {
+            visibility: visible;
+            height: auto; /* Restauramos altura natural */
+          }
+
+          /* 3. Posicionamiento ABSOLUTO y ESTRICTO */
+          #print-root {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: ${widthCss} !important;
+            height: ${heightCss} !important;
+            
+            /* 🔥 ESTAS 3 LINEAS SON LA CLAVE PARA 1 SOLA PÁGINA: */
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow: hidden !important; /* Corta cualquier cosa que sobre */
+            
+            display: block !important; /* Quitamos el flex que centra */
+          }
         }
       `}</style>
-    </div>
+    </>
   );
 }
 
