@@ -15,7 +15,7 @@ export default function BarcodeScannerModal({ isOpen, onClose, onScan }: Barcode
   const [error, setError] = useState<string>('');
   const [loading, setLoading] = useState(true);
   
-  // Estado para el Zoom (Simplificado)
+  // Estado para el Zoom
   const [zoom, setZoom] = useState(1);
   const [hasZoom, setHasZoom] = useState(false);
 
@@ -41,7 +41,7 @@ export default function BarcodeScannerModal({ isOpen, onClose, onScan }: Barcode
       await new Promise(r => setTimeout(r, 300));
 
       try {
-        // Limpiar instancia previa si existe (evita conflictos)
+        // Limpiar instancia previa si existe
         if (scannerRef.current) {
             try {
                 await scannerRef.current.stop();
@@ -58,8 +58,7 @@ export default function BarcodeScannerModal({ isOpen, onClose, onScan }: Barcode
         
         scannerRef.current = scanner;
 
-        // 🔥 CONFIGURACIÓN SEGURA PARA IPHONE
-        // No pedimos width/height específicos para evitar OverconstrainedError
+        // Configuración de Cámara (Simple para evitar errores en iPhone)
         const videoConstraints = {
             facingMode: "environment", 
             focusMode: "continuous"
@@ -71,14 +70,12 @@ export default function BarcodeScannerModal({ isOpen, onClose, onScan }: Barcode
             fps: 15,
             qrbox: { width: 280, height: 200 }, // Guía visual
             aspectRatio: 1.0,
-            experimentalFeatures: {
-                useBarCodeDetectorIfSupported: true
-            }
+            // ❌ ELIMINADO: experimentalFeatures (Causaba el error de Build)
           },
           (decodedText) => {
             // ÉXITO
             console.log("Scan:", decodedText);
-            if (decodedText.length < 4) return; // Ignorar lecturas basura
+            if (decodedText.length < 4) return; 
 
             // Vibración
             if (typeof navigator !== 'undefined' && navigator.vibrate) {
@@ -96,20 +93,18 @@ export default function BarcodeScannerModal({ isOpen, onClose, onScan }: Barcode
           }
         );
 
-        // 🔍 DETECCIÓN DE ZOOM SEGURA (Try/Catch crítico)
+        // 🔍 DETECCIÓN DE ZOOM SEGURA
         try {
             const track = scanner.getRunningTrackCameraCapabilities();
             const capabilities = track as any;
             
-            // Solo habilitamos zoom si el navegador dice explícitamente que puede
             if (capabilities && 'zoom' in capabilities) {
                 setHasZoom(true);
-                // Intentamos un pequeño zoom inicial (1.5x) para ayudar con códigos TBA
                 applyZoom(1.5, scanner);
                 setZoom(1.5);
             }
         } catch (e) {
-            console.log("Zoom no soportado en este dispositivo (es normal)", e);
+            console.log("Zoom no soportado (normal)", e);
         }
 
         setLoading(false);
@@ -139,7 +134,7 @@ export default function BarcodeScannerModal({ isOpen, onClose, onScan }: Barcode
     try {
         scannerInstance.applyVideoConstraints({
             advanced: [{ zoom: zoomValue }] as any
-        }).catch(() => {}); // Si falla silenciosamente, no importa
+        }).catch(() => {}); 
     } catch (e) {
         // Ignorar
     }
@@ -227,7 +222,7 @@ export default function BarcodeScannerModal({ isOpen, onClose, onScan }: Barcode
                     <input 
                         type="range" 
                         min="1" 
-                        max="3" // Limitamos a 3x para que no se pixelee mucho
+                        max="3" 
                         step="0.1" 
                         value={zoom} 
                         onChange={handleZoomChange}
