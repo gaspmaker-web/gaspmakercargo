@@ -125,6 +125,16 @@ export default function LoginClient() {
             value={password} onChange={(e) => setPassword(e.target.value)} disabled={isLoading}
           />
 
+          {/* 🔥 ENLACE DE RECUPERACIÓN AGREGADO AQUÍ 🔥 */}
+          <div className="flex justify-end w-full -mt-2 mb-6">
+            <Link 
+              href="/recuperar-contrasena" 
+              className="text-xs font-medium text-gray-500 hover:text-[#D4AF37] transition-colors"
+            >
+              {t("forgotPassword") ?? "¿Olvidaste tu contraseña?"}
+            </Link>
+          </div>
+
           <button
             type="submit"
             disabled={isLoading}
