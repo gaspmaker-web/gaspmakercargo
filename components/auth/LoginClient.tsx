@@ -157,4 +157,4 @@ export default function LoginClient() {
       </div>
     </main>
   );
-}
+}// Actualización forzada para Vercel
