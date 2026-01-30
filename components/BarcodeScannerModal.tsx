@@ -22,7 +22,7 @@ export default function BarcodeScannerModal({ isOpen, onClose, onScan }: Barcode
   useEffect(() => {
     if (!isOpen) return;
     
-    // Limpieza inicial
+    // Resetear estados
     setError('');
     setLoading(true);
     setZoom(1);
@@ -37,17 +37,27 @@ export default function BarcodeScannerModal({ isOpen, onClose, onScan }: Barcode
     ];
 
     const startScanner = async () => {
-      // Esperamos un poco para asegurar que el HTML existe
-      await new Promise(r => setTimeout(r, 300));
+      // 1. ESPERA ACTIVA: Asegurar que el elemento HTML existe antes de iniciar
+      // Esto soluciona la pantalla negra por "elemento no encontrado"
+      let attempts = 0;
+      while (!document.getElementById("reader-element") && attempts < 10) {
+        await new Promise(r => setTimeout(r, 100));
+        attempts++;
+      }
+
+      if (!document.getElementById("reader-element")) {
+          setError("Error interno: No se pudo cargar el visor.");
+          return;
+      }
 
       try {
-        // Limpiar instancia previa si existe
+        // Limpiar instancia previa de forma segura
         if (scannerRef.current) {
             try {
                 await scannerRef.current.stop();
                 scannerRef.current.clear();
             } catch (e) {
-                // Ignorar errores de parada
+                console.log("Limpiando scanner previo...");
             }
         }
 
@@ -58,31 +68,35 @@ export default function BarcodeScannerModal({ isOpen, onClose, onScan }: Barcode
         
         scannerRef.current = scanner;
 
-        // Configuración de Cámara (Simple para evitar errores en iPhone)
+        // 2. CONFIGURACIÓN "NATIVA": Sin restricciones forzadas
         const videoConstraints = {
-            facingMode: "environment", 
-            focusMode: "continuous"
+            facingMode: "environment",
+            focusMode: "continuous" 
         };
 
         await scanner.start(
           videoConstraints, 
           {
             fps: 15,
-            qrbox: { width: 280, height: 200 }, // Guía visual
-            aspectRatio: 1.0,
-            // ❌ ELIMINADO: experimentalFeatures (Causaba el error de Build)
+            // 3. CLAVE DEL ÉXITO: Sin aspectRatio forzado y sin qrbox estático
+            // Esto permite que el iPhone use su relación de aspecto natural (4:3 o 16:9)
+            qrbox: (viewfinderWidth, viewfinderHeight) => {
+                // Creamos una caja dinámica rectangular (buena para códigos largos)
+                return {
+                    width: Math.floor(viewfinderWidth * 0.8),
+                    height: Math.floor(viewfinderHeight * 0.4) // Rectángulo más chato
+                };
+            }
           },
           (decodedText) => {
             // ÉXITO
             console.log("Scan:", decodedText);
             if (decodedText.length < 4) return; 
 
-            // Vibración
             if (typeof navigator !== 'undefined' && navigator.vibrate) {
                 navigator.vibrate(200);
             }
             
-            // Detener y enviar
             scanner.stop().then(() => {
                 scanner.clear();
                 onScan(decodedText.trim());
@@ -93,32 +107,31 @@ export default function BarcodeScannerModal({ isOpen, onClose, onScan }: Barcode
           }
         );
 
-        // 🔍 DETECCIÓN DE ZOOM SEGURA
+        // Detección de Zoom
         try {
             const track = scanner.getRunningTrackCameraCapabilities();
             const capabilities = track as any;
-            
             if (capabilities && 'zoom' in capabilities) {
                 setHasZoom(true);
-                applyZoom(1.5, scanner);
-                setZoom(1.5);
+                // Zoom ligero inicial (1.2x) para ayudar al enfoque
+                applyZoom(1.2, scanner);
+                setZoom(1.2);
             }
         } catch (e) {
-            console.log("Zoom no soportado (normal)", e);
+            // Ignorar si no hay zoom
         }
 
         setLoading(false);
 
       } catch (err: any) {
         console.error("Error crítico cámara:", err);
-        setError("No se pudo iniciar la cámara. Por favor cierra esta ventana y vuelve a intentar.");
+        setError("No se pudo iniciar la cámara. Verifica los permisos.");
         setLoading(false);
       }
     };
 
     startScanner();
 
-    // Limpieza al cerrar modal
     return () => {
       if (scannerRef.current) {
          scannerRef.current.stop().catch(() => {}).finally(() => {
@@ -128,16 +141,13 @@ export default function BarcodeScannerModal({ isOpen, onClose, onScan }: Barcode
     };
   }, [isOpen, onScan]);
 
-  // Función de Zoom Protegida
   const applyZoom = (zoomValue: number, scannerInstance = scannerRef.current) => {
     if (!scannerInstance) return;
     try {
         scannerInstance.applyVideoConstraints({
             advanced: [{ zoom: zoomValue }] as any
         }).catch(() => {}); 
-    } catch (e) {
-        // Ignorar
-    }
+    } catch (e) {}
   };
 
   const handleZoomChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -162,7 +172,7 @@ export default function BarcodeScannerModal({ isOpen, onClose, onScan }: Barcode
       <div className="w-full h-full relative flex flex-col">
         
         {/* HEADER */}
-        <div className="absolute top-0 left-0 right-0 p-8 pt-12 z-40 bg-gradient-to-b from-black/90 to-transparent flex justify-center">
+        <div className="absolute top-0 left-0 right-0 p-8 pt-12 z-40 bg-gradient-to-b from-black/90 to-transparent flex justify-center pointer-events-none">
              <h2 className="text-white font-bold text-lg flex items-center gap-2 drop-shadow-md">
                 <ScanLine size={20} className="text-gmc-dorado-principal animate-pulse" />
                 Escaneando...
@@ -172,23 +182,11 @@ export default function BarcodeScannerModal({ isOpen, onClose, onScan }: Barcode
         {/* ÁREA DE CÁMARA */}
         <div className="flex-1 relative bg-black overflow-hidden flex items-center justify-center">
             
-            {/* Contenedor del video */}
-            <div id="reader-element" className="w-full h-full object-cover"></div>
-
-            {/* GUI VISUAL (Solo si no hay error) */}
-            {!error && !loading && (
-                <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-                    <div className="w-[85%] h-56 border-2 border-white/60 rounded-xl relative shadow-[0_0_0_999px_rgba(0,0,0,0.5)]">
-                        {/* Esquinas */}
-                        <div className="absolute -top-1 -left-1 w-8 h-8 border-t-4 border-l-4 border-gmc-dorado-principal rounded-tl-lg"></div>
-                        <div className="absolute -top-1 -right-1 w-8 h-8 border-t-4 border-r-4 border-gmc-dorado-principal rounded-tr-lg"></div>
-                        <div className="absolute -bottom-1 -left-1 w-8 h-8 border-b-4 border-l-4 border-gmc-dorado-principal rounded-bl-lg"></div>
-                        <div className="absolute -bottom-1 -right-1 w-8 h-8 border-b-4 border-r-4 border-gmc-dorado-principal rounded-br-lg"></div>
-                        {/* Láser */}
-                        <div className="absolute top-1/2 left-2 right-2 h-0.5 bg-red-500 shadow-[0_0_15px_red] animate-[scan_2s_infinite]"></div>
-                    </div>
-                </div>
-            )}
+            {/* 4. CONTENEDOR SEGURO:
+               Le damos w-full y h-full para asegurar que ocupe espacio.
+               El 'bg-black' evita el flash blanco.
+            */}
+            <div id="reader-element" className="w-full h-full bg-black object-cover relative z-10"></div>
 
             {/* MENSAJE DE ERROR */}
             {error && (
@@ -231,7 +229,7 @@ export default function BarcodeScannerModal({ isOpen, onClose, onScan }: Barcode
                 </div>
              ) : (
                  <p className="text-center text-gray-400 text-xs">
-                    Si el código no lee, intenta alejar o acercar el celular físicamente.
+                    Cámara lista. Apunta al código.
                  </p>
              )}
         </div>
