@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
-import { X, CameraOff } from 'lucide-react';
+import { X, CameraOff, Zap } from 'lucide-react';
 
 interface BarcodeScannerModalProps {
   isOpen: boolean;
@@ -18,45 +18,56 @@ export default function BarcodeScannerModal({ isOpen, onClose, onScan }: Barcode
   useEffect(() => {
     if (!isOpen) return;
 
-    // 1. Configuración para códigos de envío (UPS, FedEx, USPS usan CODE_128)
+    // 🔥 CONFIGURACIÓN "TODO TERRENO" PARA LOGÍSTICA
+    // Activamos DataMatrix (Amazon), PDF417 (USPS/Licencias), ITF (Cajas grandes)
     const formatsToSupport = [
-      Html5QrcodeSupportedFormats.CODE_128,
-      Html5QrcodeSupportedFormats.CODE_39,
-      Html5QrcodeSupportedFormats.EAN_13,
-      Html5QrcodeSupportedFormats.UPC_A,
-      Html5QrcodeSupportedFormats.QR_CODE,
+      Html5QrcodeSupportedFormats.CODE_128,    // Estándar Tracking (FedEx, UPS, GMC)
+      Html5QrcodeSupportedFormats.CODE_39,     // Estándar antiguo
+      Html5QrcodeSupportedFormats.EAN_13,      // Productos comerciales
+      Html5QrcodeSupportedFormats.UPC_A,       // Productos USA
+      Html5QrcodeSupportedFormats.DATA_MATRIX, // ⚠️ IMPORTANTE: Amazon y piezas pequeñas
+      Html5QrcodeSupportedFormats.PDF_417,     // USPS y Documentos
+      Html5QrcodeSupportedFormats.ITF,         // Cajas master
+      Html5QrcodeSupportedFormats.QR_CODE,     // QR Normal
+      Html5QrcodeSupportedFormats.CODABAR,     // Logística varia
     ];
 
     const startScanner = async () => {
       try {
-        // Instanciamos el lector "RAW" (sin la interfaz fea por defecto)
         const scanner = new Html5Qrcode("reader-element");
         scannerRef.current = scanner;
 
         // Configuración de la cámara
         const config = {
-          fps: 10, // Cuadros por segundo
-          qrbox: { width: 280, height: 180 }, // Zona de lectura rectangular (ideal para tracking)
+          fps: 15, // Aumentamos FPS para lectura más rápida
+          qrbox: { width: 300, height: 200 }, // Área un poco más grande
           aspectRatio: 1.0,
-          formatsToSupport: formatsToSupport
+          formatsToSupport: formatsToSupport,
+          // Intenta usar la detección nativa del navegador si existe (es más rápida)
+          experimentalFeatures: {
+             useBarCodeDetectorIfSupported: true
+          }
         };
 
-        // Iniciamos la cámara trasera
         await scanner.start(
-          { facingMode: "environment" }, // "environment" fuerza la cámara trasera
+          { facingMode: "environment" },
           config,
           (decodedText) => {
-            // ÉXITO: Código leído
+            // ÉXITO
             console.log("Código detectado:", decodedText);
             
-            // Detenemos escáner
+            // Vibración fuerte para confirmar
+            if (typeof navigator !== 'undefined' && navigator.vibrate) {
+                navigator.vibrate([100, 50, 100]);
+            }
+
             scanner.stop().then(() => {
                 scanner.clear();
-                onScan(decodedText.trim()); // Enviamos el código limpio
+                onScan(decodedText.trim());
             }).catch(err => console.error("Error al detener", err));
           },
           (errorMessage) => {
-            // Error de lectura en cada frame (es normal, lo ignoramos)
+            // Ignoramos errores de frame vacío
           }
         );
         
@@ -64,12 +75,11 @@ export default function BarcodeScannerModal({ isOpen, onClose, onScan }: Barcode
 
       } catch (err: any) {
         console.error("Error iniciando cámara:", err);
-        setError("No se pudo acceder a la cámara. Asegúrate de dar permisos.");
+        setError("No se pudo acceder a la cámara. Revisa los permisos en tu navegador.");
         setIsPermitted(false);
       }
     };
 
-    // Pequeño delay para asegurar que el DOM (reader-element) existe
     const timer = setTimeout(() => {
       startScanner();
     }, 100);
@@ -77,7 +87,6 @@ export default function BarcodeScannerModal({ isOpen, onClose, onScan }: Barcode
     return () => {
       clearTimeout(timer);
       if (scannerRef.current) {
-         // Limpieza agresiva al cerrar
          scannerRef.current.stop().catch(() => {}).finally(() => {
             scannerRef.current?.clear();
          });
@@ -90,59 +99,69 @@ export default function BarcodeScannerModal({ isOpen, onClose, onScan }: Barcode
   return (
     <div className="fixed inset-0 z-[9999] bg-black flex flex-col items-center justify-center animate-fadeIn">
       
-      {/* Botón Cerrar Flotante */}
+      {/* Botón Cerrar */}
       <button 
         onClick={onClose}
-        className="absolute top-6 right-6 bg-white/20 text-white p-3 rounded-full backdrop-blur-md z-50 hover:bg-white/40 transition-all"
+        className="absolute top-6 right-6 bg-white/20 text-white p-3 rounded-full backdrop-blur-md z-50 hover:bg-white/40 active:scale-95 transition-all"
       >
         <X size={28} />
       </button>
 
-      <div className="w-full max-w-lg relative flex flex-col items-center">
+      <div className="w-full max-w-lg relative flex flex-col items-center h-full justify-center">
         
-        <h2 className="text-white font-bold text-lg mb-4 flex items-center gap-2">
-            Escaneando Paquete...
+        <h2 className="text-white font-bold text-xl mb-6 flex items-center gap-2 drop-shadow-md">
+            <Zap size={24} className="text-yellow-400 fill-yellow-400" />
+            Buscando Código...
         </h2>
 
-        {/* CONTENEDOR DE LA CÁMARA */}
-        <div className="relative w-full aspect-square bg-black overflow-hidden rounded-3xl border border-gray-800 shadow-2xl">
+        {/* CÁMARA */}
+        <div className="relative w-[90%] aspect-square max-w-md bg-black overflow-hidden rounded-3xl border-2 border-gray-700 shadow-2xl">
             
-            {/* Elemento donde la librería inyecta el video */}
             <div id="reader-element" className="w-full h-full object-cover"></div>
 
-            {/* GUI DE ESCANEO (Línea roja láser) */}
+            {/* GUI LÁSER MEJORADA */}
             {isPermitted && !error && (
                 <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-                    <div className="w-[85%] h-48 border-2 border-gmc-dorado-principal/50 rounded-xl relative overflow-hidden bg-white/5">
-                        <div className="absolute top-0 left-0 w-full h-1 bg-red-500 shadow-[0_0_20px_red] animate-[scan_2s_infinite]"></div>
+                    {/* Marco Esquinas */}
+                    <div className="w-[85%] h-56 border-2 border-white/30 rounded-2xl relative">
+                        
+                        {/* Esquinas Blancas Brillantes */}
+                        <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-gmc-dorado-principal rounded-tl-xl shadow-[0_0_10px_#D4AF37]"></div>
+                        <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-gmc-dorado-principal rounded-tr-xl shadow-[0_0_10px_#D4AF37]"></div>
+                        <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-gmc-dorado-principal rounded-bl-xl shadow-[0_0_10px_#D4AF37]"></div>
+                        <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-gmc-dorado-principal rounded-br-xl shadow-[0_0_10px_#D4AF37]"></div>
+
+                        {/* Línea Roja Láser */}
+                        <div className="absolute top-1/2 left-2 right-2 h-0.5 bg-red-600 shadow-[0_0_15px_red] animate-[scan_1.5s_infinite]"></div>
                     </div>
                 </div>
             )}
 
-            {/* Mensaje de error si falla */}
             {error && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900 text-white p-6 text-center">
-                    <CameraOff size={48} className="mb-4 text-gray-500" />
-                    <p>{error}</p>
-                    <button onClick={onClose} className="mt-4 bg-white text-black px-4 py-2 rounded-lg font-bold">
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900/90 text-white p-6 text-center backdrop-blur-sm">
+                    <CameraOff size={48} className="mb-4 text-red-400" />
+                    <p className="font-bold mb-2">{error}</p>
+                    <button onClick={onClose} className="mt-4 bg-white text-black px-6 py-2 rounded-full font-bold">
                         Cerrar
                     </button>
                 </div>
             )}
         </div>
 
-        <p className="text-gray-400 text-sm mt-6 text-center px-8">
-          Coloca el código de barras dentro del recuadro. <br/>
-          Funciona mejor con buena iluminación.
-        </p>
+        <div className="mt-8 text-center space-y-2">
+            <p className="text-white font-bold text-lg">Apunta al Código de Barras</p>
+            <p className="text-gray-400 text-sm px-6">
+                Soporta: Tracking, Amazon (DataMatrix), FedEx, UPS, USPS.
+                <br/>Mantén el celular estable.
+            </p>
+        </div>
       </div>
 
       <style jsx>{`
         @keyframes scan {
-          0% { top: 0%; opacity: 0; }
-          10% { opacity: 1; }
-          90% { opacity: 1; }
-          100% { top: 100%; opacity: 0; }
+          0% { transform: translateY(-80px); opacity: 0.5; }
+          50% { opacity: 1; }
+          100% { transform: translateY(80px); opacity: 0.5; }
         }
       `}</style>
     </div>
