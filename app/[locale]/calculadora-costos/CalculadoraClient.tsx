@@ -293,32 +293,36 @@ export default function CalculadoraClient() {
                                     <div key={rate.id} className={`group border-2 rounded-[1.5rem] p-5 transition-all relative ${index === 0 ? 'border-gmc-dorado-principal bg-yellow-50/30' : 'border-gray-50 bg-white hover:border-gray-200'}`}>
                                         {index === 0 && (<div className="absolute top-0 right-0 bg-gmc-dorado-principal text-black text-[8px] font-black px-3 py-1 rounded-bl-xl uppercase">Best Value</div>)}
                                         
-                                        <div className="flex justify-between items-center mb-4">
-                                            <div className="flex items-center gap-4">
-                                                <div className="bg-white p-2 rounded-xl border border-gray-100 h-14 w-14 flex items-center justify-center shadow-sm">
-                                                    <img 
-                                                        src={rate.logo || "/gaspmakercargoproject.png"} 
-                                                        alt={rate.carrier} 
-                                                        className="max-h-full max-w-full object-contain" 
-                                                        onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = "/gaspmakercargoproject.png" }}
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <h3 className="font-black text-gray-900 text-sm uppercase">{rate.carrier}</h3>
-                                                    <p className="text-[10px] text-gray-400 font-bold">{rate.service}</p>
-                                                </div>
+                                        {/* 🔥 ESTRUCTURA DE GRID BLINDADA */}
+                                        <div className="grid grid-cols-[3.5rem_1fr_min-content] gap-4 items-center mb-4">
+                                            {/* Col 1: Logo (Ancho Fijo) */}
+                                            <div className="bg-white p-2 rounded-xl border border-gray-100 h-14 w-14 flex items-center justify-center shadow-sm shrink-0">
+                                                <img 
+                                                    src={rate.logo || "/gaspmakercargoproject.png"} 
+                                                    alt={rate.carrier} 
+                                                    className="max-h-full max-w-full object-contain" 
+                                                    onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = "/gaspmakercargoproject.png" }}
+                                                />
                                             </div>
-                                            <div className="text-right">
-                                                <p className="text-2xl font-black text-gray-900">${details.total.toFixed(2)}</p>
-                                                <p className="text-[8px] text-gray-400 font-black uppercase tracking-widest">Total Estimated</p>
+                                            
+                                            {/* Col 2: Info Texto */}
+                                            <div className="overflow-hidden">
+                                                <h3 className="font-black text-gray-900 text-sm uppercase truncate">{rate.carrier}</h3>
+                                                <p className="text-[10px] text-gray-400 font-bold truncate">{rate.service}</p>
+                                            </div>
+
+                                            {/* Col 3: Precio (Ancho Min Fijo) */}
+                                            <div className="text-right min-w-[5rem]">
+                                                <p className="text-2xl font-black text-gray-900 leading-none">${details.total.toFixed(2)}</p>
+                                                <p className="text-[8px] text-gray-400 font-black uppercase tracking-widest">Total</p>
                                             </div>
                                         </div>
 
-                                        {/* 🔥 DESGLOSE VISUAL */}
-                                        <div className="flex justify-between items-center text-[10px] font-bold text-gray-500 border-t border-dashed border-gray-200 pt-4 mb-4">
+                                        {/* 🔥 DESGLOSE EN GRID */}
+                                        <div className="grid grid-cols-2 gap-4 text-[10px] font-bold text-gray-500 border-t border-dashed border-gray-200 pt-4 mb-4 items-start">
                                             <div className="flex items-center gap-2">
-                                                <Truck size={14} className="text-gmc-dorado-principal"/> 
-                                                {rate.days}
+                                                <Truck size={14} className="text-gmc-dorado-principal shrink-0"/> 
+                                                <span>{rate.days}</span>
                                             </div>
                                             
                                             <div className="flex flex-col text-right gap-0.5">
@@ -326,7 +330,7 @@ export default function CalculadoraClient() {
                                                 {details.insurance > 0 && (
                                                     <span className="text-blue-600">+ Ins: ${details.insurance.toFixed(2)}</span>
                                                 )}
-                                                <span className="text-gray-400">+ Fee: $10.00</span>
+                                                <span className="text-gray-400 whitespace-nowrap">+ Fee: $10.00</span>
                                             </div>
                                         </div>
 
