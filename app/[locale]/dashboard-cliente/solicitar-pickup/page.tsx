@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 // ❌ ArrowLeft eliminado de imports
-import { Truck, MapPin, Warehouse, CreditCard, Info, Loader2, Package, Check, ChevronDown, ChevronUp } from 'lucide-react';
+import { Truck, MapPin, Warehouse, CreditCard, Info, Loader2, Package, Check, ChevronDown, ChevronUp, Calendar, Phone, Weight } from 'lucide-react';
 import { useJsApiLoader, Autocomplete } from '@react-google-maps/api';
 import { getProcessingFee } from '@/lib/stripeCalc';
 // 🔥 Importamos hook de traducción
@@ -380,16 +380,79 @@ export default function SolicitarPickupPage() {
 
                             <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm border border-gray-200">
                                 <h3 className="font-bold text-gmc-gris-oscuro text-sm uppercase mb-4">{t('loadDetailsTitle')}</h3>
-                                <div className="grid grid-cols-2 gap-3 mb-3">
-                                    <select className="p-3 border rounded-lg text-sm bg-white" onChange={e => setFormData({...formData, weightTier: e.target.value})}>{WEIGHT_TIERS.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}</select>
-                                    <select className="p-3 border rounded-lg text-sm bg-white" onChange={e => setFormData({...formData, volumeTier: e.target.value})}>{VOLUME_TIERS.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}</select>
+                                
+                                {/* 🔥 DISEÑO MÓVIL ARREGLADO (1 COLUMNA EN MÓVIL, 2 EN PC) */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                    <div className="relative">
+                                        <select 
+                                            className="w-full p-3 pl-4 border border-gray-200 rounded-xl text-sm bg-white appearance-none font-medium focus:ring-2 focus:ring-gmc-dorado-principal focus:border-transparent" 
+                                            onChange={e => setFormData({...formData, weightTier: e.target.value})}
+                                            value={formData.weightTier}
+                                        >
+                                            {WEIGHT_TIERS.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
+                                        </select>
+                                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
+                                    </div>
+
+                                    <div className="relative">
+                                        <select 
+                                            className="w-full p-3 pl-4 border border-gray-200 rounded-xl text-sm bg-white appearance-none font-medium focus:ring-2 focus:ring-gmc-dorado-principal focus:border-transparent" 
+                                            onChange={e => setFormData({...formData, volumeTier: e.target.value})}
+                                            value={formData.volumeTier}
+                                        >
+                                            {VOLUME_TIERS.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
+                                        </select>
+                                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
+                                    </div>
                                 </div>
-                                {formData.weightTier === 'w_heavy' && <input type="number" placeholder="Peso exacto (Lbs)" className="w-full p-3 border rounded-lg mb-3 bg-yellow-50 text-sm" onChange={e => setFormData({...formData, exactWeight: parseFloat(e.target.value)})} />}
-                                <div className="grid grid-cols-2 gap-3 mb-3">
-                                    <input type="date" className="p-3 border rounded-lg text-sm" onChange={e => setFormData({...formData, pickupDate: e.target.value})} />
-                                    <input type="tel" placeholder="Teléfono" className="p-3 border rounded-lg text-sm" onChange={e => setFormData({...formData, contactPhone: e.target.value})} />
+
+                                {/* 🔥 CAMPO HEAVY CON ANIMACIÓN SUAVE */}
+                                {formData.weightTier === 'w_heavy' && (
+                                    <div className="mb-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                                        <div className="relative">
+                                            <Weight className="absolute left-3 top-1/2 -translate-y-1/2 text-gmc-dorado-principal" size={18} />
+                                            <input 
+                                                type="number" 
+                                                placeholder="Peso exacto (Lbs)" 
+                                                className="w-full p-3 pl-10 border border-yellow-200 rounded-xl bg-yellow-50 text-sm font-bold placeholder-yellow-600/50 focus:ring-2 focus:ring-yellow-400 focus:outline-none" 
+                                                onChange={e => setFormData({...formData, exactWeight: parseFloat(e.target.value)})} 
+                                            />
+                                        </div>
+                                        <p className="text-[10px] text-yellow-600 mt-1 pl-2 font-medium">Tarifa especial para carga pesada.</p>
+                                    </div>
+                                )}
+
+                                {/* 🔥 FECHA Y TELÉFONO (ARREGLADO EL BOTÓN FANTASMA) */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                    {/* Input de Fecha Mejorado */}
+                                    <div className="relative">
+                                        <label className="absolute -top-2 left-3 bg-white px-1 text-[10px] font-bold text-gray-400 z-10">Fecha de Recogida</label>
+                                        <div className="relative">
+                                            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                                            <input 
+                                                type="date" 
+                                                className="w-full p-3 pl-10 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-gmc-dorado-principal focus:border-transparent min-h-[46px]" 
+                                                onChange={e => setFormData({...formData, pickupDate: e.target.value})} 
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Input de Teléfono Mejorado */}
+                                    <div className="relative">
+                                         <label className="absolute -top-2 left-3 bg-white px-1 text-[10px] font-bold text-gray-400 z-10">Contacto</label>
+                                         <div className="relative">
+                                            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                                            <input 
+                                                type="tel" 
+                                                placeholder="Teléfono" 
+                                                className="w-full p-3 pl-10 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-gmc-dorado-principal focus:border-transparent min-h-[46px]" 
+                                                onChange={e => setFormData({...formData, contactPhone: e.target.value})} 
+                                            />
+                                        </div>
+                                    </div>
                                 </div>
-                                <textarea className="w-full p-3 border rounded-lg text-sm h-24 resize-none" placeholder="Descripción de los artículos..." onChange={e => setFormData({...formData, description: e.target.value})}></textarea>
+                                
+                                <textarea className="w-full p-3 border border-gray-200 rounded-xl text-sm h-24 resize-none focus:ring-2 focus:ring-gmc-dorado-principal focus:border-transparent" placeholder="Descripción de los artículos (Ej: 2 cajas de ropa, 1 TV 55 pulgadas...)" onChange={e => setFormData({...formData, description: e.target.value})}></textarea>
                             </div>
                         </>
                     )}
