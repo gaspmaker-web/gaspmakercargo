@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
-import { X, CameraOff, ScanLine, Zap, ZoomIn, ZoomOut } from 'lucide-react';
+import { X, ScanLine, ZoomIn, ZoomOut, Zap } from 'lucide-react';
 
 interface BarcodeScannerModalProps {
   isOpen: boolean;
@@ -16,7 +16,7 @@ export default function BarcodeScannerModal({ isOpen, onClose, onScan }: Barcode
   const [isPermitted, setIsPermitted] = useState(false);
   const [loading, setLoading] = useState(true);
   
-  // Controles de Cámara
+  // Controles
   const [zoom, setZoom] = useState(1);
   const [hasZoom, setHasZoom] = useState(false);
   const [torchOn, setTorchOn] = useState(false);
@@ -30,9 +30,10 @@ export default function BarcodeScannerModal({ isOpen, onClose, onScan }: Barcode
     setLoading(true);
     setZoom(1);
 
+    // Lista de formatos soportados
     const formatsToSupport = [
-      Html5QrcodeSupportedFormats.CODE_128,    // Amazon TBA / FedEx / UPS
-      Html5QrcodeSupportedFormats.DATA_MATRIX, // Amazon Cuadrado
+      Html5QrcodeSupportedFormats.CODE_128,    
+      Html5QrcodeSupportedFormats.DATA_MATRIX, 
       Html5QrcodeSupportedFormats.CODE_39,
       Html5QrcodeSupportedFormats.EAN_13,
       Html5QrcodeSupportedFormats.UPC_A,
@@ -50,29 +51,35 @@ export default function BarcodeScannerModal({ isOpen, onClose, onScan }: Barcode
             scannerRef.current.clear();
         }
 
-        const scanner = new Html5Qrcode("reader-element");
+        // 🔥 CORRECCIÓN AQUÍ: Pasamos los formatos EN EL CONSTRUCTOR
+        const scanner = new Html5Qrcode("reader-element", {
+            formatsToSupport: formatsToSupport,
+            verbose: false
+        });
+        
         scannerRef.current = scanner;
 
-        // Configuración "Segura" para iPhone pero con calidad HD (Ideal)
-        // Usamos 'ideal' en lugar de valores fijos para que Safari no se rompa
+        // Configuración de la cámara
         const videoConstraints = {
             facingMode: "environment",
-            focusMode: "continuous", // Intenta forzar el enfoque continuo
+            focusMode: "continuous",
             width: { min: 640, ideal: 1280, max: 1920 }, 
             height: { min: 480, ideal: 720, max: 1080 },
         };
 
-        await scanner.start(
-          videoConstraints, 
-          {
+        // Configuración de escaneo (Ya SIN formatsToSupport aquí)
+        const scanConfig = {
             fps: 15,
-            qrbox: { width: 280, height: 200 }, // Guía visual rectangular para códigos largos
+            qrbox: { width: 280, height: 200 },
             aspectRatio: 1.0,
-            formatsToSupport: formatsToSupport,
             experimentalFeatures: {
                 useBarCodeDetectorIfSupported: true
             }
-          },
+        };
+
+        await scanner.start(
+          videoConstraints, 
+          scanConfig,
           (decodedText) => {
             // ÉXITO
             console.log("Código:", decodedText);
@@ -82,10 +89,7 @@ export default function BarcodeScannerModal({ isOpen, onClose, onScan }: Barcode
                 navigator.vibrate(200);
             }
             
-            // Sonido de éxito (opcional)
-            const audio = new Audio('/beep.mp3'); // Si tienes un archivo beep
-            audio.play().catch(() => {});
-
+            // Cerrar y enviar
             scanner.stop().then(() => {
                 scanner.clear();
                 onScan(decodedText.trim());
@@ -96,15 +100,17 @@ export default function BarcodeScannerModal({ isOpen, onClose, onScan }: Barcode
           }
         );
 
-        // Detectar capacidades de Zoom
-        const track = scanner.getRunningTrackCameraCapabilities();
-        const capabilities = track as any; // Casting para acceder a zoom
-
-        if (capabilities && capabilities.zoom) {
-            setHasZoom(true);
-            // Intentar poner un zoom inicial ligero (1.5x) para facilitar lectura
-            applyZoom(1.5, scanner); 
-            setZoom(1.5);
+        // Detectar Zoom
+        try {
+            const track = scanner.getRunningTrackCameraCapabilities();
+            const capabilities = track as any; 
+            if (capabilities && capabilities.zoom) {
+                setHasZoom(true);
+                applyZoom(1.5, scanner); // Zoom inicial suave
+                setZoom(1.5);
+            }
+        } catch (e) {
+            console.log("No se pudo obtener capabilities de cámara", e);
         }
         
         setIsPermitted(true);
@@ -132,7 +138,7 @@ export default function BarcodeScannerModal({ isOpen, onClose, onScan }: Barcode
     if (scannerInstance) {
         scannerInstance.applyVideoConstraints({
             advanced: [{ zoom: zoomValue }] as any
-        }).catch(e => console.log("Zoom no soportado en tiempo real", e));
+        }).catch(e => console.log("Zoom no soportado", e));
     }
   };
 
@@ -183,19 +189,16 @@ export default function BarcodeScannerModal({ isOpen, onClose, onScan }: Barcode
             
             <div id="reader-element" className="w-full h-full object-cover"></div>
 
-            {/* GUI VISUAL MEJORADA */}
+            {/* GUI VISUAL */}
             {isPermitted && !error && !loading && (
                 <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-                    {/* Marco visual rectangular (Mejor para códigos TBA largos) */}
                     <div className="w-[85%] h-48 border-2 border-white/60 rounded-xl relative shadow-[0_0_0_999px_rgba(0,0,0,0.5)]">
-                        
-                        {/* Esquinas Brillantes */}
+                        {/* Esquinas */}
                         <div className="absolute -top-1 -left-1 w-8 h-8 border-t-4 border-l-4 border-gmc-dorado-principal rounded-tl-lg"></div>
                         <div className="absolute -top-1 -right-1 w-8 h-8 border-t-4 border-r-4 border-gmc-dorado-principal rounded-tr-lg"></div>
                         <div className="absolute -bottom-1 -left-1 w-8 h-8 border-b-4 border-l-4 border-gmc-dorado-principal rounded-bl-lg"></div>
                         <div className="absolute -bottom-1 -right-1 w-8 h-8 border-b-4 border-r-4 border-gmc-dorado-principal rounded-br-lg"></div>
-
-                        {/* Línea Láser */}
+                        {/* Láser */}
                         <div className="absolute top-1/2 left-2 right-2 h-0.5 bg-red-500 shadow-[0_0_15px_red] animate-[scan_2s_infinite]"></div>
                     </div>
                 </div>
@@ -210,10 +213,10 @@ export default function BarcodeScannerModal({ isOpen, onClose, onScan }: Barcode
             )}
         </div>
 
-        {/* FOOTER CONTROLES (ZOOM y LINTERNA) */}
+        {/* FOOTER CONTROLES */}
         <div className="absolute bottom-0 left-0 right-0 bg-black/80 backdrop-blur-md p-6 pb-10 z-50 rounded-t-3xl border-t border-white/10">
              
-             {/* Slider de Zoom (Si está disponible) */}
+             {/* Slider Zoom */}
              {hasZoom && (
                 <div className="flex items-center gap-4 mb-6 px-4">
                     <ZoomOut size={20} className="text-gray-400" />
