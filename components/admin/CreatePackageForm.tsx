@@ -5,7 +5,8 @@ import { useForm } from 'react-hook-form';
 import { Camera, Search, Package, Upload, CheckCircle, X, ScanBarcode, Printer, Tag, DollarSign, User, Save, Scale } from 'lucide-react';
 import Image from 'next/image';
 import BarcodeScannerModal from '@/components/BarcodeScannerModal';
-import { toast } from 'sonner'; // Opcional: Si usas sonner, queda mejor que alert()
+
+// ❌ ELIMINADO: import { toast } from 'sonner';
 
 interface UserData {
   id: string;
@@ -70,7 +71,7 @@ export default function CreatePackageForm() {
       if (res.ok && data.users && data.users.length > 0) {
         setFoundUser(data.users[0]); 
         // Vibración suave al encontrar
-        if (navigator.vibrate) navigator.vibrate(50);
+        if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(50);
       } else {
         alert(data.message || "Cliente no encontrado");
       }
@@ -100,7 +101,7 @@ export default function CreatePackageForm() {
       
       if (data.secure_url) {
         setPhotoUrl(data.secure_url);
-        if (navigator.vibrate) navigator.vibrate([50, 50]);
+        if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate([50, 50]);
       } else {
         throw new Error("No se recibió URL");
       }
@@ -156,6 +157,9 @@ export default function CreatePackageForm() {
         description: payload.description,
         date: new Date().toLocaleDateString()
       });
+      
+      // ✅ ÉXITO: Usamos alert normal para no instalar librerías
+      // alert("¡Paquete registrado con éxito!"); 
 
       reset();
       setPhotoUrl(null);
@@ -171,14 +175,14 @@ export default function CreatePackageForm() {
 
   return (
     <>
-      {/* MODAL DEL ESCÁNER (Fuera del flujo visual) */}
+      {/* MODAL DEL ESCÁNER */}
       <BarcodeScannerModal 
         isOpen={isScannerOpen}
         onClose={() => setIsScannerOpen(false)}
         onScan={(code) => {
             setValue('trackingNumber', code); 
             setIsScannerOpen(false);
-            if (navigator.vibrate) navigator.vibrate(100);
+            if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(100);
         }}
       />
 
