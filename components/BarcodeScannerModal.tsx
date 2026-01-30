@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
-import { X, CameraOff, ScanLine, Zap } from 'lucide-react';
+import { X, CameraOff, ScanLine, Zap, ZoomIn, ZoomOut } from 'lucide-react';
 
 interface BarcodeScannerModalProps {
   isOpen: boolean;
@@ -15,76 +15,79 @@ export default function BarcodeScannerModal({ isOpen, onClose, onScan }: Barcode
   const [error, setError] = useState<string>('');
   const [isPermitted, setIsPermitted] = useState(false);
   const [loading, setLoading] = useState(true);
+  
+  // Controles de Cámara
+  const [zoom, setZoom] = useState(1);
+  const [hasZoom, setHasZoom] = useState(false);
+  const [torchOn, setTorchOn] = useState(false);
 
   useEffect(() => {
     if (!isOpen) return;
     
-    // Resetear estados al abrir
+    // Resetear estados
     setError('');
     setIsPermitted(false);
     setLoading(true);
+    setZoom(1);
 
-    // 🔥 CONFIGURACIÓN COMPATIBLE CON IPHONE (SAFARI)
     const formatsToSupport = [
-      Html5QrcodeSupportedFormats.CODE_128,    // Tracking estándar
-      Html5QrcodeSupportedFormats.DATA_MATRIX, // Amazon
+      Html5QrcodeSupportedFormats.CODE_128,    // Amazon TBA / FedEx / UPS
+      Html5QrcodeSupportedFormats.DATA_MATRIX, // Amazon Cuadrado
       Html5QrcodeSupportedFormats.CODE_39,
       Html5QrcodeSupportedFormats.EAN_13,
       Html5QrcodeSupportedFormats.UPC_A,
-      Html5QrcodeSupportedFormats.PDF_417,     // USPS
+      Html5QrcodeSupportedFormats.PDF_417,
       Html5QrcodeSupportedFormats.QR_CODE,
     ];
 
-    let scanner: Html5Qrcode | null = null;
-
     const startScanner = async () => {
-      // Pequeña espera para asegurar que el <div id="reader"> existe en el DOM
-      await new Promise(r => setTimeout(r, 100));
+      // Esperar a que el DOM esté listo
+      await new Promise(r => setTimeout(r, 200));
 
       try {
-        if (!document.getElementById("reader-element")) {
-            console.error("Elemento reader-element no encontrado");
-            return;
-        }
-
-        // Si ya había una instancia, limpiarla antes
         if (scannerRef.current) {
             await scannerRef.current.stop().catch(() => {});
             scannerRef.current.clear();
         }
 
-        scanner = new Html5Qrcode("reader-element");
+        const scanner = new Html5Qrcode("reader-element");
         scannerRef.current = scanner;
 
-        const config = {
-          fps: 10, // 10 FPS es suficiente y estable en iOS
-          qrbox: { width: 300, height: 250 }, // Caja visual (pero escanea todo)
-          aspectRatio: 1.0,
-          formatsToSupport: formatsToSupport,
-          experimentalFeatures: {
-             useBarCodeDetectorIfSupported: true // Usa chip nativo si existe
-          }
+        // Configuración "Segura" para iPhone pero con calidad HD (Ideal)
+        // Usamos 'ideal' en lugar de valores fijos para que Safari no se rompa
+        const videoConstraints = {
+            facingMode: "environment",
+            focusMode: "continuous", // Intenta forzar el enfoque continuo
+            width: { min: 640, ideal: 1280, max: 1920 }, 
+            height: { min: 480, ideal: 720, max: 1080 },
         };
 
-        // ⚠️ CAMBIO CLAVE: Usamos configuración simple para iOS
-        // No forzamos resolución HD manual, dejamos que Safari decida la mejor.
         await scanner.start(
-          { facingMode: "environment" }, 
-          config,
+          videoConstraints, 
+          {
+            fps: 15,
+            qrbox: { width: 280, height: 200 }, // Guía visual rectangular para códigos largos
+            aspectRatio: 1.0,
+            formatsToSupport: formatsToSupport,
+            experimentalFeatures: {
+                useBarCodeDetectorIfSupported: true
+            }
+          },
           (decodedText) => {
-            // Éxito
+            // ÉXITO
             console.log("Código:", decodedText);
-            
-            // Filtro para evitar lecturas falsas cortas
             if (decodedText.length < 5) return;
 
             if (typeof navigator !== 'undefined' && navigator.vibrate) {
                 navigator.vibrate(200);
             }
+            
+            // Sonido de éxito (opcional)
+            const audio = new Audio('/beep.mp3'); // Si tienes un archivo beep
+            audio.play().catch(() => {});
 
-            // Detener y enviar
-            scanner?.stop().then(() => {
-                scanner?.clear();
+            scanner.stop().then(() => {
+                scanner.clear();
                 onScan(decodedText.trim());
             }).catch(err => console.error(err));
           },
@@ -92,21 +95,30 @@ export default function BarcodeScannerModal({ isOpen, onClose, onScan }: Barcode
             // Ignorar errores de frame vacío
           }
         );
+
+        // Detectar capacidades de Zoom
+        const track = scanner.getRunningTrackCameraCapabilities();
+        const capabilities = track as any; // Casting para acceder a zoom
+
+        if (capabilities && capabilities.zoom) {
+            setHasZoom(true);
+            // Intentar poner un zoom inicial ligero (1.5x) para facilitar lectura
+            applyZoom(1.5, scanner); 
+            setZoom(1.5);
+        }
         
         setIsPermitted(true);
         setLoading(false);
 
       } catch (err: any) {
-        console.error("Error iniciando cámara:", err);
-        // Mensaje amigable para el usuario
-        setError("No pudimos acceder a la cámara. Por favor, revisa que hayas dado permiso en tu navegador.");
+        console.error("Error cámara:", err);
+        setError("No se pudo iniciar la cámara. Revisa los permisos.");
         setLoading(false);
       }
     };
 
     startScanner();
 
-    // Limpieza al desmontar el componente (cerrar modal)
     return () => {
       if (scannerRef.current) {
          scannerRef.current.stop().catch(() => {}).finally(() => {
@@ -115,6 +127,33 @@ export default function BarcodeScannerModal({ isOpen, onClose, onScan }: Barcode
       }
     };
   }, [isOpen, onScan]);
+
+  const applyZoom = (zoomValue: number, scannerInstance = scannerRef.current) => {
+    if (scannerInstance) {
+        scannerInstance.applyVideoConstraints({
+            advanced: [{ zoom: zoomValue }] as any
+        }).catch(e => console.log("Zoom no soportado en tiempo real", e));
+    }
+  };
+
+  const handleZoomChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newZoom = parseFloat(e.target.value);
+    setZoom(newZoom);
+    applyZoom(newZoom);
+  };
+
+  const toggleTorch = async () => {
+    if (scannerRef.current) {
+        try {
+            await scannerRef.current.applyVideoConstraints({
+                advanced: [{ torch: !torchOn }] as any
+            });
+            setTorchOn(!torchOn);
+        } catch (err) {
+            console.log("Linterna no soportada", err);
+        }
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -132,63 +171,77 @@ export default function BarcodeScannerModal({ isOpen, onClose, onScan }: Barcode
       <div className="w-full h-full relative flex flex-col">
         
         {/* HEADER */}
-        <div className="absolute top-0 left-0 right-0 p-8 pt-12 z-40 bg-gradient-to-b from-black/80 to-transparent flex justify-center">
+        <div className="absolute top-0 left-0 right-0 p-6 pt-12 z-40 bg-gradient-to-b from-black/90 to-transparent flex flex-col items-center">
              <h2 className="text-white font-bold text-lg flex items-center gap-2 drop-shadow-md">
                 <ScanLine size={20} className="text-gmc-dorado-principal animate-pulse" />
-                Escaneando...
+                Apunta al Código
              </h2>
         </div>
 
         {/* CÁMARA */}
         <div className="flex-1 relative bg-black overflow-hidden flex items-center justify-center">
             
-            {/* El video se inyecta aquí */}
             <div id="reader-element" className="w-full h-full object-cover"></div>
 
-            {/* GUI VISUAL */}
+            {/* GUI VISUAL MEJORADA */}
             {isPermitted && !error && !loading && (
                 <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-                    {/* Marco visual */}
-                    <div className="w-[85%] h-64 border-2 border-white/50 rounded-xl relative shadow-[0_0_100px_rgba(0,0,0,0.5)_inset]">
+                    {/* Marco visual rectangular (Mejor para códigos TBA largos) */}
+                    <div className="w-[85%] h-48 border-2 border-white/60 rounded-xl relative shadow-[0_0_0_999px_rgba(0,0,0,0.5)]">
                         
-                        {/* Esquinas */}
-                        <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-gmc-dorado-principal rounded-tl-lg"></div>
-                        <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-gmc-dorado-principal rounded-tr-lg"></div>
-                        <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-gmc-dorado-principal rounded-bl-lg"></div>
-                        <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-gmc-dorado-principal rounded-br-lg"></div>
+                        {/* Esquinas Brillantes */}
+                        <div className="absolute -top-1 -left-1 w-8 h-8 border-t-4 border-l-4 border-gmc-dorado-principal rounded-tl-lg"></div>
+                        <div className="absolute -top-1 -right-1 w-8 h-8 border-t-4 border-r-4 border-gmc-dorado-principal rounded-tr-lg"></div>
+                        <div className="absolute -bottom-1 -left-1 w-8 h-8 border-b-4 border-l-4 border-gmc-dorado-principal rounded-bl-lg"></div>
+                        <div className="absolute -bottom-1 -right-1 w-8 h-8 border-b-4 border-r-4 border-gmc-dorado-principal rounded-br-lg"></div>
 
-                        {/* Línea Roja */}
-                        <div className="absolute top-1/2 left-4 right-4 h-0.5 bg-red-500 shadow-[0_0_15px_red] animate-[scan_2s_infinite]"></div>
+                        {/* Línea Láser */}
+                        <div className="absolute top-1/2 left-2 right-2 h-0.5 bg-red-500 shadow-[0_0_15px_red] animate-[scan_2s_infinite]"></div>
                     </div>
-                </div>
-            )}
-
-            {/* ERROR */}
-            {error && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900 z-50 text-white p-8 text-center">
-                    <CameraOff size={48} className="mb-4 text-red-500" />
-                    <p className="font-bold text-lg mb-2">Error de Acceso</p>
-                    <p className="text-gray-400 text-sm">{error}</p>
-                    <button onClick={onClose} className="mt-6 bg-white text-black px-6 py-3 rounded-xl font-bold">
-                        Cerrar
-                    </button>
                 </div>
             )}
 
             {/* LOADING */}
             {loading && !error && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center bg-black text-white z-40">
-                    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-white mb-4"></div>
-                    <p className="text-sm">Iniciando cámara...</p>
+                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gmc-dorado-principal mb-4"></div>
+                    <p className="text-sm font-medium">Iniciando cámara HD...</p>
                 </div>
             )}
         </div>
 
-        {/* FOOTER TEXT */}
-        <div className="absolute bottom-12 left-0 right-0 text-center px-6 z-40">
-             <p className="text-gray-300 text-xs bg-black/50 py-2 px-4 rounded-full inline-block backdrop-blur-md">
-                Si el código es largo, aleja un poco el celular
-             </p>
+        {/* FOOTER CONTROLES (ZOOM y LINTERNA) */}
+        <div className="absolute bottom-0 left-0 right-0 bg-black/80 backdrop-blur-md p-6 pb-10 z-50 rounded-t-3xl border-t border-white/10">
+             
+             {/* Slider de Zoom (Si está disponible) */}
+             {hasZoom && (
+                <div className="flex items-center gap-4 mb-6 px-4">
+                    <ZoomOut size={20} className="text-gray-400" />
+                    <input 
+                        type="range" 
+                        min="1" 
+                        max="5" 
+                        step="0.1" 
+                        value={zoom} 
+                        onChange={handleZoomChange}
+                        className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-gmc-dorado-principal"
+                    />
+                    <ZoomIn size={20} className="text-gray-400" />
+                </div>
+             )}
+
+             <div className="flex justify-center gap-8">
+                {/* Botón Linterna */}
+                <button 
+                    onClick={toggleTorch}
+                    className={`flex flex-col items-center gap-2 ${torchOn ? 'text-yellow-400' : 'text-gray-400'}`}
+                >
+                    <div className={`p-4 rounded-full border ${torchOn ? 'bg-yellow-400/20 border-yellow-400' : 'bg-white/10 border-white/20'}`}>
+                        <Zap size={24} className={torchOn ? "fill-yellow-400" : ""} />
+                    </div>
+                    <span className="text-xs font-bold">Linterna</span>
+                </button>
+             </div>
         </div>
       </div>
     </div>
