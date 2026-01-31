@@ -65,7 +65,12 @@ export default function ConsolidationCard({ request }: { request: any }) {
   return (
     <>
       {/* --- TARJETA VISUAL --- */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
+      <div 
+        // 🟢 CORRECCIÓN VISUAL: Al hacer click aquí, ahora vamos a '/envios/'
+        // NOTA: Si quieres que toda la tarjeta sea cliqueable para ver detalle
+        // onClick={() => router.push(`/dashboard-admin/envios/${request.id}`)}
+        className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
+      >
         
         {/* Cabecera */}
         <div className="bg-gray-50 px-6 py-4 border-b border-gray-100 flex flex-wrap justify-between items-center gap-4">
@@ -114,7 +119,10 @@ export default function ConsolidationCard({ request }: { request: any }) {
             {/* Footer: Botón de Acción */}
             <div className="flex justify-end pt-4 border-t border-gray-100">
                 <button 
-                    onClick={() => setShowModal(true)}
+                    onClick={(e) => {
+                        e.stopPropagation(); // Evitamos navegar si damos click al botón
+                        setShowModal(true);
+                    }}
                     className="bg-gmc-gris-oscuro text-white px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-black transition-colors flex items-center gap-2"
                 >
                     Procesar Consolidación <ArrowRight size={16} />
