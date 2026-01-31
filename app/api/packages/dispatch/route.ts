@@ -16,42 +16,62 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    // 🔥 ACEPTAMOS 'staffName' (Para entregas en tienda)
-    const { packageId, finalTrackingNumber, type, staffName } = body;
+    const { packageId, finalTrackingNumber, type, staffName, driverName, action } = body;
 
-    // VALIDACIÓN: Debe haber ID y (Tracking O StaffName)
-    if (!packageId || (!finalTrackingNumber && !staffName)) {
-        return NextResponse.json({ message: "Faltan datos (Tracking o Nombre Staff)" }, { status: 400 });
+    if (!packageId) {
+        return NextResponse.json({ message: "Falta el ID del paquete" }, { status: 400 });
     }
 
-    // Detectamos si es Retiro en Tienda o Envío
-    const isStorePickup = !!staffName;
-    const newStatus = isStorePickup ? 'ENTREGADO' : 'ENVIADO'; // 👈 AQUÍ CAMBIA EL ESTADO
+    // --- LÓGICA DE ESTADOS ---
+    let newStatus = 'ENVIADO'; 
+    let trackingInfo = finalTrackingNumber;
+    let serviceInfo = ''; 
+
+    // 1. CASO: RECEPCIÓN EN DESTINO (Botón Morado)
+    if (action === 'RECEIVE_IN_DESTINATION') {
+        newStatus = 'EN_REPARTO';
+        console.log(`📥 Recibiendo en destino (EN_REPARTO): ${packageId}`);
+    } 
+    // 2. CASO: ENTREGA EN TIENDA (Pickup Cliente)
+    else if (staffName) {
+        newStatus = 'ENTREGADO';
+        serviceInfo = `Entregado en Tienda por: ${staffName}`;
+        trackingInfo = 'RETIRADO_EN_TIENDA';
+        console.log(`👤 Entregando en tienda (ENTREGADO): ${packageId}`);
+    }
+    // 3. CASO: SALIDA / ENVÍO CON DRIVER (Botón Verde)
+    else {
+        newStatus = 'ENVIADO';
+        // 🔥 ACTUALIZADO: Usamos "Driver" para coincidir con el Rol
+        if (driverName) {
+            serviceInfo = `Driver Salida: ${driverName}`;
+        }
+        
+        if (!finalTrackingNumber) {
+             return NextResponse.json({ message: "Falta Tracking Number para despacho" }, { status: 400 });
+        }
+        console.log(`🚚 Despachando Courier/Driver (ENVIADO): ${packageId}`);
+    }
 
     let updatedRecord: any;
     let shipmentId;
 
-    // 👇 LÓGICA DE BIFURCACIÓN
+    // 👇 EJECUCIÓN EN BASE DE DATOS
     
     if (type === 'CONSOLIDATION') {
-        // ES CONSOLIDACIÓN
-        console.log(`🚚 Procesando Consolidación (${newStatus}):`, packageId);
-        
         updatedRecord = await prisma.consolidatedShipment.update({
             where: { id: packageId },
             data: {
                 status: newStatus,
-                // Si es tienda, guardamos quien entregó. Si es courier, el tracking.
-                ...(isStorePickup 
-                    ? { courierService: `Entregado en Tienda por: ${staffName}`, finalTrackingNumber: 'RETIRADO_EN_TIENDA' } 
-                    : { finalTrackingNumber: finalTrackingNumber }
-                ),
+                ...(staffName && { courierService: serviceInfo, finalTrackingNumber: trackingInfo }),
+                ...(newStatus === 'ENVIADO' && driverName && { courierService: serviceInfo }),
+                ...(newStatus === 'ENVIADO' && finalTrackingNumber && { finalTrackingNumber: finalTrackingNumber }),
                 updatedAt: new Date()
             },
             include: { user: true }
         });
 
-        // Actualizamos hijos
+        // Actualizar hijos
         await prisma.package.updateMany({
             where: { consolidatedShipmentId: packageId },
             data: { status: newStatus, updatedAt: new Date() }
@@ -60,17 +80,14 @@ export async function POST(req: Request) {
         shipmentId = updatedRecord.gmcShipmentNumber;
 
     } else {
-        // ES PAQUETE INDIVIDUAL
-        console.log(`📦 Procesando Paquete Individual (${newStatus}):`, packageId);
-
         updatedRecord = await prisma.package.update({
             where: { id: packageId },
             data: {
                 status: newStatus,
-                ...(isStorePickup 
-                    ? { deliverySignature: `Staff: ${staffName}`, gmcTrackingNumber: 'RETIRADO_EN_TIENDA' } 
-                    : { gmcTrackingNumber: finalTrackingNumber }
-                ),
+                ...(staffName && { deliverySignature: `Staff: ${staffName}`, gmcTrackingNumber: trackingInfo }),
+                // 🔥 ACTUALIZADO: Guardamos "Driver: [Nombre]"
+                ...(newStatus === 'ENVIADO' && driverName && { deliverySignature: `Driver: ${driverName}` }),
+                ...(newStatus === 'ENVIADO' && finalTrackingNumber && { gmcTrackingNumber: finalTrackingNumber }),
                 updatedAt: new Date()
             },
             include: { user: true }
@@ -79,21 +96,20 @@ export async function POST(req: Request) {
         shipmentId = updatedRecord.gmcTrackingNumber;
     }
 
-    // ENVIAR CORREO AL CLIENTE
-    if (updatedRecord && updatedRecord.user) {
+    // ENVIAR CORREO
+    if (updatedRecord && updatedRecord.user && newStatus !== 'EN_REPARTO') {
         try {
             const clientName = updatedRecord.user.name || 'Cliente';
             const refId = shipmentId || 'Envío';
             let emailMessage = "";
 
-            if (isStorePickup) {
-                // MENSAJE TIENDA
-                emailMessage = `Hola ${clientName}, tu envío (${refId}) ha sido entregado exitosamente en nuestra tienda. Atendido por: ${staffName}. Gracias por elegirnos.`;
-            } else {
-                // MENSAJE COURIER
+            if (newStatus === 'ENTREGADO') {
+                emailMessage = `Hola ${clientName}, tu envío (${refId}) ha sido entregado en tienda. Atendido por: ${staffName}.`;
+            } else if (newStatus === 'ENVIADO') {
                 const courierName = updatedRecord.selectedCourier || 'Transportista';
-                const tracking = finalTrackingNumber;
-                emailMessage = `Hola ${clientName}, tu envío (${refId}) ha sido despachado vía ${courierName}. Tracking: ${tracking}.`;
+                // 🔥 ACTUALIZADO: Texto en el correo
+                const driverText = driverName ? ` (Driver: ${driverName})` : '';
+                emailMessage = `Hola ${clientName}, tu envío (${refId}) ha salido hacia su destino vía ${courierName}${driverText}. Tracking: ${finalTrackingNumber}.`;
             }
 
             await sendPackageDispatchedEmail(updatedRecord.user.email, emailMessage);
@@ -104,7 +120,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ 
         success: true, 
-        message: isStorePickup ? "Entregado en Tienda" : "Despachado correctamente",
+        message: "Actualizado correctamente",
         data: updatedRecord 
     });
 

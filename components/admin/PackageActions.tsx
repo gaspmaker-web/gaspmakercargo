@@ -30,6 +30,9 @@ export default function PackageActions({ pkg, locale }: PackageActionsProps) {
   // --- ESTADOS DE PROCESO ---
   const [finalWeight, setFinalWeight] = useState('');
   const [dims, setDims] = useState({ length: '', width: '', height: '' });
+  
+  // 🔥 ESTADO DRIVER
+  const [driverName, setDriverName] = useState(''); 
   const [trackingNumber, setTrackingNumber] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
@@ -123,11 +126,15 @@ export default function PackageActions({ pkg, locale }: PackageActionsProps) {
       if (!trackingNumber) return alert("Ingresa tracking"); 
       setIsSaving(true); 
       try { 
-          // ✅ RUTA CORRECTA: /api/packages/dispatch
+          // ✅ ENVIAMOS 'driverName' a la ruta correcta
           const res = await fetch('/api/packages/dispatch', { 
               method: 'POST', 
               headers: { 'Content-Type': 'application/json' }, 
-              body: JSON.stringify({ packageId: pkg.id, finalTrackingNumber: trackingNumber }) 
+              body: JSON.stringify({ 
+                  packageId: pkg.id, 
+                  finalTrackingNumber: trackingNumber,
+                  driverName: driverName 
+              }) 
           }); 
           
           if (res.ok) { 
@@ -143,23 +150,19 @@ export default function PackageActions({ pkg, locale }: PackageActionsProps) {
       } 
   };
 
-  // 🔥 ENTREGA EN TIENDA (CORREGIDA LA RUTA)
+  // 🔥 ENTREGA EN TIENDA
   const handlePickupStore = async () => {
-      // 1. Pedimos el nombre del encargado
       const staffName = prompt(`👤 ¿Quién está entregando el paquete? \n\nEscribe tu nombre para el registro:`);
-      
-      // 2. Si cancela o lo deja vacío, no hacemos nada
       if (!staffName || staffName.trim() === '') return;
 
       try {
-          // 3. Llamamos a la API (CORREGIDA A '/api/packages/dispatch')
           const res = await fetch('/api/packages/dispatch', { 
               method: 'POST', 
               headers: {'Content-Type': 'application/json'},
               body: JSON.stringify({ 
                   packageId: pkg.id, 
-                  staffName: staffName, // Enviamos el nombre
-                  type: pkg.type || 'PACKAGE' // Por seguridad enviamos el tipo
+                  staffName: staffName, 
+                  type: pkg.type || 'PACKAGE' 
               })
           });
 
@@ -168,12 +171,11 @@ export default function PackageActions({ pkg, locale }: PackageActionsProps) {
               setIsMenuOpen(false); 
               router.refresh(); 
           } else {
-              // Manejo seguro del error si la API devuelve HTML (404) o JSON
               try {
                   const data = await res.json();
                   alert("Error: " + (data.message || "Desconocido"));
               } catch (err) {
-                  alert("Error: La ruta de la API no responde. Verifica que 'api/packages/dispatch' exista.");
+                  alert("Error: La ruta de la API no responde.");
               }
           }
       } catch (e: any) { 
@@ -226,12 +228,10 @@ export default function PackageActions({ pkg, locale }: PackageActionsProps) {
           <div className="fixed inset-0 z-10" onClick={() => setIsMenuOpen(false)} />
           <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl border border-gray-100 z-20 overflow-hidden font-montserrat animate-in fade-in zoom-in-95 duration-100 text-sm">
             
-            {/* 1. EDITAR */}
             <button onClick={() => { setIsEditOpen(true); setIsMenuOpen(false); }} className="w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center gap-3 text-gray-700">
               <Edit size={16} className="text-gray-400" /> Editar Detalles
             </button>
             
-            {/* 2. IMPRIMIR (Menú Principal) */}
             <button onClick={() => { setShowPrintModal(true); setIsMenuOpen(false); }} className="w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center gap-3 text-gray-700">
               <Printer size={16} className="text-gray-400" /> Imprimir Etiqueta
             </button>
@@ -240,7 +240,6 @@ export default function PackageActions({ pkg, locale }: PackageActionsProps) {
                <User size={16} className="text-gray-400" /> Ver Perfil Cliente
             </Link>
 
-            {/* CONSOLIDAR */}
             {isConsolidationRequest && (
                  <button 
                     onClick={() => { setShowConsolidateModal(true); setIsMenuOpen(false); }}
@@ -250,14 +249,12 @@ export default function PackageActions({ pkg, locale }: PackageActionsProps) {
                 </button>
             )}
 
-            {/* PRE-ALERTA */}
             {isPreAlert && (
                  <Link href={`/${locale}/dashboard-admin/paquetes/${pkg.id}`} className="w-full text-left px-4 py-3 bg-yellow-50 hover:bg-yellow-100 flex items-center gap-3 font-bold text-yellow-800 border-t border-gray-100">
                     <Package size={16} /> Procesar Ingreso
                 </Link>
             )}
 
-            {/* DESPACHAR / API */}
             {isReadyToShip && (
                 <>
                 {!isGaspMaker && (
@@ -266,7 +263,7 @@ export default function PackageActions({ pkg, locale }: PackageActionsProps) {
                     </button>
                 )}
                 <button onClick={() => { setShowDispatchModal(true); setIsMenuOpen(false); }} className="w-full text-left px-4 py-3 hover:bg-green-50 flex items-center gap-3 font-bold text-green-700">
-                    <Truck size={16} /> {isGaspMaker ? "Despachar (GMC)" : "Tracking Manual"}
+                    <Truck size={16} /> {isGaspMaker ? "Salida con Driver (GMC)" : "Tracking Manual"}
                 </button>
                 </>
             )}
@@ -284,7 +281,6 @@ export default function PackageActions({ pkg, locale }: PackageActionsProps) {
         </>
       )}
 
-      {/* --- MODAL SOLO IMPRIMIR (Desde el menú) --- */}
       {showPrintModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
             <div className="bg-white rounded-xl shadow-2xl max-w-sm w-full p-6 animate-in zoom-in-95">
@@ -303,7 +299,6 @@ export default function PackageActions({ pkg, locale }: PackageActionsProps) {
           </div>
       )}
 
-      {/* --- MODAL CONSOLIDACIÓN --- */}
       {showConsolidateModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
             <div className="bg-white rounded-xl shadow-2xl max-w-sm w-full p-6 animate-in zoom-in-95">
@@ -351,40 +346,40 @@ export default function PackageActions({ pkg, locale }: PackageActionsProps) {
         </div>
       )}
 
-      {/* 🛑 AQUI USAMOS EL MODAL DE EDICIÓN (DEBE EXISTIR) */}
       {isEditOpen && <EditPackageAdminModal isOpen={isEditOpen} onClose={() => setIsEditOpen(false)} pkg={pkg} />}
       
-      {/* --- MODAL DESPACHO --- */}
+      {/* 🔥 MODAL DESPACHO CON CAMPO DE DRIVER 🔥 */}
       {showDispatchModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
             <div className="bg-white rounded-xl shadow-2xl max-w-sm w-full p-6 animate-in zoom-in-95">
                 <div className="flex justify-between items-center mb-4">
                     <h3 className="text-lg font-bold text-gray-800">
-                        {dispatchSuccess ? '¡Despacho Exitoso!' : (isGaspMaker ? "Despacho GMC" : "Tracking Manual")}
+                        {dispatchSuccess ? '¡Despacho Exitoso!' : (isGaspMaker ? "Salida con Driver" : "Tracking Manual")}
                     </h3>
                     <button onClick={() => setShowDispatchModal(false)}><X size={20} className="text-gray-400"/></button>
                 </div>
 
                 {dispatchSuccess ? (
                     <div className="text-center">
-                        <div className="mx-auto w-12 h-12 bg-green-100 rounded-full flex items-center justify-center text-green-600 mb-3">
-                            <CheckCircle size={32}/>
-                        </div>
+                        <div className="mx-auto w-12 h-12 bg-green-100 rounded-full flex items-center justify-center text-green-600 mb-3"><CheckCircle size={32}/></div>
                         <p className="text-sm text-gray-600 mb-2">Tracking Generado:</p>
                         <p className="font-mono font-bold text-xl text-blue-600 mb-6 bg-blue-50 p-2 rounded">{trackingNumber}</p>
-                        
                         <PrintButtons />
-                        
-                        <button onClick={() => setShowDispatchModal(false)} className="mt-4 text-xs text-gray-400 hover:text-gray-600">
-                            Cerrar
-                        </button>
+                        <button onClick={() => setShowDispatchModal(false)} className="mt-4 text-xs text-gray-400 hover:text-gray-600">Cerrar</button>
                     </div>
                 ) : (
                     <>
                         <div className="bg-blue-50 p-3 rounded-lg mb-4 text-sm"><p className="font-bold text-blue-800">{pkg.selectedCourier}</p></div>
+                        
+                        {/* INPUT PARA DRIVER */}
+                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Nombre del Driver (Opcional)</label>
+                        <input type="text" value={driverName} onChange={(e) => setDriverName(e.target.value)} placeholder="Ej: Juan Perez" className="w-full border p-3 rounded-lg mb-4 text-gray-800"/>
+
+                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Tracking Number</label>
                         <input type="text" value={trackingNumber} onChange={(e) => setTrackingNumber(e.target.value)} placeholder="Tracking..." className="w-full border p-3 rounded-lg mb-4 font-mono text-lg"/>
+                        
                         <button onClick={handleDispatch} disabled={isSaving} className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg flex gap-2 justify-center">
-                            {isSaving ? <Loader2 className="animate-spin"/> : <Save size={18}/>} Guardar
+                            {isSaving ? <Loader2 className="animate-spin"/> : <Save size={18}/>} Despachar
                         </button>
                     </>
                 )}

@@ -13,21 +13,31 @@ export default function ReceiveShipmentButton({ shipmentId, currentStatus }: { s
         
         setLoading(true);
         try {
-            const res = await fetch('/api/admin/shipments/receive', {
+            // 🔥 CORRECCIÓN: Apuntamos a la API que SÍ existe: /api/admin/packages/dispatch
+            const res = await fetch('/api/admin/packages/dispatch', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ shipmentId })
+                body: JSON.stringify({ 
+                    packageId: shipmentId, 
+                    type: 'CONSOLIDATION',
+                    action: 'RECEIVE_IN_DESTINATION' // 👈 Esta es la clave para que la API sepa qué hacer
+                })
             });
 
             if (res.ok) {
                 alert("✅ Consolidación recibida. Estado: EN REPARTO");
                 router.refresh();
             } else {
-                alert("Hubo un error al actualizar.");
+                try {
+                    const data = await res.json();
+                    alert("Error: " + (data.message || "Hubo un error al actualizar."));
+                } catch (e) {
+                    alert("Hubo un error al actualizar (Error de servidor).");
+                }
             }
         } catch (error) {
             console.error(error);
-            alert("Error de conexión");
+            alert("Error de conexión. Verifica que la ruta /api/admin/packages/dispatch exista.");
         } finally {
             setLoading(false);
         }
