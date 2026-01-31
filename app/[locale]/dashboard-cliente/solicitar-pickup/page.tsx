@@ -251,8 +251,8 @@ export default function SolicitarPickupPage() {
   const gridLayoutClass = isBodega ? 'max-w-4xl mx-auto' : 'grid grid-cols-1 lg:grid-cols-3 gap-8';
 
   return (
-    // 🔥 FIX: 'w-full overflow-x-hidden' PARA EVITAR SCROLL LATERAL 🔥
-    <div className="min-h-screen w-full bg-gray-50 pb-32 md:pb-6 font-montserrat overflow-x-hidden">
+    // 🔥 FIX: 'max-w-[100vw]' Y 'overflow-x-hidden' PARA EVITAR SCROLL LATERAL 🔥
+    <div className="min-h-screen w-full max-w-[100vw] bg-gray-50 pb-32 md:pb-6 font-montserrat overflow-x-hidden relative">
       <div className="max-w-6xl mx-auto p-4 md:p-6 w-full">
         
         <div className="mb-6 text-center">
