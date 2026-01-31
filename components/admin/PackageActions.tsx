@@ -123,6 +123,7 @@ export default function PackageActions({ pkg, locale }: PackageActionsProps) {
       if (!trackingNumber) return alert("Ingresa tracking"); 
       setIsSaving(true); 
       try { 
+          // ✅ RUTA CORRECTA: /api/packages/dispatch
           const res = await fetch('/api/packages/dispatch', { 
               method: 'POST', 
               headers: { 'Content-Type': 'application/json' }, 
@@ -142,7 +143,7 @@ export default function PackageActions({ pkg, locale }: PackageActionsProps) {
       } 
   };
 
-  // 🔥 MODIFICACIÓN AQUÍ: ENTREGA EN TIENDA CON NOMBRE DE STAFF
+  // 🔥 ENTREGA EN TIENDA (CORREGIDA LA RUTA)
   const handlePickupStore = async () => {
       // 1. Pedimos el nombre del encargado
       const staffName = prompt(`👤 ¿Quién está entregando el paquete? \n\nEscribe tu nombre para el registro:`);
@@ -151,8 +152,8 @@ export default function PackageActions({ pkg, locale }: PackageActionsProps) {
       if (!staffName || staffName.trim() === '') return;
 
       try {
-          // 3. Llamamos a la API INTELIGENTE que acabamos de crear
-          const res = await fetch('/api/admin/paquetes/dispatch', { 
+          // 3. Llamamos a la API (CORREGIDA A '/api/packages/dispatch')
+          const res = await fetch('/api/packages/dispatch', { 
               method: 'POST', 
               headers: {'Content-Type': 'application/json'},
               body: JSON.stringify({ 
@@ -162,18 +163,22 @@ export default function PackageActions({ pkg, locale }: PackageActionsProps) {
               })
           });
 
-          const data = await res.json();
-
           if (res.ok) { 
               alert(`✅ Paquete entregado correctamente.\nRegistrado por: ${staffName}`); 
               setIsMenuOpen(false); 
               router.refresh(); 
           } else {
-              alert("Error: " + data.message);
+              // Manejo seguro del error si la API devuelve HTML (404) o JSON
+              try {
+                  const data = await res.json();
+                  alert("Error: " + (data.message || "Desconocido"));
+              } catch (err) {
+                  alert("Error: La ruta de la API no responde. Verifica que 'api/packages/dispatch' exista.");
+              }
           }
-      } catch (e) { 
+      } catch (e: any) { 
           console.error(e);
-          alert("Error de conexión al entregar."); 
+          alert("⚠️ Error de conexión: " + e.message); 
       }
   };
 
