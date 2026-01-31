@@ -3,11 +3,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-// ❌ ArrowLeft eliminado de imports
 import { Truck, MapPin, Warehouse, CreditCard, Info, Loader2, Package, Check, ChevronDown, ChevronUp, Calendar, Phone, Weight } from 'lucide-react';
 import { useJsApiLoader, Autocomplete } from '@react-google-maps/api';
 import { getProcessingFee } from '@/lib/stripeCalc';
-// 🔥 Importamos hook de traducción
 import { useTranslations } from 'next-intl';
 
 // --- CONFIGURACIÓN ---
@@ -23,11 +21,9 @@ const GMC_WAREHOUSE_ADDRESS = "1861 NW 22nd St, Miami, FL 33142";
 const GOOGLE_LIBRARIES: ("places")[] = ["places"];
 
 export default function SolicitarPickupPage() {
-  // 🔥 Inicializamos traducción
   const t = useTranslations('Pickup');
   const router = useRouter();
   
-  // Refs
   const inventorySectionRef = useRef<HTMLDivElement>(null);
   const routeSectionRef = useRef<HTMLDivElement>(null);
 
@@ -37,7 +33,6 @@ export default function SolicitarPickupPage() {
     libraries: GOOGLE_LIBRARIES
   });
 
-  // 🔥 CONSTANTES CON TRADUCCIÓN DENTRO DEL COMPONENTE
   const WEIGHT_TIERS = [
     { id: 'w_30', label: t('sizeSmall'), price: 30 },
     { id: 'w_45', label: t('sizeMedium'), price: 45 },
@@ -163,7 +158,6 @@ export default function SolicitarPickupPage() {
   };
 
   const handlePaymentAndSubmit = async () => {
-    // Validaciones
     if (serviceType !== 'PICKUP_WAREHOUSE') {
         if (!formData.originAddress || !formData.pickupDate) { alert("Completa los campos."); return; }
         if (!selectedCardId) { alert("Selecciona un método de pago."); return; }
@@ -178,7 +172,6 @@ export default function SolicitarPickupPage() {
             paymentId: 'PREPAID_PICKUP'
         };
 
-        // 2. Procesar Cobro (Solo si NO es Bodega)
         if (serviceType !== 'PICKUP_WAREHOUSE') {
             const payRes = await fetch('/api/payments/charge', {
                 method: 'POST',
@@ -235,16 +228,13 @@ export default function SolicitarPickupPage() {
     finally { setIsLoading(false); }
   };
 
-  // --- 🔥 CÁLCULO VISUAL UNIFICADO (Servicio + Fee) 🔥 ---
-  // Sumamos la tarifa base + fee para mostrarlos juntos
   const serviceWithFee = quote.baseFare + quote.processingFee;
 
   if (!isLoaded) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin text-gmc-dorado-principal"/></div>;
 
-  // --- VISTA DE ÉXITO (CORREGIDA) ---
   if (step === 2) {
       return (
-          <div className="min-h-screen bg-gray-50 p-6 flex flex-col items-center justify-center font-montserrat">
+          <div className="min-h-screen bg-gray-50 p-6 flex flex-col items-center justify-center font-montserrat w-full overflow-x-hidden">
               <div className="bg-white p-8 rounded-2xl shadow-xl max-w-lg w-full text-center">
                   <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4"><Check size={32} className="text-green-600"/></div>
                   <h2 className="text-2xl font-bold text-gray-800 mb-2">{t('successTitle')}</h2>
@@ -257,21 +247,19 @@ export default function SolicitarPickupPage() {
       );
   }
 
-  // --- LÓGICA DE DISEÑO ---
   const isBodega = serviceType === 'PICKUP_WAREHOUSE';
   const gridLayoutClass = isBodega ? 'max-w-4xl mx-auto' : 'grid grid-cols-1 lg:grid-cols-3 gap-8';
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-32 md:pb-6 font-montserrat">
-      <div className="max-w-6xl mx-auto p-4 md:p-6">
+    // 🔥 FIX: 'w-full overflow-x-hidden' PARA EVITAR SCROLL LATERAL 🔥
+    <div className="min-h-screen w-full bg-gray-50 pb-32 md:pb-6 font-montserrat overflow-x-hidden">
+      <div className="max-w-6xl mx-auto p-4 md:p-6 w-full">
         
-        {/* Header CENTRADO */}
         <div className="mb-6 text-center">
             <h1 className="text-xl md:text-2xl font-bold text-gmc-gris-oscuro font-garamond">{t('title')}</h1>
             <p className="text-sm text-gray-500">{t('subtitle')}</p>
         </div>
 
-        {/* SELECTOR */}
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-6 mb-6">
             <button onClick={() => handleServiceSelect('PICKUP_WAREHOUSE')} className={`p-4 rounded-xl border transition-all flex flex-col items-start justify-between h-full ${serviceType === 'PICKUP_WAREHOUSE' ? 'border-gmc-dorado-principal bg-yellow-50' : 'border-gray-200 bg-white'}`}>
                 <Warehouse size={24} className={serviceType === 'PICKUP_WAREHOUSE' ? 'text-gmc-dorado-principal' : 'text-gray-400'}/>
@@ -287,15 +275,12 @@ export default function SolicitarPickupPage() {
             </button>
         </div>
 
-        {/* INFO BODEGA */}
         {(serviceType === 'PICKUP_WAREHOUSE') && (
             <div ref={inventorySectionRef} className="scroll-mt-4 bg-orange-50 border border-orange-200 p-4 rounded-xl mb-6 flex gap-3 text-sm animate-fadeIn">
                 <Info size={20} className="text-orange-600 shrink-0 mt-0.5"/>
                 <div>
                     <h3 className="font-bold text-orange-900 uppercase text-xs mb-1">{t('storageRatesTitle')}</h3>
-                    <p className="text-orange-800 leading-relaxed">
-                        {t('storageRatesText')}
-                    </p>
+                    <p className="text-orange-800 leading-relaxed">{t('storageRatesText')}</p>
                 </div>
             </div>
         )}
@@ -304,7 +289,6 @@ export default function SolicitarPickupPage() {
             <div className={gridLayoutClass + " animate-fadeIn"}>
                 <div className={isBodega ? "w-full" : "lg:col-span-2 space-y-6"}>
                     
-                    {/* CASO A: INVENTARIO BODEGA - SOLO INFO, SIN BOTÓN */}
                     {serviceType === 'PICKUP_WAREHOUSE' ? (
                         <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm border border-gray-200">
                             <div className="flex justify-between items-center mb-4 border-b pb-2">
@@ -352,7 +336,6 @@ export default function SolicitarPickupPage() {
                             </div>
                         </div>
                     ) : (
-                        /* CASO B: FORMULARIOS DE RUTA (SHIPPING / DELIVERY) */
                         <>
                             <div ref={routeSectionRef} className="scroll-mt-4 bg-white p-4 md:p-6 rounded-xl shadow-sm border border-gray-200 space-y-4">
                                 <h3 className="font-bold text-gmc-gris-oscuro text-sm uppercase mb-2">{t('routeTitle')}</h3>
@@ -381,7 +364,6 @@ export default function SolicitarPickupPage() {
                             <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm border border-gray-200">
                                 <h3 className="font-bold text-gmc-gris-oscuro text-sm uppercase mb-4">{t('loadDetailsTitle')}</h3>
                                 
-                                {/* 🔥 DISEÑO MÓVIL ARREGLADO (1 COLUMNA EN MÓVIL, 2 EN PC) */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                     <div className="relative">
                                         <select 
@@ -406,7 +388,6 @@ export default function SolicitarPickupPage() {
                                     </div>
                                 </div>
 
-                                {/* 🔥 CAMPO HEAVY CON ANIMACIÓN SUAVE */}
                                 {formData.weightTier === 'w_heavy' && (
                                     <div className="mb-4 animate-in fade-in slide-in-from-top-2 duration-300">
                                         <div className="relative">
@@ -422,62 +403,53 @@ export default function SolicitarPickupPage() {
                                     </div>
                                 )}
 
-                                {/* 🔥 FECHA Y TELÉFONO (ARREGLADO EL BOTÓN FANTASMA) */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                    {/* Input de Fecha Mejorado */}
+                                    {/* 🔥 FIX: 'bg-white' Y 'appearance-none' PARA QUITAR EL CUADRO GRIS 🔥 */}
                                     <div className="relative">
                                         <label className="absolute -top-2 left-3 bg-white px-1 text-[10px] font-bold text-gray-400 z-10">Fecha de Recogida</label>
                                         <div className="relative">
-                                            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                                            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={18} />
                                             <input 
                                                 type="date" 
-                                                className="w-full p-3 pl-10 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-gmc-dorado-principal focus:border-transparent min-h-[46px]" 
+                                                className="w-full p-3 pl-10 border border-gray-200 rounded-xl text-sm bg-white appearance-none focus:ring-2 focus:ring-gmc-dorado-principal focus:border-transparent min-h-[46px]" 
                                                 onChange={e => setFormData({...formData, pickupDate: e.target.value})} 
                                             />
                                         </div>
                                     </div>
 
-                                    {/* Input de Teléfono Mejorado */}
                                     <div className="relative">
                                          <label className="absolute -top-2 left-3 bg-white px-1 text-[10px] font-bold text-gray-400 z-10">Contacto</label>
                                          <div className="relative">
-                                            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                                            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={18} />
                                             <input 
                                                 type="tel" 
                                                 placeholder="Teléfono" 
-                                                className="w-full p-3 pl-10 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-gmc-dorado-principal focus:border-transparent min-h-[46px]" 
+                                                className="w-full p-3 pl-10 border border-gray-200 rounded-xl text-sm bg-white focus:ring-2 focus:ring-gmc-dorado-principal focus:border-transparent min-h-[46px]" 
                                                 onChange={e => setFormData({...formData, contactPhone: e.target.value})} 
                                             />
                                         </div>
                                     </div>
                                 </div>
                                 
-                                <textarea className="w-full p-3 border border-gray-200 rounded-xl text-sm h-24 resize-none focus:ring-2 focus:ring-gmc-dorado-principal focus:border-transparent" placeholder="Descripción de los artículos (Ej: 2 cajas de ropa, 1 TV 55 pulgadas...)" onChange={e => setFormData({...formData, description: e.target.value})}></textarea>
+                                <textarea className="w-full p-3 border border-gray-200 rounded-xl text-sm h-24 resize-none focus:ring-2 focus:ring-gmc-dorado-principal focus:border-transparent" placeholder="Descripción de los artículos..." onChange={e => setFormData({...formData, description: e.target.value})}></textarea>
                             </div>
                         </>
                     )}
                 </div>
 
-                {/* 🔥 SIDEBAR DESKTOP - OCULTA SI ES BODEGA 🔥 */}
                 {!isBodega && (
                     <div className="hidden lg:block lg:col-span-1">
                         <div className="bg-gmc-gris-oscuro text-white p-6 rounded-2xl shadow-xl sticky top-6">
                             <h3 className="font-bold text-gmc-dorado-principal text-lg mb-4 border-b border-gray-600 pb-2">{t('summaryTitle')}</h3>
                             <div className="space-y-3 text-sm mb-4">
-                                
-                                {/* 🔥 SERVICIO + FEE COMBINADOS 🔥 */}
                                 <div className="flex justify-between">
                                     <span>{t('sumService')}</span>
                                     <span className="font-mono font-bold">${serviceWithFee.toFixed(2)}</span>
                                 </div>
-                                
                                 <div className="flex justify-between">
                                     <span>{t('sumDistance')}</span>
                                     <span>+${quote.distanceSurcharge.toFixed(2)}</span>
                                 </div>
-                                
-                                {/* ❌ FEE ELIMINADO VISUALMENTE (Ya sumado en 'serviceWithFee') */}
-                                
                                 <div className="flex justify-between text-xl font-bold pt-2 border-t border-gray-600 text-gmc-dorado-principal">
                                     <span>{t('sumTotal')}</span>
                                     <span>${quote.total.toFixed(2)}</span>
@@ -501,7 +473,6 @@ export default function SolicitarPickupPage() {
             </div>
         )}
 
-        {/* BARRA MÓVIL STICKY - SOLO VISIBLE SI NO ES BODEGA */}
         {serviceType && !isBodega && (
             <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-50 flex items-center justify-between gap-4">
                 <div onClick={() => setShowMobileSummary(!showMobileSummary)} className="flex-1 cursor-pointer">
@@ -515,9 +486,7 @@ export default function SolicitarPickupPage() {
 
                 {showMobileSummary && (
                     <div className="absolute bottom-full left-0 right-0 bg-white border-t border-gray-100 p-4 shadow-lg animate-fadeIn text-sm text-gray-700 space-y-2 pb-6">
-                        {/* 🔥 MÓVIL TAMBIÉN COMBINADO 🔥 */}
                         <div className="flex justify-between"><span>Base</span><span>${serviceWithFee.toFixed(2)}</span></div>
-                        
                         <div className="h-px bg-gray-100 my-2"></div>
                         <div className="flex justify-between items-center bg-gray-50 p-2 rounded">
                             <span className="text-xs flex items-center gap-2 font-bold"><CreditCard size={14}/> Tarjeta</span>
