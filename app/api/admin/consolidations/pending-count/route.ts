@@ -1,13 +1,14 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
-export const dynamic = 'force-dynamic'; // 🔥 Importante: No guardar caché
+export const dynamic = 'force-dynamic'; 
 
 export async function GET() {
   try {
-    // Buscamos en la base de datos cuántas dicen 'SOLICITADO'
-    const count = await prisma.consolidationRequest.count({
+    // CORRECCIÓN: Usamos 'consolidatedShipment' que es el nombre real en tu Schema
+    const count = await prisma.consolidatedShipment.count({
       where: {
+        // Asumimos que el estado inicial cuando el cliente pide consolidar es 'SOLICITADO'
         status: 'SOLICITADO' 
       }
     });
