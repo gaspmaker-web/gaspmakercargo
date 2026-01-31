@@ -1,14 +1,13 @@
 import { NextResponse } from "next/server";
 
-// 👇 VACUNA 1: Forzar modo dinámico (Para evitar errores en Build)
+// 👇 VACUNA 1: Forzar modo dinámico
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
   try {
-    // 👇 VACUNA 2: Imports dentro de la función (Lazy Loading)
+    // 👇 VACUNA 2: Imports Lazy Loading
     const prisma = (await import("@/lib/prisma")).default;
     const { auth } = await import("@/auth");
-    // Importamos la notificación solo si realmente vamos a despachar
     const { sendPackageDispatchedEmail } = await import("@/lib/notifications");
 
     const session = await auth();
@@ -17,45 +16,42 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    // 🔥 MODIFICACIÓN: Ahora aceptamos 'staffName' para entregas en tienda
+    // 🔥 ACEPTAMOS 'staffName' (Para entregas en tienda)
     const { packageId, finalTrackingNumber, type, staffName } = body;
 
-    // VALIDACIÓN INTELIGENTE:
-    // Requiere ID y (Tracking O Nombre del Staff)
+    // VALIDACIÓN: Debe haber ID y (Tracking O StaffName)
     if (!packageId || (!finalTrackingNumber && !staffName)) {
-        return NextResponse.json({ message: "Faltan datos (Tracking o Nombre del Staff)" }, { status: 400 });
+        return NextResponse.json({ message: "Faltan datos (Tracking o Nombre Staff)" }, { status: 400 });
     }
 
-    // Detectamos si es una Entrega en Tienda o un Envío Courier
+    // Detectamos si es Retiro en Tienda o Envío
     const isStorePickup = !!staffName;
-    const newStatus = isStorePickup ? 'ENTREGADO' : 'ENVIADO';
+    const newStatus = isStorePickup ? 'ENTREGADO' : 'ENVIADO'; // 👈 AQUÍ CAMBIA EL ESTADO
 
-    // Usamos 'any' para evitar conflictos de tipos entre Paquete y Consolidación
     let updatedRecord: any;
     let shipmentId;
 
-    // 👇 LÓGICA DE BIFURCACIÓN (Switch)
+    // 👇 LÓGICA DE BIFURCACIÓN
     
     if (type === 'CONSOLIDATION') {
-        // OPCIÓN A: ES UNA CONSOLIDACIÓN
+        // ES CONSOLIDACIÓN
         console.log(`🚚 Procesando Consolidación (${newStatus}):`, packageId);
         
         updatedRecord = await prisma.consolidatedShipment.update({
             where: { id: packageId },
             data: {
                 status: newStatus,
-                // Si es Tienda, guardamos el nombre del staff en 'courierService' o similar para registro
-                // Si es Envío, guardamos el Tracking
+                // Si es tienda, guardamos quien entregó. Si es courier, el tracking.
                 ...(isStorePickup 
                     ? { courierService: `Entregado en Tienda por: ${staffName}`, finalTrackingNumber: 'RETIRADO_EN_TIENDA' } 
                     : { finalTrackingNumber: finalTrackingNumber }
                 ),
                 updatedAt: new Date()
             },
-            include: { user: true } // Vital para el correo
+            include: { user: true }
         });
 
-        // También actualizamos los paquetes hijos
+        // Actualizamos hijos
         await prisma.package.updateMany({
             where: { consolidatedShipmentId: packageId },
             data: { status: newStatus, updatedAt: new Date() }
@@ -64,66 +60,56 @@ export async function POST(req: Request) {
         shipmentId = updatedRecord.gmcShipmentNumber;
 
     } else {
-        // OPCIÓN B: ES UN PAQUETE INDIVIDUAL
+        // ES PAQUETE INDIVIDUAL
         console.log(`📦 Procesando Paquete Individual (${newStatus}):`, packageId);
 
         updatedRecord = await prisma.package.update({
             where: { id: packageId },
             data: {
                 status: newStatus,
-                // Si es Tienda, usamos 'deliverySignature' para guardar el nombre del staff (Record de control)
                 ...(isStorePickup 
                     ? { deliverySignature: `Staff: ${staffName}`, gmcTrackingNumber: 'RETIRADO_EN_TIENDA' } 
                     : { gmcTrackingNumber: finalTrackingNumber }
                 ),
                 updatedAt: new Date()
             },
-            include: { user: true } // Vital para el correo
+            include: { user: true }
         });
 
         shipmentId = updatedRecord.gmcTrackingNumber;
     }
 
-    // ENVIAR NOTIFICACIÓN AL CLIENTE
+    // ENVIAR CORREO AL CLIENTE
     if (updatedRecord && updatedRecord.user) {
         try {
-            // Preparar variables para el mensaje
             const clientName = updatedRecord.user.name || 'Cliente';
             const refId = shipmentId || 'Envío';
-
             let emailMessage = "";
 
             if (isStorePickup) {
-                // MENSAJE DE ENTREGA EN TIENDA
-                emailMessage = `Hola ${clientName}, tu envío (${refId}) ha sido entregado exitosamente en nuestra tienda. Atendido por: ${staffName}. Gracias por usar Gasp Maker.`;
+                // MENSAJE TIENDA
+                emailMessage = `Hola ${clientName}, tu envío (${refId}) ha sido entregado exitosamente en nuestra tienda. Atendido por: ${staffName}. Gracias por elegirnos.`;
             } else {
-                // MENSAJE DE DESPACHO (COURIER)
+                // MENSAJE COURIER
                 const courierName = updatedRecord.selectedCourier || 'Transportista';
                 const tracking = finalTrackingNumber;
-                emailMessage = `Hola ${clientName}, tu envío (${refId}) ha sido despachado exitosamente vía ${courierName}. Tu número de rastreo es: ${tracking}. Gracias por usar Gasp Maker.`;
+                emailMessage = `Hola ${clientName}, tu envío (${refId}) ha sido despachado vía ${courierName}. Tracking: ${tracking}.`;
             }
 
-            await sendPackageDispatchedEmail(
-                updatedRecord.user.email,
-                emailMessage // Pasamos TEXTO, no un objeto
-            );
+            await sendPackageDispatchedEmail(updatedRecord.user.email, emailMessage);
         } catch (emailError) {
-            console.warn("⚠️ Correo de notificación falló, pero el registro se guardó:", emailError);
+            console.warn("⚠️ Error enviando correo:", emailError);
         }
     }
 
     return NextResponse.json({ 
         success: true, 
-        message: isStorePickup ? "Entregado en tienda correctamente" : "Despachado correctamente",
+        message: isStorePickup ? "Entregado en Tienda" : "Despachado correctamente",
         data: updatedRecord 
     });
 
   } catch (error: any) {
-    console.error("🔥 Error processing:", error);
-    // P2025 es el código de "Record not found" de Prisma
-    if (error.code === 'P2025') {
-        return NextResponse.json({ message: "No se encontró el envío (ID incorrecto)" }, { status: 404 });
-    }
-    return NextResponse.json({ message: error.message }, { status: 500 });
+    console.error("🔥 Error:", error);
+    return NextResponse.json({ message: error.message || "Error interno" }, { status: 500 });
   }
 }

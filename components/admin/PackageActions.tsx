@@ -142,15 +142,39 @@ export default function PackageActions({ pkg, locale }: PackageActionsProps) {
       } 
   };
 
+  // 🔥 MODIFICACIÓN AQUÍ: ENTREGA EN TIENDA CON NOMBRE DE STAFF
   const handlePickupStore = async () => {
-      if (!confirm(`¿Confirmas que el cliente retiró el paquete ${pkg.gmcTrackingNumber}?`)) return;
+      // 1. Pedimos el nombre del encargado
+      const staffName = prompt(`👤 ¿Quién está entregando el paquete? \n\nEscribe tu nombre para el registro:`);
+      
+      // 2. Si cancela o lo deja vacío, no hacemos nada
+      if (!staffName || staffName.trim() === '') return;
+
       try {
-          const res = await fetch('/api/admin/packages/update-status', { 
-              method: 'POST', headers: {'Content-Type': 'application/json'},
-              body: JSON.stringify({ packageId: pkg.id, newStatus: 'ENTREGADO' })
+          // 3. Llamamos a la API INTELIGENTE que acabamos de crear
+          const res = await fetch('/api/admin/paquetes/dispatch', { 
+              method: 'POST', 
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify({ 
+                  packageId: pkg.id, 
+                  staffName: staffName, // Enviamos el nombre
+                  type: pkg.type || 'PACKAGE' // Por seguridad enviamos el tipo
+              })
           });
-          if (res.ok) { alert("✅ Entregado en Tienda."); setIsMenuOpen(false); router.refresh(); }
-      } catch (e) { alert("Error al entregar."); }
+
+          const data = await res.json();
+
+          if (res.ok) { 
+              alert(`✅ Paquete entregado correctamente.\nRegistrado por: ${staffName}`); 
+              setIsMenuOpen(false); 
+              router.refresh(); 
+          } else {
+              alert("Error: " + data.message);
+          }
+      } catch (e) { 
+          console.error(e);
+          alert("Error de conexión al entregar."); 
+      }
   };
 
   const handleBuyLabel = async () => { 
