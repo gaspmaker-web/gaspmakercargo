@@ -17,11 +17,18 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { packageId, finalTrackingNumber, type } = body;
+    // 🔥 MODIFICACIÓN: Ahora aceptamos 'staffName' para entregas en tienda
+    const { packageId, finalTrackingNumber, type, staffName } = body;
 
-    if (!packageId || !finalTrackingNumber) {
-        return NextResponse.json({ message: "Faltan datos" }, { status: 400 });
+    // VALIDACIÓN INTELIGENTE:
+    // Requiere ID y (Tracking O Nombre del Staff)
+    if (!packageId || (!finalTrackingNumber && !staffName)) {
+        return NextResponse.json({ message: "Faltan datos (Tracking o Nombre del Staff)" }, { status: 400 });
     }
+
+    // Detectamos si es una Entrega en Tienda o un Envío Courier
+    const isStorePickup = !!staffName;
+    const newStatus = isStorePickup ? 'ENTREGADO' : 'ENVIADO';
 
     // Usamos 'any' para evitar conflictos de tipos entre Paquete y Consolidación
     let updatedRecord: any;
@@ -31,35 +38,44 @@ export async function POST(req: Request) {
     
     if (type === 'CONSOLIDATION') {
         // OPCIÓN A: ES UNA CONSOLIDACIÓN
-        console.log("🚚 Despachando Consolidación:", packageId);
+        console.log(`🚚 Procesando Consolidación (${newStatus}):`, packageId);
         
         updatedRecord = await prisma.consolidatedShipment.update({
             where: { id: packageId },
             data: {
-                status: 'ENVIADO',
-                finalTrackingNumber: finalTrackingNumber,
+                status: newStatus,
+                // Si es Tienda, guardamos el nombre del staff en 'courierService' o similar para registro
+                // Si es Envío, guardamos el Tracking
+                ...(isStorePickup 
+                    ? { courierService: `Entregado en Tienda por: ${staffName}`, finalTrackingNumber: 'RETIRADO_EN_TIENDA' } 
+                    : { finalTrackingNumber: finalTrackingNumber }
+                ),
                 updatedAt: new Date()
             },
             include: { user: true } // Vital para el correo
         });
 
-        // También actualizamos los paquetes hijos para que se marquen como enviados
+        // También actualizamos los paquetes hijos
         await prisma.package.updateMany({
             where: { consolidatedShipmentId: packageId },
-            data: { status: 'ENVIADO', updatedAt: new Date() }
+            data: { status: newStatus, updatedAt: new Date() }
         });
 
         shipmentId = updatedRecord.gmcShipmentNumber;
 
     } else {
-        // OPCIÓN B: ES UN PAQUETE INDIVIDUAL (Comportamiento original)
-        console.log("📦 Despachando Paquete Individual:", packageId);
+        // OPCIÓN B: ES UN PAQUETE INDIVIDUAL
+        console.log(`📦 Procesando Paquete Individual (${newStatus}):`, packageId);
 
         updatedRecord = await prisma.package.update({
             where: { id: packageId },
             data: {
-                status: 'ENVIADO',
-                gmcTrackingNumber: finalTrackingNumber, // O finalTrackingNumber si usas ese campo
+                status: newStatus,
+                // Si es Tienda, usamos 'deliverySignature' para guardar el nombre del staff (Record de control)
+                ...(isStorePickup 
+                    ? { deliverySignature: `Staff: ${staffName}`, gmcTrackingNumber: 'RETIRADO_EN_TIENDA' } 
+                    : { gmcTrackingNumber: finalTrackingNumber }
+                ),
                 updatedAt: new Date()
             },
             include: { user: true } // Vital para el correo
@@ -73,31 +89,37 @@ export async function POST(req: Request) {
         try {
             // Preparar variables para el mensaje
             const clientName = updatedRecord.user.name || 'Cliente';
-            const courierName = updatedRecord.selectedCourier || 'Transportista';
-            const tracking = finalTrackingNumber;
             const refId = shipmentId || 'Envío';
 
-            // 🚨 SOLUCIÓN: Creamos un mensaje de texto (String)
-            // Esto corrige el error "Argument of type object is not assignable to parameter of type string"
-            const emailMessage = `Hola ${clientName}, tu envío (${refId}) ha sido despachado exitosamente vía ${courierName}. Tu número de rastreo es: ${tracking}. Gracias por usar Gasp Maker.`;
+            let emailMessage = "";
+
+            if (isStorePickup) {
+                // MENSAJE DE ENTREGA EN TIENDA
+                emailMessage = `Hola ${clientName}, tu envío (${refId}) ha sido entregado exitosamente en nuestra tienda. Atendido por: ${staffName}. Gracias por usar Gasp Maker.`;
+            } else {
+                // MENSAJE DE DESPACHO (COURIER)
+                const courierName = updatedRecord.selectedCourier || 'Transportista';
+                const tracking = finalTrackingNumber;
+                emailMessage = `Hola ${clientName}, tu envío (${refId}) ha sido despachado exitosamente vía ${courierName}. Tu número de rastreo es: ${tracking}. Gracias por usar Gasp Maker.`;
+            }
 
             await sendPackageDispatchedEmail(
                 updatedRecord.user.email,
                 emailMessage // Pasamos TEXTO, no un objeto
             );
         } catch (emailError) {
-            console.warn("⚠️ Correo de despacho falló, pero el registro se guardó:", emailError);
+            console.warn("⚠️ Correo de notificación falló, pero el registro se guardó:", emailError);
         }
     }
 
     return NextResponse.json({ 
         success: true, 
-        message: "Despachado correctamente",
+        message: isStorePickup ? "Entregado en tienda correctamente" : "Despachado correctamente",
         data: updatedRecord 
     });
 
   } catch (error: any) {
-    console.error("🔥 Error dispatching:", error);
+    console.error("🔥 Error processing:", error);
     // P2025 es el código de "Record not found" de Prisma
     if (error.code === 'P2025') {
         return NextResponse.json({ message: "No se encontró el envío (ID incorrecto)" }, { status: 404 });
