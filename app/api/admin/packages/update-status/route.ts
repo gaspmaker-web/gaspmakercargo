@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-// 👇 Esto asegura que funcione en Vercel sin problemas de caché
+// 👇 Forzar modo dinámico para Vercel
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
@@ -16,40 +16,44 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { packageId, newStatus } = body;
 
-    // Validación
     if (!packageId || !newStatus) {
         return NextResponse.json({ message: "Faltan datos (ID o Status)" }, { status: 400 });
     }
 
     console.log(`🔄 Actualizando estado: ${packageId} -> ${newStatus}`);
 
-    // 👇 AQUÍ ESTÁ LA MAGIA:
-    // Al poner 'EN_REPARTO', tu App de Driver lo detectará automáticamente.
-    
-    // 1. Intentamos actualizar si es Consolidación
-    let updated = await prisma.consolidatedShipment.updateMany({
+    // 1. INTENTO A: Actualizar como Consolidación (Devuelve un contador 'count')
+    const consolidationResult = await prisma.consolidatedShipment.updateMany({
         where: { id: packageId },
         data: { status: newStatus, updatedAt: new Date() }
     });
 
-    // 2. Si no actualizó nada (count 0), intentamos como Paquete Suelto
-    if (updated.count === 0) {
-        updated = await prisma.package.update({
-            where: { id: packageId },
-            data: { status: newStatus, updatedAt: new Date() }
-        });
-    } else {
-        // Si ERA consolidación, actualizamos también sus paquetes hijos
+    // Si encontró y actualizó alguna consolidación (count > 0)
+    if (consolidationResult.count > 0) {
+        // Actualizamos también sus paquetes hijos
         await prisma.package.updateMany({
             where: { consolidatedShipmentId: packageId },
             data: { status: newStatus, updatedAt: new Date() }
         });
+        
+        return NextResponse.json({ success: true, message: "Consolidación actualizada" });
     }
 
-    return NextResponse.json({ success: true, message: "Estado actualizado" });
+    // 2. INTENTO B: Si count fue 0, intentamos actualizar como Paquete Suelto
+    // (Esto devuelve un objeto completo, no un count)
+    const packageResult = await prisma.package.update({
+        where: { id: packageId },
+        data: { status: newStatus, updatedAt: new Date() }
+    });
+
+    return NextResponse.json({ success: true, data: packageResult });
 
   } catch (error: any) {
     console.error("🔥 Error en update-status:", error);
+    // Manejo elegante si el ID no existe en ninguna tabla
+    if (error.code === 'P2025') {
+        return NextResponse.json({ message: "ID no encontrado en el sistema" }, { status: 404 });
+    }
     return NextResponse.json({ message: error.message || "Error interno" }, { status: 500 });
   }
 }
