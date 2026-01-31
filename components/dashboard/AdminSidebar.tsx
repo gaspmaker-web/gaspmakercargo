@@ -15,7 +15,7 @@ import {
   LogOut,
   Menu,
   X,
-  AlertCircle // 👈 Icono opcional para emergencias
+  AlertCircle 
 } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 
@@ -36,9 +36,8 @@ export default function AdminSidebar() {
   useEffect(() => {
     const checkPendingWork = async () => {
         try {
-            // Nota: Asegúrate de tener un endpoint que devuelva { count: number }
-            // O ajusta la URL a tu endpoint real de consolidaciones
-            const res = await fetch('/api/admin/consolidations/pending-count'); 
+            // Agregamos { cache: 'no-store' } para evitar caché del navegador
+            const res = await fetch('/api/admin/consolidations/pending-count', { cache: 'no-store' }); 
             if (res.ok) {
                 const data = await res.json();
                 // Si hay más de 0 pendientes, activamos la alerta
