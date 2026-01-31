@@ -251,8 +251,8 @@ export default function SolicitarPickupPage() {
   const gridLayoutClass = isBodega ? 'max-w-4xl mx-auto' : 'grid grid-cols-1 lg:grid-cols-3 gap-8';
 
   return (
-    // 🔥 FIX: 'max-w-[100vw]' Y 'overflow-x-hidden' PARA EVITAR SCROLL LATERAL 🔥
-    <div className="min-h-screen w-full max-w-[100vw] bg-gray-50 pb-32 md:pb-6 font-montserrat overflow-x-hidden relative">
+    // 🔥 FIX: 'touch-action-pan-y' bloquea el movimiento lateral en móviles 🔥
+    <div className="min-h-screen w-full max-w-[100vw] bg-gray-50 pb-32 md:pb-6 font-montserrat overflow-x-hidden relative" style={{ touchAction: 'pan-y' }}>
       <div className="max-w-6xl mx-auto p-4 md:p-6 w-full">
         
         <div className="mb-6 text-center">
@@ -341,7 +341,7 @@ export default function SolicitarPickupPage() {
                                 <h3 className="font-bold text-gmc-gris-oscuro text-sm uppercase mb-2">{t('routeTitle')}</h3>
                                 <div>
                                     <label className="text-xs font-bold text-gray-400">{t('pickupPointA')}</label>
-                                    <Autocomplete onLoad={ref => { originRef.current = ref }} onPlaceChanged={() => { const place = originRef.current?.getPlace(); if(place?.formatted_address) { setFormData(prev => ({...prev, originAddress: place.formatted_address!})); if(serviceType === 'SHIPPING') calculateDistance(place.formatted_address!, GMC_WAREHOUSE_ADDRESS); } }}><input type="text" placeholder="Dirección de recogida..." className="w-full p-3 border rounded-lg text-sm" /></Autocomplete>
+                                    <Autocomplete onLoad={ref => { originRef.current = ref }} onPlaceChanged={() => { const place = originRef.current?.getPlace(); if(place?.formatted_address) { setFormData(prev => ({...prev, originAddress: place.formatted_address!})); if(serviceType === 'SHIPPING') calculateDistance(place.formatted_address!, GMC_WAREHOUSE_ADDRESS); } }}><input type="text" placeholder="Dirección de recogida..." className="w-full p-3 border rounded-lg text-base" /></Autocomplete>
                                 </div>
                                 {serviceType === 'SHIPPING' && (
                                     <div className="p-3 bg-blue-50 border border-blue-100 rounded-lg flex items-center gap-3">
@@ -356,7 +356,7 @@ export default function SolicitarPickupPage() {
                                 {serviceType === 'DELIVERY' && (
                                     <div>
                                         <label className="text-xs font-bold text-gray-400">{t('dropoffPointB')}</label>
-                                        <Autocomplete onLoad={ref => { destRef.current = ref }} onPlaceChanged={() => { const place = destRef.current?.getPlace(); if(place?.formatted_address) { setFormData(prev => ({...prev, dropOffAddress: place.formatted_address!})); calculateDistance(formData.originAddress, place.formatted_address!); } }}><input type="text" placeholder="Dirección de entrega..." className="w-full p-3 border rounded-lg text-sm" /></Autocomplete>
+                                        <Autocomplete onLoad={ref => { destRef.current = ref }} onPlaceChanged={() => { const place = destRef.current?.getPlace(); if(place?.formatted_address) { setFormData(prev => ({...prev, dropOffAddress: place.formatted_address!})); calculateDistance(formData.originAddress, place.formatted_address!); } }}><input type="text" placeholder="Dirección de entrega..." className="w-full p-3 border rounded-lg text-base" /></Autocomplete>
                                     </div>
                                 )}
                             </div>
@@ -366,8 +366,9 @@ export default function SolicitarPickupPage() {
                                 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                     <div className="relative">
+                                        {/* 🔥 FIX: 'text-base' EVITA EL ZOOM EN MÓVILES 🔥 */}
                                         <select 
-                                            className="w-full p-3 pl-4 border border-gray-200 rounded-xl text-sm bg-white appearance-none font-medium focus:ring-2 focus:ring-gmc-dorado-principal focus:border-transparent" 
+                                            className="w-full p-3 pl-4 border border-gray-200 rounded-xl text-base bg-white appearance-none font-medium focus:ring-2 focus:ring-gmc-dorado-principal focus:border-transparent" 
                                             onChange={e => setFormData({...formData, weightTier: e.target.value})}
                                             value={formData.weightTier}
                                         >
@@ -378,7 +379,7 @@ export default function SolicitarPickupPage() {
 
                                     <div className="relative">
                                         <select 
-                                            className="w-full p-3 pl-4 border border-gray-200 rounded-xl text-sm bg-white appearance-none font-medium focus:ring-2 focus:ring-gmc-dorado-principal focus:border-transparent" 
+                                            className="w-full p-3 pl-4 border border-gray-200 rounded-xl text-base bg-white appearance-none font-medium focus:ring-2 focus:ring-gmc-dorado-principal focus:border-transparent" 
                                             onChange={e => setFormData({...formData, volumeTier: e.target.value})}
                                             value={formData.volumeTier}
                                         >
@@ -395,7 +396,7 @@ export default function SolicitarPickupPage() {
                                             <input 
                                                 type="number" 
                                                 placeholder="Peso exacto (Lbs)" 
-                                                className="w-full p-3 pl-10 border border-yellow-200 rounded-xl bg-yellow-50 text-sm font-bold placeholder-yellow-600/50 focus:ring-2 focus:ring-yellow-400 focus:outline-none" 
+                                                className="w-full p-3 pl-10 border border-yellow-200 rounded-xl bg-yellow-50 text-base font-bold placeholder-yellow-600/50 focus:ring-2 focus:ring-yellow-400 focus:outline-none" 
                                                 onChange={e => setFormData({...formData, exactWeight: parseFloat(e.target.value)})} 
                                             />
                                         </div>
@@ -404,14 +405,13 @@ export default function SolicitarPickupPage() {
                                 )}
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                    {/* 🔥 FIX: 'bg-white' Y 'appearance-none' PARA QUITAR EL CUADRO GRIS 🔥 */}
                                     <div className="relative">
                                         <label className="absolute -top-2 left-3 bg-white px-1 text-[10px] font-bold text-gray-400 z-10">Fecha de Recogida</label>
                                         <div className="relative">
                                             <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={18} />
                                             <input 
                                                 type="date" 
-                                                className="w-full p-3 pl-10 border border-gray-200 rounded-xl text-sm bg-white appearance-none focus:ring-2 focus:ring-gmc-dorado-principal focus:border-transparent min-h-[46px]" 
+                                                className="w-full p-3 pl-10 border border-gray-200 rounded-xl text-base bg-white appearance-none focus:ring-2 focus:ring-gmc-dorado-principal focus:border-transparent min-h-[46px]" 
                                                 onChange={e => setFormData({...formData, pickupDate: e.target.value})} 
                                             />
                                         </div>
@@ -424,14 +424,14 @@ export default function SolicitarPickupPage() {
                                             <input 
                                                 type="tel" 
                                                 placeholder="Teléfono" 
-                                                className="w-full p-3 pl-10 border border-gray-200 rounded-xl text-sm bg-white focus:ring-2 focus:ring-gmc-dorado-principal focus:border-transparent min-h-[46px]" 
+                                                className="w-full p-3 pl-10 border border-gray-200 rounded-xl text-base bg-white focus:ring-2 focus:ring-gmc-dorado-principal focus:border-transparent min-h-[46px]" 
                                                 onChange={e => setFormData({...formData, contactPhone: e.target.value})} 
                                             />
                                         </div>
                                     </div>
                                 </div>
                                 
-                                <textarea className="w-full p-3 border border-gray-200 rounded-xl text-sm h-24 resize-none focus:ring-2 focus:ring-gmc-dorado-principal focus:border-transparent" placeholder="Descripción de los artículos..." onChange={e => setFormData({...formData, description: e.target.value})}></textarea>
+                                <textarea className="w-full p-3 border border-gray-200 rounded-xl text-base h-24 resize-none focus:ring-2 focus:ring-gmc-dorado-principal focus:border-transparent" placeholder="Descripción de los artículos..." onChange={e => setFormData({...formData, description: e.target.value})}></textarea>
                             </div>
                         </>
                     )}
