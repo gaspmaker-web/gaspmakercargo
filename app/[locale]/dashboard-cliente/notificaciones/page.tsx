@@ -136,8 +136,9 @@ export default function NotificationsPage() {
         <div className="max-w-2xl mx-auto w-full px-4 flex items-center justify-between relative">
             
             <div className="flex items-center gap-3">
+                {/* 🔥 AQUÍ ESTÁ EL CAMBIO: router.back() para regresar al historial anterior */}
                 <button 
-                  onClick={() => router.push('/dashboard-cliente')}
+                  onClick={() => router.back()}
                   className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gmc-gris-oscuro"
                 >
                   <ArrowLeft size={24} />
