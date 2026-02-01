@@ -9,17 +9,16 @@ import { getProcessingFee } from '@/lib/stripeCalc';
 // --- CONFIGURACIÓN DE LÍMITES ---
 const MAX_WEIGHT_PER_BOX = 100; // Límite de 100 lbs por caja consolidada
 
-// --- TARIFAS SIMULADAS ---
+// --- TARIFAS ---
+// 🔥 CAMBIO 1: Renombramos 'ECONOMY' a 'GMC' (Gasp Maker Cargo)
 const COURIER_RATES = {
     'DHL': { name: 'DHL Express', base: 45.00, perLb: 4.50, days: '2-4 días' },
     'FEDEX': { name: 'FedEx Priority', base: 40.00, perLb: 4.20, days: '3-5 días' },
-    'ECONOMY': { name: 'Aéreo Económico', base: 15.00, perLb: 2.50, days: '7-10 días' }
+    'GMC': { name: 'Gasp Maker Cargo', base: 15.00, perLb: 2.50, days: '7-10 días' }
 };
 
 export default function ConsolidateShipmentPage() {
   const router = useRouter();
-  
-  // Referencia para el Auto-Scroll hacia el pago
   const paymentSectionRef = useRef<HTMLDivElement>(null);
 
   const [loading, setLoading] = useState(true);
@@ -32,7 +31,6 @@ export default function ConsolidateShipmentPage() {
   const [selectedCardId, setSelectedCardId] = useState<string>('');
   const [processing, setProcessing] = useState(false);
 
-  // Estado para el Acordeón (Inventario)
   const [isInventoryOpen, setIsInventoryOpen] = useState(true);
 
   // --- CARGAR DATOS ---
@@ -59,17 +57,16 @@ export default function ConsolidateShipmentPage() {
       fetchData();
   }, []);
 
-  // --- AUTO-SCROLL AL SELECCIONAR COURIER ---
+  // --- AUTO-SCROLL ---
   useEffect(() => {
       if (selectedCourier && paymentSectionRef.current) {
-          // Pequeño delay para UX suave
           setTimeout(() => {
               paymentSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
           }, 100);
       }
   }, [selectedCourier]);
 
-  // --- CÁLCULOS ---
+  // --- CÁLCULOS (AQUÍ ESTÁ LA LÓGICA DEL FEE) ---
   const calculateTotals = () => {
       const selectedPackages = inventory.filter(p => selectedIds.includes(p.id));
       const totalWeight = selectedPackages.reduce((sum, p) => sum + (p.weightLbs || 1), 0);
@@ -80,8 +77,17 @@ export default function ConsolidateShipmentPage() {
           shippingCost = rate.base + (rate.perLb * totalWeight);
       }
 
-      const fee = shippingCost > 0 ? getProcessingFee(shippingCost) : 0;
+      // Calculamos el Fee normal (basado en Stripe)
+      let fee = shippingCost > 0 ? getProcessingFee(shippingCost) : 0;
+      
+      const isConsolidation = selectedPackages.length > 1;
       const isOverweight = totalWeight > MAX_WEIGHT_PER_BOX;
+
+      // 🔥 CAMBIO 2: LÓGICA DE NEGOCIO
+      // Si es Gasp Maker Cargo (GMC) Y es envío individual (NO consolidación) -> Fee = $0
+      if (selectedCourier === 'GMC' && !isConsolidation) {
+          fee = 0;
+      }
       
       return { 
           count: selectedPackages.length,
@@ -89,7 +95,7 @@ export default function ConsolidateShipmentPage() {
           shippingCost,
           fee,
           total: shippingCost + fee,
-          isConsolidation: selectedPackages.length > 1,
+          isConsolidation,
           isOverweight 
       };
   };
@@ -165,8 +171,6 @@ export default function ConsolidateShipmentPage() {
               
                 {/* TARJETA INVENTARIO ACORDEÓN */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden transition-all">
-                   
-                    {/* Header Clickeable */}
                     <div 
                         onClick={() => setIsInventoryOpen(!isInventoryOpen)}
                         className="p-6 flex justify-between items-center cursor-pointer hover:bg-gray-50 bg-white"
@@ -180,10 +184,8 @@ export default function ConsolidateShipmentPage() {
                         </div>
                     </div>
 
-                    {/* Contenido Desplegable */}
                     {isInventoryOpen && (
                         <div className="p-6 pt-0 animate-fadeIn">
-                            {/* BARRA DE PESO */}
                             {selectedIds.length > 0 && (
                                 <div className="mb-6 bg-gray-50 p-4 rounded-lg border border-gray-100">
                                     <div className="flex justify-between text-xs font-bold mb-2">
@@ -238,11 +240,10 @@ export default function ConsolidateShipmentPage() {
                     )}
                 </div>
 
-                {/* OPCIONES DE COURIER (CORREGIDO PARA MÓVIL) */}
+                {/* OPCIONES DE COURIER */}
                 {selectedIds.length > 0 && !totals.isOverweight && (
                     <div className="bg-white p-5 md:p-6 rounded-xl shadow-sm border border-gray-200 animate-fadeIn">
                         <h3 className="font-bold text-gmc-gris-oscuro mb-4">Elige tu Servicio de Envío</h3>
-                        {/* 🔥 Grid Ajustado: 1 col en móvil (grande), 3 en desktop */}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             {Object.entries(COURIER_RATES).map(([key, rate]) => {
                                 const price = (rate.base + (rate.perLb * totals.weight)).toFixed(2);
@@ -261,7 +262,6 @@ export default function ConsolidateShipmentPage() {
                                             </span>
                                         </div>
                                         
-                                        {/* Nombre y Precio (Evita desbordamiento) */}
                                         <div className="flex flex-col gap-1">
                                             <p className="font-bold text-gray-800 text-sm leading-tight group-hover:text-black">
                                                 {rate.name}
@@ -271,7 +271,6 @@ export default function ConsolidateShipmentPage() {
                                             </p>
                                         </div>
 
-                                        {/* Checkmark decorativo si está seleccionado */}
                                         {selectedCourier === key && (
                                             <div className="absolute -top-2 -right-2 bg-gmc-dorado-principal text-white rounded-full p-1 shadow-sm">
                                                 <Check size={12} strokeWidth={3}/>
@@ -310,9 +309,15 @@ export default function ConsolidateShipmentPage() {
                             <span className="text-gray-300">Flete Internacional</span>
                             <span className="font-mono font-bold">${totals.shippingCost.toFixed(2)}</span>
                         </div>
+                        
+                        {/* MUESTRA FEE O GRATIS */}
                         <div className="flex justify-between items-center text-xs text-gray-400">
                             <span>Fee Procesamiento</span>
-                            <span>+${totals.fee.toFixed(2)}</span>
+                            {totals.fee === 0 ? (
+                                <span className="text-green-400 font-bold">GRATIS (GMC)</span>
+                            ) : (
+                                <span>+${totals.fee.toFixed(2)}</span>
+                            )}
                         </div>
 
                         <div className="flex justify-between pt-4 border-t border-gray-600 text-xl font-bold">
@@ -321,7 +326,6 @@ export default function ConsolidateShipmentPage() {
                         </div>
                     </div>
 
-                    {/* Selector Tarjeta */}
                     <div className="mb-6">
                         <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Método de Pago</label>
                         {cards.length > 0 ? (
@@ -350,6 +354,12 @@ export default function ConsolidateShipmentPage() {
                         {processing ? <Loader2 className="animate-spin"/> : <Plane size={20}/>}
                         {processing ? 'Procesando...' : 'Pagar y Enviar'}
                     </button>
+                   
+                    {totals.isOverweight && (
+                        <p className="text-xs text-center text-red-400 mt-3 font-bold animate-pulse">
+                            ¡Excedes el límite de 100 lbs!
+                        </p>
+                    )}
                 </div>
             </div>
 
