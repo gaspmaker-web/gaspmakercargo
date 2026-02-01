@@ -2,11 +2,9 @@
 
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { Camera, Search, Package, Upload, CheckCircle, X, ScanBarcode, Printer, Tag, DollarSign, User, Save, Scale } from 'lucide-react';
+import { Camera, Search, CheckCircle, X, ScanBarcode, Printer, Tag, DollarSign, User, Save, Scale, Ruler } from 'lucide-react';
 import Image from 'next/image';
 import BarcodeScannerModal from '@/components/BarcodeScannerModal';
-
-// ❌ ELIMINADO: import { toast } from 'sonner';
 
 interface UserData {
   id: string;
@@ -70,7 +68,6 @@ export default function CreatePackageForm() {
       
       if (res.ok && data.users && data.users.length > 0) {
         setFoundUser(data.users[0]); 
-        // Vibración suave al encontrar
         if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(50);
       } else {
         alert(data.message || "Cliente no encontrado");
@@ -158,9 +155,6 @@ export default function CreatePackageForm() {
         date: new Date().toLocaleDateString()
       });
       
-      // ✅ ÉXITO: Usamos alert normal para no instalar librerías
-      // alert("¡Paquete registrado con éxito!"); 
-
       reset();
       setPhotoUrl(null);
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -175,7 +169,6 @@ export default function CreatePackageForm() {
 
   return (
     <>
-      {/* MODAL DEL ESCÁNER */}
       <BarcodeScannerModal 
         isOpen={isScannerOpen}
         onClose={() => setIsScannerOpen(false)}
@@ -269,7 +262,7 @@ export default function CreatePackageForm() {
         {/* --- 2. FORMULARIO PRINCIPAL --- */}
         <form onSubmit={handleSubmit(onSubmit)} className="p-4 md:p-6 space-y-6">
             
-            {/* TRACKING + SCANNER (DISEÑO MÓVIL) */}
+            {/* TRACKING + SCANNER */}
             <div className="space-y-2">
                 <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
                     2. Tracking Number
@@ -282,7 +275,6 @@ export default function CreatePackageForm() {
                             className="w-full h-full pl-4 pr-4 bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-gmc-dorado-principal focus:ring-0 text-lg font-mono uppercase font-bold"
                         />
                     </div>
-                    {/* Botón Escáner Grande */}
                     <button 
                         type="button"
                         onClick={() => setIsScannerOpen(true)}
@@ -295,8 +287,8 @@ export default function CreatePackageForm() {
                 {errors.trackingNumber && <span className="text-red-500 text-xs font-bold">⚠️ Tracking requerido</span>}
             </div>
 
+            {/* PESO Y VALOR */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                {/* PESO */}
                 <div>
                     <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 block">
                         3. Peso (Lbs)
@@ -313,7 +305,6 @@ export default function CreatePackageForm() {
                     </div>
                 </div>
 
-                {/* VALOR DECLARADO */}
                 <div>
                     <label className="text-xs font-bold text-blue-600 uppercase tracking-wider mb-1 block">
                         Valor Declarado ($)
@@ -331,6 +322,18 @@ export default function CreatePackageForm() {
                 </div>
             </div>
 
+            {/* 🔥 DIMENSIONES (MOVIDO AQUÍ) 🔥 */}
+            <details className="group bg-gray-50 rounded-xl border border-gray-200 overflow-hidden">
+                <summary className="cursor-pointer p-3 font-bold text-xs text-gray-500 uppercase hover:bg-gray-100 flex items-center gap-2 select-none">
+                    <Ruler size={14} /> Opciones Avanzadas (Dimensiones)
+                </summary>
+                <div className="p-3 grid grid-cols-3 gap-3 animate-fadeIn">
+                    <input type="number" placeholder="Largo" {...register("length")} className="w-full p-2 border border-gray-300 rounded-lg text-center"/>
+                    <input type="number" placeholder="Ancho" {...register("width")} className="w-full p-2 border border-gray-300 rounded-lg text-center"/>
+                    <input type="number" placeholder="Alto" {...register("height")} className="w-full p-2 border border-gray-300 rounded-lg text-center"/>
+                </div>
+            </details>
+
             {/* DESCRIPCIÓN */}
             <div>
                 <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 block">
@@ -343,14 +346,13 @@ export default function CreatePackageForm() {
                 />
             </div>
 
-            {/* FOTO EVIDENCIA (DISEÑO TOUCH FRIENDLY) */}
+            {/* FOTO EVIDENCIA */}
             <div>
                 <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">
                     4. Foto de Recepción
                 </label>
                 
                 <div className="relative">
-                    {/* El input file está oculto pero ocupa todo el espacio clickable */}
                     <label className={`
                         relative w-full h-32 rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-2 transition-all cursor-pointer active:scale-[0.99] overflow-hidden
                         ${photoUrl ? 'border-green-500 bg-green-50' : 'border-gray-300 bg-gray-50 hover:bg-gray-100'}
@@ -386,7 +388,6 @@ export default function CreatePackageForm() {
                         />
                     </label>
 
-                    {/* Botón para borrar foto */}
                     {photoUrl && (
                         <button 
                             type="button"
@@ -399,7 +400,7 @@ export default function CreatePackageForm() {
                 </div>
             </div>
 
-            {/* BOTÓN SUBMIT GRANDE */}
+            {/* BOTÓN SUBMIT */}
             <div className="pt-4 pb-2">
                 <button 
                     type="submit" 
@@ -415,16 +416,6 @@ export default function CreatePackageForm() {
                     )}
                 </button>
             </div>
-
-            {/* Dimensiones (Opcionales, ocultas en acordeón o pequeñas al final) */}
-            <details className="text-xs text-gray-400">
-                <summary className="cursor-pointer font-bold mb-2">Opciones Avanzadas (Dimensiones)</summary>
-                <div className="flex gap-2">
-                    <input type="number" placeholder="L" {...register("length")} className="w-full p-2 border rounded-lg"/>
-                    <input type="number" placeholder="W" {...register("width")} className="w-full p-2 border rounded-lg"/>
-                    <input type="number" placeholder="H" {...register("height")} className="w-full p-2 border rounded-lg"/>
-                </div>
-            </details>
 
         </form>
       </div>
