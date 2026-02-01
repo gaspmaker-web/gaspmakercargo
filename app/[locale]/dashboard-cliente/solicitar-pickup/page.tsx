@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { 
     Truck, MapPin, Warehouse, CreditCard, Info, Loader2, Package, Check, 
-    ChevronDown, ChevronUp, Calendar, Phone, Weight, ArrowLeft, Building2 
+    ChevronDown, ChevronUp, Calendar, Phone, Weight, Building2 
 } from 'lucide-react';
 import { useJsApiLoader, Autocomplete } from '@react-google-maps/api';
 import { getProcessingFee } from '@/lib/stripeCalc';
@@ -53,7 +53,7 @@ export default function SolicitarPickupPage() {
 
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
-  const [serviceType, setServiceType] = useState<string | null>('PICKUP_WAREHOUSE'); // Default selection
+  const [serviceType, setServiceType] = useState<string | null>('PICKUP_WAREHOUSE'); 
   const [inventory, setInventory] = useState<any[]>([]);
   const [inventoryLoading, setInventoryLoading] = useState(true);
   const [cards, setCards] = useState<any[]>([]);
@@ -100,9 +100,8 @@ export default function SolicitarPickupPage() {
   // --- 2. MANEJO DE SELECCIÓN ---
   const handleServiceSelect = (type: string) => {
       setServiceType(type);
-      // Animación suave de scroll
       setTimeout(() => {
-          window.scrollTo({ top: 300, behavior: 'smooth' });
+          window.scrollTo({ top: 150, behavior: 'smooth' });
       }, 100);
   };
 
@@ -114,7 +113,7 @@ export default function SolicitarPickupPage() {
         let distanceSurcharge = 0;
 
         if (serviceType === 'PICKUP_WAREHOUSE') {
-             subtotal = 0; // Se paga al retirar o ya está pagado
+             subtotal = 0; 
         } else {
             let tp = 0;
             if (formData.weightTier === 'w_heavy') {
@@ -253,67 +252,66 @@ export default function SolicitarPickupPage() {
   const isBodega = serviceType === 'PICKUP_WAREHOUSE';
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-40 font-montserrat relative">
+    <div className="min-h-screen bg-gray-50 pb-40 font-montserrat relative overflow-x-hidden">
         
-        {/* --- HEADER --- */}
+        {/* --- HEADER (Sin flecha de regreso) --- */}
         <div className="bg-white sticky top-0 z-20 px-4 py-4 border-b border-gray-100 shadow-sm">
-            <div className="max-w-xl mx-auto flex items-center gap-4">
-                <button onClick={() => router.back()} className="p-2 -ml-2 rounded-full hover:bg-gray-100 transition">
-                    <ArrowLeft size={24} className="text-gray-700"/>
-                </button>
-                <div>
-                    <h1 className="text-lg font-bold text-gmc-gris-oscuro font-garamond">{t('title')}</h1>
-                    <p className="text-xs text-gray-400">{t('subtitle')}</p>
-                </div>
+            <div className="max-w-xl mx-auto text-center">
+                <h1 className="text-lg font-bold text-gmc-gris-oscuro font-garamond">{t('title')}</h1>
+                <p className="text-xs text-gray-400">{t('subtitle')}</p>
             </div>
         </div>
 
         <div className="max-w-xl mx-auto p-4 space-y-6">
 
-            {/* --- SELECCIÓN DE SERVICIO (Diseño de Tarjetas IMG_3060) --- */}
-            <div className="grid grid-cols-2 gap-4">
-                {/* Warehouse / Self Pickup */}
-                <div 
-                    onClick={() => handleServiceSelect('PICKUP_WAREHOUSE')}
-                    className={`p-4 rounded-2xl border-2 cursor-pointer transition-all flex flex-col justify-between h-28 ${serviceType === 'PICKUP_WAREHOUSE' ? 'bg-white border-gray-800 shadow-md ring-1 ring-gray-200' : 'bg-white border-gray-100 text-gray-400 hover:border-gray-200'}`}
-                >
-                    <Warehouse size={24} className={serviceType === 'PICKUP_WAREHOUSE' ? 'text-gray-800' : 'text-gray-300'}/>
-                    <div>
-                        <p className={`font-bold text-sm leading-tight ${serviceType === 'PICKUP_WAREHOUSE' ? 'text-gray-800' : 'text-gray-400'}`}>{t('tabSelfPickup')}</p>
-                        <p className="text-[10px] mt-1">{t('descSelfPickup')}</p>
+            {/* --- SELECCIÓN DE SERVICIO (DISEÑO VERTICAL) --- */}
+            <div className="flex flex-col gap-4">
+                
+                {/* Fila 1: Warehouse & Intl */}
+                <div className="grid grid-cols-2 gap-4">
+                    {/* Warehouse / Self Pickup */}
+                    <div 
+                        onClick={() => handleServiceSelect('PICKUP_WAREHOUSE')}
+                        className={`p-4 rounded-2xl border-2 cursor-pointer transition-all flex flex-col justify-between h-28 ${serviceType === 'PICKUP_WAREHOUSE' ? 'bg-white border-gray-800 shadow-md ring-1 ring-gray-200' : 'bg-white border-gray-100 text-gray-400 hover:border-gray-200'}`}
+                    >
+                        <Warehouse size={24} className={serviceType === 'PICKUP_WAREHOUSE' ? 'text-gray-800' : 'text-gray-300'}/>
+                        <div>
+                            <p className={`font-bold text-sm leading-tight ${serviceType === 'PICKUP_WAREHOUSE' ? 'text-gray-800' : 'text-gray-400'}`}>{t('tabSelfPickup')}</p>
+                            <p className="text-[10px] mt-1">{t('descSelfPickup')}</p>
+                        </div>
+                    </div>
+
+                    {/* Intl. Shipping */}
+                    <div 
+                        onClick={() => handleServiceSelect('SHIPPING')}
+                        className={`p-4 rounded-2xl border-2 cursor-pointer transition-all flex flex-col justify-between h-28 ${serviceType === 'SHIPPING' ? 'bg-blue-50 border-blue-500 shadow-md ring-1 ring-blue-100' : 'bg-white border-gray-100 text-gray-400 hover:border-gray-200'}`}
+                    >
+                        <Truck size={24} className={serviceType === 'SHIPPING' ? 'text-blue-600' : 'text-gray-300'}/>
+                        <div>
+                            <p className={`font-bold text-sm leading-tight ${serviceType === 'SHIPPING' ? 'text-blue-700' : 'text-gray-400'}`}>{t('tabShipping')}</p>
+                            <p className="text-[10px] mt-1">{t('descShipping')}</p>
+                        </div>
                     </div>
                 </div>
 
-                {/* Intl. Shipping */}
+                {/* Fila 2: Local Delivery (Ancho Completo) */}
                 <div 
-                    onClick={() => handleServiceSelect('SHIPPING')}
-                    className={`p-4 rounded-2xl border-2 cursor-pointer transition-all flex flex-col justify-between h-28 ${serviceType === 'SHIPPING' ? 'bg-blue-50 border-blue-500 shadow-md ring-1 ring-blue-100' : 'bg-white border-gray-100 text-gray-400 hover:border-gray-200'}`}
+                    onClick={() => handleServiceSelect('DELIVERY')}
+                    className={`p-4 rounded-2xl border-2 cursor-pointer transition-all flex items-center gap-4 ${serviceType === 'DELIVERY' ? 'bg-green-50 border-green-500 shadow-md ring-1 ring-green-100' : 'bg-white border-gray-100 text-gray-400 hover:border-gray-200'}`}
                 >
-                    <Truck size={24} className={serviceType === 'SHIPPING' ? 'text-blue-600' : 'text-gray-300'}/>
+                    <div className={`p-2 rounded-full border shadow-sm ${serviceType === 'DELIVERY' ? 'bg-white border-green-200 text-green-600' : 'bg-gray-50 border-gray-100 text-gray-300'}`}>
+                        <MapPin size={20}/>
+                    </div>
                     <div>
-                        <p className={`font-bold text-sm leading-tight ${serviceType === 'SHIPPING' ? 'text-blue-700' : 'text-gray-400'}`}>{t('tabShipping')}</p>
-                        <p className="text-[10px] mt-1">{t('descShipping')}</p>
+                        <h3 className={`font-bold text-sm ${serviceType === 'DELIVERY' ? 'text-green-800' : 'text-gray-400'}`}>{t('tabDelivery')}</h3>
+                        <p className={`text-xs ${serviceType === 'DELIVERY' ? 'text-green-600' : 'text-gray-300'}`}>{t('descDelivery')}</p>
                     </div>
                 </div>
             </div>
 
-            {/* Local Delivery (Card Verde Completa IMG_3061) */}
-            <div 
-                onClick={() => handleServiceSelect('DELIVERY')}
-                className={`p-4 rounded-2xl border-2 cursor-pointer transition-all flex items-center gap-4 ${serviceType === 'DELIVERY' ? 'bg-green-50 border-green-500 shadow-md ring-1 ring-green-100' : 'bg-white border-gray-100 text-gray-400 hover:border-gray-200'}`}
-            >
-                <div className={`p-2 rounded-full border shadow-sm ${serviceType === 'DELIVERY' ? 'bg-white border-green-200 text-green-600' : 'bg-gray-50 border-gray-100 text-gray-300'}`}>
-                    <MapPin size={20}/>
-                </div>
-                <div>
-                    <h3 className={`font-bold text-sm ${serviceType === 'DELIVERY' ? 'text-green-800' : 'text-gray-400'}`}>{t('tabDelivery')}</h3>
-                    <p className={`text-xs ${serviceType === 'DELIVERY' ? 'text-green-600' : 'text-gray-300'}`}>{t('descDelivery')}</p>
-                </div>
-            </div>
-
-            {/* --- CONTENIDO DINÁMICO SEGÚN SELECCIÓN --- */}
+            {/* --- CONTENIDO DINÁMICO --- */}
             
-            {/* CASO: BODEDA (INVENTARIO) */}
+            {/* CASO: BODEGA (INVENTARIO) */}
             {serviceType === 'PICKUP_WAREHOUSE' && (
                 <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm animate-fadeIn">
                     <div className="flex justify-between items-center mb-4">
@@ -359,14 +357,14 @@ export default function SolicitarPickupPage() {
             {serviceType !== 'PICKUP_WAREHOUSE' && (
                 <>
                     {/* ROUTE SECTION */}
-                    <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm space-y-5 animate-fadeIn">
+                    <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm space-y-6 animate-fadeIn">
                         <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest">{t('routeTitle')}</h3>
                         
                         {/* Pickup Input */}
                         <div className="relative">
-                            <label className="text-[10px] font-bold text-gray-400 mb-1 block uppercase">Pickup (A)</label>
+                            <label className="text-[10px] font-bold text-gray-400 mb-1.5 block uppercase tracking-wide">Pickup (A)</label>
                             <Autocomplete onLoad={ref => { originRef.current = ref }} onPlaceChanged={() => { const place = originRef.current?.getPlace(); if(place?.formatted_address) { setFormData(prev => ({...prev, originAddress: place.formatted_address!})); if(serviceType === 'SHIPPING') calculateDistance(place.formatted_address!, GMC_WAREHOUSE_ADDRESS); } }}>
-                                <input type="text" placeholder="Dirección de recogida..." className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:border-gmc-dorado-principal focus:bg-white transition-colors" />
+                                <input type="text" placeholder="Dirección de recogida..." className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium text-gray-800 focus:outline-none focus:border-gmc-dorado-principal focus:bg-white transition-colors" />
                             </Autocomplete>
                         </div>
 
@@ -385,9 +383,9 @@ export default function SolicitarPickupPage() {
                         {/* Dropoff Input (Solo Local Delivery) */}
                         {serviceType === 'DELIVERY' && (
                             <div className="relative">
-                                <label className="text-[10px] font-bold text-gray-400 mb-1 block uppercase">{t('dropoffPointB')}</label>
+                                <label className="text-[10px] font-bold text-gray-400 mb-1.5 block uppercase tracking-wide">{t('dropoffPointB')}</label>
                                 <Autocomplete onLoad={ref => { destRef.current = ref }} onPlaceChanged={() => { const place = destRef.current?.getPlace(); if(place?.formatted_address) { setFormData(prev => ({...prev, dropOffAddress: place.formatted_address!})); calculateDistance(formData.originAddress, place.formatted_address!); } }}>
-                                    <input type="text" placeholder="Dirección de entrega..." className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:border-gmc-dorado-principal focus:bg-white transition-colors" />
+                                    <input type="text" placeholder="Dirección de entrega..." className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium text-gray-800 focus:outline-none focus:border-gmc-dorado-principal focus:bg-white transition-colors" />
                                 </Autocomplete>
                             </div>
                         )}
@@ -425,7 +423,7 @@ export default function SolicitarPickupPage() {
                                 <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16}/>
                                 <input 
                                     type="date" 
-                                    className="w-full p-3 pl-10 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold text-gray-700 focus:outline-none"
+                                    className="w-full p-3 pl-10 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold text-gray-700 focus:outline-none focus:border-gmc-dorado-principal"
                                     onChange={e => setFormData({...formData, pickupDate: e.target.value})}
                                 />
                             </div>
@@ -434,7 +432,7 @@ export default function SolicitarPickupPage() {
                                 <input 
                                     type="tel" 
                                     placeholder="Teléfono"
-                                    className="w-full p-3 pl-10 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold text-gray-700 focus:outline-none"
+                                    className="w-full p-3 pl-10 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold text-gray-700 focus:outline-none focus:border-gmc-dorado-principal"
                                     onChange={e => setFormData({...formData, contactPhone: e.target.value})}
                                 />
                             </div>
@@ -457,22 +455,22 @@ export default function SolicitarPickupPage() {
                 {/* Degradado superior */}
                 <div className="absolute bottom-full left-0 right-0 h-8 bg-gradient-to-t from-gray-200/40 to-transparent pointer-events-none" />
                 
-                <div className="bg-white border-t border-gray-100 p-4 pb-8 shadow-[0_-5px_20px_rgba(0,0,0,0.05)]">
-                    <div className="max-w-xl mx-auto flex items-center justify-between gap-4">
+                <div className="bg-[#222b3c] rounded-t-3xl shadow-[0_-5px_25px_rgba(0,0,0,0.2)] p-5 animate-slideUp text-white">
+                    <div className="flex justify-between items-center gap-4">
                         
                         {/* Total (Izquierda) */}
                         <div onClick={() => setShowMobileSummary(!showMobileSummary)} className="flex flex-col cursor-pointer">
-                            <div className="flex items-center gap-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">
-                                Total <ChevronUp size={12} className={`transition-transform ${showMobileSummary ? 'rotate-180' : ''}`}/>
+                            <div className="flex items-center gap-1 text-[10px] font-bold text-[#EAD8B1] uppercase tracking-widest mb-0.5">
+                                Total <ChevronUp size={12} className={`transition-transform text-white ${showMobileSummary ? 'rotate-180' : ''}`}/>
                             </div>
-                            <div className="text-3xl font-black text-gray-900 leading-none">${quote.total.toFixed(2)}</div>
+                            <div className="text-3xl font-garamond font-bold leading-none text-white">${quote.total.toFixed(2)}</div>
                         </div>
 
-                        {/* Botón Pay (Derecha - Oscuro) */}
+                        {/* Botón Pay (Derecha - Dorado/Oscuro) */}
                         <button 
                             onClick={handlePaymentAndSubmit} 
                             disabled={isLoading || quote.total === 0 || !selectedCardId} 
-                            className="bg-[#222b3c] text-white px-8 py-3.5 rounded-xl font-bold text-base shadow-xl active:scale-95 transition-transform flex items-center gap-2 disabled:opacity-50 disabled:shadow-none"
+                            className="bg-[#EAD8B1] text-[#222b3c] px-8 py-3.5 rounded-xl font-bold text-base shadow-xl active:scale-95 transition-transform flex items-center gap-2 disabled:opacity-50 disabled:shadow-none"
                         >
                             {isLoading ? <Loader2 className="animate-spin" size={20}/> : <CreditCard size={20}/>} 
                             {t('btnPay')}
@@ -481,8 +479,8 @@ export default function SolicitarPickupPage() {
 
                     {/* Desplegable de Detalles */}
                     {showMobileSummary && (
-                        <div className="mt-4 pt-4 border-t border-dashed border-gray-200 animate-slideUp text-sm space-y-2 max-w-xl mx-auto">
-                            <div className="flex justify-between text-gray-600">
+                        <div className="mt-4 pt-4 border-t border-gray-600 animate-slideUp text-sm space-y-2 max-w-xl mx-auto">
+                            <div className="flex justify-between text-gray-300">
                                 <span>Service Base</span>
                                 <span>${quote.baseFare.toFixed(2)}</span>
                             </div>
@@ -494,17 +492,17 @@ export default function SolicitarPickupPage() {
                                 <span>+${quote.processingFee.toFixed(2)}</span>
                             </div>
                             
-                            <div className="pt-3 mt-2 border-t border-gray-100">
+                            <div className="pt-3 mt-2 border-t border-gray-600">
                                 <label className="block text-xs font-bold text-gray-400 uppercase mb-2">PAYING WITH</label>
                                 {cards.length > 0 ? (
-                                    <div className="flex items-center justify-between bg-gray-50 p-2 rounded-lg border border-gray-100">
+                                    <div className="flex items-center justify-between bg-gray-700/50 p-2 rounded-lg border border-gray-600">
                                         <div className="flex items-center gap-2">
-                                            <CreditCard size={14} className="text-gray-800"/>
-                                            <span className="font-mono text-xs font-bold text-gray-700">•••• {cards.find(c => c.id === selectedCardId)?.last4}</span>
+                                            <CreditCard size={14} className="text-gray-300"/>
+                                            <span className="font-mono text-xs font-bold text-white">•••• {cards.find(c => c.id === selectedCardId)?.last4}</span>
                                         </div>
-                                        <Link href="/account-settings" className="text-[10px] text-blue-600 font-bold uppercase tracking-wider">Change</Link>
+                                        <Link href="/account-settings" className="text-[10px] text-[#EAD8B1] font-bold uppercase tracking-wider">Change</Link>
                                     </div>
-                                ) : <Link href="/account-settings" className="text-xs text-blue-600 underline font-bold">+ Add Card</Link>}
+                                ) : <Link href="/account-settings" className="text-xs text-blue-400 underline font-bold">+ Add Card</Link>}
                             </div>
                         </div>
                     )}
