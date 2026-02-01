@@ -20,34 +20,6 @@ const getCarrierLogo = (carrier: string): string => {
   return '/gaspmakercargoproject.png';
 };
 
-// 🔥 HELPERS DE DISEÑO PROFESIONAL
-const cleanCarrierName = (name: string) => {
-  if (!name) return '';
-  const n = name.toLowerCase();
-  if (n.includes('fedex')) return 'FedEx';
-  if (n.includes('ups')) return 'UPS';
-  if (n.includes('dhl')) return 'DHL';
-  if (n.includes('usps')) return 'USPS';
-  if (n.includes('gasp') || n.includes('gmc')) return 'Gasp Maker Cargo';
-  return name;
-};
-
-const cleanServiceName = (name: string) => {
-  if (!name) return '';
-  // Limpia guiones bajos y CamelCase a texto legible
-  return name
-    .replace(/_/g, ' ')
-    .replace(/([A-Z])/g, ' $1')
-    .trim()
-    .toLowerCase()
-    .split(' ')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ')
-    .replace('Fedex', '')
-    .replace('Ups', '')
-    .trim();
-};
-
 interface PackageDetailProps {
     pkg: any;
     userProfile: any;
@@ -254,6 +226,7 @@ export default function PackageDetailClient({ pkg, userProfile, savedCards = [] 
                  subtotal: servicePrice,
                  processingFee: fee,
                  insuranceCost: insuranceCost,
+                 // 🔥 ENVIAMOS EL HANDLING QUE CALCULAMOS ($0 O $10)
                  handlingFee: handlingFee, 
                  discount: discount, 
                  totalPaid: total,
@@ -349,7 +322,7 @@ export default function PackageDetailClient({ pkg, userProfile, savedCards = [] 
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-32 lg:pb-10 font-montserrat">
+    <div className="min-h-screen bg-gray-50 pb-40 lg:pb-10 font-montserrat">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start pt-6">
@@ -438,72 +411,35 @@ export default function PackageDetailClient({ pkg, userProfile, savedCards = [] 
                             )
                         )}
                     </div>
-                    
-                    {/* 🔥 SECCIÓN DE TARIFAS REDISEÑADA (Estilo Profesional y Limpio) */}
                     {rates.length > 0 && (
-                        <div ref={couriersRef} className="p-4 sm:p-5 animate-fadeIn">
+                        <div ref={couriersRef} className="p-5 animate-fadeIn">
                             <p className="text-xs font-bold text-gray-400 uppercase mb-3">{t('shippingOptions')}:</p>
                             <div className="space-y-3">
-                                {rates.map((rate, index) => {
-                                    const isBestValue = index === 0;
-                                    const isSelected = selectedRate?.id === rate.id;
-
-                                    return (
-                                        <div 
-                                            key={rate.id}
-                                            onClick={() => setSelectedRate(rate)}
-                                            className={`relative group rounded-2xl p-4 transition-all cursor-pointer border-2 overflow-hidden
-                                                ${isSelected 
-                                                    ? 'border-gmc-dorado-principal bg-yellow-50/50 shadow-md scale-[1.01]' 
-                                                    : 'border-gray-100 bg-white hover:border-gray-300 hover:shadow-sm'
-                                                }
-                                            `}
-                                        >
-                                            {isBestValue && (
-                                                <div className="absolute top-0 right-0 bg-gmc-dorado-principal text-black text-[9px] font-black px-3 py-1 rounded-bl-xl uppercase tracking-widest shadow-sm z-10">
-                                                    Best Value
-                                                </div>
-                                            )}
-
-                                            <div className="grid grid-cols-[3.5rem_1fr_min-content] gap-4 items-center">
-                                                {/* 1. Logo */}
-                                                <div className="w-14 h-14 bg-white rounded-xl border border-gray-100 p-2 flex items-center justify-center shadow-sm shrink-0">
-                                                    <img 
-                                                        src={rate.logo || "/gaspmakercargoproject.png"} 
-                                                        alt={rate.carrier} 
-                                                        className="max-h-full max-w-full object-contain"
-                                                        onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = "/gaspmakercargoproject.png" }}
-                                                    />
-                                                </div>
-
-                                                {/* 2. Info */}
-                                                <div className="min-w-0 flex flex-col justify-center">
-                                                    <h3 className="font-black text-gray-800 text-sm uppercase leading-tight truncate">
-                                                        {cleanCarrierName(rate.carrier)}
-                                                    </h3>
-                                                    <p className="text-[11px] text-gray-500 font-medium leading-tight mt-0.5 line-clamp-2 break-words">
-                                                        {cleanServiceName(rate.service)}
-                                                    </p>
-                                                    <p className="text-[10px] text-gray-400 font-bold mt-1 flex items-center gap-1">
-                                                        <Clock size={10}/> {rate.days}
-                                                    </p>
-                                                </div>
-
-                                                {/* 3. Precio */}
-                                                <div className="text-right pl-2">
-                                                    <p className="text-xl font-black text-gray-900 tracking-tight leading-none">
-                                                        ${rate.price.toFixed(2)}
-                                                    </p>
-                                                    {isSelected && (
-                                                        <span className="text-[9px] font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full inline-block mt-1">
-                                                            Selected
-                                                        </span>
-                                                    )}
-                                                </div>
+                                {rates.map((rate) => (
+                                    <div 
+                                        key={rate.id}
+                                        onClick={() => setSelectedRate(rate)}
+                                        className={`flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                                            selectedRate?.id === rate.id 
+                                            ? 'border-blue-600 bg-blue-50/50 shadow-sm' 
+                                            : 'border-gray-200 bg-white hover:border-blue-300'
+                                        }`}
+                                    >
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-12 h-10 relative flex-shrink-0 flex items-center justify-center">
+                                                {rate.logo ? <Image src={rate.logo} alt={rate.carrier} width={40} height={40} style={{objectFit: 'contain'}}/> : <Truck className="text-gray-400"/>}
+                                            </div>
+                                            <div>
+                                                <p className="font-bold text-gray-800 text-sm">{rate.carrier}</p>
+                                                <p className="text-xs text-gray-500">{rate.service} • {rate.days}</p>
                                             </div>
                                         </div>
-                                    );
-                                })}
+                                        <div className="text-right">
+                                            <p className="text-lg font-bold text-blue-700">${rate.price.toFixed(2)}</p>
+                                            {selectedRate?.id === rate.id && <p className="text-[10px] text-blue-600 font-bold">{t('selectedBtn')}</p>}
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
                         </div>
                     )}
@@ -517,7 +453,7 @@ export default function PackageDetailClient({ pkg, userProfile, savedCards = [] 
                         <>
                             <div className="space-y-4 border-b border-gray-600 pb-6 mb-6">
                                 <div className="flex justify-between text-sm">
-                                    <span>Freight & Processing ({cleanCarrierName(selectedRate.carrier)})</span>
+                                    <span>Freight & Processing ({selectedRate.carrier})</span>
                                     <span>${servicePriceWithFee.toFixed(2)}</span>
                                 </div>
                                 
@@ -528,12 +464,14 @@ export default function PackageDetailClient({ pkg, userProfile, savedCards = [] 
                                     </div>
                                 )}
 
+                                {/* 🔥 SÓLO MOSTRAMOS EL HANDLING SI ES > 0 */}
                                 {handlingFee > 0 ? (
                                     <div className="flex justify-between text-sm" style={{ color: '#EAD8B1' }}>
                                         <span>Fee: Handling</span>
                                         <span>+${handlingFee.toFixed(2)}</span>
                                     </div>
                                 ) : (
+                                    // OPCIONAL: Mostrar que es gratis si quieres feedback visual
                                     <div className="flex justify-between text-sm text-green-400">
                                         <span>Fee: Handling (GMC)</span>
                                         <span>FREE</span>
@@ -623,81 +561,97 @@ export default function PackageDetailClient({ pkg, userProfile, savedCards = [] 
             </div>
         </div>
 
+        {/* 🔥 BARRA MÓVIL PREMIUM (Fondo Oscuro + Texto Dorado) */}
         {selectedRate && (
-            <div className="lg:hidden fixed bottom-0 left-0 right-0 p-4 z-50 border-t shadow-[0_-5px_15px_rgba(0,0,0,0.1)] animate-slideUp bg-white">
-                <div className="flex justify-between items-center">
-                    <div className="flex flex-col">
-                        <span onClick={() => setShowMobileDetails(!showMobileDetails)} className="text-sm text-gray-500 cursor-pointer flex items-center gap-1 font-bold uppercase">
-                            {tPickup('sumTotal')} {showMobileDetails ? <ChevronDown size={14} className="text-gray-700"/> : <ChevronUp size={14} className="text-gray-700"/>}
-                        </span>
-                        <div className="text-2xl font-bold text-[#222b3c]">${totalAmount.toFixed(2)}</div>
+            <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50">
+                {/* Degradado para suavizar la transición */}
+                <div className="absolute bottom-full left-0 right-0 h-10 bg-gradient-to-t from-gray-200/50 to-transparent pointer-events-none" />
+                
+                <div className="bg-[#222b3c] rounded-t-3xl shadow-[0_-5px_25px_rgba(0,0,0,0.2)] p-5 animate-slideUp text-white">
+                    <div className="flex justify-between items-center gap-4">
+                        <div onClick={() => setShowMobileDetails(!showMobileDetails)} className="flex flex-col cursor-pointer">
+                            <span className="text-[10px] text-[#EAD8B1] font-bold uppercase tracking-widest flex items-center gap-2 mb-1">
+                                {tPickup('sumTotal')} {showMobileDetails ? <ChevronDown size={14}/> : <ChevronUp size={14}/>}
+                            </span>
+                            <div className="text-3xl font-garamond font-bold leading-none text-white">${totalAmount.toFixed(2)}</div>
+                        </div>
+                        <button 
+                            onClick={handlePay} 
+                            disabled={isPaying || (!selectedCardId && cards.length > 0)} 
+                            className="bg-[#EAD8B1] text-[#222b3c] py-3.5 px-8 rounded-xl text-base font-bold shadow-lg active:scale-95 transition-transform flex items-center gap-2"
+                        >
+                            {isPaying ? <Loader2 className="animate-spin"/> : <CreditCard size={18}/>} {tPickup('btnPay')}
+                        </button>
                     </div>
-                    <button onClick={handlePay} disabled={isPaying || (!selectedCardId && cards.length > 0)} className="py-3 px-6 rounded-xl text-lg font-bold shadow-md flex justify-center items-center gap-2 active:scale-95 transition-transform" style={{ backgroundColor: '#222b3c', color: 'white' }}>
-                        {isPaying ? <Loader2 className="animate-spin"/> : <CreditCard size={20}/>} {tPickup('btnPay')}
-                    </button>
-                </div>
-                {showMobileDetails && (
-                    <div className="mt-4 pt-3 border-t border-gray-200 space-y-2 text-sm">
-                        
-                        <div className="flex justify-between text-gray-700">
-                            <span>Freight & Processing</span>
-                            <span>${servicePriceWithFee.toFixed(2)}</span>
-                        </div>
-                        
-                        {insuranceCost > 0 && (
-                            <div className="flex justify-between text-blue-600"><span>+ Insurance (3%)</span><span>+${insuranceCost.toFixed(2)}</span></div>
-                        )}
 
-                        {handlingFee > 0 && (
-                            <div className="flex justify-between text-yellow-600">
-                                <span>Fee: Handling</span>
-                                <span>+${handlingFee.toFixed(2)}</span>
+                    {showMobileDetails && (
+                        <div className="mt-5 pt-5 border-t border-gray-600 space-y-3 text-sm animate-fadeIn">
+                            
+                            <div className="flex justify-between text-gray-300">
+                                <span>Freight & Processing</span>
+                                <span>${servicePriceWithFee.toFixed(2)}</span>
                             </div>
-                        )}
+                            
+                            {insuranceCost > 0 && (
+                                <div className="flex justify-between text-blue-300"><span>+ Insurance (3%)</span><span>+${insuranceCost.toFixed(2)}</span></div>
+                            )}
 
-                        {discount > 0 && (
-                            <div className="flex justify-between text-green-600 font-bold">
-                                <span>Discount</span>
-                                <span>-${discount.toFixed(2)}</span>
-                            </div>
-                        )}
-
-                        <div className="pt-2 pb-2">
-                             <div className="flex gap-2">
-                                <input 
-                                    type="text" 
-                                    placeholder="Promo Code" 
-                                    value={couponCode}
-                                    onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                                    disabled={discount > 0}
-                                    className="flex-1 bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-xs"
-                                />
-                                <button onClick={handleApplyCoupon} className="bg-gray-800 text-white px-3 rounded-lg text-xs">Apply</button>
-                             </div>
-                             {couponMsg.text && <p className={`text-[10px] mt-1 ${couponMsg.type==='error'?'text-red-500':'text-green-500'}`}>{couponMsg.text}</p>}
-                        </div>
-
-                        <div className="pt-3 border-t border-gray-200">
-                            <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Tarjeta</label>
-                            {cards.length > 0 ? (
-                                <div className="space-y-2">
-                                    <div className="relative bg-gray-50 rounded-lg border border-gray-200">
-                                        <select value={selectedCardId} onChange={(e) => setSelectedCardId(e.target.value)} className="w-full p-2.5 bg-transparent text-gray-800 text-sm font-bold outline-none">
-                                            {cards.map((c: any) => <option key={c.id} value={c.id}>•••• {c.last4} ({c.brand})</option>)}
-                                        </select>
-                                    </div>
-                                    <button onClick={handleAddCardRedirect} className="text-xs text-blue-600 font-bold flex items-center gap-1">
-                                        <ExternalLink size={12}/> Gestionar en Configuración
-                                    </button>
+                            {handlingFee > 0 ? (
+                                <div className="flex justify-between text-[#EAD8B1]">
+                                    <span>Fee: Handling</span>
+                                    <span>+${handlingFee.toFixed(2)}</span>
                                 </div>
                             ) : (
-                                <button onClick={handleAddCardRedirect} className="w-full py-2 bg-gray-100 text-gray-700 font-bold rounded-lg border border-gray-300 flex items-center justify-center gap-2">
-                                    <Plus size={14}/> Ir a Agregar Tarjeta
-                                </button>
+                                <div className="flex justify-between text-green-400">
+                                    <span>Fee: Handling (GMC)</span>
+                                    <span>FREE</span>
+                                </div>
                             )}
+
+                            {discount > 0 && (
+                                <div className="flex justify-between text-green-400 font-bold">
+                                    <span>Discount</span>
+                                    <span>-${discount.toFixed(2)}</span>
+                                </div>
+                            )}
+
+                            <div className="pt-3">
+                                <div className="flex gap-2">
+                                    <input 
+                                        type="text" 
+                                        placeholder="Promo Code" 
+                                        value={couponCode}
+                                        onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                                        disabled={discount > 0}
+                                        className="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#EAD8B1]"
+                                    />
+                                    <button onClick={handleApplyCoupon} className="bg-gray-600 text-white px-3 rounded-lg text-xs hover:bg-gray-500">Apply</button>
+                                </div>
+                                {couponMsg.text && <p className={`text-[10px] mt-1 ${couponMsg.type==='error'?'text-red-400':'text-green-400'}`}>{couponMsg.text}</p>}
+                            </div>
+
+                            <div className="pt-4 border-t border-gray-600">
+                                <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Tarjeta Seleccionada</label>
+                                {cards.length > 0 ? (
+                                    <div className="space-y-2">
+                                        <div className="relative bg-gray-700 rounded-lg border border-gray-600">
+                                            <select value={selectedCardId} onChange={(e) => setSelectedCardId(e.target.value)} className="w-full p-2.5 bg-transparent text-white text-sm font-bold outline-none">
+                                                {cards.map((c: any) => <option key={c.id} value={c.id} className="text-black">•••• {c.last4} ({c.brand})</option>)}
+                                            </select>
+                                        </div>
+                                        <button onClick={handleAddCardRedirect} className="text-xs text-[#EAD8B1] font-bold flex items-center gap-1 hover:underline">
+                                            <ExternalLink size={12}/> Gestionar en Configuración
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <button onClick={handleAddCardRedirect} className="w-full py-2 bg-gray-700 text-white font-bold rounded-lg border border-gray-600 flex items-center justify-center gap-2">
+                                        <Plus size={14}/> Ir a Agregar Tarjeta
+                                    </button>
+                                )}
+                            </div>
                         </div>
-                    </div>
-                )}
+                    )}
+                </div>
             </div>
         )}
       </div>
