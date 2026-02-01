@@ -4,7 +4,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { FileText, CreditCard, Loader2, Check, ChevronDown, ChevronUp, DollarSign, AlertCircle, Package, Truck, Box, Ruler, Scale, ShieldCheck } from 'lucide-react';
+import { 
+    FileText, CreditCard, Loader2, Check, ChevronDown, ChevronUp, 
+    DollarSign, AlertCircle, Package, Truck, Box, Ruler, Scale, ShieldCheck, 
+    ExternalLink, Plus, Clock 
+} from 'lucide-react';
 import { getProcessingFee } from '@/lib/stripeCalc';
 import { useTranslations } from 'next-intl';
 
@@ -16,6 +20,18 @@ const getCarrierLogo = (carrier: string): string => {
   if (c.includes('ups')) return '/ups-united-parcel-service.svg';
   if (c.includes('usps')) return '/usps-logo.svg';
   return '/gaspmakercargoproject.png';
+};
+
+// --- Helper para nombres limpios ---
+const cleanCarrierName = (name: string) => {
+  if (!name) return '';
+  const n = name.toLowerCase();
+  if (n.includes('fedex')) return 'FedEx';
+  if (n.includes('ups')) return 'UPS';
+  if (n.includes('dhl')) return 'DHL';
+  if (n.includes('usps')) return 'USPS';
+  if (n.includes('gasp') || n.includes('gmc')) return 'Gasp Maker Cargo';
+  return name;
 };
 
 interface Rate {
@@ -125,9 +141,7 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
               handlingSubtotal += handling;
 
               // 🔥 CÁLCULO DE SEGURO INDIVIDUAL
-              // Leemos el valor declarado de la consolidación o paquete
               const val = Number(bill.declaredValue) || 0;
-              // Si supera $100, cobramos el 3%
               const ins = val > 100 ? val * 0.03 : 0;
               insuranceSubtotal += ins;
 
@@ -138,7 +152,6 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                   itemServicePrice = rate.price;
               } else {
                   const totalFromServer = bill.totalAmount || 0;
-                  // Si el total del servidor ya incluía handling/ins, los restamos para aislar el servicio base
                   itemServicePrice = Math.max(0, totalFromServer - handling - ins);
               }
               
@@ -147,14 +160,13 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
           }
       });
 
-      // Base Imponible = Servicio + Handling + Seguro
       const taxableAmount = serviceSubtotal + handlingSubtotal + insuranceSubtotal;
       const fee = getProcessingFee(taxableAmount);
       
       return { 
           serviceSubtotal, 
           handlingSubtotal, 
-          insuranceSubtotal, // Devolvemos el total de seguro
+          insuranceSubtotal, 
           fee, 
           total: taxableAmount + fee, 
           count 
@@ -162,8 +174,6 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
   };
 
   const totals = calculateTotals();
-
-  // "Service" para mostrar al cliente (incluye el fee de tarjeta oculto)
   const serviceWithFee = totals.serviceSubtotal + totals.fee;
 
   // 5. PAGAR
@@ -202,8 +212,6 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
              const bill = bills.find(b => b.id === id);
              const rate = selectedRateMap[id];
              const handling = bill?.handlingFee || 0;
-             
-             // Recalcular seguro individual para enviarlo desglosado si fuera necesario
              const val = Number(bill?.declaredValue) || 0;
              const ins = val > 100 ? val * 0.03 : 0;
              
@@ -215,7 +223,6 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                  itemServicePrice = Math.max(0, totalFromServer - handling - ins);
              }
 
-             // Monto total por item (para registros internos)
              return {
                  id: id,
                  amount: itemServicePrice + handling + ins
@@ -251,16 +258,10 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
               throw new Error(errData.message || "Error en el pago.");
           }
           
-          // --- ÉXITO: Actualización Inmediata del UI (El Fix) ---
-          // 1. Quitamos los bills pagados de la lista visual
           setBills(prevBills => prevBills.filter(bill => !selectedBillIds.includes(bill.id)));
-          
-          // 2. Limpiamos selecciones
           setSelectedBillIds([]);
           setSelectedRateMap({});
           setRatesMap({});
-
-          // 3. Refrescamos datos del servidor y navegamos
           router.refresh();
           router.push(`/${locale}/dashboard-cliente`);
 
@@ -276,11 +277,15 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
       else setSelectedBillIds(prev => [...prev, id]);
   };
 
+  const handleAddCardRedirect = () => {
+    router.push(`/${locale}/account-settings?tab=billing`);
+  };
+
   return (
-    <div className="max-w-5xl mx-auto space-y-6 animate-fadeIn pb-32 md:pb-0">
+    <div className="max-w-5xl mx-auto space-y-6 animate-fadeIn pb-40 lg:pb-10 font-montserrat">
         
         {/* HEADER */}
-        <div className="flex justify-center items-center py-4">
+        <div className="flex justify-center items-center py-6">
             <h1 className="text-2xl font-bold text-gmc-gris-oscuro font-garamond flex items-center gap-2">
                 <FileText className="text-gmc-dorado-principal"/> {t('title')}
             </h1>
@@ -298,26 +303,25 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                 
                 {/* LISTA DE FACTURAS */}
                 <div className="lg:col-span-2 space-y-4">
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
                         
-                        <div onClick={() => setIsBillsOpen(!isBillsOpen)} className="p-4 flex justify-between items-center cursor-pointer bg-gray-50 border-b border-gray-100">
-                            <div className="flex items-center gap-2">
-                                <span className="bg-red-100 text-red-600 p-1.5 rounded-full"><AlertCircle size={16}/></span>
-                                <span className="font-bold text-gray-700 text-sm">{bills.length} {t('statusPending')}</span>
+                        {/* ALERTA DE PENDIENTES */}
+                        <div onClick={() => setIsBillsOpen(!isBillsOpen)} className="p-5 flex justify-between items-center cursor-pointer bg-white border-b border-gray-100">
+                            <div className="flex items-center gap-3">
+                                <span className="bg-red-50 text-red-600 p-2 rounded-full border border-red-100"><AlertCircle size={18}/></span>
+                                <span className="font-bold text-gray-800 text-sm">{bills.length} {t('statusPending')}</span>
                             </div>
                             {isBillsOpen ? <ChevronUp size={18} className="text-gray-400"/> : <ChevronDown size={18} className="text-gray-400"/>}
                         </div>
 
                         {isBillsOpen && (
-                            <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50/30">
+                            <div className="p-5 grid grid-cols-1 gap-6 bg-gray-50/50">
                                 {bills.map((bill) => {
                                     const isSelected = selectedBillIds.includes(bill.id);
                                     const rates = ratesMap[bill.id];
                                     const selectedRate = selectedRateMap[bill.id];
                                     
                                     const handling = bill.handlingFee || 0;
-                                    
-                                    // Datos para etiqueta visual en tarjeta individual
                                     const val = Number(bill.declaredValue) || 0;
                                     const ins = val > 100 ? val * 0.03 : 0;
 
@@ -331,96 +335,135 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                                                      bill.gmcShipmentNumber?.toUpperCase().includes('PICKUP');
 
                                     const needsQuote = !isPickup && !selectedRate && (!bill.subtotalAmount || bill.subtotalAmount === 0);
-                                    const showPriceInCard = isPickup || selectedRate || (bill.subtotalAmount > 0);
+                                    
+                                    // Determinar si GMC fue seleccionado para quitar fee visualmente (lógica del componente anterior)
+                                    const isGMCSelected = selectedRate?.carrier?.toUpperCase().includes('GASP') || 
+                                                          selectedRate?.carrier?.toUpperCase().includes('GMC');
+                                    
+                                    const effectiveHandling = isGMCSelected ? 0 : handling;
 
                                     return (
-                                        <div key={bill.id} className={`relative bg-white p-4 rounded-xl border-2 transition-all shadow-sm flex flex-col ${isSelected ? 'border-gmc-dorado-principal ring-1 ring-orange-100' : 'border-gray-200'}`}>
+                                        <div key={bill.id} className={`relative bg-white p-5 rounded-2xl border-2 transition-all shadow-sm flex flex-col ${isSelected ? 'border-gmc-dorado-principal ring-2 ring-yellow-50/50' : 'border-gray-100 hover:border-gray-300'}`}>
                                             
-                                            <div className="flex justify-between items-start mb-3">
-                                                <div className="flex items-start gap-3">
+                                            {/* CHECKBOX Y HEADER */}
+                                            <div className="flex justify-between items-start mb-4">
+                                                <div className="flex items-start gap-4">
                                                     <div 
                                                         onClick={() => !needsQuote && toggleBill(bill.id)}
-                                                        className={`w-5 h-5 mt-0.5 rounded border flex items-center justify-center cursor-pointer ${isSelected ? 'bg-gmc-dorado-principal border-gmc-dorado-principal text-white' : 'border-gray-300 bg-gray-50'}`}
+                                                        className={`w-6 h-6 mt-1 rounded-lg border-2 flex items-center justify-center cursor-pointer transition-colors ${isSelected ? 'bg-gmc-dorado-principal border-gmc-dorado-principal text-white' : 'border-gray-300 bg-gray-50'}`}
                                                     >
-                                                        {isSelected && <Check size={12} strokeWidth={3}/>}
+                                                        {isSelected && <Check size={14} strokeWidth={4}/>}
                                                     </div>
                                                     <div>
-                                                        <h3 className="font-bold text-gray-800 text-sm leading-tight">{bill.description || t('content')}</h3>
-                                                        <p className="text-[10px] text-gray-400 font-mono mt-0.5">ID: {bill.gmcShipmentNumber}</p>
-                                                        {bill.packages && (
-                                                            <span className="text-[9px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded mt-1 inline-block">
-                                                                📦 {bill.packages.length} {t('packages')}
-                                                            </span>
-                                                        )}
-                                                        {/* Etiquetas informativas pequeñas */}
-                                                        <div className="flex flex-wrap gap-1 mt-1">
-                                                            {handling > 0 && <span className="text-[9px] bg-yellow-50 text-yellow-700 px-1.5 py-0.5 rounded border border-yellow-200">Fee</span>}
-                                                            {ins > 0 && <span className="text-[9px] bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded border border-blue-200">+Ins</span>}
+                                                        <h3 className="font-bold text-gray-800 text-base leading-tight">{bill.description || t('content')}</h3>
+                                                        <p className="text-[11px] text-gray-400 font-mono mt-1 uppercase tracking-wider">ID: {bill.gmcShipmentNumber}</p>
+                                                        
+                                                        <div className="flex flex-wrap gap-2 mt-2">
+                                                            {bill.packages && (
+                                                                <span className="text-[10px] bg-blue-50 text-blue-700 px-2 py-1 rounded font-bold">
+                                                                    📦 {bill.packages.length} {t('packages')}
+                                                                </span>
+                                                            )}
+                                                            {handling > 0 && <span className="text-[10px] bg-yellow-50 text-yellow-700 px-2 py-1 rounded font-bold border border-yellow-100">Fee</span>}
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
 
-                                            <div className="flex gap-2 mb-3">
-                                                <span className="inline-flex items-center gap-1 bg-gray-100 text-gray-600 px-2 py-1 rounded text-[10px] font-bold border border-gray-200">
-                                                    <Scale size={10}/> {bill.weightLbs} lb
+                                            <div className="flex gap-3 mb-5 pl-10">
+                                                <span className="inline-flex items-center gap-1 bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg text-xs font-bold border border-gray-200">
+                                                    <Scale size={12}/> {bill.weightLbs} lb
                                                 </span>
-                                                <span className="inline-flex items-center gap-1 bg-gray-100 text-gray-600 px-2 py-1 rounded text-[10px] font-bold border border-gray-200">
-                                                    <Ruler size={10}/> {bill.lengthIn}x{bill.widthIn}x{bill.heightIn}
+                                                <span className="inline-flex items-center gap-1 bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg text-xs font-bold border border-gray-200">
+                                                    <Ruler size={12}/> {bill.lengthIn}x{bill.widthIn}x{bill.heightIn}
                                                 </span>
                                             </div>
 
-                                            <div className="mt-auto pt-3 border-t border-gray-50">
+                                            {/* SELECCIÓN DE COURIER */}
+                                            <div className="pl-0 sm:pl-2">
                                                 {needsQuote && !rates ? (
                                                     <button 
                                                         onClick={() => handleGetRates(bill)}
                                                         disabled={loadingRatesId === bill.id}
-                                                        className="w-full py-2 bg-blue-600 text-white text-xs font-bold rounded-lg hover:bg-blue-700 transition shadow-sm flex justify-center items-center gap-2"
+                                                        className="w-full py-3 bg-blue-600 text-white text-sm font-bold rounded-xl hover:bg-blue-700 transition shadow-md flex justify-center items-center gap-2"
                                                     >
-                                                        {loadingRatesId === bill.id ? <Loader2 className="animate-spin" size={14}/> : <Truck size={14}/>}
+                                                        {loadingRatesId === bill.id ? <Loader2 className="animate-spin" size={16}/> : <Truck size={16}/>}
                                                         {t('viewOptionsBtn')}
                                                     </button>
                                                 ) : (
-                                                    showPriceInCard ? (
-                                                        <div className="flex justify-between items-end">
-                                                            <div className="text-xs text-gray-500">
-                                                                {isPickup ? (
-                                                                    <span className="flex items-center gap-1 text-green-600 font-bold"><Box size={10}/> Pickup</span>
-                                                                ) : selectedRate ? (
-                                                                    <span className="flex items-center gap-1 text-blue-600 font-bold"><Truck size={10}/> {selectedRate.carrier}</span>
-                                                                ) : t('totalToPay')}
-                                                            </div>
-                                                            <div className="text-xl font-bold text-gmc-gris-oscuro">${displayPrice.toFixed(2)}</div>
-                                                        </div>
-                                                    ) : (
-                                                        <div className="text-center text-xs text-gray-400 py-2 italic">
-                                                            {t('selectCourier')}
-                                                        </div>
-                                                    )
-                                                )}
-                                            </div>
-
-                                            {rates && !selectedRate && (
-                                                <div className="mt-3 space-y-2 animate-slideDown">
-                                                    <p className="text-[10px] font-bold text-gray-400 uppercase">{t('select')}:</p>
-                                                    {rates.map(rate => (
-                                                        <div 
-                                                            key={rate.id} 
-                                                            onClick={() => handleSelectRate(bill.id, rate)}
-                                                            className="flex justify-between items-center p-2 border border-gray-200 rounded-lg hover:border-blue-400 cursor-pointer bg-gray-50 hover:bg-white transition-all"
-                                                        >
-                                                            <div className="flex items-center gap-2">
-                                                                {rate.logo ? <Image src={rate.logo} alt={rate.carrier} width={24} height={24} style={{objectFit:'contain'}}/> : <Truck size={14} className="text-gray-400"/>}
-                                                                <div className="text-xs">
-                                                                    <p className="font-bold text-gray-700">{rate.carrier}</p>
-                                                                    <p className="text-[9px] text-gray-500">{rate.days}</p>
+                                                    <div className="space-y-3">
+                                                        {/* SI YA SELECCIONÓ UNO (Mostrar Tarjeta Resumida) */}
+                                                        {isSelected && selectedRate ? (
+                                                            <div className="bg-white border border-gmc-dorado-principal rounded-xl p-4 shadow-sm animate-fadeIn">
+                                                                <div className="flex justify-between items-center mb-3">
+                                                                    <div className="flex items-center gap-3">
+                                                                        <div className="w-10 h-10 bg-gray-50 rounded-lg p-1 border border-gray-100 flex items-center justify-center">
+                                                                            <Image src={selectedRate.logo || '/gaspmakercargoproject.png'} alt="Courier" width={32} height={32} className="object-contain"/>
+                                                                        </div>
+                                                                        <div>
+                                                                            <p className="font-bold text-gray-800 text-sm">{cleanCarrierName(selectedRate.carrier)}</p>
+                                                                            <p className="text-[10px] text-gray-500">{selectedRate.days}</p>
+                                                                        </div>
+                                                                    </div>
+                                                                    <p className="text-xl font-bold text-gmc-gris-oscuro">${displayPrice.toFixed(2)}</p>
+                                                                </div>
+                                                                
+                                                                {/* DESGLOSE RÁPIDO DENTRO DE LA TARJETA */}
+                                                                <div className="border-t border-gray-100 pt-2 mt-2 space-y-1">
+                                                                    <div className="flex justify-between text-xs text-gray-500">
+                                                                        <span>Freight</span><span>${selectedRate.price.toFixed(2)}</span>
+                                                                    </div>
+                                                                    {effectiveHandling > 0 && (
+                                                                        <div className="flex justify-between text-xs text-yellow-600">
+                                                                            <span>Handling</span><span>+${effectiveHandling.toFixed(2)}</span>
+                                                                        </div>
+                                                                    )}
+                                                                    {ins > 0 && (
+                                                                        <div className="flex justify-between text-xs text-blue-600">
+                                                                            <span>Insurance</span><span>+${ins.toFixed(2)}</span>
+                                                                        </div>
+                                                                    )}
                                                                 </div>
                                                             </div>
-                                                            <span className="text-xs font-bold text-blue-700">${rate.price.toFixed(2)}</span>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            )}
+                                                        ) : (
+                                                            /* LISTA DE OPCIONES DISPONIBLES */
+                                                            rates && (
+                                                                <div className="animate-slideDown">
+                                                                    <p className="text-[10px] font-bold text-gray-400 uppercase mb-2 tracking-wider">{t('select')}:</p>
+                                                                    <div className="space-y-2">
+                                                                        {rates.map(rate => (
+                                                                            <div 
+                                                                                key={rate.id} 
+                                                                                onClick={() => handleSelectRate(bill.id, rate)}
+                                                                                className="flex justify-between items-center p-3 border border-gray-200 rounded-xl hover:border-blue-400 cursor-pointer bg-white hover:bg-blue-50/30 transition-all group"
+                                                                            >
+                                                                                <div className="flex items-center gap-3">
+                                                                                    <div className="w-10 h-10 bg-gray-50 rounded-lg p-1 border border-gray-100 flex items-center justify-center group-hover:bg-white transition-colors">
+                                                                                        {rate.logo ? <Image src={rate.logo} alt={rate.carrier} width={32} height={32} style={{objectFit:'contain'}}/> : <Truck size={16} className="text-gray-400"/>}
+                                                                                    </div>
+                                                                                    <div className="text-sm">
+                                                                                        <p className="font-bold text-gray-700">{cleanCarrierName(rate.carrier)}</p>
+                                                                                        <p className="text-[10px] text-gray-500">{rate.days}</p>
+                                                                                    </div>
+                                                                                </div>
+                                                                                <span className="text-sm font-bold text-blue-600">${rate.price.toFixed(2)}</span>
+                                                                            </div>
+                                                                        ))}
+                                                                    </div>
+                                                                </div>
+                                                            )
+                                                        )}
+                                                        
+                                                        {/* CASO PICKUP (Sin cotización) */}
+                                                        {isPickup && !selectedRate && (
+                                                            <div className="flex justify-between items-center p-3 bg-green-50 border border-green-200 rounded-xl">
+                                                                <span className="flex items-center gap-2 text-green-700 font-bold text-sm"><Box size={14}/> Pickup en Tienda</span>
+                                                                <span className="text-lg font-bold text-green-800">$0.00</span>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
                                     );
                                 })}
@@ -429,19 +472,17 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                     </div>
                 </div>
 
-                {/* DERECHA: RESUMEN DE PAGO */}
+                {/* DERECHA: RESUMEN DE PAGO (DESKTOP) */}
                 <div className="hidden lg:block lg:col-span-1">
                     <div ref={paymentSectionRef} className="bg-gmc-gris-oscuro text-white p-6 rounded-2xl shadow-xl sticky top-6">
                         <h3 className="font-bold text-gmc-dorado-principal text-lg mb-4 border-b border-gray-600 pb-2">{tPickup('summaryTitle')}</h3>
                         <div className="space-y-3 text-sm mb-6">
                             
-                            {/* 1. Flete + Procesamiento */}
                             <div className="flex justify-between">
                                 <span>Freight & Processing (GMC)</span>
                                 <span className="font-bold">${serviceWithFee.toFixed(2)}</span>
                             </div>
                             
-                            {/* 2. Handling Fee */}
                             {totals.handlingSubtotal > 0 && (
                                 <div className="flex justify-between text-yellow-400">
                                     <span>Fee: Handling</span>
@@ -449,7 +490,6 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                                 </div>
                             )}
 
-                            {/* 3. 🔥 SEGURO (Visible si > 0) */}
                             {totals.insuranceSubtotal > 0 && (
                                 <div className="flex justify-between text-blue-300">
                                     <span className="flex items-center gap-1"><ShieldCheck size={14}/> + Ins (3%)</span>
@@ -481,43 +521,66 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
             </div>
         )}
 
-        {/* --- BARRA MÓVIL --- */}
+        {/* --- BARRA MÓVIL PREMIUM (Fondo Oscuro + Texto Dorado) --- */}
         {bills.length > 0 && (
-            <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 shadow-lg z-50 flex items-center justify-between gap-4">
-                <div onClick={() => setShowMobileSummary(!showMobileSummary)} className="flex-1 cursor-pointer">
-                    <p className="text-[10px] text-gray-500 flex items-center gap-1 font-bold uppercase tracking-wide">
-                        {tPickup('sumTotal')} ({totals.count}) {showMobileSummary ? <ChevronDown size={12}/> : <ChevronUp size={12}/>}
-                    </p>
-                    <p className="text-xl font-bold text-gmc-gris-oscuro">${totals.total.toFixed(2)}</p>
-                </div>
-                <button onClick={handlePay} disabled={isProcessing || totals.count === 0 || !selectedCardId} className="bg-gmc-gris-oscuro text-white px-6 py-3 rounded-xl font-bold text-sm flex items-center gap-2 shadow-lg disabled:opacity-50">
-                    {isProcessing ? <Loader2 className="animate-spin" size={18}/> : <DollarSign size={18}/>} {tPickup('btnPay')}
-                </button>
+            <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50">
+                {/* Degradado superior para suavizar */}
+                <div className="absolute bottom-full left-0 right-0 h-8 bg-gradient-to-t from-gray-200/40 to-transparent pointer-events-none" />
                 
-                {showMobileSummary && (
-                    <div className="absolute bottom-full left-0 right-0 bg-white border-t border-gray-100 p-4 shadow-lg animate-fadeIn text-sm text-gray-700 space-y-2 pb-6">
-                        
-                        <div className="flex justify-between">
-                            <span>Freight & Processing</span>
-                            <span>${serviceWithFee.toFixed(2)}</span>
+                <div className="bg-[#222b3c] rounded-t-3xl shadow-[0_-5px_25px_rgba(0,0,0,0.2)] p-5 animate-slideUp text-white">
+                    <div className="flex justify-between items-center gap-4">
+                        <div onClick={() => setShowMobileSummary(!showMobileSummary)} className="flex flex-col cursor-pointer">
+                            <span className="text-[10px] text-[#EAD8B1] font-bold uppercase tracking-widest flex items-center gap-2 mb-1">
+                                {tPickup('sumTotal')} ({totals.count}) {showMobileSummary ? <ChevronDown size={14}/> : <ChevronUp size={14}/>}
+                            </span>
+                            <div className="text-3xl font-garamond font-bold leading-none text-white">${totals.total.toFixed(2)}</div>
                         </div>
-                        
-                        {totals.handlingSubtotal > 0 && (
-                            <div className="flex justify-between text-yellow-600"><span>Fee: Handling</span><span>+${totals.handlingSubtotal.toFixed(2)}</span></div>
-                        )}
-
-                        {/* 🔥 SEGURO EN MÓVIL */}
-                        {totals.insuranceSubtotal > 0 && (
-                            <div className="flex justify-between text-blue-600"><span>+ Insurance (3%)</span><span>+${totals.insuranceSubtotal.toFixed(2)}</span></div>
-                        )}
-
-                        <div className="h-px bg-gray-100 my-2"></div>
-                        <div className="flex justify-between items-center bg-gray-50 p-2 rounded">
-                            <span className="text-xs flex items-center gap-2 font-bold"><CreditCard size={14}/> Card</span>
-                            {cards.length > 0 ? <span className="font-mono text-xs">•••• {cards.find(c => c.id === selectedCardId)?.last4}</span> : <Link href={`/${locale}/account-settings`} className="text-xs text-blue-600 underline">Add</Link>}
-                        </div>
+                        <button 
+                            onClick={handlePay} 
+                            disabled={isProcessing || totals.count === 0 || !selectedCardId} 
+                            className="bg-[#EAD8B1] text-[#222b3c] py-3.5 px-8 rounded-xl text-base font-bold shadow-lg active:scale-95 transition-transform flex items-center gap-2 disabled:opacity-50"
+                        >
+                            {isProcessing ? <Loader2 className="animate-spin" size={18}/> : <DollarSign size={18}/>} {tPickup('btnPay')}
+                        </button>
                     </div>
-                )}
+
+                    {showMobileSummary && (
+                        <div className="mt-5 pt-5 border-t border-gray-600 space-y-3 text-sm animate-fadeIn">
+                            <div className="flex justify-between text-gray-300">
+                                <span>Freight & Processing</span>
+                                <span>${serviceWithFee.toFixed(2)}</span>
+                            </div>
+                            
+                            {totals.handlingSubtotal > 0 && (
+                                <div className="flex justify-between text-[#EAD8B1]"><span>Fee: Handling</span><span>+${totals.handlingSubtotal.toFixed(2)}</span></div>
+                            )}
+
+                            {totals.insuranceSubtotal > 0 && (
+                                <div className="flex justify-between text-blue-300"><span>+ Insurance (3%)</span><span>+${totals.insuranceSubtotal.toFixed(2)}</span></div>
+                            )}
+
+                            <div className="pt-3 border-t border-gray-600">
+                                <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Tarjeta Seleccionada</label>
+                                {cards.length > 0 ? (
+                                    <div className="space-y-2">
+                                        <div className="relative bg-gray-700 rounded-lg border border-gray-600">
+                                            <select value={selectedCardId} onChange={(e) => setSelectedCardId(e.target.value)} className="w-full p-2.5 bg-transparent text-white text-sm font-bold outline-none">
+                                                {cards.map((c: any) => <option key={c.id} value={c.id} className="text-black">•••• {c.last4} ({c.brand})</option>)}
+                                            </select>
+                                        </div>
+                                        <button onClick={handleAddCardRedirect} className="text-xs text-[#EAD8B1] font-bold flex items-center gap-1 hover:underline">
+                                            <ExternalLink size={12}/> Gestionar en Configuración
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <button onClick={handleAddCardRedirect} className="w-full py-2 bg-gray-700 text-white font-bold rounded-lg border border-gray-600 flex items-center justify-center gap-2">
+                                        <Plus size={14}/> Ir a Agregar Tarjeta
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    )}
+                </div>
             </div>
         )}
     </div>
