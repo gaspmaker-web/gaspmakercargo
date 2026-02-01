@@ -20,11 +20,10 @@ const getCarrierLogo = (carrier: string): string => {
   return '/gaspmakercargoproject.png';
 };
 
-// 🔥 PROPS INTERFACE ACTUALIZADA (Ahora acepta savedCards)
 interface PackageDetailProps {
     pkg: any;
     userProfile: any;
-    savedCards?: any[]; // Opcional por si acaso, pero lo usaremos
+    savedCards?: any[]; 
 }
 
 export default function PackageDetailClient({ pkg, userProfile, savedCards = [] }: PackageDetailProps) {
@@ -44,21 +43,28 @@ export default function PackageDetailClient({ pkg, userProfile, savedCards = [] 
   const [loadingRates, setLoadingRates] = useState(false);
   const [selectedRate, setSelectedRate] = useState<any>(null);
   
-  // 🔥 INICIALIZACIÓN DE TARJETAS (Usamos las que vienen del Server)
   const [cards, setCards] = useState<any[]>(savedCards);
   
   const [selectedCardId, setSelectedCardId] = useState<string>('');
   const [isPaying, setIsPaying] = useState(false);
   const [showMobileDetails, setShowMobileDetails] = useState(false);
 
-  // 🔥 ESTADO DEL CUPÓN
+  // ESTADO DEL CUPÓN
   const [couponCode, setCouponCode] = useState('');
   const [discount, setDiscount] = useState(0);
   const [couponMsg, setCouponMsg] = useState({ type: '', text: '' });
   const [validatingCoupon, setValidatingCoupon] = useState(false);
 
-  // CONFIGURACIÓN DE COSTOS
-  const handlingFee = pkg.handlingFee || 10.00;
+  // 🔥 LÓGICA DE HANDLING FEE DINÁMICA
+  // Si hay tarifa seleccionada y es GMC -> Fee $0. Si no, usamos el del paquete (o $10 por defecto si no es GMC).
+  // Nota: Si el usuario no ha cotizado, asumimos $10 visualmente hasta que seleccione.
+  const isGMCSelected = selectedRate?.carrier?.toUpperCase().includes('GASP') || 
+                        selectedRate?.carrier?.toUpperCase().includes('GMC') || 
+                        selectedRate?.id?.includes('gmc');
+
+  // Si ya seleccionó GMC, es $0. Si no ha seleccionado nada o es otro, es $10 (o lo que venga del pkg).
+  const handlingFee = isGMCSelected ? 0.00 : (pkg.handlingFee || 10.00);
+
   const declaredValue = Number(pkg.declaredValue) || 0;
   const insuranceCost = declaredValue > 100 ? declaredValue * 0.03 : 0;
 
@@ -82,7 +88,7 @@ export default function PackageDetailClient({ pkg, userProfile, savedCards = [] 
     }
   }, [cards, selectedCardId]);
 
-  // Si no vinieron tarjetas del servidor, intentamos buscarlas (Fallback)
+  // Fallback cards
   useEffect(() => {
     if (cards.length === 0) {
         const fetchCards = async () => {
@@ -98,7 +104,7 @@ export default function PackageDetailClient({ pkg, userProfile, savedCards = [] 
     }
   }, [cards.length]);
 
-  // Resetear descuento si cambia la tarifa seleccionada
+  // Resetear descuento
   useEffect(() => {
     if (discount > 0 && selectedRate) {
         if (selectedRate.price < 100) {
@@ -222,7 +228,9 @@ export default function PackageDetailClient({ pkg, userProfile, savedCards = [] 
                  totalWeight: pkg.weightLbs,
                  subtotal: servicePrice,
                  processingFee: fee,
-                 insuranceCost: insuranceCost, 
+                 insuranceCost: insuranceCost,
+                 // 🔥 ENVIAMOS EL HANDLING QUE CALCULAMOS ($0 O $10)
+                 handlingFee: handlingFee, 
                  discount: discount, 
                  totalPaid: total,
                  stripePaymentId: payData.paymentId,
@@ -459,10 +467,17 @@ export default function PackageDetailClient({ pkg, userProfile, savedCards = [] 
                                     </div>
                                 )}
 
-                                {handlingFee > 0 && (
+                                {/* 🔥 SÓLO MOSTRAMOS EL HANDLING SI ES > 0 */}
+                                {handlingFee > 0 ? (
                                     <div className="flex justify-between text-sm" style={{ color: '#EAD8B1' }}>
                                         <span>Fee: Handling</span>
                                         <span>+${handlingFee.toFixed(2)}</span>
+                                    </div>
+                                ) : (
+                                    // OPCIONAL: Mostrar que es gratis si quieres feedback visual
+                                    <div className="flex justify-between text-sm text-green-400">
+                                        <span>Fee: Handling (GMC)</span>
+                                        <span>FREE</span>
                                     </div>
                                 )}
 
@@ -521,7 +536,7 @@ export default function PackageDetailClient({ pkg, userProfile, savedCards = [] 
                                                 {cards.map((c: any) => <option key={c.id} value={c.id} className="text-black">•••• {c.last4} ({c.brand})</option>)}
                                             </select>
                                         </div>
-                                        <button onClick={handleAddCardRedirect} className="text-xs text-[#EAD8B1] hover:underline flex items-center gap-1">
+                                        <button onClick={handleAddCardRedirect} className="text-xs text--[#EAD8B1] hover:underline flex items-center gap-1">
                                             <Plus size={12}/> Agregar nueva (Ir a Configuración)
                                         </button>
                                     </div>
@@ -574,10 +589,12 @@ export default function PackageDetailClient({ pkg, userProfile, savedCards = [] 
                             <div className="flex justify-between text-blue-600"><span>+ Insurance (3%)</span><span>+${insuranceCost.toFixed(2)}</span></div>
                         )}
 
-                        <div className="flex justify-between text-yellow-600">
-                            <span>Fee: Handling</span>
-                            <span>+${handlingFee.toFixed(2)}</span>
-                        </div>
+                        {handlingFee > 0 && (
+                            <div className="flex justify-between text-yellow-600">
+                                <span>Fee: Handling</span>
+                                <span>+${handlingFee.toFixed(2)}</span>
+                            </div>
+                        )}
 
                         {discount > 0 && (
                             <div className="flex justify-between text-green-600 font-bold">
