@@ -33,7 +33,6 @@ export default function ConsolidateShipmentPage() {
   const [processing, setProcessing] = useState(false);
 
   // Estado para el Acordeón (Inventario)
-  // Lo dejamos 'true' (abierto) al inicio para que vea qué enviar, pero se puede cerrar.
   const [isInventoryOpen, setIsInventoryOpen] = useState(true);
 
   // --- CARGAR DATOS ---
@@ -154,9 +153,9 @@ export default function ConsolidateShipmentPage() {
     <div className="min-h-screen bg-gray-50 p-4 md:p-6 font-montserrat">
       <div className="max-w-6xl mx-auto">
        
-        <div className="flex items-center mb-8">
+        <div className="flex items-center mb-6 md:mb-8">
             <Link href="/dashboard-cliente" className="text-gray-500 hover:text-gmc-dorado-principal mr-4"><ArrowLeft size={24} /></Link>
-            <h1 className="text-2xl font-bold text-gmc-gris-oscuro font-garamond">Crear Envío Internacional</h1>
+            <h1 className="text-xl md:text-2xl font-bold text-gmc-gris-oscuro font-garamond">Crear Envío Internacional</h1>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -184,12 +183,12 @@ export default function ConsolidateShipmentPage() {
                     {/* Contenido Desplegable */}
                     {isInventoryOpen && (
                         <div className="p-6 pt-0 animate-fadeIn">
-                            {/* BARRA DE PESO DE CONSOLIDACIÓN */}
+                            {/* BARRA DE PESO */}
                             {selectedIds.length > 0 && (
                                 <div className="mb-6 bg-gray-50 p-4 rounded-lg border border-gray-100">
                                     <div className="flex justify-between text-xs font-bold mb-2">
                                         <span className={totals.isOverweight ? "text-red-500" : "text-gray-600"}>
-                                            Peso Acumulado: {totals.weight} lbs
+                                            Peso Acumulado: {totals.weight.toFixed(1)} lbs
                                         </span>
                                         <span className="text-gray-400">Límite: {MAX_WEIGHT_PER_BOX} lbs</span>
                                     </div>
@@ -201,7 +200,7 @@ export default function ConsolidateShipmentPage() {
                                     </div>
                                     {totals.isOverweight && (
                                         <p className="text-xs text-red-500 mt-2 flex items-center gap-1 font-bold">
-                                            <AlertTriangle size={12}/> Has excedido el límite de consolidación.
+                                            <AlertTriangle size={12}/> Excedes el límite de 100 lbs
                                         </p>
                                     )}
                                 </div>
@@ -212,25 +211,24 @@ export default function ConsolidateShipmentPage() {
                             ) : inventory.length === 0 ? (
                                 <div className="text-center py-10 bg-gray-50 rounded-lg">
                                     <Package className="mx-auto text-gray-300 mb-2" size={32}/>
-                                    <p className="text-gray-500">No tienes paquetes listos en Miami.</p>
+                                    <p className="text-gray-500">No tienes paquetes listos.</p>
                                 </div>
                             ) : (
                                 <div className="space-y-3 max-h-[400px] overflow-y-auto scrollbar-thin">
                                     {inventory.map((pkg) => (
                                         <div key={pkg.id} 
                                             onClick={() => togglePackage(pkg.id)}
-                                            className={`flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all ${selectedIds.includes(pkg.id) ? 'border-blue-500 bg-blue-50' : 'border-gray-100 hover:border-gray-200'}`}
+                                            className={`flex items-center gap-3 p-3 md:p-4 rounded-xl border-2 cursor-pointer transition-all ${selectedIds.includes(pkg.id) ? 'border-blue-500 bg-blue-50' : 'border-gray-100 hover:border-gray-200'}`}
                                         >
-                                            <div className={`w-6 h-6 rounded-full border flex items-center justify-center ${selectedIds.includes(pkg.id) ? 'bg-blue-500 border-blue-500 text-white' : 'border-gray-300 bg-white'}`}>
+                                            <div className={`flex-shrink-0 w-6 h-6 rounded-full border flex items-center justify-center ${selectedIds.includes(pkg.id) ? 'bg-blue-500 border-blue-500 text-white' : 'border-gray-300 bg-white'}`}>
                                                 {selectedIds.includes(pkg.id) && <Check size={14} strokeWidth={4}/>}
                                             </div>
-                                            <div className="flex-1">
-                                                <p className="font-bold text-gray-800 text-sm">{pkg.description || 'Paquete sin descripción'}</p>
-                                                <p className="text-xs text-gray-500">Tracking: {pkg.gmcTrackingNumber || pkg.id.slice(0,8)}</p>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="font-bold text-gray-800 text-sm truncate">{pkg.description || 'Sin descripción'}</p>
+                                                <p className="text-xs text-gray-500 truncate">{pkg.gmcTrackingNumber || pkg.id}</p>
                                             </div>
-                                            <div className="text-right">
+                                            <div className="text-right flex-shrink-0">
                                                 <p className="font-bold text-gray-700 text-sm">{pkg.weightLbs || 1} lb</p>
-                                                <p className="text-[10px] text-gray-400">Peso aprox.</p>
                                             </div>
                                         </div>
                                     ))}
@@ -240,35 +238,55 @@ export default function ConsolidateShipmentPage() {
                     )}
                 </div>
 
-                {/* OPCIONES DE COURIER (Solo aparecen si seleccionas algo y NO te pasas del peso) */}
+                {/* OPCIONES DE COURIER (CORREGIDO PARA MÓVIL) */}
                 {selectedIds.length > 0 && !totals.isOverweight && (
-                    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 animate-fadeIn">
+                    <div className="bg-white p-5 md:p-6 rounded-xl shadow-sm border border-gray-200 animate-fadeIn">
                         <h3 className="font-bold text-gmc-gris-oscuro mb-4">Elige tu Servicio de Envío</h3>
+                        {/* 🔥 Grid Ajustado: 1 col en móvil (grande), 3 en desktop */}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            {Object.entries(COURIER_RATES).map(([key, rate]) => (
-                                <button 
-                                    key={key}
-                                    onClick={() => setSelectedCourier(key)}
-                                    className={`p-4 rounded-xl border-2 text-left transition-all ${selectedCourier === key ? 'border-gmc-dorado-principal bg-yellow-50 shadow-md ring-2 ring-yellow-200' : 'border-gray-200 hover:border-gray-300'}`}
-                                >
-                                    <div className="flex justify-between items-start mb-2">
-                                        <Plane size={20} className={selectedCourier === key ? 'text-gmc-dorado-principal' : 'text-gray-400'}/>
-                                        <span className="text-xs font-bold bg-white px-2 py-1 rounded border shadow-sm">{rate.days}</span>
-                                    </div>
-                                    <p className="font-bold text-gray-800 text-sm">{rate.name}</p>
-                                    <p className="text-xs text-gray-500 mt-1">
-                                        Est: ${(rate.base + (rate.perLb * totals.weight)).toFixed(2)}
-                                    </p>
-                                </button>
-                            ))}
+                            {Object.entries(COURIER_RATES).map(([key, rate]) => {
+                                const price = (rate.base + (rate.perLb * totals.weight)).toFixed(2);
+                                return (
+                                    <button 
+                                        key={key}
+                                        onClick={() => setSelectedCourier(key)}
+                                        className={`group relative p-4 rounded-xl border-2 text-left transition-all ${selectedCourier === key ? 'border-gmc-dorado-principal bg-yellow-50 shadow-md ring-1 ring-yellow-200' : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'}`}
+                                    >
+                                        <div className="flex justify-between items-start mb-3">
+                                            <div className={`p-2 rounded-full ${selectedCourier === key ? 'bg-white text-gmc-dorado-principal' : 'bg-gray-100 text-gray-400 group-hover:bg-white'}`}>
+                                                <Plane size={20} />
+                                            </div>
+                                            <span className="text-[10px] font-bold bg-white px-2 py-1 rounded border border-gray-200 shadow-sm text-gray-500">
+                                                {rate.days}
+                                            </span>
+                                        </div>
+                                        
+                                        {/* Nombre y Precio (Evita desbordamiento) */}
+                                        <div className="flex flex-col gap-1">
+                                            <p className="font-bold text-gray-800 text-sm leading-tight group-hover:text-black">
+                                                {rate.name}
+                                            </p>
+                                            <p className={`text-lg font-mono font-bold ${selectedCourier === key ? 'text-gmc-dorado-principal' : 'text-gray-600'}`}>
+                                                ${price}
+                                            </p>
+                                        </div>
+
+                                        {/* Checkmark decorativo si está seleccionado */}
+                                        {selectedCourier === key && (
+                                            <div className="absolute -top-2 -right-2 bg-gmc-dorado-principal text-white rounded-full p-1 shadow-sm">
+                                                <Check size={12} strokeWidth={3}/>
+                                            </div>
+                                        )}
+                                    </button>
+                                );
+                            })}
                         </div>
                     </div>
                 )}
             </div>
 
-            {/* DERECHA: RESUMEN DE PAGO (CON REF PARA SCROLL) */}
+            {/* DERECHA: RESUMEN DE PAGO */}
             <div className="lg:col-span-1">
-                {/* Asignamos la referencia a este contenedor para que el scroll llegue aquí */}
                 <div ref={paymentSectionRef} className="bg-gmc-gris-oscuro text-white p-6 rounded-2xl shadow-xl sticky top-6 scroll-mt-6">
                     <h3 className="font-bold text-gmc-dorado-principal text-lg mb-6 border-b border-gray-600 pb-4">Resumen de Envío</h3>
                    
@@ -312,8 +330,8 @@ export default function ConsolidateShipmentPage() {
                                     <label key={card.id} className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${selectedCardId === card.id ? 'bg-white text-black border-gmc-dorado-principal' : 'bg-gray-700 border-gray-600'}`}>
                                         <input type="radio" name="card" value={card.id} checked={selectedCardId === card.id} onChange={() => setSelectedCardId(card.id)} className="hidden" />
                                         <div className="bg-gray-200 text-black p-1 rounded text-[10px] font-bold uppercase w-10 text-center">{card.brand}</div>
-                                        <div className="flex-1 text-sm font-mono">•••• {card.last4}</div>
-                                        {selectedCardId === card.id && <Check size={16} className="text-green-600"/>}
+                                        <div className="flex-1 text-sm font-mono truncate">•••• {card.last4}</div>
+                                        {selectedCardId === card.id && <Check size={16} className="text-green-600 flex-shrink-0"/>}
                                     </label>
                                 ))}
                             </div>
@@ -332,12 +350,6 @@ export default function ConsolidateShipmentPage() {
                         {processing ? <Loader2 className="animate-spin"/> : <Plane size={20}/>}
                         {processing ? 'Procesando...' : 'Pagar y Enviar'}
                     </button>
-                   
-                    {totals.isOverweight && (
-                        <p className="text-xs text-center text-red-400 mt-3 font-bold animate-pulse">
-                            ¡Excedes el límite de 100 lbs!
-                        </p>
-                    )}
                 </div>
             </div>
 
