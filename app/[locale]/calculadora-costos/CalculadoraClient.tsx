@@ -134,11 +134,16 @@ export default function CalculadoraClient() {
     };
 
     // 🔥 CÁLCULO DEL DESGLOSE
-    const calculateTotal = (basePrice: number) => {
+    // Ahora acepta 'carrier' para saber si quitar el fee
+    const calculateTotal = (basePrice: number, carrier: string = '') => {
         const val = Number(value) || 0;
         // Seguro: 3% del valor si es mayor a $100
         const insurance = val > 100 ? val * 0.03 : 0;
-        const handling = 10.00;
+        
+        // REGLA: Si es GMC/GASP, handling es 0. Si no, 10.
+        const isGMC = carrier.toUpperCase().includes('GASP') || carrier.toUpperCase().includes('GMC');
+        const handling = isGMC ? 0 : 10.00;
+
         return {
             total: basePrice + insurance + handling,
             insurance,
@@ -287,7 +292,8 @@ export default function CalculadoraClient() {
 
                         <div className="p-8 max-h-[60vh] overflow-y-auto space-y-4">
                             {apiRates.map((rate, index) => {
-                                const details = calculateTotal(rate.price);
+                                // Pasamos el carrier al cálculo para detectar GMC
+                                const details = calculateTotal(rate.price, rate.carrier);
                                 
                                 return (
                                     <div key={rate.id} className={`group border-2 rounded-[1.5rem] p-5 transition-all relative ${index === 0 ? 'border-gmc-dorado-principal bg-yellow-50/30' : 'border-gray-50 bg-white hover:border-gray-200'}`}>
@@ -330,7 +336,10 @@ export default function CalculadoraClient() {
                                                 {details.insurance > 0 && (
                                                     <span className="text-blue-600">+ Ins: ${details.insurance.toFixed(2)}</span>
                                                 )}
-                                                <span className="text-gray-400 whitespace-nowrap">+ Fee: $10.00</span>
+                                                {/* Solo mostramos el fee si es mayor a 0 */}
+                                                {details.handling > 0 && (
+                                                    <span className="text-gray-400 whitespace-nowrap">+ Fee: ${details.handling.toFixed(2)}</span>
+                                                )}
                                             </div>
                                         </div>
 
