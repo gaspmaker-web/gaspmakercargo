@@ -20,6 +20,34 @@ const getCarrierLogo = (carrier: string): string => {
   return '/gaspmakercargoproject.png';
 };
 
+// 🔥 HELPERS DE DISEÑO PROFESIONAL
+const cleanCarrierName = (name: string) => {
+  if (!name) return '';
+  const n = name.toLowerCase();
+  if (n.includes('fedex')) return 'FedEx';
+  if (n.includes('ups')) return 'UPS';
+  if (n.includes('dhl')) return 'DHL';
+  if (n.includes('usps')) return 'USPS';
+  if (n.includes('gasp') || n.includes('gmc')) return 'Gasp Maker Cargo';
+  return name;
+};
+
+const cleanServiceName = (name: string) => {
+  if (!name) return '';
+  // Limpia guiones bajos y CamelCase a texto legible
+  return name
+    .replace(/_/g, ' ')
+    .replace(/([A-Z])/g, ' $1')
+    .trim()
+    .toLowerCase()
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ')
+    .replace('Fedex', '')
+    .replace('Ups', '')
+    .trim();
+};
+
 interface PackageDetailProps {
     pkg: any;
     userProfile: any;
@@ -56,13 +84,10 @@ export default function PackageDetailClient({ pkg, userProfile, savedCards = [] 
   const [validatingCoupon, setValidatingCoupon] = useState(false);
 
   // 🔥 LÓGICA DE HANDLING FEE DINÁMICA
-  // Si hay tarifa seleccionada y es GMC -> Fee $0. Si no, usamos el del paquete (o $10 por defecto si no es GMC).
-  // Nota: Si el usuario no ha cotizado, asumimos $10 visualmente hasta que seleccione.
   const isGMCSelected = selectedRate?.carrier?.toUpperCase().includes('GASP') || 
                         selectedRate?.carrier?.toUpperCase().includes('GMC') || 
                         selectedRate?.id?.includes('gmc');
 
-  // Si ya seleccionó GMC, es $0. Si no ha seleccionado nada o es otro, es $10 (o lo que venga del pkg).
   const handlingFee = isGMCSelected ? 0.00 : (pkg.handlingFee || 10.00);
 
   const declaredValue = Number(pkg.declaredValue) || 0;
@@ -229,7 +254,6 @@ export default function PackageDetailClient({ pkg, userProfile, savedCards = [] 
                  subtotal: servicePrice,
                  processingFee: fee,
                  insuranceCost: insuranceCost,
-                 // 🔥 ENVIAMOS EL HANDLING QUE CALCULAMOS ($0 O $10)
                  handlingFee: handlingFee, 
                  discount: discount, 
                  totalPaid: total,
@@ -414,35 +438,72 @@ export default function PackageDetailClient({ pkg, userProfile, savedCards = [] 
                             )
                         )}
                     </div>
+                    
+                    {/* 🔥 SECCIÓN DE TARIFAS REDISEÑADA (Estilo Profesional y Limpio) */}
                     {rates.length > 0 && (
-                        <div ref={couriersRef} className="p-5 animate-fadeIn">
+                        <div ref={couriersRef} className="p-4 sm:p-5 animate-fadeIn">
                             <p className="text-xs font-bold text-gray-400 uppercase mb-3">{t('shippingOptions')}:</p>
                             <div className="space-y-3">
-                                {rates.map((rate) => (
-                                    <div 
-                                        key={rate.id}
-                                        onClick={() => setSelectedRate(rate)}
-                                        className={`flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                                            selectedRate?.id === rate.id 
-                                            ? 'border-blue-600 bg-blue-50/50 shadow-sm' 
-                                            : 'border-gray-200 bg-white hover:border-blue-300'
-                                        }`}
-                                    >
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-12 h-10 relative flex-shrink-0 flex items-center justify-center">
-                                                {rate.logo ? <Image src={rate.logo} alt={rate.carrier} width={40} height={40} style={{objectFit: 'contain'}}/> : <Truck className="text-gray-400"/>}
-                                            </div>
-                                            <div>
-                                                <p className="font-bold text-gray-800 text-sm">{rate.carrier}</p>
-                                                <p className="text-xs text-gray-500">{rate.service} • {rate.days}</p>
+                                {rates.map((rate, index) => {
+                                    const isBestValue = index === 0;
+                                    const isSelected = selectedRate?.id === rate.id;
+
+                                    return (
+                                        <div 
+                                            key={rate.id}
+                                            onClick={() => setSelectedRate(rate)}
+                                            className={`relative group rounded-2xl p-4 transition-all cursor-pointer border-2 overflow-hidden
+                                                ${isSelected 
+                                                    ? 'border-gmc-dorado-principal bg-yellow-50/50 shadow-md scale-[1.01]' 
+                                                    : 'border-gray-100 bg-white hover:border-gray-300 hover:shadow-sm'
+                                                }
+                                            `}
+                                        >
+                                            {isBestValue && (
+                                                <div className="absolute top-0 right-0 bg-gmc-dorado-principal text-black text-[9px] font-black px-3 py-1 rounded-bl-xl uppercase tracking-widest shadow-sm z-10">
+                                                    Best Value
+                                                </div>
+                                            )}
+
+                                            <div className="grid grid-cols-[3.5rem_1fr_min-content] gap-4 items-center">
+                                                {/* 1. Logo */}
+                                                <div className="w-14 h-14 bg-white rounded-xl border border-gray-100 p-2 flex items-center justify-center shadow-sm shrink-0">
+                                                    <img 
+                                                        src={rate.logo || "/gaspmakercargoproject.png"} 
+                                                        alt={rate.carrier} 
+                                                        className="max-h-full max-w-full object-contain"
+                                                        onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = "/gaspmakercargoproject.png" }}
+                                                    />
+                                                </div>
+
+                                                {/* 2. Info */}
+                                                <div className="min-w-0 flex flex-col justify-center">
+                                                    <h3 className="font-black text-gray-800 text-sm uppercase leading-tight truncate">
+                                                        {cleanCarrierName(rate.carrier)}
+                                                    </h3>
+                                                    <p className="text-[11px] text-gray-500 font-medium leading-tight mt-0.5 line-clamp-2 break-words">
+                                                        {cleanServiceName(rate.service)}
+                                                    </p>
+                                                    <p className="text-[10px] text-gray-400 font-bold mt-1 flex items-center gap-1">
+                                                        <Clock size={10}/> {rate.days}
+                                                    </p>
+                                                </div>
+
+                                                {/* 3. Precio */}
+                                                <div className="text-right pl-2">
+                                                    <p className="text-xl font-black text-gray-900 tracking-tight leading-none">
+                                                        ${rate.price.toFixed(2)}
+                                                    </p>
+                                                    {isSelected && (
+                                                        <span className="text-[9px] font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full inline-block mt-1">
+                                                            Selected
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
-                                        <div className="text-right">
-                                            <p className="text-lg font-bold text-blue-700">${rate.price.toFixed(2)}</p>
-                                            {selectedRate?.id === rate.id && <p className="text-[10px] text-blue-600 font-bold">{t('selectedBtn')}</p>}
-                                        </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         </div>
                     )}
@@ -456,7 +517,7 @@ export default function PackageDetailClient({ pkg, userProfile, savedCards = [] 
                         <>
                             <div className="space-y-4 border-b border-gray-600 pb-6 mb-6">
                                 <div className="flex justify-between text-sm">
-                                    <span>Freight & Processing ({selectedRate.carrier})</span>
+                                    <span>Freight & Processing ({cleanCarrierName(selectedRate.carrier)})</span>
                                     <span>${servicePriceWithFee.toFixed(2)}</span>
                                 </div>
                                 
@@ -467,14 +528,12 @@ export default function PackageDetailClient({ pkg, userProfile, savedCards = [] 
                                     </div>
                                 )}
 
-                                {/* 🔥 SÓLO MOSTRAMOS EL HANDLING SI ES > 0 */}
                                 {handlingFee > 0 ? (
                                     <div className="flex justify-between text-sm" style={{ color: '#EAD8B1' }}>
                                         <span>Fee: Handling</span>
                                         <span>+${handlingFee.toFixed(2)}</span>
                                     </div>
                                 ) : (
-                                    // OPCIONAL: Mostrar que es gratis si quieres feedback visual
                                     <div className="flex justify-between text-sm text-green-400">
                                         <span>Fee: Handling (GMC)</span>
                                         <span>FREE</span>
@@ -536,7 +595,7 @@ export default function PackageDetailClient({ pkg, userProfile, savedCards = [] 
                                                 {cards.map((c: any) => <option key={c.id} value={c.id} className="text-black">•••• {c.last4} ({c.brand})</option>)}
                                             </select>
                                         </div>
-                                        <button onClick={handleAddCardRedirect} className="text-xs text--[#EAD8B1] hover:underline flex items-center gap-1">
+                                        <button onClick={handleAddCardRedirect} className="text-xs text-[#EAD8B1] hover:underline flex items-center gap-1">
                                             <Plus size={12}/> Agregar nueva (Ir a Configuración)
                                         </button>
                                     </div>
