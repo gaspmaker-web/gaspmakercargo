@@ -1,5 +1,6 @@
 import React from 'react';
 import { Lock, Eye, Database, Globe, Shield, Mail, FileText } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 export const metadata = {
   title: 'Privacy Policy | GaspMakerCargo',
@@ -7,7 +8,7 @@ export const metadata = {
 };
 
 export default function PrivacyPolicyPage() {
-  const lastUpdated = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  const t = useTranslations('PrivacyPolicy');
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans">
@@ -20,12 +21,12 @@ export default function PrivacyPolicyPage() {
                     <Lock size={48} className="text-green-400" />
                 </div>
             </div>
-            <h1 className="text-3xl md:text-5xl font-bold font-garamond mb-4">Privacy Policy</h1>
+            <h1 className="text-3xl md:text-5xl font-bold font-garamond mb-4">{t('title')}</h1>
             <p className="text-gray-300 text-lg max-w-2xl mx-auto">
-                We are committed to protecting your personal information and your right to privacy.
+                {t('subtitle')}
             </p>
             <p className="mt-6 text-xs text-gray-500 uppercase tracking-widest font-bold">
-                Last Updated: {lastUpdated}
+                {t('lastUpdated')}
             </p>
         </div>
       </div>
@@ -36,11 +37,10 @@ export default function PrivacyPolicyPage() {
         {/* Intro */}
         <div className="bg-white p-8 rounded-2xl shadow-xl border border-gray-100 mb-8">
             <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                <Shield className="text-blue-600" /> Introduction
+                <Shield className="text-blue-600" /> {t('intro_title')}
             </h2>
             <p className="text-gray-600 leading-relaxed">
-                This Privacy Policy explains how <strong>GaspMakerCargo LLC</strong> ("we", "us", "our") collects, uses, shares, and protects your personal information when you visit our website or use our logistics services. 
-                By using our services, you consent to the data practices described in this policy.
+                {t('intro_text')}
             </p>
         </div>
 
@@ -50,65 +50,60 @@ export default function PrivacyPolicyPage() {
             {/* 1. DATA WE COLLECT */}
             <Section 
                 icon={<Database size={24} className="text-indigo-600"/>}
-                title="1. Information We Collect"
+                title={t('s1_title')}
             >
-                <p>We collect personal information that you voluntarily provide to us when you register on the website, express an interest in obtaining information about us or our products and services.</p>
+                <p>{t('s1_text')}</p>
                 <ul className="list-disc pl-5 mt-3 space-y-2 text-gray-600 text-sm">
-                    <li><strong>Personal Info:</strong> Names, phone numbers, email addresses, mailing addresses, billing addresses.</li>
-                    <li><strong>Payment Data:</strong> We may collect data necessary to process your payment if you make purchases (credit card numbers), managed securely via Stripe.</li>
-                    <li><strong>Logistics Data:</strong> Information about your shipments, tracking numbers, package contents, and declared values.</li>
+                    <li><strong>{t('s1_li1_label')}</strong> {t('s1_li1_text')}</li>
+                    <li><strong>{t('s1_li2_label')}</strong> {t('s1_li2_text')}</li>
+                    <li><strong>{t('s1_li3_label')}</strong> {t('s1_li3_text')}</li>
                 </ul>
             </Section>
 
             {/* 2. HOW WE USE DATA */}
             <Section 
                 icon={<Eye size={24} className="text-teal-600"/>}
-                title="2. How We Use Your Information"
+                title={t('s2_title')}
             >
-                <p>We use personal information collected via our website for a variety of business purposes described below:</p>
+                <p>{t('s2_text')}</p>
                 <ul className="list-disc pl-5 mt-3 space-y-2 text-gray-600 text-sm">
-                    <li>To facilitate account creation and logon process.</li>
-                    <li>To fulfill and manage your orders, payments, and returns.</li>
-                    <li>To send administrative information to you (tracking updates, invoices).</li>
-                    <li>To protect our Services (fraud monitoring and prevention).</li>
+                    <li>{t('s2_li1')}</li>
+                    <li>{t('s2_li2')}</li>
+                    <li>{t('s2_li3')}</li>
+                    <li>{t('s2_li4')}</li>
                 </ul>
             </Section>
 
             {/* 3. COOKIES */}
             <Section 
                 icon={<Globe size={24} className="text-orange-600"/>}
-                title="3. Cookies and Tracking Technologies"
+                title={t('s3_title')}
             >
-                <p>
-                    We use cookies and similar tracking technologies (like web beacons and pixels) to access or store information. 
-                    Specific information about how we use such technologies and how you can refuse certain cookies is set out in our Cookie Notice.
-                </p>
+                <p>{t('s3_text')}</p>
                 <div className="mt-3 bg-orange-50 p-3 rounded text-xs text-orange-800 border border-orange-100">
-                    <strong>Essential Cookies:</strong> Required for the website to function (e.g., login session, language preference).
+                    <strong>{t('s3_essential_label')}</strong> {t('s3_essential_text')}
                 </div>
             </Section>
 
             {/* 4. THIRD PARTIES */}
             <Section 
                 icon={<FileText size={24} className="text-purple-600"/>}
-                title="4. Sharing with Third Parties"
+                title={t('s4_title')}
             >
-                <p>We only share information with the following third parties to perform specific services:</p>
+                <p>{t('s4_text')}</p>
                 <ul className="list-disc pl-5 mt-3 space-y-2 text-gray-600 text-sm">
-                    <li><strong>Payment Processors:</strong> Stripe (for secure credit card transactions).</li>
-                    <li><strong>Logistics Partners:</strong> Airlines, sea freight carriers, and local delivery services (Tookan) strictly for delivery fulfillment.</li>
-                    <li><strong>Cloud Infrastructure:</strong> Vercel and Supabase (for hosting and database security).</li>
+                    <li><strong>{t('s4_li1_label')}</strong> {t('s4_li1_text')}</li>
+                    <li><strong>{t('s4_li2_label')}</strong> {t('s4_li2_text')}</li>
+                    <li><strong>{t('s4_li3_label')}</strong> {t('s4_li3_text')}</li>
                 </ul>
             </Section>
 
              {/* CONTACT */}
              <Section 
                 icon={<Mail size={24} className="text-gray-600"/>}
-                title="5. Contact Us"
+                title={t('s5_title')}
             >
-                <p>
-                    If you have questions or comments about this policy, you may email us at:
-                </p>
+                <p>{t('s5_text')}</p>
                 <div className="mt-4 bg-gray-50 p-4 rounded-lg">
                     <a href="mailto:privacy@gaspmakercargo.com" className="text-blue-600 hover:underline font-bold">
                         privacy@gaspmakercargo.com
