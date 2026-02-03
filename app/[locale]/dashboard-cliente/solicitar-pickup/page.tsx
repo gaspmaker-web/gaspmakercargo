@@ -3,7 +3,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Truck, MapPin, Warehouse, CreditCard, Info, Loader2, Package, Check, ChevronDown, ChevronUp, Calendar, Phone, Weight } from 'lucide-react';
+import { 
+    Truck, MapPin, Warehouse, CreditCard, Info, Loader2, Package, Check, 
+    ChevronDown, ChevronUp, Calendar, Phone, Weight, Building2, AlertTriangle, XCircle 
+} from 'lucide-react';
 import { useJsApiLoader, Autocomplete } from '@react-google-maps/api';
 import { getProcessingFee } from '@/lib/stripeCalc';
 import { useTranslations } from 'next-intl';
@@ -14,9 +17,17 @@ const FEE_HEAVY = 15.00;
 const FEE_PALLET = 35.00;    
 
 const BASE_MILES = 10;
-const MILE_SURCHARGE = 1.50;
-const HEAVY_RATE_PER_LB = 0.55;
 const GMC_WAREHOUSE_ADDRESS = "1861 NW 22nd St, Miami, FL 33142";
+
+// 🔥 NUEVAS TARIFAS
+const MILE_RATE_STD = 1.50;      // Milla Estándar
+const MILE_RATE_TRUCK = 2.50;    // Milla Camión
+const HEAVY_RATE_STD = 0.55;     // Peso <= 1999 lbs
+const HEAVY_RATE_BULK = 0.35;    // Peso > 1999 lbs
+const FULL_FREIGHT_BASE = 250;   // Base Camión
+
+// 🔥 ZONAS PERMITIDAS
+const ALLOWED_COUNTIES = ['Miami-Dade County', 'Broward County'];
 
 const GOOGLE_LIBRARIES: ("places")[] = ["places"];
 
@@ -45,17 +56,20 @@ export default function SolicitarPickupPage() {
     { id: 'v_30', label: t('volLow'), price: 30 },
     { id: 'v_55', label: t('volMed'), price: 55 },
     { id: 'v_75', label: t('volHigh'), price: 75 },
-    { id: 'v_100', label: t('volFull'), price: 100 },
+    { id: 'v_250', label: t('volFull'), price: 250 }, // Full Freight
   ];
 
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
-  const [serviceType, setServiceType] = useState<string | null>(null); 
+  const [serviceType, setServiceType] = useState<string | null>('PICKUP_WAREHOUSE'); 
   const [inventory, setInventory] = useState<any[]>([]);
   const [inventoryLoading, setInventoryLoading] = useState(true);
   const [cards, setCards] = useState<any[]>([]);
   const [selectedCardId, setSelectedCardId] = useState<string>('');
   const [showMobileSummary, setShowMobileSummary] = useState(false);
+
+  const [addressError, setAddressError] = useState<string | null>(null);
+  const [isAddressValid, setIsAddressValid] = useState(false);
 
   const [quote, setQuote] = useState({ 
       total: 0, subtotal: 0, processingFee: 0, baseFare: 0, distanceSurcharge: 0, distanceMiles: 0, appliedStrategy: 'WEIGHT' 
@@ -97,9 +111,10 @@ export default function SolicitarPickupPage() {
   // --- 2. MANEJO DE SELECCIÓN ---
   const handleServiceSelect = (type: string) => {
       setServiceType(type);
+      setAddressError(null);
+      setQuote(prev => ({ ...prev, distanceMiles: 0, distanceSurcharge: 0 }));
       setTimeout(() => {
-          if (type === 'PICKUP_WAREHOUSE') inventorySectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          else routeSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          window.scrollTo({ top: 150, behavior: 'smooth' });
       }, 100);
   };
 
@@ -114,15 +129,43 @@ export default function SolicitarPickupPage() {
              subtotal = 0; 
         } else {
             let tp = 0;
+            // A. Calcular Precio Peso
             if (formData.weightTier === 'w_heavy') {
-                const weight = formData.exactWeight > 150 ? formData.exactWeight : 151;
-                tp = weight * HEAVY_RATE_PER_LB;
+                const weight = formData.exactWeight > 0 ? formData.exactWeight : 0;
+                // 🔥 Regla Mayorista: > 1999 lbs -> $0.35, sino $0.55
+                const rate = weight > 1999 ? HEAVY_RATE_BULK : HEAVY_RATE_STD;
+                tp = weight * rate;
             } else {
                 tp = WEIGHT_TIERS.find(t => t.id === formData.weightTier)?.price || 0;
             }
-            const tv = VOLUME_TIERS.find(v => v.id === formData.volumeTier)?.price || 0;
-            const baseFare = Math.max(tp, tv);
-            if (quote.distanceMiles > BASE_MILES) distanceSurcharge = (quote.distanceMiles - BASE_MILES) * MILE_SURCHARGE;
+
+            // B. Calcular Base Fare y Milla
+            let baseFare = 0;
+            let mileRate = MILE_RATE_STD;
+
+            if (formData.volumeTier === 'v_250') {
+                // 🔥 LÓGICA CAMIÓN: Base $250.
+                // NO se suma el precio "small/medium/large". SOLO se suma si es "Heavy Load".
+                mileRate = MILE_RATE_TRUCK; // Milla a $2.50
+                
+                if (formData.weightTier === 'w_heavy') {
+                    baseFare = FULL_FREIGHT_BASE + tp;
+                } else {
+                    baseFare = FULL_FREIGHT_BASE; // $250 fijos si no es carga pesada
+                }
+
+            } else {
+                // Lógica Estándar (Auto/SUV)
+                const tv = VOLUME_TIERS.find(v => v.id === formData.volumeTier)?.price || 0;
+                baseFare = Math.max(tp, tv);
+                mileRate = MILE_RATE_STD;
+            }
+
+            // C. Recargo Distancia
+            if (quote.distanceMiles > BASE_MILES) {
+                distanceSurcharge = (quote.distanceMiles - BASE_MILES) * mileRate;
+            }
+            
             subtotal = baseFare + distanceSurcharge;
         }
         
@@ -140,26 +183,104 @@ export default function SolicitarPickupPage() {
     calculateTotal();
   }, [formData.weightTier, formData.volumeTier, formData.exactWeight, quote.distanceMiles, isLoaded, serviceType, inventory]);
 
-  const calculateDistance = async (origin: string, destination: string) => {
-    if (!isLoaded || typeof google === 'undefined' || !origin || !destination) return;
+  // --- MAPS & VALIDACIÓN ---
+  const handleOriginChange = () => {
+      if (!originRef.current) return;
+      const place = originRef.current.getPlace();
+
+      if (!place || !place.geometry || !place.formatted_address) {
+          setAddressError("⚠️ Dirección inválida. Selecciona de la lista.");
+          setIsAddressValid(false);
+          setFormData(prev => ({ ...prev, originAddress: '' }));
+          return;
+      }
+
+      let county = '';
+      if (place.address_components) {
+          const countyComp = place.address_components.find(c => c.types.includes('administrative_area_level_2'));
+          if (countyComp) county = countyComp.long_name;
+      }
+      const isAllowed = ALLOWED_COUNTIES.some(allowed => county === allowed);
+      if (!isAllowed) {
+          setAddressError(`❌ Solo atendemos en Miami-Dade y Broward. (Zona: ${county || 'Desconocida'})`);
+          setIsAddressValid(false);
+          setFormData(prev => ({ ...prev, originAddress: '' }));
+          return;
+      }
+
+      setAddressError(null);
+      setIsAddressValid(true);
+      const newOrigin = place.formatted_address!;
+      setFormData(prev => ({ ...prev, originAddress: newOrigin }));
+      
+      calculateComplexRoute(newOrigin, formData.dropOffAddress);
+  };
+
+  const handleDropoffChange = () => {
+      if (!destRef.current) return;
+      const place = destRef.current.getPlace();
+
+      if (!place || !place.geometry || !place.formatted_address) {
+          setFormData(prev => ({ ...prev, dropOffAddress: '' }));
+          return;
+      }
+      const newDropoff = place.formatted_address!;
+      setFormData(prev => ({ ...prev, dropOffAddress: newDropoff }));
+      
+      calculateComplexRoute(formData.originAddress, newDropoff);
+  };
+
+  const calculateComplexRoute = async (origin: string, destination: string) => {
+    if (!isLoaded || typeof google === 'undefined' || !origin) return;
+
     try {
         const service = new google.maps.DistanceMatrixService();
-        const result = await service.getDistanceMatrix({
-            origins: [origin], destinations: [destination],
-            travelMode: google.maps.TravelMode.DRIVING,
-            unitSystem: google.maps.UnitSystem.IMPERIAL
-        });
-        const element = result.rows[0].elements[0];
-        if (element.status === "OK") {
-            const miles = element.distance.value / 1609.34;
-            setQuote(prev => ({ ...prev, distanceMiles: parseFloat(miles.toFixed(1)) }));
+        let totalMiles = 0;
+
+        const getLeg = async (start: string, end: string) => {
+            const res = await service.getDistanceMatrix({
+                origins: [start], destinations: [end],
+                travelMode: google.maps.TravelMode.DRIVING,
+                unitSystem: google.maps.UnitSystem.IMPERIAL
+            });
+            const el = res.rows[0].elements[0];
+            if (el.status !== "OK") return 0;
+            return el.distance.text.includes('mi') 
+                ? parseFloat(el.distance.text.replace(' mi','').replace(',','')) 
+                : el.distance.value / 1609.34;
+        };
+
+        if (serviceType === 'SHIPPING') {
+            const leg1 = await getLeg(GMC_WAREHOUSE_ADDRESS, origin); 
+            totalMiles = leg1 * 2; 
+        } 
+        else if (serviceType === 'DELIVERY') {
+            if (!destination) return;
+            const leg1 = await getLeg(GMC_WAREHOUSE_ADDRESS, origin); 
+            const leg2 = await getLeg(origin, destination);           
+            const leg3 = await getLeg(destination, GMC_WAREHOUSE_ADDRESS); 
+            totalMiles = leg1 + leg2 + leg3;
         }
-    } catch (e) { console.error(e); }
+
+        setQuote(prev => ({ ...prev, distanceMiles: parseFloat(totalMiles.toFixed(1)) }));
+
+    } catch (e) { console.error("Error calculando ruta:", e); }
+  };
+
+  const handleInputInput = () => {
+      setIsAddressValid(false);
+      setQuote(prev => ({ ...prev, distanceMiles: 0 }));
   };
 
   const handlePaymentAndSubmit = async () => {
     if (serviceType !== 'PICKUP_WAREHOUSE') {
-        if (!formData.originAddress || !formData.pickupDate) { alert("Completa los campos."); return; }
+        if (!isAddressValid || !formData.originAddress) { 
+            alert("⚠️ Dirección no válida. Selecciona una opción de la lista."); return; 
+        }
+        if (serviceType === 'DELIVERY' && !formData.dropOffAddress) {
+            alert("⚠️ Faltan dirección de entrega."); return;
+        }
+        if (!formData.pickupDate) { alert("Completa los campos."); return; }
         if (!selectedCardId) { alert("Selecciona un método de pago."); return; }
     }
 
@@ -172,7 +293,7 @@ export default function SolicitarPickupPage() {
             paymentId: 'PREPAID_PICKUP'
         };
 
-        if (serviceType !== 'PICKUP_WAREHOUSE') {
+        if (serviceType !== 'PICKUP_WAREHOUSE' && quote.total > 0) {
             const payRes = await fetch('/api/payments/charge', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -251,7 +372,6 @@ export default function SolicitarPickupPage() {
   const gridLayoutClass = isBodega ? 'max-w-4xl mx-auto' : 'grid grid-cols-1 lg:grid-cols-3 gap-8';
 
   return (
-    // 🔥 FIX: 'touch-action-pan-y' bloquea el movimiento lateral en móviles 🔥
     <div className="min-h-screen w-full max-w-[100vw] bg-gray-50 pb-40 md:pb-6 font-montserrat overflow-x-hidden relative" style={{ touchAction: 'pan-y' }}>
       <div className="max-w-6xl mx-auto p-4 md:p-6 w-full">
         
@@ -291,6 +411,7 @@ export default function SolicitarPickupPage() {
                     
                     {serviceType === 'PICKUP_WAREHOUSE' ? (
                         <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm border border-gray-200">
+                            {/* ... (Contenido de Inventario sin cambios) ... */}
                             <div className="flex justify-between items-center mb-4 border-b pb-2">
                                 <h3 className="font-bold text-gmc-gris-oscuro text-sm uppercase">{t('inventoryTitle')}</h3>
                                 <div className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded font-bold">{t('statusReady')}</div>
@@ -341,8 +462,26 @@ export default function SolicitarPickupPage() {
                                 <h3 className="font-bold text-gmc-gris-oscuro text-sm uppercase mb-2">{t('routeTitle')}</h3>
                                 <div>
                                     <label className="text-xs font-bold text-gray-400">{t('pickupPointA')}</label>
-                                    <Autocomplete onLoad={ref => { originRef.current = ref }} onPlaceChanged={() => { const place = originRef.current?.getPlace(); if(place?.formatted_address) { setFormData(prev => ({...prev, originAddress: place.formatted_address!})); if(serviceType === 'SHIPPING') calculateDistance(place.formatted_address!, GMC_WAREHOUSE_ADDRESS); } }}><input type="text" placeholder="Dirección de recogida..." className="w-full p-3 border rounded-lg text-base" /></Autocomplete>
+                                    <Autocomplete 
+                                        onLoad={ref => { originRef.current = ref }} 
+                                        onPlaceChanged={handleOriginChange}
+                                        restrictions={{ country: "us" }}
+                                    >
+                                        <input 
+                                            type="text" 
+                                            placeholder="Dirección de recogida..." 
+                                            className={`w-full p-3 border rounded-lg text-base ${addressError ? 'border-red-500 bg-red-50 text-red-900' : 'border-gray-200'}`} 
+                                            onInput={handleInputInput}
+                                        />
+                                    </Autocomplete>
+                                    {addressError && (
+                                        <div className="mt-2 flex items-center gap-2 text-red-600 bg-red-50 p-2 rounded-lg text-xs font-bold animate-in fade-in">
+                                            <AlertTriangle size={16} />
+                                            <span>{addressError}</span>
+                                        </div>
+                                    )}
                                 </div>
+
                                 {serviceType === 'SHIPPING' && (
                                     <div className="p-3 bg-blue-50 border border-blue-100 rounded-lg flex items-center gap-3">
                                         <div className="bg-white p-2 rounded-full text-blue-600 shadow-sm"><Warehouse size={18}/></div>
@@ -356,7 +495,13 @@ export default function SolicitarPickupPage() {
                                 {serviceType === 'DELIVERY' && (
                                     <div>
                                         <label className="text-xs font-bold text-gray-400">{t('dropoffPointB')}</label>
-                                        <Autocomplete onLoad={ref => { destRef.current = ref }} onPlaceChanged={() => { const place = destRef.current?.getPlace(); if(place?.formatted_address) { setFormData(prev => ({...prev, dropOffAddress: place.formatted_address!})); calculateDistance(formData.originAddress, place.formatted_address!); } }}><input type="text" placeholder="Dirección de entrega..." className="w-full p-3 border rounded-lg text-base" /></Autocomplete>
+                                        <Autocomplete 
+                                            onLoad={ref => { destRef.current = ref }} 
+                                            onPlaceChanged={handleDropoffChange} 
+                                            restrictions={{ country: "us" }}
+                                        >
+                                            <input type="text" placeholder="Dirección de entrega..." className="w-full p-3 border rounded-lg text-base border-gray-200" />
+                                        </Autocomplete>
                                     </div>
                                 )}
                             </div>
@@ -366,7 +511,6 @@ export default function SolicitarPickupPage() {
                                 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                     <div className="relative">
-                                        {/* 🔥 FIX: 'text-base' EVITA EL ZOOM EN MÓVILES 🔥 */}
                                         <select 
                                             className="w-full p-3 pl-4 border border-gray-200 rounded-xl text-base bg-white appearance-none font-medium focus:ring-2 focus:ring-gmc-dorado-principal focus:border-transparent" 
                                             onChange={e => setFormData({...formData, weightTier: e.target.value})}
@@ -400,7 +544,6 @@ export default function SolicitarPickupPage() {
                                                 onChange={e => setFormData({...formData, exactWeight: parseFloat(e.target.value)})} 
                                             />
                                         </div>
-                                        <p className="text-[10px] text-yellow-600 mt-1 pl-2 font-medium">Tarifa especial para carga pesada.</p>
                                     </div>
                                 )}
 
@@ -464,7 +607,7 @@ export default function SolicitarPickupPage() {
                                     </div>
                                 ) : <Link href="/account-settings" className="block text-center text-xs p-2 bg-gray-700 rounded text-white">+ Agregar Tarjeta</Link>}
                             </div>
-                            <button onClick={handlePaymentAndSubmit} disabled={isLoading || quote.total === 0} className="w-full py-3 bg-gmc-dorado-principal text-gmc-gris-oscuro font-bold rounded-xl flex justify-center items-center gap-2 hover:bg-white transition-colors disabled:opacity-50">
+                            <button onClick={handlePaymentAndSubmit} disabled={isLoading || quote.total === 0 || !isAddressValid} className="w-full py-3 bg-gmc-dorado-principal text-gmc-gris-oscuro font-bold rounded-xl flex justify-center items-center gap-2 hover:bg-white transition-colors disabled:opacity-50">
                                 {isLoading ? <Loader2 className="animate-spin"/> : <CreditCard size={18}/>} {t('btnPay')}
                             </button>
                         </div>
@@ -473,16 +616,11 @@ export default function SolicitarPickupPage() {
             </div>
         )}
 
-        {/* --- BARRA MÓVIL PREMIUM (Fondo Oscuro + Texto Dorado) --- */}
         {serviceType && !isBodega && (
             <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50">
-                {/* Degradado para suavizar la transición */}
                 <div className="absolute bottom-full left-0 right-0 h-10 bg-gradient-to-t from-gray-200/50 to-transparent pointer-events-none" />
-                
                 <div className="bg-[#222b3c] rounded-t-3xl shadow-[0_-5px_25px_rgba(0,0,0,0.2)] p-5 animate-slideUp text-white">
                     <div className="flex justify-between items-center gap-4">
-                        
-                        {/* Total (Izquierda) */}
                         <div onClick={() => setShowMobileSummary(!showMobileSummary)} className="flex flex-col cursor-pointer">
                             <div className="flex items-center gap-1 text-[10px] font-bold text-[#EAD8B1] uppercase tracking-widest mb-0.5">
                                 {t('sumTotal')} <ChevronUp size={12} className={`transition-transform text-white ${showMobileSummary ? 'rotate-180' : ''}`}/>
@@ -490,10 +628,9 @@ export default function SolicitarPickupPage() {
                             <div className="text-3xl font-garamond font-bold leading-none text-white">${quote.total.toFixed(2)}</div>
                         </div>
 
-                        {/* Botón Pay (Derecha - Dorado/Oscuro) */}
                         <button 
                             onClick={handlePaymentAndSubmit} 
-                            disabled={isLoading || quote.total === 0 || !selectedCardId} 
+                            disabled={isLoading || quote.total === 0 || !selectedCardId || !isAddressValid} 
                             className="bg-[#EAD8B1] text-[#222b3c] px-8 py-3.5 rounded-xl font-bold text-base shadow-lg active:scale-95 transition-transform flex items-center gap-2 disabled:opacity-50 disabled:shadow-none"
                         >
                             {isLoading ? <Loader2 className="animate-spin" size={20}/> : <CreditCard size={20}/>} 
@@ -501,7 +638,6 @@ export default function SolicitarPickupPage() {
                         </button>
                     </div>
 
-                    {/* Desplegable de Detalles (Sobre fondo oscuro) */}
                     {showMobileSummary && (
                         <div className="mt-5 pt-5 border-t border-gray-600 animate-fadeIn text-sm space-y-3">
                             <div className="flex justify-between text-gray-300">
