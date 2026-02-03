@@ -17,10 +17,14 @@ export default function FaqClient() { // Renombrado para consistencia interna
     const t = useTranslations('FAQPage');
     const [openIndex, setOpenIndex] = useState<number | null>(null);
 
-    // 🔥 FUNCIÓN: Abre el chat de Tawk.to al hacer clic
+    // 🔥 FUNCIÓN ACTUALIZADA: Abre el chat de Tawk.to al hacer clic
+    // Esta lógica es necesaria porque el widget está oculto por defecto (Secret Agent Mode)
     const handleOpenChat = () => {
         if (typeof window !== 'undefined' && (window as any).Tawk_API) {
-            (window as any).Tawk_API.maximize();
+            (window as any).Tawk_API.showWidget(); // 1. Muestra la burbuja (estaba oculta)
+            (window as any).Tawk_API.maximize();   // 2. Abre la ventana de chat inmediatamente
+        } else {
+            console.warn("Tawk.to aún no ha cargado completamente.");
         }
     };
 
@@ -130,7 +134,7 @@ export default function FaqClient() { // Renombrado para consistencia interna
                     
                     <button 
                         onClick={handleOpenChat}
-                        className="whitespace-nowrap px-6 py-3 bg-gray-900 text-white rounded-xl font-bold text-sm hover:bg-gray-800 transition-all"
+                        className="whitespace-nowrap px-6 py-3 bg-gray-900 text-white rounded-xl font-bold text-sm hover:bg-gray-800 transition-all shadow-lg transform hover:-translate-y-1"
                     >
                         {t.has('footerbox_btn') ? t('footerbox_btn') : 'Contactar Soporte'}
                     </button>
