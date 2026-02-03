@@ -600,11 +600,12 @@ export default function ClientDashboard({
                         <div className="space-y-4">
                             <div>
                                 <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('labelDate')}</label>
+                                {/* 🔥 INPUT DE FECHA MEJORADO */}
                                 <div className="relative">
-                                    <Calendar className="absolute left-3 top-2.5 text-gray-400" size={18}/>
+                                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={20}/>
                                     <input 
                                         type="date" 
-                                        className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all hover:bg-gray-50"
+                                        className="w-full p-3 pl-10 border border-gray-200 rounded-xl text-base bg-white appearance-none font-medium text-gray-700 focus:ring-2 focus:ring-gmc-dorado-principal focus:border-transparent transition-all shadow-sm placeholder-gray-400"
                                         min={new Date().toISOString().split('T')[0]}
                                         value={pickupDate}
                                         onChange={(e) => setPickupDate(e.target.value)}
