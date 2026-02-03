@@ -8,11 +8,7 @@ export const metadata = {
 };
 
 export default function TermsOfServicePage() {
-  // Nota: Si quieres traducir esto dinámicamente, usa useTranslations.
-  // Por ahora, lo dejaré en inglés estático ya que la URL solicitada es /en/terms-of-service
-  // y los términos legales suelen requerir redacción específica por idioma.
-
-  const lastUpdated = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  const t = useTranslations('TermsOfService');
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans">
@@ -25,12 +21,12 @@ export default function TermsOfServicePage() {
                     <ScrollText size={48} className="text-gmc-dorado-principal" />
                 </div>
             </div>
-            <h1 className="text-3xl md:text-5xl font-bold font-garamond mb-4">Terms of Service</h1>
+            <h1 className="text-3xl md:text-5xl font-bold font-garamond mb-4">{t('title')}</h1>
             <p className="text-gray-300 text-lg max-w-2xl mx-auto">
-                Please read these terms carefully before using our logistics and shipping services.
+                {t('subtitle')}
             </p>
             <p className="mt-6 text-xs text-gray-500 uppercase tracking-widest font-bold">
-                Last Updated: {lastUpdated}
+                {t('lastUpdated')}
             </p>
         </div>
       </div>
@@ -41,12 +37,10 @@ export default function TermsOfServicePage() {
         {/* Intro Card */}
         <div className="bg-white p-8 rounded-2xl shadow-xl border border-gray-100 mb-8">
             <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                <ShieldCheck className="text-green-600" /> 1. Acceptance of Terms
+                <ShieldCheck className="text-green-600" /> {t('s1_title')}
             </h2>
             <p className="text-gray-600 leading-relaxed">
-                By accessing and using the services provided by <strong>GaspMakerCargo (GMC)</strong> ("we," "us," or "our"), 
-                including our website, warehouse facilities, and shipping services, you ("the User" or "Customer") agree to comply with and be bound by these Terms of Service. 
-                If you do not agree to these terms, please do not use our services.
+                {t('s1_text')}
             </p>
         </div>
 
@@ -56,38 +50,35 @@ export default function TermsOfServicePage() {
             {/* SERVICE DESCRIPTION */}
             <Section 
                 icon={<Truck size={24} className="text-blue-600"/>}
-                title="2. Description of Services"
+                title={t('s2_title')}
             >
-                <p>GaspMakerCargo provides logistics solutions, including but not limited to:</p>
+                <p>{t('s2_intro')}</p>
                 <ul className="list-disc pl-5 mt-2 space-y-1 text-gray-600">
-                    <li>Receipt and processing of packages at our Miami warehouse.</li>
-                    <li>Consolidation of merchandise (repackaging).</li>
-                    <li>International air and ocean freight forwarding.</li>
-                    <li>Local pickup and delivery services.</li>
+                    <li>{t('s2_li1')}</li>
+                    <li>{t('s2_li2')}</li>
+                    <li>{t('s2_li3')}</li>
+                    <li>{t('s2_li4')}</li>
                 </ul>
                 <p className="mt-3 text-sm italic text-gray-500">
-                    We reserve the right to refuse service to anyone for any reason at any time, particularly if the goods involve prohibited items or illegal activities.
+                    {t('s2_disclaimer')}
                 </p>
             </Section>
 
             {/* STORAGE POLICY */}
             <Section 
                 icon={<Clock size={24} className="text-orange-600"/>}
-                title="3. Storage & Warehousing Policy"
+                title={t('s3_title')}
             >
-                <p className="mb-3">
-                    Effective management of warehouse space is critical to our operations. Our storage policy is as follows:
-                </p>
+                <p className="mb-3">{t('s3_intro')}</p>
                 <div className="bg-orange-50 p-4 rounded-lg border-l-4 border-orange-500 text-sm text-gray-700">
-                    <strong>Free Storage Period:</strong> Customers are granted <strong>30 days</strong> of free storage starting from the date the package arrives at our Miami facility.
+                    <strong>{t('s3_free_label')}</strong> {t('s3_free_text')}
                 </div>
                 <ul className="list-disc pl-5 mt-3 space-y-2 text-gray-600">
                     <li>
-                        <strong>Storage Fees:</strong> After the 30-day free period, a storage fee will be applied based on the volume (CFT) of the package.
-                        Currently calculated at a rate of <strong>$2.25 per CFT per month</strong> (or fraction thereof).
+                        <strong>{t('s3_fee_label')}</strong> {t('s3_fee_text')}
                     </li>
                     <li>
-                        <strong>Abandonment:</strong> Packages stored for more than <strong>90 days</strong> without payment or shipping instructions will be considered abandoned. GMC reserves the right to dispose of, auction, or destroy abandoned cargo to recover costs.
+                        <strong>{t('s3_abandon_label')}</strong> {t('s3_abandon_text')}
                     </li>
                 </ul>
             </Section>
@@ -95,65 +86,56 @@ export default function TermsOfServicePage() {
             {/* PAYMENTS */}
             <Section 
                 icon={<CreditCard size={24} className="text-purple-600"/>}
-                title="4. Rates, Payments & Refunds"
+                title={t('s4_title')}
             >
-                <p>
-                    All shipping charges, duties, and taxes must be paid before the final delivery or release of the cargo.
-                </p>
+                <p>{t('s4_intro')}</p>
                 <ul className="list-disc pl-5 mt-2 space-y-1 text-gray-600">
-                    <li><strong>Currency:</strong> All fees are billed in US Dollars (USD).</li>
-                    <li><strong>Volumetric Weight:</strong> Shipping costs are calculated based on the greater of actual weight or volumetric weight, in accordance with airline/carrier standards.</li>
-                    <li><strong>Refunds:</strong> Services rendered (such as shipping or consolidation already performed) are non-refundable. Claims for lost or damaged cargo must be filed within 7 days of receipt.</li>
+                    <li><strong>{t('s4_curr_label')}</strong> {t('s4_curr_text')}</li>
+                    <li><strong>{t('s4_vol_label')}</strong> {t('s4_vol_text')}</li>
+                    <li><strong>{t('s4_ref_label')}</strong> {t('s4_ref_text')}</li>
                 </ul>
             </Section>
 
             {/* PROHIBITED ITEMS */}
             <Section 
                 icon={<AlertTriangle size={24} className="text-red-600"/>}
-                title="5. Prohibited & Restricted Items"
+                title={t('s5_title')}
             >
-                <p>
-                    The Customer is solely responsible for ensuring their cargo complies with all applicable export/import laws. 
-                    We strictly do <strong>NOT</strong> ship:
-                </p>
+                <p>{t('s5_intro')}</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3 text-sm text-gray-600">
-                    <span className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-red-400 rounded-full"></div> Explosives or Flammables</span>
-                    <span className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-red-400 rounded-full"></div> Illegal Drugs or Narcotics</span>
-                    <span className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-red-400 rounded-full"></div> Firearms or Ammunition</span>
-                    <span className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-red-400 rounded-full"></div> Perishable Foods (without prior approval)</span>
-                    <span className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-red-400 rounded-full"></div> Cash or High-Value Jewelry</span>
+                    <span className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-red-400 rounded-full"></div> {t('s5_li1')}</span>
+                    <span className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-red-400 rounded-full"></div> {t('s5_li2')}</span>
+                    <span className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-red-400 rounded-full"></div> {t('s5_li3')}</span>
+                    <span className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-red-400 rounded-full"></div> {t('s5_li4')}</span>
+                    <span className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-red-400 rounded-full"></div> {t('s5_li5')}</span>
                 </div>
                 <p className="mt-3 text-red-600 text-xs font-bold">
-                    Attempting to ship prohibited items may result in the forfeiture of goods and reporting to relevant authorities (TSA, CBP).
+                    {t('s5_warning')}
                 </p>
             </Section>
 
             {/* LIABILITY */}
             <Section 
                 icon={<Scale size={24} className="text-gray-600"/>}
-                title="6. Limitation of Liability"
+                title={t('s6_title')}
             >
-                <p>
-                    GaspMakerCargo acts as a freight forwarder and logistics agent. We are not liable for:
-                </p>
+                <p>{t('s6_intro')}</p>
                 <ul className="list-disc pl-5 mt-2 space-y-1 text-gray-600">
-                    <li>Delays caused by customs (Aduana), airlines, or "Force Majeure" events (weather, strikes, pandemics).</li>
-                    <li>Damage to improperly packaged goods (if packed by the merchant/sender).</li>
-                    <li>Indirect or consequential damages (loss of profit, income, or business opportunity).</li>
+                    <li>{t('s6_li1')}</li>
+                    <li>{t('s6_li2')}</li>
+                    <li>{t('s6_li3')}</li>
                 </ul>
                 <p className="mt-2">
-                    Our liability is limited to the declared value of the goods or the limits set by international transport treaties (Montreal/Warsaw Conventions), whichever is lower, unless additional insurance is purchased.
+                    {t('s6_limit')}
                 </p>
             </Section>
 
              {/* CONTACT */}
              <Section 
                 icon={<Mail size={24} className="text-teal-600"/>}
-                title="7. Contact Us"
+                title={t('s7_title')}
             >
-                <p>
-                    If you have any questions regarding these Terms, please contact our support team:
-                </p>
+                <p>{t('s7_intro')}</p>
                 <div className="mt-4 bg-gray-50 p-4 rounded-lg flex flex-col gap-2">
                     <p className="text-sm font-bold text-gray-800">GaspMakerCargo LLC</p>
                     <p className="text-sm text-gray-600">Miami, Florida, USA</p>
