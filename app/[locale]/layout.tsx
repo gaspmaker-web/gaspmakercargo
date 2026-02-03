@@ -4,7 +4,8 @@ import { Inter, Montserrat, Cormorant_Garamond } from 'next/font/google';
 import '../globals.css';
 import Header from '@/components/Header';
 import Providers from '@/components/Providers';
-import HeaderWrapper from '@/components/HeaderWrapper'; // 👈 NUEVO IMPORT
+import HeaderWrapper from '@/components/HeaderWrapper'; 
+import CookieBanner from '@/components/ui/CookieBanner'; // 👈 1. IMPORTAR COMPONENTE
 
 // Configuración de fuentes
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
@@ -54,6 +55,9 @@ export default async function RootLayout({
             <footer className="bg-gmc-gris-oscuro text-white p-8 text-center mt-auto">
               <p className="text-sm opacity-50">© 2026 GaspMakerCargo - Sistema en Reconstrucción</p>
             </footer>
+
+            {/* 🍪 2. AGREGAR EL BANNER AQUÍ (Flotará sobre todo) */}
+            <CookieBanner />
 
           </Providers>
         </NextIntlClientProvider>
