@@ -7,8 +7,23 @@ import Script from 'next/script';
 export default function TawkLoader() {
   const pathname = usePathname();
   const [cookiesAccepted, setCookiesAccepted] = useState(false);
+  
+  // Lista de páginas permitidas (Whitelist)
+  const allowedPages = [
+      '/', 
+      '/en', '/es', '/fr', '/pt',
+      '/en/faq', '/es/faq', '/fr/faq', '/pt/faq',
+      '/en/contact', '/es/contact', '/fr/contact', '/pt/contact'
+  ];
 
-  // 1. VERIFICACIÓN DE COOKIES (Solo al inicio)
+  const currentPath = pathname.endsWith('/') && pathname.length > 1 
+      ? pathname.slice(0, -1) 
+      : pathname;
+
+  // Calculamos si debemos mostrarlo ANTES de renderizar nada
+  const isAllowedPage = allowedPages.includes(currentPath);
+
+  // 1. CHEQUEO DE COOKIES
   useEffect(() => {
     const checkConsent = () => {
         if (localStorage.getItem('gmc_cookie_consent') === 'true') {
@@ -20,70 +35,34 @@ export default function TawkLoader() {
     return () => window.removeEventListener('cookie_consent_updated', checkConsent);
   }, []);
 
-  // 2. CONTROL DE VISIBILIDAD (Se activa en CADA click o cambio de ruta)
+  // 2. LIMPIEZA DE "RESIDUOS" AL NAVEGAR 🧹
+  // Si vienes de la Landing hacia el Dashboard, el widget podría quedarse pegado.
+  // Este efecto asegura que se elimine visualmente.
   useEffect(() => {
-    // Si Tawk no ha cargado, no hacemos nada aún
-    if (typeof window === 'undefined' || !(window as any).Tawk_API) return;
-
-    // DEFINIMOS LA "LISTA BLANCA" (Únicos lugares donde el chat puede vivir)
-    const allowedPages = [
-        // Landing Page
-        '/', 
-        '/en', '/es', '/fr', '/pt',
-        // FAQ (Para que funcione el botón de Contact Support)
-        '/en/faq', '/es/faq', '/fr/faq', '/pt/faq',
-        // Contacto (Opcional)
-        '/en/contact', '/es/contact', '/fr/contact', '/pt/contact'
-    ];
-
-    // Limpiamos la ruta actual
-    const currentPath = pathname.endsWith('/') && pathname.length > 1 
-        ? pathname.slice(0, -1) 
-        : pathname;
-
-    // LÓGICA DE CONTROL
-    if (allowedPages.includes(currentPath)) {
-        // ✅ ESTAMOS EN LANDING O FAQ -> MOSTRAR
-        (window as any).Tawk_API.showWidget();
-    } else {
-        // ⛔ ESTAMOS EN DASHBOARD O APP -> OCULTAR INMEDIATAMENTE
+    if (!isAllowedPage && typeof window !== 'undefined' && (window as any).Tawk_API) {
+        // Si entramos a zona prohibida, forzamos ocultar inmediatamente
         (window as any).Tawk_API.hideWidget();
-        
-        // REFUERZO: A veces Next.js es muy rápido, así que enviamos
-        // una segunda orden 500ms después para asegurar que se vaya.
-        setTimeout(() => {
-            if ((window as any).Tawk_API) {
-                (window as any).Tawk_API.hideWidget();
-            }
-        }, 500);
+    } else if (isAllowedPage && cookiesAccepted && typeof window !== 'undefined' && (window as any).Tawk_API) {
+        // Si volvimos a zona permitida, asegurar que se vea
+        (window as any).Tawk_API.showWidget();
     }
+  }, [pathname, isAllowedPage, cookiesAccepted]);
 
-  }, [pathname, cookiesAccepted]); // 👈 Esto se dispara al cambiar la URL
-
-  if (!cookiesAccepted) return null;
+  // 🛑 REGLA DE ORO: Si no hay cookies O no es página permitida,
+  // devolvemos NULL. Así el script NO se carga al refrescar la página.
+  if (!cookiesAccepted || !isAllowedPage) {
+      return null;
+  }
 
   return (
     <Script 
       id="tawk-widget" 
       strategy="lazyOnload"
       onLoad={() => {
-        // CONFIGURACIÓN INICIAL AL CARGAR EL SCRIPT
-        if ((window as any).Tawk_API) {
-            const path = window.location.pathname;
-            const cleanPath = path.endsWith('/') && path.length > 1 ? path.slice(0, -1) : path;
-            
-            // Lista blanca local para la carga inicial
-            const safeList = [
-                '/', '/en', '/es', '/fr', '/pt',
-                '/en/faq', '/es/faq', '/fr/faq', '/pt/faq',
-                '/en/contact', '/es/contact', '/fr/contact', '/pt/contact'
-            ];
-
-            // Si al cargar resulta que estamos en el Dashboard (ej. recargar página), ocultar directo.
-            if (!safeList.includes(cleanPath)) {
-                (window as any).Tawk_API.hideWidget();
-            }
-        }
+          // Doble seguridad al terminar de cargar
+          if ((window as any).Tawk_API) {
+              (window as any).Tawk_API.showWidget();
+          }
       }}
     >
       {`
