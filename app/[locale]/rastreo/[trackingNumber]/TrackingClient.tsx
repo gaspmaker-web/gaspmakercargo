@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { CheckCircle, Truck, MapPin, Camera, Clock, Package as PackageIcon, User, ArrowLeft, PenTool } from 'lucide-react';
+import { CheckCircle, Truck, MapPin, Camera, Clock, Package as PackageIcon, User, ArrowLeft, PenTool, UserCheck } from 'lucide-react';
 
 // Definimos la interfaz para los datos que recibimos del servidor
 interface TrackingClientProps {
@@ -128,21 +128,46 @@ export default function TrackingClient({ pkg, from }: TrackingClientProps) {
                                 <PenTool size={12} /> Firma de Conformidad
                             </div>
                             <img 
-                                src={pkg.deliverySignature} 
+                                src={pkg.deliverySignature === 'ENTREGA_TIENDA' ? '/firma-tienda-placeholder.png' : pkg.deliverySignature} 
                                 alt="Firma Digital Cliente" 
                                 className="h-24 sm:h-32 object-contain mt-2 opacity-85 hover:opacity-100 transition-opacity"
+                                onError={(e) => {
+                                    // Fallback visual si no hay imagen de firma real
+                                    e.currentTarget.style.display = 'none';
+                                }}
                             />
+                            {pkg.deliverySignature === 'ENTREGA_TIENDA' && (
+                                <p className="text-gray-500 font-bold text-lg mt-4">ENTREGADO EN TIENDA</p>
+                            )}
+
                             <div className="w-32 h-px bg-gray-200 mt-2"></div>
                             <p className="text-xs text-gray-400 font-mono mt-1">Firmado Digitalmente</p>
                         </div>
                     )}
 
                     {/* PIE DE PÁGINA */}
-                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mt-4 text-sm text-gray-500 px-2 gap-2 border-t pt-4">
-                        <span className="flex items-center gap-1"><Clock size={16}/> Entregado el: {new Date(pkg.updatedAt).toLocaleDateString()}</span>
-                        <span className="font-bold text-gray-800 flex items-center gap-1">
-                            <User size={16}/> Recibido por: {pkg.user?.name}
-                        </span>
+                    <div className="flex flex-col gap-3 mt-4 text-sm px-2 border-t pt-4">
+                        
+                        <div className="flex justify-between items-center text-gray-500">
+                             <span className="flex items-center gap-1"><Clock size={16}/> Entregado el:</span>
+                             <span className="font-mono">{new Date(pkg.updatedAt).toLocaleDateString()}</span>
+                        </div>
+
+                        <div className="flex justify-between items-center text-gray-800">
+                             <span className="flex items-center gap-1 text-gray-500"><User size={16}/> Recibido por:</span>
+                             <span className="font-bold">{pkg.user?.name}</span>
+                        </div>
+
+                        {/* 🔥 AQUÍ MOSTRAMOS QUIÉN LO ENTREGÓ */}
+                        {pkg.deliveredBy && (
+                            <div className="flex justify-between items-center bg-green-50 p-2 rounded-lg border border-green-100 mt-1">
+                                <span className="flex items-center gap-1 text-green-700 font-bold text-xs uppercase tracking-wide">
+                                    <UserCheck size={16}/> Entregado Por:
+                                </span>
+                                <span className="font-bold text-green-800 uppercase">{pkg.deliveredBy}</span>
+                            </div>
+                        )}
+
                     </div>
                 </div>
             )}

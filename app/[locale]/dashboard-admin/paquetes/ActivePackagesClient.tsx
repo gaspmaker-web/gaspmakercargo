@@ -1,11 +1,13 @@
 "use client";
 
+import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { 
   Calendar, Scale, AlertCircle, CheckCircle, Truck, 
-  DollarSign, Ruler, MapPin, Box 
+  DollarSign, Ruler, MapPin, Box, X, User 
 } from 'lucide-react';
-// Asegúrate de que estos componentes existan, o coméntalos temporalmente si no los has migrado
+// Asegúrate de que estos componentes existan
 import PackageSearch from '@/components/admin/PackageSearch';
 import PackageActions from '@/components/admin/PackageActions'; 
 import BackButton from '@/components/admin/BackButton';
@@ -16,8 +18,57 @@ interface PackageProps {
 }
 
 export default function ActivePackagesClient({ allItems, currentLocale }: PackageProps) {
+  const router = useRouter();
+  
+  // --- ESTADOS PARA EL MODAL DE ENTREGA ---
+  const [isDeliverModalOpen, setIsDeliverModalOpen] = useState(false);
+  const [selectedPackageId, setSelectedPackageId] = useState<string | null>(null);
+  const [staffName, setStaffName] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // --- FUNCIÓN PARA ABRIR EL MODAL ---
+  // Esta función se pasará a PackageActions o se usará directamente
+  const handleOpenDeliverModal = (pkgId: string) => {
+      setSelectedPackageId(pkgId);
+      setStaffName(""); // Limpiar campo
+      setIsDeliverModalOpen(true);
+  };
+
+  // --- FUNCIÓN PARA CONFIRMAR LA ENTREGA ---
+  const handleConfirmDelivery = async () => {
+      if (!staffName.trim()) {
+          alert("Por favor, escribe el nombre del personal.");
+          return;
+      }
+
+      setIsSubmitting(true);
+      try {
+          const res = await fetch('/api/admin/packages/deliver-store', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ 
+                  packageId: selectedPackageId, 
+                  deliveredBy: staffName 
+              })
+          });
+
+          if (res.ok) {
+              setIsDeliverModalOpen(false);
+              router.refresh(); // Refrescar la tabla
+          } else {
+              const data = await res.json();
+              alert(data.message || "Error al procesar la entrega.");
+          }
+      } catch (error) {
+          console.error(error);
+          alert("Error de conexión.");
+      } finally {
+          setIsSubmitting(false);
+      }
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 p-6 font-montserrat">
+    <div className="min-h-screen bg-gray-50 p-6 font-montserrat relative">
       <div className="max-w-7xl mx-auto">
         
         <div className="mb-6 flex justify-between items-center">
@@ -159,8 +210,8 @@ export default function ActivePackagesClient({ allItems, currentLocale }: Packag
                                             <div className="text-center opacity-60">
                                                 <div className="text-sm font-bold text-gray-700 flex items-center justify-center gap-1">
                                                     <Scale size={14} className="text-gray-400"/> {pkg.weightLbs || 0} lbs
-                                                </div>
-                                                <div className="text-xs text-gray-400">{pkg.lengthIn}x{pkg.widthIn}x{pkg.heightIn} in</div>
+                                                 </div>
+                                                 <div className="text-xs text-gray-400">{pkg.lengthIn}x{pkg.widthIn}x{pkg.heightIn} in</div>
                                             </div>
                                         )}
                                     </td>
@@ -201,7 +252,12 @@ export default function ActivePackagesClient({ allItems, currentLocale }: Packag
                                     </td>
 
                                     <td className="p-4 text-right">
-                                        <PackageActions pkg={pkg} locale={currentLocale} />
+                                        {/* 🔥 PASAMOS LA FUNCIÓN DE APERTURA AL COMPONENTE HIJO */}
+                                        <PackageActions 
+                                            pkg={pkg} 
+                                            locale={currentLocale} 
+                                            onDeliverStore={() => handleOpenDeliverModal(pkg.id)}
+                                        />
                                     </td>
                                 </tr>
                             )})
@@ -210,6 +266,69 @@ export default function ActivePackagesClient({ allItems, currentLocale }: Packag
                 </table>
             </div>
         </div>
+
+        {/* ===================================================================
+           MODAL DE ENTREGA EN TIENDA (NUEVO)
+           =================================================================== */}
+        {isDeliverModalOpen && (
+            <div className="fixed inset-0 bg-black/60 z-[9999] flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in">
+                <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-200 border border-gray-100">
+                    
+                    {/* Header del Modal */}
+                    <div className="bg-emerald-50 p-5 border-b border-emerald-100 flex justify-between items-center">
+                        <h3 className="font-bold text-emerald-800 flex items-center gap-2 text-lg">
+                            <MapPin className="text-emerald-600" size={20}/>
+                            Entregar en Tienda
+                        </h3>
+                        <button onClick={() => setIsDeliverModalOpen(false)} className="text-emerald-400 hover:text-emerald-600 transition-colors">
+                            <X size={24} />
+                        </button>
+                    </div>
+
+                    <div className="p-6">
+                        <div className="text-center mb-5">
+                            <p className="text-sm text-gray-500 leading-relaxed mb-4">
+                                Estás a punto de marcar este paquete como <strong>ENTREGADO</strong> al cliente en la bodega.
+                            </p>
+                            <div className="bg-gray-50 p-3 rounded-lg border border-gray-200 text-left">
+                                <label className="block text-xs font-bold text-gray-400 uppercase mb-1">
+                                    Entregado Por (Personal):
+                                </label>
+                                <div className="relative">
+                                    <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16}/>
+                                    <input 
+                                        type="text" 
+                                        autoFocus
+                                        placeholder="Tu nombre..." 
+                                        className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
+                                        value={staffName}
+                                        onChange={(e) => setStaffName(e.target.value)}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Botones de Acción */}
+                        <div className="flex gap-3">
+                            <button 
+                                onClick={() => setIsDeliverModalOpen(false)}
+                                className="flex-1 py-2.5 text-gray-600 font-bold text-sm hover:bg-gray-100 rounded-xl transition-colors border border-gray-200"
+                            >
+                                Cancelar
+                            </button>
+                            <button 
+                                onClick={handleConfirmDelivery}
+                                disabled={isSubmitting || !staffName.trim()}
+                                className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl font-bold text-sm shadow-md flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                            >
+                                {isSubmitting ? 'Procesando...' : 'Confirmar Entrega'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        )}
+
       </div>
     </div>
   );

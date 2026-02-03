@@ -23,8 +23,6 @@ model User {
   email                 String                @unique
   
   // 🔐 AUTENTICACIÓN (CORREGIDO)
-  // Aquí guardaremos el hash encriptado ($2b$10$...). 
-  // Eliminamos 'password_hash' para evitar conflictos.
   password              String?
 
   // 🔄 RECUPERACIÓN
@@ -115,6 +113,7 @@ model Package {
   
   deliveryPhotoUrl       String?   
   deliverySignature      String?   
+  deliveredBy            String?   // 🔥 NUEVO: Nombre del personal que entregó
   tookanLink             String?   
   
   carrierTrackingNumber  String?   
@@ -147,6 +146,8 @@ model ConsolidatedShipment {
   finalTrackingNumber    String?
   shippingLabelUrl       String?
   
+  deliveredBy            String?   // 🔥 NUEVO: Nombre del personal que entregó
+
   paymentId              String?
   weightLbs              Float?
   

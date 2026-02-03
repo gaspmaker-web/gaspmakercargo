@@ -13,9 +13,10 @@ import EditPackageAdminModal from './EditPackageAdminModal';
 interface PackageActionsProps {
   pkg: any;
   locale: string;
+  onDeliverStore?: () => void; // 🔥 NUEVO: Función para abrir el modal del padre
 }
 
-export default function PackageActions({ pkg, locale }: PackageActionsProps) {
+export default function PackageActions({ pkg, locale, onDeliverStore }: PackageActionsProps) {
   const router = useRouter();
   
   // Estados de UI
@@ -142,17 +143,6 @@ export default function PackageActions({ pkg, locale }: PackageActionsProps) {
       } 
   };
 
-  const handlePickupStore = async () => {
-      if (!confirm(`¿Confirmas que el cliente retiró el paquete ${pkg.gmcTrackingNumber}?`)) return;
-      try {
-          const res = await fetch('/api/admin/packages/update-status', { 
-              method: 'POST', headers: {'Content-Type': 'application/json'},
-              body: JSON.stringify({ packageId: pkg.id, newStatus: 'ENTREGADO' })
-          });
-          if (res.ok) { alert("✅ Entregado en Tienda."); setIsMenuOpen(false); router.refresh(); }
-      } catch (e) { alert("Error al entregar."); }
-  };
-
   const handleBuyLabel = async () => { 
       if (!confirm(`¿Comprar Label?`)) return; 
       setIsSaving(true); 
@@ -245,7 +235,18 @@ export default function PackageActions({ pkg, locale }: PackageActionsProps) {
             {isStorePickup && (
                 <>
                     <div className="border-t border-gray-100 my-1"></div>
-                    <button onClick={handlePickupStore} className="w-full text-left px-4 py-3 hover:bg-green-50 flex items-center gap-3 text-green-700 font-bold transition-colors">
+                    {/* 🔥 MODIFICADO: AHORA LLAMA AL CALLBACK DEL PADRE */}
+                    <button 
+                        onClick={() => { 
+                            if (onDeliverStore) {
+                                onDeliverStore(); // Abrir modal del padre
+                                setIsMenuOpen(false); 
+                            } else {
+                                alert("Error: Función de entrega no conectada.");
+                            }
+                        }} 
+                        className="w-full text-left px-4 py-3 hover:bg-green-50 flex items-center gap-3 text-green-700 font-bold transition-colors"
+                    >
                         <MapPin size={16}/> Entregar en Tienda
                     </button>
                 </>
