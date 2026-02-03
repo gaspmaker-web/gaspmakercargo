@@ -1,11 +1,12 @@
 import React from 'react';
 import { NextIntlClientProvider } from 'next-intl';
 import { Inter, Montserrat, Cormorant_Garamond } from 'next/font/google';
+import Script from 'next/script'; // 👈 1. IMPORTANTE: Agregamos esto
 import '../globals.css';
 import Header from '@/components/Header';
 import Providers from '@/components/Providers';
 import HeaderWrapper from '@/components/HeaderWrapper'; 
-import CookieBanner from '@/components/ui/CookieBanner'; // 👈 1. IMPORTAR COMPONENTE
+import CookieBanner from '@/components/ui/CookieBanner';
 
 // Configuración de fuentes
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
@@ -58,6 +59,25 @@ export default async function RootLayout({
 
             {/* 🍪 2. AGREGAR EL BANNER AQUÍ (Flotará sobre todo) */}
             <CookieBanner />
+
+            {/* 🔥 3. CHAT TAWK.TO (Inyectado Directamente) 🔥 */}
+            <Script id="tawk-widget" strategy="lazyOnload">
+              {`
+                var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+                
+                // NOTA: Forzamos la carga para prueba.
+                // Si funciona, luego podemos ocultarlo de nuevo.
+                
+                (function(){
+                var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
+                s1.async=true;
+                s1.src='https://embed.tawk.to/6760b7db49e2fd8dfef91f45/1if8sscq9';
+                s1.charset='UTF-8';
+                s1.setAttribute('crossorigin','*');
+                s0.parentNode.insertBefore(s1,s0);
+                })();
+              `}
+            </Script>
 
           </Providers>
         </NextIntlClientProvider>
