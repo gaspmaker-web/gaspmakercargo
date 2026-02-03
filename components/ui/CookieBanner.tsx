@@ -8,10 +8,8 @@ export default function CookieBanner() {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    // Verificar si ya aceptó las cookies
     const consent = localStorage.getItem('gmc_cookie_consent');
     if (!consent) {
-      // Pequeño retraso para que la animación se vea elegante al entrar
       const timer = setTimeout(() => setIsVisible(true), 1000);
       return () => clearTimeout(timer);
     }
@@ -28,7 +26,6 @@ export default function CookieBanner() {
     <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:max-w-md z-[9999] animate-in slide-in-from-bottom-10 fade-in duration-500">
       <div className="bg-white p-5 rounded-2xl shadow-2xl border border-gray-100 flex flex-col gap-4 relative">
         
-        {/* Botón Cerrar (opcional) */}
         <button 
             onClick={() => setIsVisible(false)} 
             className="absolute top-2 right-2 text-gray-300 hover:text-gray-500 p-1"
@@ -44,7 +41,8 @@ export default function CookieBanner() {
                 <h4 className="font-bold text-gray-800 text-sm">Usamos Cookies 🍪</h4>
                 <p className="text-xs text-gray-500 mt-1 leading-relaxed">
                     Utilizamos cookies esenciales para gestionar tu sesión, recordar tu idioma y garantizar la seguridad del envío. 
-                    <Link href="#" className="text-blue-600 hover:underline ml-1">
+                    {/* 🔥 ENLACE CORREGIDO AQUÍ */}
+                    <Link href="/privacy-policy" className="text-blue-600 hover:underline ml-1 font-bold">
                         Política de Privacidad
                     </Link>.
                 </p>
@@ -59,7 +57,7 @@ export default function CookieBanner() {
                 Aceptar todas
             </button>
             <button 
-                onClick={acceptCookies} // Técnicamente las esenciales no se pueden rechazar si quieres usar el sitio
+                onClick={acceptCookies} 
                 className="px-4 py-2 bg-gray-50 text-gray-500 rounded-lg text-xs font-bold hover:bg-gray-100 transition-colors"
             >
                 Solo necesarias
