@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { Cookie, X, ShieldCheck } from 'lucide-react'; // Agregamos ShieldCheck para look PRO
+import { Cookie, X, ShieldCheck } from 'lucide-react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 
@@ -20,7 +20,16 @@ export default function CookieBanner() {
   }, []);
 
   const acceptCookies = () => {
+    // 1. Guardamos el consentimiento
     localStorage.setItem('gmc_cookie_consent', 'true');
+    
+    // 🔥 2. AVISAMOS A LA APP QUE SE ACEPTARON LAS COOKIES
+    // Esto disparará el evento para que el Chat de Tawk.to aparezca
+    if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('cookie_consent_updated'));
+    }
+
+    // 3. Cerramos el banner
     setIsVisible(false);
   };
 
