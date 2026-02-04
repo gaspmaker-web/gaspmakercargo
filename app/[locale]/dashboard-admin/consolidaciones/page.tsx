@@ -14,6 +14,9 @@ import MenuAccionesConsolidacion from '@/components/admin/MenuAccionesConsolidac
 import ConsolidationCard from '@/components/admin/ConsolidationCard'; 
 import SearchConsolidations from '@/components/admin/SearchConsolidations';
 
+// 👇 1. IMPORTAR EL COMPONENTE NUEVO
+import BotonComprarLabelConsolidado from '@/components/admin/BotonComprarLabelConsolidado';
+
 export const dynamic = 'force-dynamic';
 
 export default async function ConsolidacionesPage({
@@ -23,13 +26,10 @@ export default async function ConsolidacionesPage({
 }) {
   const query = searchParams?.q || '';
   
-  // 1. TRAEMOS TODO (FILTRADO POR TIPO)
+  // 1. TRAEMOS TODO
   const consolidaciones = await prisma.consolidatedShipment.findMany({
     where: {
-        // Solo mostramos 'CONSOLIDATION'
         serviceType: 'CONSOLIDATION',
-
-        // Búsqueda
         ...(query ? {
             OR: [
                 { user: { name: { contains: query, mode: 'insensitive' } } },
@@ -46,8 +46,6 @@ export default async function ConsolidacionesPage({
   });
 
   // 2. CLASIFICACIÓN
-
-  // A. Listos para Despachar
   const listosParaDespachar = consolidaciones.filter(c => {
     const s = c.status;
     const isPaidState = s === 'PAGADO' || s === 'POR_ENVIAR' || s === 'PAID' || s === 'LISTO_PARA_ENVIO' || s === 'LISTO PARA ENVIO';
@@ -55,16 +53,12 @@ export default async function ConsolidacionesPage({
     return isPaidState && hasMoney;
   });
 
-  // B. Esperando Pago
-  const esperandoPago = consolidaciones.filter(c => 
-    c.status === 'PENDIENTE_PAGO'
-  );
+  const esperandoPago = consolidaciones.filter(c => c.status === 'PENDIENTE_PAGO');
 
   function isZeroError(envio: any) {
       return (envio.totalAmount || 0) === 0 && (envio.status === 'LISTO_PARA_ENVIO' || envio.status === 'LISTO PARA ENVIO');
   }
 
-  // C. Pendientes de Procesar
   const pendientesProcesar = consolidaciones.filter(c => {
     const s = c.status;
     const isPaidState = s === 'PAGADO' || s === 'POR_ENVIAR' || s === 'PAID' || s === 'LISTO_PARA_ENVIO' || s === 'LISTO PARA ENVIO';
@@ -81,7 +75,6 @@ export default async function ConsolidacionesPage({
   return (
     <div className="p-6 bg-gray-50 min-h-screen font-sans overflow-x-hidden">
       <div className="max-w-7xl mx-auto">
-        
         {/* HEADER */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
             <div>
@@ -98,26 +91,18 @@ export default async function ConsolidacionesPage({
                 </h1>
                 <p className="text-gray-500 mt-1">Ciclo Activo: Solicitud ➝ Medidas ➝ Pago ➝ Despacho.</p>
             </div>
-            
             <SearchConsolidations />
         </div>
 
         <div className="space-y-10">
-
-            {/* --- 1. CARRUSEL DE PENDIENTES --- */}
+            {/* 1. PENDIENTES */}
             {pendientesProcesar.length > 0 && (
                 <div className="bg-white rounded-2xl p-6 shadow-md border-l-4 border-orange-500 relative overflow-hidden">
                     <div className="flex justify-between items-center mb-4">
                         <h2 className="text-xl font-bold flex items-center gap-2 text-orange-800">
                             <AlertCircle className="text-orange-600"/> Pendientes de Procesar ({pendientesProcesar.length})
                         </h2>
-                        {pendientesProcesar.length > 2 && (
-                            <span className="text-xs text-orange-600 flex items-center animate-pulse">
-                                Desliza para ver más <ChevronRight size={14}/>
-                            </span>
-                        )}
                     </div>
-                    
                     <div className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-4 -mx-2 px-2 scroll-smooth">
                         {pendientesProcesar.map((envio) => {
                              const isError = isZeroError(envio);
@@ -136,7 +121,7 @@ export default async function ConsolidacionesPage({
                 </div>
             )}
 
-            {/* --- 2. ESPERANDO PAGO --- */}
+            {/* 2. ESPERANDO PAGO */}
             {esperandoPago.length > 0 && (
                 <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
                     <h2 className="text-lg font-bold mb-4 flex items-center gap-2 text-gray-700">
@@ -162,35 +147,50 @@ export default async function ConsolidacionesPage({
                 </div>
             )}
 
-            {/* --- 3. LISTOS PARA DESPACHAR --- */}
+            {/* 3. LISTOS PARA DESPACHAR */}
             {listosParaDespachar.length > 0 ? (
                 <div className="bg-white rounded-2xl p-6 shadow-md border border-green-100">
                     <h2 className="text-xl font-bold mb-4 flex items-center gap-2 text-green-700">
                         <Truck className="animate-pulse"/> Listos para Despachar ({listosParaDespachar.length})
                     </h2>
                     <div className="grid gap-4">
-                        {listosParaDespachar.map((envio) => (
-                            <div key={envio.id} className="bg-green-50/50 p-4 rounded-xl border border-green-200 flex flex-col md:flex-row justify-between items-center gap-4">
-                                <div>
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <span className="bg-green-600 text-white px-2 py-0.5 rounded text-[10px] font-bold uppercase">PAGADO & LISTO</span>
-                                        <span className="text-xs text-gray-500 font-mono">#{envio.gmcShipmentNumber}</span>
+                        {listosParaDespachar.map((envio) => {
+                            // Validar si es envío interno o externo
+                            const courier = envio.selectedCourier?.toLowerCase() || '';
+                            const esGaspMaker = courier.includes('gasp') || courier.includes('maritimo');
+
+                            return (
+                                <div key={envio.id} className="bg-green-50/50 p-4 rounded-xl border border-green-200 flex flex-col md:flex-row justify-between items-center gap-4">
+                                    <div>
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <span className="bg-green-600 text-white px-2 py-0.5 rounded text-[10px] font-bold uppercase">PAGADO & LISTO</span>
+                                            <span className="text-xs text-gray-500 font-mono">#{envio.gmcShipmentNumber}</span>
+                                        </div>
+                                        <h3 className="font-bold text-lg">{envio.user?.name}</h3>
+                                        <div className="flex gap-4 text-sm text-gray-600 mt-1">
+                                        <span>⚖️ {envio.weightLbs} lb</span>
+                                        <span>📦 {envio.packages?.length || 0} Paquetes</span>
+                                        <span className="font-bold text-purple-700 uppercase">
+                                            {envio.selectedCourier || 'Sin Courier'}
+                                        </span>
+                                        </div>
                                     </div>
-                                    <h3 className="font-bold text-lg">{envio.user?.name}</h3>
-                                    <div className="flex gap-4 text-sm text-gray-600 mt-1">
-                                       <span>⚖️ {envio.weightLbs} lb</span>
-                                       <span>📦 {envio.packages?.length || 0} Paquetes</span>
+                                    <div className="flex items-center gap-4">
+                                        <div className="text-right mr-2">
+                                            <p className="text-xs text-gray-400 uppercase font-bold">Total Pagado</p>
+                                            <p className="font-bold text-green-700 text-lg">${envio.totalAmount?.toFixed(2)}</p>
+                                        </div>
+                                        
+                                        {/* 👇 AQUÍ ESTÁ LA LÓGICA: Si no es GaspMaker, mostramos el botón de API */}
+                                        {!esGaspMaker && (
+                                            <BotonComprarLabelConsolidado consolidationId={envio.id} />
+                                        )}
+
+                                        <MenuAccionesConsolidacion shipment={envio} />
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-6">
-                                     <div className="text-right">
-                                         <p className="text-xs text-gray-400 uppercase font-bold">Total Pagado</p>
-                                         <p className="font-bold text-green-700 text-lg">${envio.totalAmount?.toFixed(2)}</p>
-                                     </div>
-                                     <MenuAccionesConsolidacion shipment={envio} />
-                                </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 </div>
             ) : (

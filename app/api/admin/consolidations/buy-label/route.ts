@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 
-// 👇 VACUNA 1: Forzar modo dinámico
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
@@ -10,39 +9,42 @@ export async function POST(req: Request) {
     const easypost = (await import("@/lib/easypost")).default;
 
     const session = await auth();
-    if (!session?.user) return NextResponse.json({ message: "No autorizado" }, { status: 401 });
+    // Validar Admin o Warehouse
+    if (!session?.user || (session.user.role !== 'ADMIN' && session.user.role !== 'WAREHOUSE')) {
+        return NextResponse.json({ message: "No autorizado." }, { status: 401 });
+    }
 
-    const { packageId } = await req.json();
+    const { consolidationId } = await req.json();
 
-    const pkg = await prisma.package.findUnique({
-      where: { id: packageId },
+    // 1. Buscar Consolidación
+    const consolidation = await prisma.consolidatedShipment.findUnique({
+      where: { id: consolidationId },
       include: { user: true }
     });
 
-    if (!pkg) return NextResponse.json({ error: "Paquete no encontrado" }, { status: 404 });
-    if (!pkg.selectedCourier) return NextResponse.json({ error: "Sin courier asignado" }, { status: 400 });
+    if (!consolidation) return NextResponse.json({ error: "Consolidación no encontrada" }, { status: 404 });
+    
+    // Validar Courier
+    if (!consolidation.selectedCourier) return NextResponse.json({ error: "Falta asignar Courier" }, { status: 400 });
 
-    const courierName = pkg.selectedCourier.toLowerCase();
+    const courierName = consolidation.selectedCourier.toLowerCase();
     if (courierName.includes('gasp') || courierName.includes('maritimo')) {
-        return NextResponse.json({ error: "Para Gasp Maker usa el despacho manual." }, { status: 400 });
+        return NextResponse.json({ error: "Usa despacho manual." }, { status: 400 });
     }
 
-    // 3. PREPARACIÓN DE DATOS
-    let destinationCountry = pkg.user.country?.trim().toUpperCase();
-
-    if (!destinationCountry) {
-        return NextResponse.json({ error: "Error: El cliente no tiene país de envío configurado." }, { status: 400 });
-    }
+    // 2. Lógica de Dirección (Igual que paquetes)
+    let destinationCountry = consolidation.user.country?.trim().toUpperCase();
+    if (!destinationCountry) destinationCountry = 'US'; // Fallback seguro
 
     if (destinationCountry.length > 2) {
         if (destinationCountry.includes('TRINIDAD')) destinationCountry = 'TT';
         else if (destinationCountry.includes('UNITED')) destinationCountry = 'US';
     }
 
-    let cleanPhone = pkg.user.phone?.replace(/[^0-9]/g, '') || '';
-    if (cleanPhone.length < 10) cleanPhone = '7862820763'; 
+    let cleanPhone = consolidation.user.phone?.replace(/[^0-9]/g, '') || '';
+    if (cleanPhone.length < 10) cleanPhone = '7862820763';
 
-    const rawLocation = pkg.user.cityZip || ''; 
+    const rawLocation = consolidation.user.cityZip || ''; 
     const city = rawLocation.split(',')[0].replace(/\d+/g, '').trim() || 'City'; 
     const zip = rawLocation.match(/\d{4,}/)?.[0] || '00000';
 
@@ -52,35 +54,33 @@ export async function POST(req: Request) {
         state = stateMatch ? stateMatch[0] : (destinationCountry === 'US' ? 'FL' : undefined);
     }
 
-    console.log(`📍 Target: ${city}, ${state || 'N/A'}, ${destinationCountry}`);
+    console.log(`📦 Consolidation Target: ${city}, ${destinationCountry}`);
 
-    // 👇 4. INFORMACIÓN DE ADUANAS (NUEVO REQUISITO) 🛃
-    // Solo es obligatorio para internacional, pero EasyPost lo acepta siempre.
-    
+    // 3. Aduanas
     const customsItem = {
-        description: pkg.description || 'Personal Effects', // Qué es
+        description: 'Consolidated Personal Effects', 
         quantity: 1,
-        value: parseFloat(pkg.declaredValue as any) || 10.0, // Cuánto vale (Obligatorio)
-        weight: (parseFloat(pkg.weightLbs as any) || 1) * 16, // Peso en onzas
-        origin_country: 'US', // De dónde sale
-        hs_tariff_number: '650500' // Código genérico para ropa/varios (ayuda a evitar rechazos)
+        value: parseFloat(consolidation.declaredValue as any) || 10.0, 
+        weight: (parseFloat(consolidation.weightLbs as any) || 1) * 16,
+        origin_country: 'US', 
+        hs_tariff_number: '650500'
     };
 
     const customsInfo = {
-        eel_pfc: 'NOEEI 30.37(a)', // Exención estándar para envíos < $2500
+        eel_pfc: 'NOEEI 30.37(a)',
         customs_certify: true,
-        customs_signer: 'GaspMaker Agent', // Quién firma
+        customs_signer: 'GaspMaker Agent',
         contents_type: 'merchandise',
         restriction_type: 'none',
         non_delivery_option: 'return',
         customs_items: [customsItem]
     };
 
-    // 5. Crear Envío con Aduanas
+    // 4. Crear Envío
     const shipment = await easypost.Shipment.create({
       to_address: {
-        name: pkg.user.name,
-        street1: pkg.user.address,
+        name: consolidation.user.name,
+        street1: consolidation.user.address,
         city: city,
         state: state, 
         zip: zip,
@@ -97,27 +97,27 @@ export async function POST(req: Request) {
         phone: '7862820763'
       },
       parcel: {
-        length: parseFloat(pkg.lengthIn as any) || 10,
-        width: parseFloat(pkg.widthIn as any) || 6,
-        height: parseFloat(pkg.heightIn as any) || 4,
-        weight: (parseFloat(pkg.weightLbs as any) || 1) * 16
+        length: parseFloat(consolidation.lengthIn as any) || 10,
+        width: parseFloat(consolidation.widthIn as any) || 10,
+        height: parseFloat(consolidation.heightIn as any) || 10,
+        weight: (parseFloat(consolidation.weightLbs as any) || 1) * 16
       },
-      customs_info: customsInfo // 👈 AQUÍ INYECTAMOS LA ADUANA
+      customs_info: customsInfo
     });
 
     if (!shipment.rates || shipment.rates.length === 0) {
-        throw new Error(`EasyPost no devolvió tarifas para ${city}, ${destinationCountry}.`);
+        throw new Error("EasyPost no devolvió tarifas.");
     }
 
-    // 6. Selección de Tarifa
+    // 5. Selección Tarifa
     let selectedRate;
     const carrierRates = shipment.rates.filter((r: any) => 
         r.carrier.toLowerCase().includes(courierName)
     );
 
     if (carrierRates.length > 0) {
-        if (pkg.courierService) {
-            selectedRate = carrierRates.find((r: any) => r.service === pkg.courierService);
+        if (consolidation.courierService) {
+            selectedRate = carrierRates.find((r: any) => r.service === consolidation.courierService);
         }
         if (!selectedRate) {
             selectedRate = carrierRates.sort((a: any, b: any) => parseFloat(a.rate) - parseFloat(b.rate))[0];
@@ -126,20 +126,18 @@ export async function POST(req: Request) {
         selectedRate = shipment.rates.sort((a: any, b: any) => parseFloat(a.rate) - parseFloat(b.rate))[0];
     }
 
-    if (!selectedRate) {
-        return NextResponse.json({ error: `No hay tarifa para ${pkg.selectedCourier}.` }, { status: 400 });
-    }
+    if (!selectedRate) return NextResponse.json({ error: "No hay tarifa disponible." }, { status: 400 });
 
-    // 7. Comprar
+    // 6. Comprar
     const boughtShipment = await easypost.Shipment.buy(shipment.id, selectedRate.id);
 
-    // 8. Guardar
-    await prisma.package.update({
-        where: { id: packageId },
+    // 7. Guardar
+    await prisma.consolidatedShipment.update({
+        where: { id: consolidationId },
         data: {
             status: 'ENVIADO',
             finalTrackingNumber: boughtShipment.tracker.tracking_code,
-            receiptUrl: boughtShipment.postage_label.label_url,
+            shippingLabelUrl: boughtShipment.postage_label.label_url,
             courierService: `${boughtShipment.selected_rate.carrier} - ${boughtShipment.selected_rate.service}`
         }
     });
@@ -151,7 +149,7 @@ export async function POST(req: Request) {
     });
 
   } catch (error: any) {
-    console.error("EasyPost Buy Error:", error);
+    console.error("API Error:", error);
     const msg = error.error?.message || error.message || "Error desconocido";
     return NextResponse.json({ error: msg }, { status: 500 });
   }

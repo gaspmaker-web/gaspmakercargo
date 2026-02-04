@@ -1,13 +1,13 @@
 import EasyPost from '@easypost/api';
 
-// Verificamos que la clave exista para evitar errores silenciosos
+// Usamos la variable de entorno
 const apiKey = process.env.EASYPOST_API_KEY;
 
 if (!apiKey) {
-  throw new Error("❌ Error Crítico: Falta la variable EASYPOST_API_KEY en .env.local");
+  console.warn("⚠️ Advertencia: No se detectó EASYPOST_API_KEY. EasyPost fallará si intentas usarlo.");
 }
 
-// Inicializamos el cliente
-const easypost = new EasyPost(apiKey);
+// Inicializamos el cliente (ponemos string vacío si falla para evitar crash en build time)
+const easypost = new EasyPost(apiKey || 'TEST_KEY_PLACEHOLDER');
 
 export default easypost;
