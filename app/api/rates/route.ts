@@ -43,7 +43,7 @@ function calculateRate_CU(weight: number): number {
 }
 
 function calculateRate_GD(weight: number): number {
-    if (weight <= 10) return 85.00;
+    if (weight <= 10) return 1.00;
     if (weight <= 44) return 110.00;
     return weight * 2.50; 
 }
