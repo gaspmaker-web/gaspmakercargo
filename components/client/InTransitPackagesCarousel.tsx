@@ -4,6 +4,8 @@ import React, { useState } from 'react';
 import { Search, MapPin, Calendar, Plane, ExternalLink, Box, Copy, Truck, Scale, ArrowRight, Check } from 'lucide-react';
 // 🔥 1. Importamos el hook
 import { useTranslations } from 'next-intl';
+// 🔥 2. Importamos la función de tracking (NUEVO)
+import { getTrackingUrl } from '@/lib/getTrackingUrl';
 
 interface Props {
   packages: any[];
@@ -11,9 +13,9 @@ interface Props {
 }
 
 export default function InTransitPackagesCarousel({ packages, userCountryCode }: Props) {
-  // 🔥 2. Inicializamos traducciones
-  const t = useTranslations('PackageDetail'); // Para "Tracking", "Peso", etc.
-  const tPage = useTranslations('InTransitPage'); // Para mensajes específicos
+  // 🔥 3. Inicializamos traducciones
+  const t = useTranslations('PackageDetail'); 
+  const tPage = useTranslations('InTransitPage');
 
   const [searchTerm, setSearchTerm] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -70,6 +72,12 @@ export default function InTransitPackagesCarousel({ packages, userCountryCode }:
                     : (pkg.selectedCourier || 'Gasp Maker Cargo');
                 
                 const isGMC = displayCourier.toUpperCase().includes('GASP') || displayCourier.toUpperCase().includes('MAKER');
+
+                // 🔥 GENERAMOS LA URL DE RASTREO
+                const trackingUrl = getTrackingUrl(
+                    hasMasterTracking ? parent.selectedCourier : pkg.selectedCourier,
+                    displayTracking
+                );
 
                 return (
                     <div 
@@ -130,9 +138,22 @@ export default function InTransitPackagesCarousel({ packages, userCountryCode }:
                                     {t('tracking')}
                                 </p>
                                 <div className="flex justify-between items-center">
-                                    <p className="font-mono text-base font-bold text-slate-800 truncate tracking-tight">
-                                        {displayTracking}
-                                    </p>
+                                    {/* 🔥 Lógica: Si es GMC es texto, si es externo es Link */}
+                                    {isGMC ? (
+                                        <p className="font-mono text-base font-bold text-slate-800 truncate tracking-tight">
+                                            {displayTracking}
+                                        </p>
+                                    ) : (
+                                        <a 
+                                            href={trackingUrl}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="font-mono text-base font-bold text-slate-800 truncate tracking-tight hover:text-blue-600 hover:underline cursor-pointer"
+                                        >
+                                            {displayTracking}
+                                        </a>
+                                    )}
+
                                     <button 
                                         onClick={() => handleCopy(displayTracking, pkg.id)}
                                         className="text-gray-400 hover:text-blue-600 transition-colors p-1"
@@ -154,25 +175,25 @@ export default function InTransitPackagesCarousel({ packages, userCountryCode }:
                                     </div>
                                 </div>
 
-                                {/* 🚫 BOTÓN RASTREAR (VISUALMENTE IDÉNTICO, PERO DESACTIVADO) */}
-                                <button
-                                    type="button"
-                                    disabled={true}
-                                    className={`
-                                        flex-1 py-3 px-4 rounded-xl text-xs font-bold text-white flex items-center justify-center gap-2 transition-all shadow-none
-                                        opacity-50 cursor-not-allowed select-none
-                                        ${isGMC 
-                                            ? 'bg-slate-800' 
-                                            : 'bg-blue-600'
-                                        }
-                                    `}
-                                >
-                                    {isGMC ? (
-                                        <>{t('internalRoute') || "Internal Route"} <Box size={14}/></>
-                                    ) : (
-                                        <>{t('trackBtn') || "Track"} <ExternalLink size={14}/></>
-                                    )}
-                                </button>
+                                {/* 🔥 BOTÓN INTELIGENTE: LINK SI ES EXTERNO, DISABLED SI ES INTERNO */}
+                                {isGMC ? (
+                                    <button
+                                        type="button"
+                                        disabled={true}
+                                        className="flex-1 py-3 px-4 rounded-xl text-xs font-bold text-white flex items-center justify-center gap-2 transition-all shadow-none opacity-50 cursor-not-allowed select-none bg-slate-800"
+                                    >
+                                        {t('internalRoute') || "Internal Route"} <Box size={14}/>
+                                    </button>
+                                ) : (
+                                    <a
+                                        href={trackingUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex-1 py-3 px-4 rounded-xl text-xs font-bold text-white flex items-center justify-center gap-2 transition-all shadow-md hover:shadow-lg bg-blue-600 hover:bg-blue-700 active:scale-95"
+                                    >
+                                        {t('trackBtn') || "Track"} <ExternalLink size={14}/>
+                                    </a>
+                                )}
                             </div>
 
                         </div>
