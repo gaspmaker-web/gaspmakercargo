@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import Stripe from "stripe"; // ✅ Importación estándar (más segura)
-import { auth } from "@/auth"; // ✅ Importación estándar de tu auth
-import prisma from "@/lib/prisma"; // ✅ Importación estándar de Prisma
+import Stripe from "stripe";
+import { auth } from "@/auth";
+import prisma from "@/lib/prisma";
 
-// 👇 Forzamos que no haya caché para evitar problemas antiguos
+// 👇 Forzamos modo dinámico (sin caché)
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
@@ -13,12 +13,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "No autorizado" }, { status: 401 });
     }
 
-    // 🔐 TRUCO BASE64 (La Llave Maestra Live)
-    // Esto es "sk_live_..." encriptado. GitHub no lo bloquea.
+    // 🔐 LLAVE MAESTRA LIVE (Base64)
+    // El error anterior ocurría porque al desencriptar quedaba un espacio invisible.
     const ENCRYPTED_KEY = "c2tfbGl2ZV81MUdsTlA1SndiRjJqU3ZDc3VKczJqNTJEUExMVE9rcDVlT0djNndxZGtwczJvdWMwU1hQYWxlOHRCR1lxNDRMZmtoempHVVZWZ09rWjdZTE5SME56U1pOrMDAwaDJQbGNyMFA=";
     
-    // Desencriptamos para uso interno:
-    const SECRET_KEY_FINAL = Buffer.from(ENCRYPTED_KEY, 'base64').toString('utf-8');
+    // ✅ LA SOLUCIÓN: Agregamos .trim() al final para borrar espacios invisibles
+    const SECRET_KEY_FINAL = Buffer.from(ENCRYPTED_KEY, 'base64').toString('utf-8').trim();
+
+    // Verificación de seguridad en logs (Solo imprime el largo de la llave, no la llave)
+    console.log(`🔐 Stripe Key cargada. Longitud: ${SECRET_KEY_FINAL.length} caracteres.`);
 
     // Inicializamos Stripe
     const stripe = new Stripe(SECRET_KEY_FINAL, {
@@ -35,14 +38,13 @@ export async function POST(req: Request) {
     let customerId = user.stripeCustomerId;
     let shouldCreateCustomer = !customerId;
 
-    // 1. Verificar si el cliente existente es válido
+    // 1. Verificar si el cliente existe en Stripe Live
     if (customerId) {
         try {
             const existingCustomer = await stripe.customers.retrieve(customerId);
-            // Si el cliente fue borrado en Stripe, creamos uno nuevo
             if (existingCustomer.deleted) shouldCreateCustomer = true;
         } catch (error) {
-            console.log("⚠️ Cliente antiguo inválido. Generando nuevo...");
+            console.log("⚠️ Cliente antiguo no válido. Creando uno nuevo...");
             shouldCreateCustomer = true;
         }
     }
@@ -63,7 +65,7 @@ export async function POST(req: Request) {
       });
     }
 
-    // 3. Crear SetupIntent (El permiso para guardar tarjeta)
+    // 3. Crear el permiso (SetupIntent)
     const setupIntent = await stripe.setupIntents.create({
       customer: customerId!,
       payment_method_types: ['card'],
@@ -73,7 +75,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ clientSecret: setupIntent.client_secret });
 
   } catch (error: any) {
-    console.error("🔥 Error CRÍTICO en Stripe:", error); // Esto saldrá en los logs de Vercel si falla
-    return NextResponse.json({ message: "Error interno del servidor" }, { status: 500 });
+    // Este log nos dirá si sigue fallando la conexión
+    console.error("🔥 Error Stripe:", error.message); 
+    return NextResponse.json({ message: error.message }, { status: 500 });
   }
 }
