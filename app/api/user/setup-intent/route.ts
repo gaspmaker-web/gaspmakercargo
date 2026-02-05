@@ -3,7 +3,6 @@ import Stripe from "stripe";
 import { auth } from "@/auth";
 import prisma from "@/lib/prisma";
 
-// 👇 Forzamos modo dinámico (sin caché)
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
@@ -13,18 +12,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "No autorizado" }, { status: 401 });
     }
 
-    // 🔐 LLAVE MAESTRA LIVE (Base64)
-    // El error anterior ocurría porque al desencriptar quedaba un espacio invisible.
-    const ENCRYPTED_KEY = "c2tfbGl2ZV81MUdsTlA1SndiRjJqU3ZDc3VKczJqNTJEUExMVE9rcDVlT0djNndxZGtwczJvdWMwU1hQYWxlOHRCR1lxNDRMZmtoempHVVZWZ09rWjdZTE5SME56U1pOrMDAwaDJQbGNyMFA=";
-    
-    // ✅ LA SOLUCIÓN: Agregamos .trim() al final para borrar espacios invisibles
-    const SECRET_KEY_FINAL = Buffer.from(ENCRYPTED_KEY, 'base64').toString('utf-8').trim();
+    // ✅ FORMA CORRECTA: Leemos de Vercel + Limpiamos espacios invisibles
+    const stripeKey = process.env.STRIPE_SECRET_KEY;
 
-    // Verificación de seguridad en logs (Solo imprime el largo de la llave, no la llave)
-    console.log(`🔐 Stripe Key cargada. Longitud: ${SECRET_KEY_FINAL.length} caracteres.`);
+    if (!stripeKey) {
+        throw new Error("La clave de Stripe no está configurada en Vercel");
+    }
 
-    // Inicializamos Stripe
-    const stripe = new Stripe(SECRET_KEY_FINAL, {
+    // ✂️ El .trim() es vital para evitar el error "Invalid character in header"
+    const stripe = new Stripe(stripeKey.trim(), {
       apiVersion: '2024-12-18.acacia' as any,
       typescript: true,
     });
@@ -38,13 +34,13 @@ export async function POST(req: Request) {
     let customerId = user.stripeCustomerId;
     let shouldCreateCustomer = !customerId;
 
-    // 1. Verificar si el cliente existe en Stripe Live
+    // 1. Validar cliente existente
     if (customerId) {
         try {
             const existingCustomer = await stripe.customers.retrieve(customerId);
             if (existingCustomer.deleted) shouldCreateCustomer = true;
         } catch (error) {
-            console.log("⚠️ Cliente antiguo no válido. Creando uno nuevo...");
+            console.log("⚠️ Cliente antiguo no válido. Creando nuevo...");
             shouldCreateCustomer = true;
         }
     }
@@ -65,7 +61,7 @@ export async function POST(req: Request) {
       });
     }
 
-    // 3. Crear el permiso (SetupIntent)
+    // 3. Crear SetupIntent
     const setupIntent = await stripe.setupIntents.create({
       customer: customerId!,
       payment_method_types: ['card'],
@@ -75,8 +71,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ clientSecret: setupIntent.client_secret });
 
   } catch (error: any) {
-    // Este log nos dirá si sigue fallando la conexión
-    console.error("🔥 Error Stripe:", error.message); 
-    return NextResponse.json({ message: error.message }, { status: 500 });
+    console.error("🔥 Error Stripe:", error.message);
+    return NextResponse.json({ message: "Error procesando el pago" }, { status: 500 });
   }
 }
