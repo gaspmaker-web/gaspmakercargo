@@ -3,7 +3,7 @@ import Stripe from "stripe"; // ✅ Importación estándar (más segura)
 import { auth } from "@/auth"; // ✅ Importación estándar de tu auth
 import prisma from "@/lib/prisma"; // ✅ Importación estándar de Prisma
 
-// 👇 Forzamos que no haya caché
+// 👇 Forzamos que no haya caché para evitar problemas antiguos
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
@@ -35,13 +35,14 @@ export async function POST(req: Request) {
     let customerId = user.stripeCustomerId;
     let shouldCreateCustomer = !customerId;
 
-    // 1. Verificar cliente existente
+    // 1. Verificar si el cliente existente es válido
     if (customerId) {
         try {
             const existingCustomer = await stripe.customers.retrieve(customerId);
+            // Si el cliente fue borrado en Stripe, creamos uno nuevo
             if (existingCustomer.deleted) shouldCreateCustomer = true;
         } catch (error) {
-            console.log("⚠️ Cliente inválido. Generando nuevo...");
+            console.log("⚠️ Cliente antiguo inválido. Generando nuevo...");
             shouldCreateCustomer = true;
         }
     }
@@ -62,7 +63,7 @@ export async function POST(req: Request) {
       });
     }
 
-    // 3. Crear SetupIntent
+    // 3. Crear SetupIntent (El permiso para guardar tarjeta)
     const setupIntent = await stripe.setupIntents.create({
       customer: customerId!,
       payment_method_types: ['card'],
@@ -72,7 +73,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ clientSecret: setupIntent.client_secret });
 
   } catch (error: any) {
-    console.error("🔥 Error CRÍTICO en Stripe:", error); // Esto saldrá en los logs si falla
+    console.error("🔥 Error CRÍTICO en Stripe:", error); // Esto saldrá en los logs de Vercel si falla
     return NextResponse.json({ message: "Error interno del servidor" }, { status: 500 });
   }
 }
