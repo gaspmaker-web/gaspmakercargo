@@ -5,8 +5,8 @@ import { loadStripe } from '@stripe/stripe-js';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { X, CreditCard, Lock, Loader2 } from 'lucide-react';
 
-// Cargar Stripe
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
+// Cargar Stripe con la LLAVE LIVE DIRECTA (Solución al error Test Mode)
+const stripePromise = loadStripe("pk_live_T0abxWmSgNZQ7dDDm6U3Rk8A00PwAsynLw");
 
 // --- FORMULARIO INTERNO ---
 function CardForm({ onSuccess, onCancel }: { onSuccess: () => void, onCancel: () => void }) {
