@@ -40,54 +40,26 @@ export default async function RootLayout({
 
   return (
     <html lang={locale}>
-      <body className={`${inter.variable} ${montserrat.variable} ${garamond.variable} font-sans bg-gray-50`}>
+      <body className={`${inter.variable} ${montserrat.variable} ${garamond.variable} font-sans bg-gray-50 flex flex-col min-h-screen`}>
         <NextIntlClientProvider locale={locale} messages={messages}>
           <Providers>
             
-            {/* 🔴 CAMBIO: Envolvemos el Header con la lógica condicional */}
             <HeaderWrapper>
               <Header /> 
             </HeaderWrapper>
             
-            {/* 🔴 CORRECCIÓN: Quitamos pt-[72px] para eliminar el espacio blanco */}
-            <main className="min-h-screen"> 
+            <main className="flex-grow"> 
               {children}
             </main>
 
-            {/* ✨ NUEVO FOOTER LUXURY (Optimizado para Móvil) */}
-            <footer className="bg-gmc-gris-oscuro py-10 px-6 mt-auto border-t-4 border-gmc-dorado-principal">
-                <div className="max-w-md mx-auto text-center">
-                    
-                    {/* 1. NOMBRE DE LA MARCA */}
-                    <h2 className="text-2xl font-bold text-white font-garamond mb-3 tracking-wider uppercase">
-                        GASP MAKER CARGO
-                    </h2>
-
-                    {/* 2. ENLACES LEGALES (Estilo Minimalista) */}
-                    <div className="flex justify-center gap-5 mb-6 text-xs font-medium text-gray-400 uppercase tracking-widest font-montserrat">
-                        <a href="#" className="hover:text-gmc-dorado-principal transition-colors duration-300">Privacidad</a>
-                        <span className="text-gray-600">•</span>
-                        <a href="#" className="hover:text-gmc-dorado-principal transition-colors duration-300">Términos</a>
-                        <span className="text-gray-600">•</span>
-                        <a href="#" className="hover:text-gmc-dorado-principal transition-colors duration-300">Soporte</a>
-                    </div>
-
-                    {/* 3. COPYRIGHT Y NOTA */}
-                    <div className="space-y-2 font-montserrat">
-                        <p className="text-sm text-gray-300">
-                            © 2026 GaspMakerCargo .
-                        </p>
-                        <p className="text-[10px] text-gmc-dorado-principal/80 font-semibold uppercase tracking-tight bg-black/20 py-1 px-3 rounded-full inline-block">
-                            🚀 Sistema en Reconstrucción
-                        </p>
-                    </div>
-                </div>
+            {/* ✨ FOOTER MINIMALISTA Y LIMPIO */}
+            <footer className="bg-gmc-gris-oscuro py-6 text-center mt-auto w-full">
+                <p className="text-sm text-gray-400 font-montserrat">
+                    © 2026 GaspMakerCargo .
+                </p>
             </footer>
 
-            {/* 🍪 2. COOKIE BANNER (A la izquierda o abajo en móvil) */}
             <CookieBanner />
-
-            {/* 🔥 3. CHAT INTELIGENTE (Solo carga si aceptan cookies y no es Dashboard) */}
             <TawkLoader />
 
           </Providers>
