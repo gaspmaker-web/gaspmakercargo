@@ -75,7 +75,7 @@ export default async function RootLayout({
                     {/* 3. COPYRIGHT Y NOTA */}
                     <div className="space-y-2 font-montserrat">
                         <p className="text-sm text-gray-300">
-                            © 2026 Todos los derechos reservados.
+                            © 2026 GaspMakerCargo .
                         </p>
                         <p className="text-[10px] text-gmc-dorado-principal/80 font-semibold uppercase tracking-tight bg-black/20 py-1 px-3 rounded-full inline-block">
                             🚀 Sistema en Reconstrucción
