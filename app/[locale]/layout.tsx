@@ -54,8 +54,34 @@ export default async function RootLayout({
               {children}
             </main>
 
-            <footer className="bg-gmc-gris-oscuro text-white p-8 text-center mt-auto">
-              <p className="text-sm opacity-50">© 2026 GaspMakerCargo - Sistema en Reconstrucción</p>
+            {/* ✨ NUEVO FOOTER LUXURY (Optimizado para Móvil) */}
+            <footer className="bg-gmc-gris-oscuro py-10 px-6 mt-auto border-t-4 border-gmc-dorado-principal">
+                <div className="max-w-md mx-auto text-center">
+                    
+                    {/* 1. NOMBRE DE LA MARCA */}
+                    <h2 className="text-2xl font-bold text-white font-garamond mb-3 tracking-wider uppercase">
+                        GASP MAKER CARGO
+                    </h2>
+
+                    {/* 2. ENLACES LEGALES (Estilo Minimalista) */}
+                    <div className="flex justify-center gap-5 mb-6 text-xs font-medium text-gray-400 uppercase tracking-widest font-montserrat">
+                        <a href="#" className="hover:text-gmc-dorado-principal transition-colors duration-300">Privacidad</a>
+                        <span className="text-gray-600">•</span>
+                        <a href="#" className="hover:text-gmc-dorado-principal transition-colors duration-300">Términos</a>
+                        <span className="text-gray-600">•</span>
+                        <a href="#" className="hover:text-gmc-dorado-principal transition-colors duration-300">Soporte</a>
+                    </div>
+
+                    {/* 3. COPYRIGHT Y NOTA */}
+                    <div className="space-y-2 font-montserrat">
+                        <p className="text-sm text-gray-300">
+                            © 2026 Todos los derechos reservados.
+                        </p>
+                        <p className="text-[10px] text-gmc-dorado-principal/80 font-semibold uppercase tracking-tight bg-black/20 py-1 px-3 rounded-full inline-block">
+                            🚀 Sistema en Reconstrucción
+                        </p>
+                    </div>
+                </div>
             </footer>
 
             {/* 🍪 2. COOKIE BANNER (A la izquierda o abajo en móvil) */}
