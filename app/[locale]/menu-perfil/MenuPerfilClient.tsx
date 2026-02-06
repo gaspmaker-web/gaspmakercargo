@@ -72,46 +72,58 @@ export default function MenuPerfilClient() {
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#F3F4F6] font-montserrat overflow-y-auto">
+    // 1. FONDO LUXURY (Degradado Oscuro)
+    <div className="fixed inset-0 z-50 bg-gradient-to-b from-[#0f172a] to-[#1e1b4b] font-montserrat overflow-y-auto animate-in fade-in duration-300">
       
-      {/* 1. BANNER SUPERIOR */}
-      <div className="relative h-40 bg-[#1a1f2e] overflow-hidden">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-gmc-dorado-principal/10 rounded-full blur-3xl -mr-10 -mt-20"></div>
-        <div className="absolute bottom-0 left-0 w-full h-12 bg-[#F3F4F6] rounded-t-[40px] translate-y-6 opacity-10"></div>
-        
-        <button onClick={() => router.back()} className="absolute top-6 left-4 text-white hover:text-gmc-dorado-principal transition-colors z-20">
-            <ArrowLeft size={26} />
-        </button>
+      {/* Efectos de fondo (Luces ambientales) */}
+      <div className="fixed top-[-20%] right-[-10%] w-[300px] h-[300px] bg-gmc-dorado-principal/10 blur-[120px] rounded-full pointer-events-none" />
+      <div className="fixed bottom-[-10%] left-[-10%] w-[250px] h-[250px] bg-blue-900/20 blur-[100px] rounded-full pointer-events-none" />
+
+      {/* Botón Volver (Estilo Glass) */}
+      <div className="absolute top-6 left-4 z-20">
+         <button 
+            onClick={() => router.back()} 
+            className="p-2.5 bg-white/10 backdrop-blur-md rounded-full text-white border border-white/20 hover:bg-white/20 hover:scale-105 transition-all shadow-lg"
+         >
+            <ArrowLeft size={24} />
+         </button>
       </div>
 
-      {/* 2. ZONA DE PERFIL */}
-      <div className="px-5 relative -mt-16 mb-6">
+      {/* 2. ZONA DE PERFIL (Glassmorphism Header) */}
+      <div className="relative pt-24 px-5 pb-8">
         
-        <div className="relative inline-block mb-3 cursor-pointer group" onClick={handleAvatarClick}>
-            <div className="w-28 h-28 rounded-full border-4 border-white bg-white shadow-md overflow-hidden relative">
-                {previewImage ? (
-                    <Image 
-                        src={previewImage} 
-                        alt="Profile" 
-                        fill 
-                        className="object-cover"
-                        sizes="(max-width: 768px) 100vw, 150px"
-                    />
-                ) : (
-                    <div className="w-full h-full bg-gmc-dorado-principal flex items-center justify-center text-4xl font-bold text-[#1a1f2e]">
-                        {user?.name?.[0]?.toUpperCase()}
-                    </div>
-                )}
+        {/* Avatar Container */}
+        <div className="relative flex justify-center mb-4">
+            <div 
+                onClick={handleAvatarClick}
+                className="relative w-32 h-32 rounded-full p-1 border-2 border-gmc-dorado-principal cursor-pointer group shadow-[0_0_20px_rgba(251,191,36,0.3)] transition-all hover:shadow-[0_0_30px_rgba(251,191,36,0.5)]"
+            >
+                <div className="w-full h-full rounded-full overflow-hidden relative bg-[#1a1f2e]">
+                    {previewImage ? (
+                        <Image 
+                            src={previewImage} 
+                            alt="Profile" 
+                            fill 
+                            className="object-cover transition-transform group-hover:scale-110"
+                            sizes="(max-width: 768px) 100vw, 150px"
+                        />
+                    ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-gray-800 to-black flex items-center justify-center text-5xl font-bold text-gmc-dorado-principal font-garamond">
+                            {user?.name?.[0]?.toUpperCase()}
+                        </div>
+                    )}
+                    
+                    {uploading && (
+                        <div className="absolute inset-0 bg-black/60 flex items-center justify-center backdrop-blur-sm z-10">
+                            <Loader2 className="w-8 h-8 text-gmc-dorado-principal animate-spin"/>
+                        </div>
+                    )}
+                </div>
                 
-                {uploading && (
-                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center backdrop-blur-sm z-10">
-                        <Loader2 className="w-8 h-8 text-white animate-spin"/>
-                    </div>
-                )}
-            </div>
-            
-            <div className="absolute bottom-1 right-1 bg-white text-gray-700 p-2 rounded-full shadow-lg border border-gray-100 group-hover:scale-110 transition-transform z-20">
-                <Edit2 size={16} />
+                {/* Botón Editar Lápiz (Estilo Lujo) */}
+                <div className="absolute bottom-1 right-1 bg-gmc-dorado-principal text-[#1a1f2e] p-2 rounded-full shadow-lg border-2 border-[#1a1f2e] hover:scale-110 transition-transform z-20">
+                    <Edit2 size={14} />
+                </div>
             </div>
             
             <input 
@@ -124,78 +136,110 @@ export default function MenuPerfilClient() {
             />
         </div>
 
-        <div className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-900">{user?.name}</h1>
-            <p className="text-blue-600 font-medium text-sm mb-1">{user?.email}</p>
-            <p className="text-gray-400 text-xs">Miembro desde {memberSince}</p>
+        {/* Info Usuario */}
+        <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-white font-garamond tracking-wide mb-1">{user?.name}</h1>
+            <p className="text-gmc-dorado-principal/80 text-sm font-medium tracking-wider">{user?.email}</p>
+            <p className="text-gray-400 text-xs mt-2 uppercase tracking-[2px]">Miembro desde {memberSince}</p>
         </div>
 
+        {/* Botones Dashboard/Settings (Estilo Glass Gold) */}
         <div className="flex gap-4">
-            <Link href="/dashboard-cliente" className="flex-1 bg-white border border-gray-300 rounded-full py-2.5 text-sm font-bold text-gray-700 text-center shadow-sm hover:bg-gray-50 flex items-center justify-center gap-2">
-                <LayoutDashboard size={16}/> {t('myDashboard')}
+            <Link 
+                href="/dashboard-cliente" 
+                className="flex-1 bg-white/5 backdrop-blur-md border border-gmc-dorado-principal/30 rounded-[20px] py-3.5 text-sm font-bold text-gmc-dorado-principal text-center shadow-lg hover:bg-gmc-dorado-principal hover:text-[#1a1f2e] transition-all flex items-center justify-center gap-2 group"
+            >
+                <LayoutDashboard size={18} className="group-hover:scale-110 transition-transform"/> {t('myDashboard')}
             </Link>
-            <Link href="/account-settings" className="flex-1 bg-white border border-gray-300 rounded-full py-2.5 text-sm font-bold text-gray-700 text-center shadow-sm hover:bg-gray-50 flex items-center justify-center gap-2">
-                <Settings size={16}/> {t('settings')}
+            <Link 
+                href="/account-settings" 
+                className="flex-1 bg-white/5 backdrop-blur-md border border-gmc-dorado-principal/30 rounded-[20px] py-3.5 text-sm font-bold text-gmc-dorado-principal text-center shadow-lg hover:bg-gmc-dorado-principal hover:text-[#1a1f2e] transition-all flex items-center justify-center gap-2 group"
+            >
+                <Settings size={18} className="group-hover:rotate-90 transition-transform duration-500"/> {t('settings')}
             </Link>
         </div>
       </div>
 
-      {/* 3. LISTA DE MENÚ */}
-      <div className="px-4 space-y-6 pb-10">
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            <Link href="/dashboard-cliente/referidos" className="flex items-center justify-between p-4 hover:bg-gray-50 transition-colors border-b border-gray-100">
-                <div className="flex items-center gap-4">
-                    <Share2 size={22} className="text-gray-700"/>
-                    <span className="text-gray-800 font-medium">{t('invite')}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                    <span className="bg-purple-100 text-purple-700 text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1">★ {t('earn')}</span>
-                    <ChevronRight size={18} className="text-gray-300"/>
-                </div>
-            </Link>
+      {/* 3. LISTA DE MENÚ (Glassmorphism List) */}
+      <div className="px-5 space-y-6 pb-12">
+        <div className="bg-white/5 backdrop-blur-xl rounded-[2rem] border border-white/10 overflow-hidden shadow-2xl shadow-black/20">
+            
+            <MenuItem 
+                href="/dashboard-cliente/referidos" 
+                icon={<Share2 size={20} />} 
+                label={t('invite')} 
+                badge={t('earn')}
+            />
+            
+            <MenuItem 
+                href="/faq" 
+                icon={<HelpCircle size={20} />} 
+                label={t('help')} 
+            />
 
-            <Link href="/faq" className="flex items-center justify-between p-4 hover:bg-gray-50 transition-colors border-b border-gray-100">
-                <div className="flex items-center gap-4">
-                    <HelpCircle size={22} className="text-gray-700"/>
-                    <span className="text-gray-800 font-medium">{t('help')}</span>
-                </div>
-                <ChevronRight size={18} className="text-gray-300"/>
-            </Link>
+            <MenuItem 
+                href="/dashboard-cliente/pagar-facturas" 
+                icon={<FileText size={20} />} 
+                label={t('bills')} 
+            />
 
-            <Link href="/dashboard-cliente/pagar-facturas" className="flex items-center justify-between p-4 hover:bg-gray-50 transition-colors border-b border-gray-100">
-                <div className="flex items-center gap-4">
-                    <FileText size={22} className="text-gray-700"/>
-                    <span className="text-gray-800 font-medium">{t('bills')}</span>
-                </div>
-                <ChevronRight size={18} className="text-gray-300"/>
-            </Link>
-
-            <Link href="/dashboard-cliente/notificaciones" className="flex items-center justify-between p-4 hover:bg-gray-50 transition-colors">
-                <div className="flex items-center gap-4">
-                    <Bell size={22} className="text-gray-700"/>
-                    <span className="text-gray-800 font-medium">{t('notifications')}</span>
-                </div>
-                <ChevronRight size={18} className="text-gray-300"/>
-            </Link>
+            <MenuItem 
+                href="/dashboard-cliente/notificaciones" 
+                icon={<Bell size={20} />} 
+                label={t('notifications')} 
+                isLast
+            />
         </div>
 
+        {/* Botón Logout (Estilo Glass Warning) */}
         <button 
             onClick={() => signOut({ callbackUrl: '/' })}
-            className="w-full bg-white rounded-full py-4 text-red-600 font-bold shadow-sm border border-gray-200 hover:bg-red-50 transition-colors flex items-center justify-center gap-2"
+            className="w-full bg-red-500/10 backdrop-blur-md border border-red-500/30 rounded-[20px] py-4 text-red-400 font-bold shadow-lg hover:bg-red-500 hover:text-white transition-all flex items-center justify-center gap-2 group active:scale-95"
         >
-            <LogOut size={20}/> {t('logout')}
+            <LogOut size={20} className="group-hover:-translate-x-1 transition-transform"/> {t('logout')}
         </button>
 
-        <div className="text-center text-xs text-gray-400 mt-6 pb-8">
-            <p className="mb-2">Gasp Maker Cargo App</p>
-            <div className="flex justify-center gap-4">
-                <Link href="/privacy" className="hover:underline">{t('privacy')}</Link>
+        {/* Footer Legal */}
+        <div className="text-center text-[10px] text-gray-500 mt-8 pb-8 uppercase tracking-widest">
+            <p className="mb-3 font-bold text-gmc-dorado-principal/50">Gasp Maker Cargo App</p>
+            <div className="flex justify-center gap-4 text-gray-400">
+                <Link href="/privacy" className="hover:text-white transition-colors">{t('privacy')}</Link>
                 <span>•</span>
-                <Link href="/terms" className="hover:underline">{t('terms')}</Link>
+                <Link href="/terms" className="hover:text-white transition-colors">{t('terms')}</Link>
             </div>
-            <p className="mt-4">Versión 1.0.5</p>
+            <p className="mt-4 opacity-50">v1.0.5</p>
         </div>
       </div>
     </div>
   );
+}
+
+// Componente Auxiliar para Items de Menú
+function MenuItem({ href, icon, label, badge, isLast = false }: { href: string, icon: React.ReactNode, label: string, badge?: string, isLast?: boolean }) {
+    return (
+        <Link 
+            href={href} 
+            className={`flex items-center justify-between p-5 hover:bg-white/10 transition-all group ${
+                !isLast ? 'border-b border-white/5' : ''
+            }`}
+        >
+            <div className="flex items-center gap-4">
+                <div className="text-gray-400 group-hover:text-gmc-dorado-principal transition-colors duration-300">
+                    {icon}
+                </div>
+                <span className="text-gray-200 font-medium tracking-wide group-hover:translate-x-1 transition-transform duration-300">
+                    {label}
+                </span>
+            </div>
+            
+            <div className="flex items-center gap-3">
+                {badge && (
+                    <span className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-[10px] font-bold px-3 py-1 rounded-full shadow-lg shadow-purple-500/30 flex items-center gap-1">
+                        ★ {badge}
+                    </span>
+                )}
+                <ChevronRight size={16} className="text-gray-600 group-hover:text-gmc-dorado-principal transition-colors"/>
+            </div>
+        </Link>
+    );
 }

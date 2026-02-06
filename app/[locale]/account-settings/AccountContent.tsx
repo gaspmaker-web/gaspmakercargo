@@ -1,4 +1,4 @@
-"use client"; 
+"use client";
 
 import { useState, useEffect } from 'react'; 
 import { useSession } from "next-auth/react"; 
@@ -9,7 +9,7 @@ import { useRouter } from 'next/navigation';
 // --- Imports ---
 import LanguageSwitcher from '@/components/LanguageSwitcher'; 
 import { ALL_COUNTRIES } from '@/lib/countries'; 
-// Asegúrate de que estos componentes existan en tu proyecto, si no, coméntalos temporalmente
+// Asegúrate de que estos componentes existan en tu proyecto
 import EditNameModal from '@/components/modals/EditNameModal'; 
 import ChangePasswordModal from '@/components/modals/ChangePasswordModal';
 import EditMobileModal from '@/components/modals/EditMobileModal';
@@ -129,8 +129,17 @@ export default function AccountContent() {
         } catch(e) { console.error(e); }
     };
 
+    // 🔥 ESTE ES EL QUE RECIBE LOS DATOS DEL MODAL NUEVO
     const handleSaveAddress = async (data: { address: string; cityZip: string; country: string; phone: string }) => {
-        setUserData(prev => ({ ...prev, address: data.address, cityZip: data.cityZip, addressCountry: data.country, phone: data.phone }));
+        // Actualizamos estado local inmediatamente para feedback rápido
+        setUserData(prev => ({ 
+            ...prev, 
+            address: data.address, 
+            cityZip: data.cityZip, 
+            addressCountry: data.country, 
+            phone: data.phone 
+        }));
+        
         setIsAddressModalOpen(false);
 
         try {
@@ -205,6 +214,7 @@ export default function AccountContent() {
                             <span className="inline-block bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full mb-2">{t('defaultTag')}</span>
                             <p className="text-gmc-gris-oscuro font-bold">{userData.name}</p>
                             <p className="text-gmc-gris-oscuro">{userData.address}</p>
+                            {/* Aquí mostramos el cityZip tal cual se guardó (Ej: Miami, FL 33122) */}
                             <p className="text-gmc-gris-oscuro">{userData.cityZip}</p>
                             <p className="text-gmc-gris-oscuro">{userData.addressCountry}</p>
                             <p className="text-gmc-gris-oscuro">{userData.phone}</p>
@@ -226,7 +236,19 @@ export default function AccountContent() {
             <ChangePasswordModal isOpen={isPasswordModalOpen} onClose={() => setIsPasswordModalOpen(false)} />
             <EditMobileModal isOpen={isEditMobileModalOpen} onClose={() => setIsEditMobileModalOpen(false)} onSave={handleSaveMobile} currentMobile={userData.phone} />
             <EditCountryModal isOpen={isEditCountryModalOpen} onClose={() => setIsEditCountryModalOpen(false)} onSave={handleSaveCountry} currentCountryCode={userData.countryCode} />
-            <EditAddressModal isOpen={isAddressModalOpen} onClose={() => setIsAddressModalOpen(false)} onSave={handleSaveAddress} currentData={{ address: userData.address, cityZip: userData.cityZip, country: userData.addressCountry, phone: userData.phone }} />
+            
+            {/* 🔥 MODAL DE DIRECCIÓN (Ahora recibe currentData completo) */}
+            <EditAddressModal 
+                isOpen={isAddressModalOpen} 
+                onClose={() => setIsAddressModalOpen(false)} 
+                onSave={handleSaveAddress} 
+                currentData={{ 
+                    address: userData.address, 
+                    cityZip: userData.cityZip, 
+                    country: userData.addressCountry, 
+                    phone: userData.phone 
+                }} 
+            />
         </div>
     );
 }

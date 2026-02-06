@@ -8,6 +8,18 @@ import {
     Footprints, Shirt, SprayCan, Box, Info, X, Check, Truck, Loader2, AlertCircle 
 } from 'lucide-react';
 
+// --- HELPER: Limpiar nombres de Carriers (Ej: UPSDAP -> UPS) ---
+const cleanCarrierName = (name: string) => {
+    if (!name) return '';
+    const n = name.toUpperCase();
+    if (n.includes('UPS')) return 'UPS';
+    if (n.includes('FEDEX')) return 'FedEx';
+    if (n.includes('DHL')) return 'DHL';
+    if (n.includes('USPS')) return 'USPS';
+    if (n.includes('GMC') || n.includes('GASP')) return 'Gasp Maker Cargo';
+    return name; // Si no coincide con ninguno, devuelve el original
+};
+
 // --- DATA: Lista de países ---
 const ALL_COUNTRIES = [
     { name: "Anguilla", code: "AI" }, { name: "Antigua and Barbuda", code: "AG" }, { name: "Aruba", code: "AW" },
@@ -16,7 +28,8 @@ const ALL_COUNTRIES = [
     { name: "Dominican Republic", code: "DO" }, { name: "Grenada", code: "GD" },
     { name: "Jamaica", code: "JM" }, { name: "Mexico", code: "MX" }, 
     { name: "Puerto Rico", code: "PR" }, { name: "Trinidad and Tobago", code: "TT" },
-    { name: "United States", code: "US" }, { name: "Colombia", code: "CO" },
+    // { name: "United States", code: "US" }, // 🇺🇸 ELIMINADO POR LÓGICA DE NEGOCIO
+    { name: "Colombia", code: "CO" },
     { name: "Spain", code: "ES" }, { name: "Canada", code: "CA" }, { name: "Venezuela", code: "VE" },
     { name: "Panama", code: "PA" }, { name: "Saint Thomas (USVI)", code: "VI" }
 ];
@@ -35,7 +48,7 @@ export default function CalculadoraClient() {
     const [dimUnit, setDimUnit] = useState('cm'); 
     const [weightUnit, setWeightUnit] = useState('kg'); 
     const [country, setCountry] = useState('DO'); 
-    const [activePreset, setActivePreset] = useState('other'); // Corrección de tipo simple
+    const [activePreset, setActivePreset] = useState('other'); 
 
     // Estados de resultados
     const [apiRates, setApiRates] = useState<any[]>([]);
@@ -47,7 +60,7 @@ export default function CalculadoraClient() {
         return [...ALL_COUNTRIES].sort((a, b) => a.name.localeCompare(b.name));
     }, []);
     
-    // Definición de presets con tipado implícito seguro
+    // Definición de presets 
     const presets = {
         phone: { l: 20, w: 10, h: 5, wg: 0.5, val: 500, Icon: Smartphone, label: t('catPhone') },
         laptop: { l: 40, w: 30, h: 5, wg: 2.5, val: 1200, Icon: Laptop, label: t('catLaptop') },
@@ -58,7 +71,7 @@ export default function CalculadoraClient() {
     };
 
     const handlePresetClick = (presetKey: string) => {
-        // @ts-ignore - Ignoramos error de tipado estricto temporalmente para agilizar
+        // @ts-ignore 
         const presetData = presets[presetKey];
         if (!presetData) return;
 
@@ -134,7 +147,6 @@ export default function CalculadoraClient() {
     };
 
     // 🔥 CÁLCULO DEL DESGLOSE
-    // Ahora acepta 'carrier' para saber si quitar el fee
     const calculateTotal = (basePrice: number, carrier: string = '') => {
         const val = Number(value) || 0;
         // Seguro: 3% del valor si es mayor a $100
@@ -313,7 +325,10 @@ export default function CalculadoraClient() {
                                             
                                             {/* Col 2: Info Texto */}
                                             <div className="overflow-hidden">
-                                                <h3 className="font-black text-gray-900 text-sm uppercase truncate">{rate.carrier}</h3>
+                                                <h3 className="font-black text-gray-900 text-sm uppercase truncate">
+                                                    {/* Usamos el helper para limpiar el nombre (UPSDAP -> UPS) */}
+                                                    {cleanCarrierName(rate.carrier)}
+                                                </h3>
                                                 <p className="text-[10px] text-gray-400 font-bold truncate">{rate.service}</p>
                                             </div>
 
