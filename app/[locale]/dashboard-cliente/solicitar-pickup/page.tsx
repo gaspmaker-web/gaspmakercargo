@@ -26,7 +26,7 @@ const HEAVY_RATE_STD = 0.55;     // Peso <= 1999 lbs
 const HEAVY_RATE_BULK = 0.35;    // Peso > 1999 lbs
 const FULL_FREIGHT_BASE = 250;   // Base Camión
 
-// 🔥 ZONAS PERMITIDAS
+// 🔥 ZONAS PERMITIDAS (Aplica para Pickup y Dropoff)
 const ALLOWED_COUNTIES = ['Miami-Dade County', 'Broward County'];
 
 const GOOGLE_LIBRARIES: ("places")[] = ["places"];
@@ -69,6 +69,7 @@ export default function SolicitarPickupPage() {
   const [showMobileSummary, setShowMobileSummary] = useState(false);
 
   const [addressError, setAddressError] = useState<string | null>(null);
+  const [dropOffError, setDropOffError] = useState<string | null>(null); // 🔥 Nuevo estado para error de Dropoff
   const [isAddressValid, setIsAddressValid] = useState(false);
 
   const [quote, setQuote] = useState({ 
@@ -112,6 +113,7 @@ export default function SolicitarPickupPage() {
   const handleServiceSelect = (type: string) => {
       setServiceType(type);
       setAddressError(null);
+      setDropOffError(null); // Limpiar error de dropoff al cambiar
       setQuote(prev => ({ ...prev, distanceMiles: 0, distanceSurcharge: 0 }));
       setTimeout(() => {
           window.scrollTo({ top: 150, behavior: 'smooth' });
@@ -224,6 +226,21 @@ export default function SolicitarPickupPage() {
           setFormData(prev => ({ ...prev, dropOffAddress: '' }));
           return;
       }
+
+      // 🔥 VALIDACIÓN DE ZONA PARA DROPOFF
+      let county = '';
+      if (place.address_components) {
+          const countyComp = place.address_components.find(c => c.types.includes('administrative_area_level_2'));
+          if (countyComp) county = countyComp.long_name;
+      }
+      const isAllowed = ALLOWED_COUNTIES.some(allowed => county === allowed);
+      if (!isAllowed) {
+          setDropOffError(`❌ Solo entregamos en Miami-Dade y Broward. (Zona: ${county || 'Desconocida'})`);
+          setFormData(prev => ({ ...prev, dropOffAddress: '' })); // Borrar dirección inválida
+          return;
+      }
+
+      setDropOffError(null); // Dirección válida
       const newDropoff = place.formatted_address!;
       setFormData(prev => ({ ...prev, dropOffAddress: newDropoff }));
       
@@ -235,7 +252,7 @@ export default function SolicitarPickupPage() {
       if (serviceType === 'DELIVERY' && formData.originAddress && formData.dropOffAddress) {
           calculateComplexRoute(formData.originAddress, formData.dropOffAddress);
       }
-  }, [formData.volumeTier]); // Escuchamos cambios en volumeTier
+  }, [formData.volumeTier]);
 
   const calculateComplexRoute = async (origin: string, destination: string) => {
     if (!isLoaded || typeof google === 'undefined' || !origin) return;
@@ -264,17 +281,13 @@ export default function SolicitarPickupPage() {
         else if (serviceType === 'DELIVERY') {
             if (!destination) return;
             
-            // 1. Base -> Origen
             const leg1 = await getLeg(GMC_WAREHOUSE_ADDRESS, origin); 
-            // 2. Origen -> Destino
             const leg2 = await getLeg(origin, destination);           
             
             // 🔥 LÓGICA DE EXCEPCIÓN PARA LOW VOLUME (v_30)
             if (formData.volumeTier === 'v_30') {
-                // Solo cobramos ida y entrega. No hay retorno.
                 totalMiles = leg1 + leg2;
             } else {
-                // Para Medium/High/Full, cobramos el retorno a base.
                 const leg3 = await getLeg(destination, GMC_WAREHOUSE_ADDRESS); 
                 totalMiles = leg1 + leg2 + leg3;
             }
@@ -518,8 +531,19 @@ export default function SolicitarPickupPage() {
                                             onPlaceChanged={handleDropoffChange} 
                                             restrictions={{ country: "us" }}
                                         >
-                                            <input type="text" placeholder="Dirección de entrega..." className="w-full p-3 border rounded-lg text-base border-gray-200" />
+                                            <input 
+                                                type="text" 
+                                                placeholder="Dirección de entrega..." 
+                                                className={`w-full p-3 border rounded-lg text-base ${dropOffError ? 'border-red-500 bg-red-50 text-red-900' : 'border-gray-200'}`} 
+                                            />
                                         </Autocomplete>
+                                        {/* 🔥 MOSTRAR ERROR DE DROPOFF */}
+                                        {dropOffError && (
+                                            <div className="mt-2 flex items-center gap-2 text-red-600 bg-red-50 p-2 rounded-lg text-xs font-bold animate-in fade-in">
+                                                <AlertTriangle size={16} />
+                                                <span>{dropOffError}</span>
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                             </div>
