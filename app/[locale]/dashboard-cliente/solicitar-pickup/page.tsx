@@ -230,6 +230,13 @@ export default function SolicitarPickupPage() {
       calculateComplexRoute(formData.originAddress, newDropoff);
   };
 
+  // 🔥 NUEVO: Recalcular ruta si el usuario cambia el volumen (para quitar o poner el retorno)
+  useEffect(() => {
+      if (serviceType === 'DELIVERY' && formData.originAddress && formData.dropOffAddress) {
+          calculateComplexRoute(formData.originAddress, formData.dropOffAddress);
+      }
+  }, [formData.volumeTier]); // Escuchamos cambios en volumeTier
+
   const calculateComplexRoute = async (origin: string, destination: string) => {
     if (!isLoaded || typeof google === 'undefined' || !origin) return;
 
@@ -256,10 +263,21 @@ export default function SolicitarPickupPage() {
         } 
         else if (serviceType === 'DELIVERY') {
             if (!destination) return;
+            
+            // 1. Base -> Origen
             const leg1 = await getLeg(GMC_WAREHOUSE_ADDRESS, origin); 
+            // 2. Origen -> Destino
             const leg2 = await getLeg(origin, destination);           
-            const leg3 = await getLeg(destination, GMC_WAREHOUSE_ADDRESS); 
-            totalMiles = leg1 + leg2 + leg3;
+            
+            // 🔥 LÓGICA DE EXCEPCIÓN PARA LOW VOLUME (v_30)
+            if (formData.volumeTier === 'v_30') {
+                // Solo cobramos ida y entrega. No hay retorno.
+                totalMiles = leg1 + leg2;
+            } else {
+                // Para Medium/High/Full, cobramos el retorno a base.
+                const leg3 = await getLeg(destination, GMC_WAREHOUSE_ADDRESS); 
+                totalMiles = leg1 + leg2 + leg3;
+            }
         }
 
         setQuote(prev => ({ ...prev, distanceMiles: parseFloat(totalMiles.toFixed(1)) }));

@@ -84,7 +84,8 @@ export default function EditAddressModal({ isOpen, onClose, onSave, currentData 
     setIsLoading(true);
 
     // 🔥 RE-ARMADO: Juntamos todo para que la base de datos no sufra
-    const finalCityZip = `${city}, ${state} ${zip}`.trim().replace(/^, /, '');
+    // El trim final elimina espacios extra si el zip está vacío
+    const finalCityZip = `${city}, ${state} ${zip}`.trim().replace(/^, /, '').replace(/, $/, '');
 
     try {
       await onSave({
@@ -208,7 +209,7 @@ export default function EditAddressModal({ isOpen, onClose, onSave, currentData 
                           </div>
                       </div>
 
-                      {/* ZIP */}
+                      {/* ZIP (MODIFICADO: Opcional y permite letras para internacional) */}
                       <div className="col-span-5 sm:col-span-3 group">
                           <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 ml-1">Zip</label>
                           <div className="relative">
@@ -217,12 +218,11 @@ export default function EditAddressModal({ isOpen, onClose, onSave, currentData 
                             </div>
                             <input
                                 type="text"
-                                required
-                                maxLength={5}
+                                // required eliminado para permitir campo vacío
                                 value={zip}
-                                onChange={(e) => setZip(e.target.value.replace(/\D/g, ''))}
-                                placeholder="33122"
-                                className="w-full pl-9 pr-2 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl text-gray-700 font-medium outline-none focus:bg-white focus:border-gmc-dorado-principal focus:ring-4 focus:ring-gmc-dorado-principal/10 transition-all shadow-sm font-mono text-center"
+                                onChange={(e) => setZip(e.target.value)} // Eliminado filtro numérico para permitir códigos internacionales o vacío
+                                placeholder="Optional"
+                                className="w-full pl-9 pr-2 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl text-gray-700 font-medium outline-none focus:bg-white focus:border-gmc-dorado-principal focus:ring-4 focus:ring-gmc-dorado-principal/10 transition-all shadow-sm font-mono text-center placeholder:text-gray-300 placeholder:text-xs"
                             />
                           </div>
                       </div>

@@ -7,7 +7,7 @@ import Image from 'next/image';
 import { 
     FileText, CreditCard, Loader2, Check, ChevronDown, ChevronUp, 
     DollarSign, AlertCircle, Package, Truck, Box, Ruler, Scale, ShieldCheck, 
-    ExternalLink, Plus, Clock 
+    ExternalLink, Plus, Clock, Info 
 } from 'lucide-react';
 import { getProcessingFee } from '@/lib/stripeCalc';
 import { useTranslations } from 'next-intl';
@@ -32,6 +32,22 @@ const cleanCarrierName = (name: string) => {
   if (n.includes('usps')) return 'USPS';
   if (n.includes('gasp') || n.includes('gmc')) return 'Gasp Maker Cargo';
   return name;
+};
+
+// 🔥 NUEVO HELPER PARA SERVICIOS (Igual que en PackageDetailClient)
+const cleanServiceName = (name: string) => {
+  if (!name) return '';
+  return name
+    .replace(/_/g, ' ')
+    .replace(/([A-Z])/g, ' $1')
+    .trim()
+    .toLowerCase()
+    .split(' ')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ')
+    .replace('Fedex', '')
+    .replace('Ups', '')
+    .trim();
 };
 
 interface Rate {
@@ -109,6 +125,7 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
           const data = await res.json();
           if (res.ok && data.rates) {
               const processed = data.rates.map((r: Rate) => ({ ...r, logo: getCarrierLogo(r.carrier) }));
+              // Fallback si no hay tarifas
               if(processed.length === 0) processed.push({ id: 'std-gmc', carrier: 'Gasp Maker Cargo', service: 'Standard', price: (bill.weightLbs * 4.5) + 15, currency: 'USD', days: '5-7', logo: '/gaspmakercargoproject.png' });
               
               setRatesMap(prev => ({ ...prev, [bill.id]: processed }));
@@ -127,20 +144,25 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
       }
   };
 
-  // 4. CALCULAR TOTALES (INCLUYENDO SEGURO)
+  // 🔥 4. CALCULAR TOTALES (LÓGICA DE NEGOCIO CORREGIDA)
   const calculateTotals = () => {
       let serviceSubtotal = 0;
       let handlingSubtotal = 0; 
-      let insuranceSubtotal = 0; // 🔥 ACUMULADOR DE SEGURO
+      let insuranceSubtotal = 0; 
       let count = 0;
 
       selectedBillIds.forEach(id => {
           const bill = bills.find(b => b.id === id);
           if (bill) {
-              const handling = bill.handlingFee || 0;
-              handlingSubtotal += handling;
+              // 🧠 LÓGICA INTELIGENTE: Single vs Consolidated
+              const isConsolidated = bill.serviceType === 'CONSOLIDATION' || 
+                                     bill.description?.toLowerCase().includes('consolid') ||
+                                     (bill.packages && bill.packages.length > 1);
+              
+              const dynamicHandling = isConsolidated ? 10.00 : 0.00;
+              handlingSubtotal += dynamicHandling;
 
-              // 🔥 CÁLCULO DE SEGURO INDIVIDUAL
+              // Seguro
               const val = Number(bill.declaredValue) || 0;
               const ins = val > 100 ? val * 0.03 : 0;
               insuranceSubtotal += ins;
@@ -151,8 +173,9 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
               if (rate) {
                   itemServicePrice = rate.price;
               } else {
+                  // Fallback si no hay rate seleccionado
                   const totalFromServer = bill.totalAmount || 0;
-                  itemServicePrice = Math.max(0, totalFromServer - handling - ins);
+                  itemServicePrice = Math.max(0, totalFromServer - (bill.handlingFee || 0) - ins);
               }
               
               serviceSubtotal += itemServicePrice;
@@ -161,6 +184,8 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
       });
 
       const taxableAmount = serviceSubtotal + handlingSubtotal + insuranceSubtotal;
+      
+      // Calculamos Fee de Procesamiento (Stripe) aparte para transparencia
       const fee = getProcessingFee(taxableAmount);
       
       return { 
@@ -174,7 +199,6 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
   };
 
   const totals = calculateTotals();
-  const serviceWithFee = totals.serviceSubtotal + totals.fee;
 
   // 5. PAGAR
   const handlePay = async () => {
@@ -211,7 +235,13 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
           const billsPayload = selectedBillIds.map(id => {
              const bill = bills.find(b => b.id === id);
              const rate = selectedRateMap[id];
-             const handling = bill?.handlingFee || 0;
+             
+             // Recalcular handling individual para el payload
+             const isConsolidated = bill?.serviceType === 'CONSOLIDATION' || 
+                                    bill?.description?.toLowerCase().includes('consolid') ||
+                                    (bill?.packages && bill?.packages.length > 1);
+             const dynamicHandling = isConsolidated ? 10.00 : 0.00;
+
              const val = Number(bill?.declaredValue) || 0;
              const ins = val > 100 ? val * 0.03 : 0;
              
@@ -220,12 +250,12 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                  itemServicePrice = rate.price;
              } else {
                  const totalFromServer = bill?.totalAmount || 0;
-                 itemServicePrice = Math.max(0, totalFromServer - handling - ins);
+                 itemServicePrice = Math.max(0, totalFromServer - (bill?.handlingFee || 0) - ins);
              }
 
              return {
                  id: id,
-                 amount: itemServicePrice + handling + ins
+                 amount: itemServicePrice + dynamicHandling + ins
              };
           });
 
@@ -321,27 +351,25 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                                     const rates = ratesMap[bill.id];
                                     const selectedRate = selectedRateMap[bill.id];
                                     
-                                    const handling = bill.handlingFee || 0;
+                                    // Detectar consolidación para mostrar fee correcto
+                                    const isConsolidated = bill.serviceType === 'CONSOLIDATION' || 
+                                                           bill.description?.toLowerCase().includes('consolid') ||
+                                                           (bill.packages && bill.packages.length > 1);
+                                    const effectiveHandling = isConsolidated ? 10.00 : 0.00;
+
                                     const val = Number(bill.declaredValue) || 0;
                                     const ins = val > 100 ? val * 0.03 : 0;
 
                                     const displayPrice = selectedRate 
-                                        ? selectedRate.price + handling + ins
+                                        ? selectedRate.price + effectiveHandling + ins
                                         : (bill.totalAmount || 0);
 
                                     const isPickup = bill.serviceType === 'PICKUP' || 
                                                      bill.courierService === 'Entregar en Tienda' || 
-                                                     bill.description?.toUpperCase().includes('PICKUP') ||
-                                                     bill.gmcShipmentNumber?.toUpperCase().includes('PICKUP');
+                                                     bill.description?.toUpperCase().includes('PICKUP');
 
                                     const needsQuote = !isPickup && !selectedRate && (!bill.subtotalAmount || bill.subtotalAmount === 0);
                                     
-                                    // Determinar si GMC fue seleccionado para quitar fee visualmente (lógica del componente anterior)
-                                    const isGMCSelected = selectedRate?.carrier?.toUpperCase().includes('GASP') || 
-                                                          selectedRate?.carrier?.toUpperCase().includes('GMC');
-                                    
-                                    const effectiveHandling = isGMCSelected ? 0 : handling;
-
                                     return (
                                         <div key={bill.id} className={`relative bg-white p-5 rounded-2xl border-2 transition-all shadow-sm flex flex-col ${isSelected ? 'border-gmc-dorado-principal ring-2 ring-yellow-50/50' : 'border-gray-100 hover:border-gray-300'}`}>
                                             
@@ -364,7 +392,8 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                                                                     📦 {bill.packages.length} {t('packages')}
                                                                 </span>
                                                             )}
-                                                            {handling > 0 && <span className="text-[10px] bg-yellow-50 text-yellow-700 px-2 py-1 rounded font-bold border border-yellow-100">Fee</span>}
+                                                            {/* SOLO MOSTRAR BADGE DE FEE SI ES CONSOLIDACIÓN */}
+                                                            {effectiveHandling > 0 && <span className="text-[10px] bg-yellow-50 text-yellow-700 px-2 py-1 rounded font-bold border border-yellow-100">Fee $10</span>}
                                                         </div>
                                                     </div>
                                                 </div>
@@ -392,7 +421,7 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                                                     </button>
                                                 ) : (
                                                     <div className="space-y-3">
-                                                        {/* SI YA SELECCIONÓ UNO (Mostrar Tarjeta Resumida) */}
+                                                        {/* SI YA SELECCIONÓ UNO (Tarjeta Resumida) */}
                                                         {isSelected && selectedRate ? (
                                                             <div className="bg-white border border-gmc-dorado-principal rounded-xl p-4 shadow-sm animate-fadeIn">
                                                                 <div className="flex justify-between items-center mb-3">
@@ -402,20 +431,21 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                                                                         </div>
                                                                         <div>
                                                                             <p className="font-bold text-gray-800 text-sm">{cleanCarrierName(selectedRate.carrier)}</p>
-                                                                            <p className="text-[10px] text-gray-500">{selectedRate.days}</p>
+                                                                            <p className="text-[10px] text-gray-500">{cleanServiceName(selectedRate.service)}</p>
+                                                                            <p className="text-[10px] text-gray-400 mt-0.5">{selectedRate.days}</p>
                                                                         </div>
                                                                     </div>
                                                                     <p className="text-xl font-bold text-gmc-gris-oscuro">${displayPrice.toFixed(2)}</p>
                                                                 </div>
                                                                 
-                                                                {/* DESGLOSE RÁPIDO DENTRO DE LA TARJETA */}
+                                                                {/* DESGLOSE RÁPIDO TRANSPARENTE */}
                                                                 <div className="border-t border-gray-100 pt-2 mt-2 space-y-1">
                                                                     <div className="flex justify-between text-xs text-gray-500">
-                                                                        <span>Freight</span><span>${selectedRate.price.toFixed(2)}</span>
+                                                                        <span>Freight Cost</span><span>${selectedRate.price.toFixed(2)}</span>
                                                                     </div>
                                                                     {effectiveHandling > 0 && (
                                                                         <div className="flex justify-between text-xs text-yellow-600">
-                                                                            <span>Handling</span><span>+${effectiveHandling.toFixed(2)}</span>
+                                                                            <span>Consolidation Fee</span><span>+${effectiveHandling.toFixed(2)}</span>
                                                                         </div>
                                                                     )}
                                                                     {ins > 0 && (
@@ -443,7 +473,9 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                                                                                     </div>
                                                                                     <div className="text-sm">
                                                                                         <p className="font-bold text-gray-700">{cleanCarrierName(rate.carrier)}</p>
-                                                                                        <p className="text-[10px] text-gray-500">{rate.days}</p>
+                                                                                        {/* 🔥 SERVICIO AGREGADO AQUÍ */}
+                                                                                        <p className="text-[11px] text-gray-500 font-medium leading-tight mt-0.5 line-clamp-2">{cleanServiceName(rate.service)}</p>
+                                                                                        <p className="text-[10px] text-gray-400 font-bold mt-1 flex items-center gap-1"><Clock size={10} /> {rate.days}</p>
                                                                                     </div>
                                                                                 </div>
                                                                                 <span className="text-sm font-bold text-blue-600">${rate.price.toFixed(2)}</span>
@@ -454,7 +486,6 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                                                             )
                                                         )}
                                                         
-                                                        {/* CASO PICKUP (Sin cotización) */}
                                                         {isPickup && !selectedRate && (
                                                             <div className="flex justify-between items-center p-3 bg-green-50 border border-green-200 rounded-xl">
                                                                 <span className="flex items-center gap-2 text-green-700 font-bold text-sm"><Box size={14}/> Pickup en Tienda</span>
@@ -478,14 +509,15 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                         <h3 className="font-bold text-gmc-dorado-principal text-lg mb-4 border-b border-gray-600 pb-2">{tPickup('summaryTitle')}</h3>
                         <div className="space-y-3 text-sm mb-6">
                             
+                            {/* 🔥 TRANSPARENCIA TOTAL: Separamos el Costo del Fee */}
                             <div className="flex justify-between">
-                                <span>Freight & Processing (GMC)</span>
-                                <span className="font-bold">${serviceWithFee.toFixed(2)}</span>
+                                <span className="text-gray-300">Freight Cost</span>
+                                <span className="font-bold">${totals.serviceSubtotal.toFixed(2)}</span>
                             </div>
                             
                             {totals.handlingSubtotal > 0 && (
                                 <div className="flex justify-between text-yellow-400">
-                                    <span>Fee: Handling</span>
+                                    <span>Consolidation Fee</span>
                                     <span className="font-bold">+${totals.handlingSubtotal.toFixed(2)}</span>
                                 </div>
                             )}
@@ -496,6 +528,12 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                                     <span className="font-bold">+${totals.insuranceSubtotal.toFixed(2)}</span>
                                 </div>
                             )}
+
+                            {/* PROCESSING FEE MOSTRADO APARTE */}
+                            <div className="flex justify-between text-gray-400 text-xs">
+                                <span className="flex items-center gap-1"><Info size={12}/> Processing Fee</span>
+                                <span>+${totals.fee.toFixed(2)}</span>
+                            </div>
 
                             <div className="flex justify-between text-xl font-bold pt-2 border-t border-gray-600 text-gmc-dorado-principal">
                                 <span>{tPickup('sumTotal')}</span>
@@ -521,10 +559,9 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
             </div>
         )}
 
-        {/* --- BARRA MÓVIL PREMIUM (Fondo Oscuro + Texto Dorado) --- */}
+        {/* --- BARRA MÓVIL PREMIUM --- */}
         {bills.length > 0 && (
             <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50">
-                {/* Degradado superior para suavizar */}
                 <div className="absolute bottom-full left-0 right-0 h-8 bg-gradient-to-t from-gray-200/40 to-transparent pointer-events-none" />
                 
                 <div className="bg-[#222b3c] rounded-t-3xl shadow-[0_-5px_25px_rgba(0,0,0,0.2)] p-5 animate-slideUp text-white">
@@ -546,18 +583,21 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
 
                     {showMobileSummary && (
                         <div className="mt-5 pt-5 border-t border-gray-600 space-y-3 text-sm animate-fadeIn">
+                            {/* 🔥 MOBILE TRANSPARENCY */}
                             <div className="flex justify-between text-gray-300">
-                                <span>Freight & Processing</span>
-                                <span>${serviceWithFee.toFixed(2)}</span>
+                                <span>Freight Cost</span>
+                                <span>${totals.serviceSubtotal.toFixed(2)}</span>
                             </div>
                             
                             {totals.handlingSubtotal > 0 && (
-                                <div className="flex justify-between text-[#EAD8B1]"><span>Fee: Handling</span><span>+${totals.handlingSubtotal.toFixed(2)}</span></div>
+                                <div className="flex justify-between text-[#EAD8B1]"><span>Consolidation Fee</span><span>+${totals.handlingSubtotal.toFixed(2)}</span></div>
                             )}
 
                             {totals.insuranceSubtotal > 0 && (
                                 <div className="flex justify-between text-blue-300"><span>+ Insurance (3%)</span><span>+${totals.insuranceSubtotal.toFixed(2)}</span></div>
                             )}
+                            
+                            <div className="flex justify-between text-gray-500 text-xs"><span>Processing Fee</span><span>+${totals.fee.toFixed(2)}</span></div>
 
                             <div className="pt-3 border-t border-gray-600">
                                 <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Tarjeta Seleccionada</label>
