@@ -6,10 +6,12 @@ export const dynamic = 'force-dynamic';
 export async function POST(req: Request) {
   try {
     // 👇 VACUNA 2: Imports dentro de la función (Lazy Loading)
-    // Evita que Stripe o Prisma se inicien durante el Build
     const { auth } = await import("@/auth");
     const prisma = (await import("@/lib/prisma")).default;
     const { stripe } = await import("@/lib/stripe");
+    
+    // 🔥 IMPORTAMOS LA LIBRERÍA DE NOTIFICACIONES
+    const { sendPaymentReceiptEmail, sendAdminPaymentAlert, sendNotification, getT } = await import("@/lib/notifications");
 
     const session = await auth();
     if (!session?.user?.id) return NextResponse.json({ message: "No autorizado" }, { status: 401 });
@@ -22,7 +24,7 @@ export async function POST(req: Request) {
         packageIds, 
         pickupId,   
         billIds,    
-        billDetails, // El desglose que enviamos desde el frontend
+        billDetails, 
         selectedCourier, 
         courierService   
     } = await req.json();
@@ -44,7 +46,7 @@ export async function POST(req: Request) {
         return NextResponse.json({ message: "Tarjeta no encontrada" }, { status: 404 });
     }
 
-    // --- CÁLCULO GENERAL (Para Stripe y Registros Globales) ---
+    // --- CÁLCULO GENERAL ---
     const totalToCharge = Number(amountNet); 
     const impliedSubtotal = totalToCharge / 1.0727; 
     const feeAmount = totalToCharge - impliedSubtotal;
@@ -72,7 +74,40 @@ export async function POST(req: Request) {
     }
 
     // =========================================================================
-    // 2. 💾 ACTUALIZACIÓN DE BASE DE DATOS
+    // 🔔 NOTIFICACIONES
+    // =========================================================================
+    const userLang = (user as any).language || 'en';
+    const t = getT(userLang);
+
+    // A. Email al Cliente
+    await sendPaymentReceiptEmail(
+        user.email!,
+        user.name || 'Cliente',
+        serviceType || 'Servicio Logístico',
+        totalToCharge,
+        paymentIntent.id,
+        description || 'Pago procesado correctamente',
+        userLang
+    );
+
+    // B. Alerta al Admin
+    await sendAdminPaymentAlert(
+        user.name || 'Cliente Desconocido',
+        totalToCharge,
+        serviceType || 'Pago General',
+        paymentIntent.id
+    );
+
+    // C. Notificación en Dashboard
+    await sendNotification({
+        userId: user.id,
+        title: t.paymentTitle,
+        message: `${t.paymentBody} $${totalToCharge.toFixed(2)}`,
+        type: "SUCCESS"
+    });
+
+    // =========================================================================
+    // 2. 💾 ACTUALIZACIÓN DE BASE DE DATOS (CORREGIDA)
     // =========================================================================
 
     if (billDetails && Array.isArray(billDetails) && billDetails.length > 0) {
@@ -83,17 +118,28 @@ export async function POST(req: Request) {
         await Promise.all(billDetails.map(async (detail: any) => {
             if (!detail.id || !detail.amount) return;
 
-            // 1. Calcular montos matemáticos
-            const rawSubtotal = Number(detail.amount); // $5.00
-            const rawTotal = rawSubtotal * 1.0727;     // $5.3635
-            const rawFee = rawTotal - rawSubtotal;     // $0.3635
+            // 1. Averiguar qué tipo de envío es (Pickup o Ship)
+            const currentShipment = await prisma.consolidatedShipment.findUnique({
+                where: { id: detail.id },
+                select: { serviceType: true }
+            });
 
-            // 2. Redondear a 2 decimales para la BD (Fix de integridad)
-            const cleanSubtotal = Number(rawSubtotal.toFixed(2)); // 5.00
-            const cleanTotal = Number(rawTotal.toFixed(2));       // 5.36
-            const cleanFee = Number(rawFee.toFixed(2));           // 0.36
+            // 🚨 CORRECCIÓN VITAL: Definir el estado correcto
+            // Si es 'STORAGE_FEE', es un Pickup -> 'PENDIENTE_RETIRO' (o LISTO_PARA_RETIRO)
+            // Si es cualquier otra cosa -> 'LISTO_PARA_ENVIO'
+            const isPickup = currentShipment?.serviceType === 'STORAGE_FEE';
+            const nextStatus = isPickup ? 'LISTO_PARA_RETIRO' : 'LISTO_PARA_ENVIO';
 
-            // 3. Actualizar la FACTURA (ConsolidatedShipment)
+            // 2. Calcular montos
+            const rawSubtotal = Number(detail.amount); 
+            const rawTotal = rawSubtotal * 1.0727;     
+            const rawFee = rawTotal - rawSubtotal;     
+
+            const cleanSubtotal = Number(rawSubtotal.toFixed(2));
+            const cleanTotal = Number(rawTotal.toFixed(2));
+            const cleanFee = Number(rawFee.toFixed(2));
+
+            // 3. Actualizar la FACTURA
             await prisma.consolidatedShipment.update({
                 where: { id: detail.id },
                 data: {
@@ -104,19 +150,18 @@ export async function POST(req: Request) {
                     
                     subtotalAmount: cleanSubtotal,
                     processingFee: cleanFee,
-                    totalAmount: cleanTotal, // Aquí se guardará 5.36
+                    totalAmount: cleanTotal,
                     
                     updatedAt: new Date()
                 }
             });
 
-            // 4. Actualizar los PAQUETES HIJOS
+            // 4. Actualizar los PAQUETES HIJOS con el estado correcto
             const childPackagesCount = await prisma.package.count({
                 where: { consolidatedShipmentId: detail.id }
             });
 
             if (childPackagesCount > 0) {
-                // Dividimos y volvemos a redondear por si acaso
                 const pkgTotal = Number((cleanTotal / childPackagesCount).toFixed(2));
                 const pkgSub = Number((cleanSubtotal / childPackagesCount).toFixed(2));
                 const pkgFee = Number((cleanFee / childPackagesCount).toFixed(2));
@@ -124,13 +169,12 @@ export async function POST(req: Request) {
                 await prisma.package.updateMany({
                     where: { consolidatedShipmentId: detail.id },
                     data: {
-                        status: 'LISTO_PARA_ENVIO',
+                        status: nextStatus, // 👈 USAMOS EL ESTADO CORRECTO (NO SIEMPRE ES ENVÍO)
                         stripePaymentId: paymentIntent.id,
                         
-                        // 🔥 Aquí aseguramos que se guarden los valores
-                        shippingTotalPaid: pkgTotal,      // 5.36
-                        shippingSubtotal: pkgSub,         // 5.00
-                        shippingProcessingFee: pkgFee,    // 0.36
+                        shippingTotalPaid: pkgTotal,
+                        shippingSubtotal: pkgSub,
+                        shippingProcessingFee: pkgFee,
                         
                         updatedAt: new Date()
                     }
@@ -139,15 +183,20 @@ export async function POST(req: Request) {
         }));
 
     } else {
-        // --- FALLBACK (Lógica Antigua) ---
-        // Solo entra aquí si el frontend falla en enviar el desglose
+        // --- FALLBACK (Lógica Antigua - También protegida) ---
         if (packageIds) {
              const idsArray = Array.isArray(packageIds) ? packageIds : packageIds.split(',');
              const count = idsArray.length || 1;
+             
+             // Por defecto asumimos envio, a menos que el serviceType diga lo contrario
+             const fallbackStatus = (serviceType === 'Warehousing' || serviceType === 'Pickup') 
+                ? 'PENDIENTE_RETIRO' 
+                : 'LISTO_PARA_ENVIO';
+
              await prisma.package.updateMany({
                 where: { id: { in: idsArray } },
                 data: {
-                    status: 'LISTO_PARA_ENVIO', 
+                    status: fallbackStatus, 
                     shippingTotalPaid: Number((totalToCharge / count).toFixed(2)),
                     stripePaymentId: paymentIntent.id
                 }
@@ -167,7 +216,7 @@ export async function POST(req: Request) {
         }
     }
 
-    // CASO C: Pickup Request
+    // CASO C: Pickup Request (Si existe un objeto PickupRequest separado)
     if (pickupId) {
         await prisma.pickupRequest.update({
             where: { id: pickupId },
@@ -184,7 +233,12 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ 
         success: true, 
-        paymentId: paymentIntent.id
+        paymentId: paymentIntent.id,
+        financials: {
+            total: Number(totalToCharge.toFixed(2)),
+            subtotal: Number(impliedSubtotal.toFixed(2)),
+            fee: Number(feeAmount.toFixed(2))
+        }
     });
 
   } catch (error: any) {

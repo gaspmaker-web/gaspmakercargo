@@ -9,6 +9,9 @@ export async function POST(req: Request) {
     const prisma = (await import('@/lib/prisma')).default;
     const { auth } = await import('@/auth');
     const { generateGmcTracking } = await import('@/lib/utils');
+    
+    // 🔥 IMPORTAMOS NOTIFICACIONES Y EL HELPER DE TRADUCCIÓN
+    const { sendPackageReceivedEmail, sendNotification, getT } = await import('@/lib/notifications');
 
     // 1. Verificar permisos
     const session = await auth();
@@ -66,8 +69,33 @@ export async function POST(req: Request) {
 
           // NO tocamos 'invoiceUrl' ni 'description', así se mantiene lo que subió el cliente
           // NO tocamos 'userId', respetamos al dueño original de la pre-alerta
-        }
+        },
+        include: { user: true } // 👈 IMPORTANTE: Traemos al usuario para tener su email e idioma
       });
+
+      // 🔔 NOTIFICAR AL CLIENTE (PRE-ALERTA PROCESADA) - MULTILINGÜE
+      if (updatedPackage.user?.email) {
+          // Detectamos idioma (Si no existe user.language, getT usa 'en' por defecto)
+          const userLang = (updatedPackage.user as any).language || 'en';
+          const t = getT(userLang);
+
+          // 1. Enviar Email (Pasamos userLang)
+          await sendPackageReceivedEmail(
+              updatedPackage.user.email,
+              updatedPackage.user.name || 'Cliente',
+              updatedPackage.carrierTrackingNumber,
+              updatedPackage.weightLbs || 0,
+              userLang // 👈 Idioma para el email
+          );
+          
+          // 2. Notificación Dashboard (Usamos el diccionario t)
+          await sendNotification({
+              userId: updatedPackage.userId,
+              title: t.notifPreAlertTitle, // "Pre-Alert Received" / "Pre-Alerta Recibida"
+              message: t.notifPreAlertBody.replace('{TRACKING}', updatedPackage.carrierTrackingNumber),
+              type: "SUCCESS"
+          });
+      }
 
       return NextResponse.json({ 
           message: "Paquete pre-alertado recibido correctamente.", 
@@ -102,8 +130,33 @@ export async function POST(req: Request) {
           
           // 🔥 GUARDAMOS EL VALOR DECLARADO (Default 0)
           declaredValue: declaredValue ? parseFloat(declaredValue) : 0
-        }
+        },
+        include: { user: true } // 👈 IMPORTANTE: Traemos al usuario
       });
+
+      // 🔔 NOTIFICAR AL CLIENTE (PAQUETE NUEVO) - MULTILINGÜE
+      if (newPackage.user?.email) {
+          // Detectamos idioma (fallback a 'en')
+          const userLang = (newPackage.user as any).language || 'en';
+          const t = getT(userLang);
+
+          // 1. Enviar Email
+          await sendPackageReceivedEmail(
+              newPackage.user.email,
+              newPackage.user.name || 'Cliente',
+              newPackage.carrierTrackingNumber,
+              newPackage.weightLbs || 0,
+              userLang
+          );
+          
+          // 2. Notificación Dashboard
+          await sendNotification({
+              userId: newPackage.userId,
+              title: t.notifPkgNewTitle, // "New Package in Miami"
+              message: t.notifPkgNewBody.replace('{TRACKING}', newPackage.carrierTrackingNumber),
+              type: "INFO"
+          });
+      }
 
       return NextResponse.json(newPackage, { status: 201 });
     }

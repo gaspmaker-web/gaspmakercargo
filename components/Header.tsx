@@ -26,10 +26,10 @@ export default function Header({ backButtonUrl }: HeaderProps) {
   // Detectar si estamos en alguna sección del Dashboard
   const isDashboard = pathname.includes('/dashboard-cliente') || pathname.includes('/menu') || pathname.includes('/account-settings');
 
-  // Detectar página de Facturas específicamente (si se requiriera lógica especial)
+  // Detectar página de Facturas específicamente
   const isBillingPage = pathname.includes('/pagar-facturas');
 
-  // Lista de sub-páginas que muestran Flecha (y ahora OCULTARÁN los iconos derechos)
+  // Lista de sub-páginas que muestran Flecha
   const isSubPage = 
     pathname.includes('/referidos') ||
     pathname.includes('/pre-alerta') ||
@@ -43,8 +43,8 @@ export default function Header({ backButtonUrl }: HeaderProps) {
     pathname.includes('/paquetes');
 
   const headerClasses = isDashboard 
-    ? "bg-transparent fixed top-0 z-40 w-full h-[72px] transition-colors duration-300" 
-    : "bg-gmc-gris-oscuro border-b border-white/5 backdrop-blur-md sticky top-0 z-40 shadow-2xl font-montserrat w-full h-[72px] transition-colors duration-300";
+    ? "bg-transparent fixed top-0 z-50 w-full h-[72px] transition-colors duration-300" 
+    : "bg-gmc-gris-oscuro border-b border-white/5 backdrop-blur-md sticky top-0 z-50 shadow-2xl font-montserrat w-full h-[72px] transition-colors duration-300";
 
   const iconColorClass = isDashboard ? "text-[#1a1f2e]" : "text-white";
 
@@ -79,32 +79,35 @@ export default function Header({ backButtonUrl }: HeaderProps) {
 
   return (
     <header className={headerClasses}>
-      <div className="container mx-auto px-4 h-full flex justify-between items-center">
+      <div className="container mx-auto px-4 h-full flex justify-between items-center relative z-50">
         
         {/* =========================================================
-            ZONA IZQUIERDA
+            ZONA IZQUIERDA (HAMBURGUESA / BACK)
            ========================================================= */}
         <div className="flex items-center gap-4">
             
-            {/* MÓVIL */}
-            <div className="lg:hidden">
+            {/* MÓVIL: Botones optimizados para tacto (min 48px) */}
+            <div className="lg:hidden relative z-50">
                 {isSubPage ? (
                     <button 
+                        type="button"
                         onClick={() => router.back()} 
-                        className={`focus:outline-none p-2 rounded-lg transition-colors block ${iconColorClass} ${
-                            isDashboard ? "hover:bg-black/5" : "hover:bg-white/10"
+                        className={`flex items-center justify-center min-w-[48px] min-h-[48px] p-2 rounded-full transition-all active:scale-90 ${iconColorClass} ${
+                            isDashboard ? "hover:bg-black/10 active:bg-black/20" : "hover:bg-white/10 active:bg-white/20"
                         }`}
+                        aria-label="Volver atrás"
                     >
                         <ArrowLeft size={28} />
                     </button>
                 ) : (
                     <Link 
                         href="/menu-movil" 
-                        className={`focus:outline-none p-2 -ml-2 rounded-lg transition-colors block ${iconColorClass} ${
-                            isDashboard ? "hover:bg-black/5" : "bg-white/5 hover:bg-white/10"
+                        className={`flex items-center justify-center min-w-[48px] min-h-[48px] -ml-2 rounded-full transition-all active:scale-90 ${iconColorClass} ${
+                            isDashboard ? "hover:bg-black/10 active:bg-black/20" : "hover:bg-white/10 active:bg-white/20"
                         }`}
+                        aria-label="Abrir menú"
                     >
-                        <Menu size={28} />
+                        <Menu size={30} />
                     </Link>
                 )}
             </div>
@@ -113,14 +116,15 @@ export default function Header({ backButtonUrl }: HeaderProps) {
             <div className={`hidden lg:flex items-center flex-shrink-0 ${iconColorClass}`}>
                 {isSubPage ? (
                     <button 
+                        type="button"
                         onClick={() => router.back()} 
-                        className={`hover:text-gmc-dorado-principal transition-all duration-300 ml-4 p-2 rounded-full hover:bg-black/5`}
+                        className={`hover:text-gmc-dorado-principal transition-all duration-300 ml-4 p-2 rounded-full hover:bg-black/5 active:scale-95`}
                         title="Volver"
                     >
                         <ArrowLeft size={24} />
                     </button>
                 ) : (
-                    <Link href="/" className="flex items-center group transition-transform hover:scale-105">
+                    <Link href="/" className="flex items-center group transition-transform hover:scale-105 active:scale-95">
                         <Image
                             src="/gaspmakercargoproject.png" 
                             alt="Gasp Maker Logo"
@@ -152,14 +156,14 @@ export default function Header({ backButtonUrl }: HeaderProps) {
         {/* =========================================================
             ZONA DERECHA (Idiomas, Notif, Perfil)
            ========================================================= */}
-        <div className="flex items-center gap-2 md:gap-4">
+        <div className="flex items-center gap-2 md:gap-4 relative z-50">
           
-          {/* 🔥 LÓGICA DE LIMPIEZA: Solo mostramos estos iconos si NO estamos en una sub-página 🔥 */}
           {!isSubPage && (
             <>
-                {/* Idioma */}
+                {/* Idioma Desktop */}
                 <div className="hidden lg:block relative" ref={langRef}>
                     <button 
+                        type="button"
                         onClick={() => setIsLangMenuOpen(!isLangMenuOpen)} 
                         className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors border ${iconColorClass} ${
                             isDashboard ? "border-gray-300 hover:bg-black/5" : "bg-white/5 hover:bg-white/10 border-white/10"
@@ -171,7 +175,11 @@ export default function Header({ backButtonUrl }: HeaderProps) {
                     {isLangMenuOpen && (
                     <div className="absolute right-0 mt-2 w-40 bg-[#1a1f2e] text-white border border-white/10 rounded-xl shadow-2xl overflow-hidden z-[60]">
                         {languages.map((lang) => (
-                        <button key={lang.code} onClick={() => handleLanguageChange(lang.code)} className="flex items-center gap-3 w-full px-4 py-3 text-sm hover:bg-white/5 transition-colors text-left">
+                        <button 
+                            key={lang.code} 
+                            onClick={() => handleLanguageChange(lang.code)} 
+                            className="flex items-center gap-3 w-full px-4 py-3 text-sm hover:bg-white/5 transition-colors text-left"
+                        >
                             <img src={lang.flag} alt={lang.name} className="w-5 h-auto rounded-sm" />
                             <span className={currentLocale === lang.code ? 'text-gmc-dorado-principal font-bold' : 'text-white/80'}>{lang.name}</span>
                         </button>
@@ -182,8 +190,8 @@ export default function Header({ backButtonUrl }: HeaderProps) {
 
                 {/* Notificaciones */}
                 {session && (
-                    <div className="flex items-center hover:scale-105 transition-transform">
-                    <NotificationBell className={iconColorClass} />
+                    <div className="flex items-center justify-center min-w-[40px] min-h-[40px] hover:scale-105 active:scale-95 transition-transform">
+                        <NotificationBell className={iconColorClass} />
                     </div>
                 )}
 
@@ -194,31 +202,36 @@ export default function Header({ backButtonUrl }: HeaderProps) {
                             <div className="hidden lg:block">
                                 <ProfileButton />
                             </div>
-                            {/* Icono perfil móvil (Solo dashboard) */}
+                            
+                            {/* 🔥 ICONO PERFIL MÓVIL OPTIMIZADO 🔥 */}
                             <Link 
                                 href="/menu-perfil" 
-                                className={`lg:hidden w-9 h-9 rounded-full flex items-center justify-center font-bold shadow-sm border active:scale-95 transition-transform overflow-hidden ${
+                                className={`lg:hidden flex items-center justify-center min-w-[44px] min-h-[44px] rounded-full font-bold shadow-sm border active:scale-90 transition-transform overflow-hidden ${
                                     isDashboard 
                                     ? "bg-[#1a1f2e] text-white border-transparent" 
                                     : "bg-gmc-dorado-principal text-black border-white/10"
                                 }`}
+                                aria-label="Mi Perfil"
                             >
-                                {/* 🔥 AQUI ES EL CAMBIO PARA MOSTRAR LA IMAGEN O LA INICIAL 🔥 */}
-                                {session.user?.image ? (
-                                    <img 
-                                        src={session.user.image} 
-                                        alt="Perfil" 
-                                        className="w-full h-full object-cover"
-                                    />
-                                ) : (
-                                    session.user?.name?.[0]?.toUpperCase() || <User size={18}/>
-                                )}
+                                <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center">
+                                    {session.user?.image ? (
+                                        <img 
+                                            src={session.user.image} 
+                                            alt="Perfil" 
+                                            className="w-full h-full object-cover"
+                                        />
+                                    ) : (
+                                        <span className="text-sm">
+                                            {session.user?.name?.[0]?.toUpperCase() || <User size={18}/>}
+                                        </span>
+                                    )}
+                                </div>
                             </Link>
                         </>
                     ) : (
                         <Link 
                         href="/login-cliente"
-                        className="px-3 py-2 lg:px-5 lg:py-2 bg-gmc-dorado-principal text-black font-bold rounded-lg hover:bg-[#e6c200] transition-all text-sm shadow-md flex items-center gap-2"
+                        className="px-3 py-2 lg:px-5 lg:py-2 bg-gmc-dorado-principal text-black font-bold rounded-lg hover:bg-[#e6c200] active:scale-95 transition-all text-sm shadow-md flex items-center gap-2"
                         >
                         <User size={18} />
                         <span className="hidden lg:inline">{t('access')}</span>

@@ -31,7 +31,7 @@ export default async function PagarFacturasPage({ params: { locale } }: { params
   });
 
   // 2. BUSCAR CONSOLIDACIONES PENDIENTES
-  // ⚠️ Nota: Asegúrate que los status coincidan con lo que guarda tu Admin API ('EN_ALMACEN')
+  // ⚠️ Nota: Asegúrate que los status coincidan con lo que guarda tu Admin API
   const pendingShipments = await prisma.consolidatedShipment.findMany({
     where: {
       userId: session.user.id,
@@ -46,46 +46,67 @@ export default async function PagarFacturasPage({ params: { locale } }: { params
   // 3. MAPEAR DATOS (CON LA CORRECCIÓN DE LÓGICA DE NEGOCIO)
   const bills = pendingShipments.map(s => {
     
-    // A. DETECTAR SI ES "ENTREGAR EN TIENDA" (STORE PICKUP)
-    // Buscamos si el tipo es PICKUP o si el texto del courier dice "Pickup"
+    // =========================================================================
+    // 🛡️ LÓGICA BLINDADA PARA DETECTAR PICKUP / RETIRO
+    // =========================================================================
+    
     let isStorePickup = false;
-    let displayService = s.courierService;
+    let displayService = s.courierService || 'Envío';
 
-    if (s.serviceType === 'PICKUP' || s.courierService?.toLowerCase().includes('pickup')) {
-        displayService = 'Entregar en Tienda'; // Forzamos el nombre correcto
+    // 1. Verificar por ID (Si empieza con PICKUP)
+    const isIdPickup = s.gmcShipmentNumber?.toUpperCase().startsWith('PICKUP');
+    
+    // 2. Verificar por Tipo de Servicio (Backend usa STORAGE_FEE para pickups)
+    const isTypeStorage = s.serviceType === 'STORAGE_FEE' || s.serviceType?.includes('STORAGE') || s.serviceType === 'PICKUP';
+    
+    // 3. Verificar por Texto del servicio (Por si acaso dice 'Cita' o 'Pickup')
+    const isServiceTextPickup = s.courierService?.toLowerCase().includes('pickup') || s.courierService?.toLowerCase().includes('cita');
+
+    // SI CUMPLE CUALQUIERA, ES UN RETIRO
+    if (isIdPickup || isTypeStorage || isServiceTextPickup) {
+        displayService = 'Retiro en Bodega'; // Forzamos el nombre correcto
         isStorePickup = true;
     }
     
-    // B. DETECTAR SI ES INTERNACIONAL
-    // Si NO es Pickup Local y NO es Almacenaje, asumimos que es Envío Internacional
-    const isInternationalType = !s.serviceType?.includes('PICKUP') && !s.serviceType?.includes('STORAGE');
+    // =========================================================================
+    // 💰 CÁLCULO DE FEES
+    // =========================================================================
     
-    // C. CALCULAR HANDLING FEE
-    // Regla de Oro: Solo cobramos los $10 si es Internacional Y NO es retiro en tienda.
+    // Regla de Oro: Solo cobramos los $10 si NO es retiro en tienda.
     let handlingFee = 0;
 
-    if (isInternationalType && !isStorePickup) {
+    if (!isStorePickup) {
+        // Solo aplicamos el fee si es un envío internacional real
         handlingFee = INTERNATIONAL_HANDLING_FEE;
     }
 
-    // D. CALCULAR TOTAL FINAL
+    // Calcular Total Final
     const currentTotal = s.totalAmount || 0;
-    const finalTotalAmount = currentTotal + handlingFee;
+    
+    // IMPORTANTE: Si la factura ya incluía el fee en la BD, no lo sumamos de nuevo visualmente
+    // Pero como estamos recalculando 'handlingFee' para mostrarlo separado, asumimos que 's.totalAmount'
+    // viene limpio o ajustamos según tu lógica de base de datos.
+    // Para seguridad visual: Total = Subtotal BD + Fee Calculado Aquí
+    const finalTotalAmount = (s.subtotalAmount || currentTotal) + handlingFee;
+
+    // Etiqueta visual
+    const labelId = s.gmcShipmentNumber || s.id.slice(0, 8).toUpperCase();
+    const typeLabel = isStorePickup ? 'Solicitud de Retiro' : 'Consolidación';
 
     return {
       id: s.id,
-      type: 'CONSOLIDATION',
+      type: isStorePickup ? 'WAREHOUSE_PICKUP' : 'CONSOLIDATION',
       
-      description: `Consolidación #${s.gmcShipmentNumber || s.id.slice(0, 8).toUpperCase()}`,
+      description: `${typeLabel} #${labelId}`,
       gmcShipmentNumber: s.gmcShipmentNumber,
       createdAt: s.createdAt,
       
       // --- MONTOS AJUSTADOS ---
+      // Usamos el subtotal base de la BD y le sumamos el fee calculado dinámicamente
       totalAmount: finalTotalAmount, 
       subtotalAmount: s.subtotalAmount || 0,
       handlingFee: handlingFee,      
       
-      // 🔥 AQUÍ AGREGAMOS LA LÍNEA CRÍTICA PARA EL SEGURO
       declaredValue: s.declaredValue || 0,
 
       weightLbs: s.weightLbs || 0,
@@ -95,7 +116,7 @@ export default async function PagarFacturasPage({ params: { locale } }: { params
       
       packages: s.packages,
       selectedCourier: s.selectedCourier,
-      courierService: displayService // ✅ Enviamos 'Entregar en Tienda' corregido
+      courierService: displayService 
     };
   });
 

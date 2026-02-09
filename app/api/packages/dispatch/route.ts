@@ -9,8 +9,8 @@ export async function POST(req: Request) {
     const prisma = (await import("@/lib/prisma")).default;
     const { auth } = await import("@/auth");
     
-    // Importamos la notificación solo si realmente vamos a despachar
-    const { sendPackageDispatchedEmail } = await import("@/lib/notifications");
+    // 🔥 IMPORTAMOS LA PLANTILLA HTML, LA CAMPANITA Y EL TRADUCTOR
+    const { sendShipmentDispatchedEmail, sendNotification, getT } = await import("@/lib/notifications");
 
     const session = await auth();
     if (!session?.user) {
@@ -18,15 +18,16 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { packageId, finalTrackingNumber, type } = body;
+    const { packageId, finalTrackingNumber, type, courierName } = body; // Agregamos courierName si viene del front
 
     if (!packageId || !finalTrackingNumber) {
-      return NextResponse.json({ message: "Faltan datos" }, { status: 400 });
+      return NextResponse.json({ message: "Faltan datos (ID o Tracking Final)" }, { status: 400 });
     }
 
-    // Usamos 'any' para evitar conflictos de tipos entre Paquete y Consolidación
+    // Usamos 'any' para facilitar el acceso a propiedades comunes
     let updatedRecord: any;
-    let shipmentId;
+    let shipmentId: string = "";
+    let finalCourier: string = courierName || "Transportista Externo";
 
     // 👇 LÓGICA DE BIFURCACIÓN (Switch)
     if (type === 'CONSOLIDATION') {
@@ -38,55 +39,78 @@ export async function POST(req: Request) {
         data: {
           status: 'ENVIADO',
           finalTrackingNumber: finalTrackingNumber,
+          // Si el admin seleccionó courier en el despacho, podrías actualizarlo aquí también
           updatedAt: new Date()
         },
         include: { user: true } // Vital para el correo
       });
 
-      // También actualizamos los paquetes hijos para que se marquen como enviados
+      // Actualizamos paquetes hijos
       await prisma.package.updateMany({
         where: { consolidatedShipmentId: packageId },
         data: { status: 'ENVIADO', updatedAt: new Date() }
       });
 
       shipmentId = updatedRecord.gmcShipmentNumber;
+      // Intentamos obtener el courier guardado, o usamos el fallback
+      finalCourier = updatedRecord.selectedCourier || updatedRecord.courierService || finalCourier;
 
     } else {
-      // OPCIÓN B: ES UN PAQUETE INDIVIDUAL (Comportamiento original)
+      // OPCIÓN B: ES UN PAQUETE INDIVIDUAL
       console.log("📦 Despachando Paquete Individual:", packageId);
 
       updatedRecord = await prisma.package.update({
         where: { id: packageId },
         data: {
           status: 'ENVIADO',
-          gmcTrackingNumber: finalTrackingNumber, // O finalTrackingNumber si usas ese campo
+          gmcTrackingNumber: finalTrackingNumber, // Guardamos el tracking final
           updatedAt: new Date()
         },
         include: { user: true } // Vital para el correo
       });
 
       shipmentId = updatedRecord.gmcTrackingNumber;
+      // En paquetes individuales, a veces no hay courier seleccionado previamente
+      finalCourier = updatedRecord.carrierTrackingNumber ? "Courier Original" : finalCourier;
     }
 
-    // ENVIAR NOTIFICACIÓN AL CLIENTE
-    if (updatedRecord && updatedRecord.user) {
+    // =========================================================================
+    // 🔔 NOTIFICACIONES AL CLIENTE (MULTILINGÜE 🌍)
+    // =========================================================================
+    
+    if (updatedRecord && updatedRecord.user && updatedRecord.user.email) {
       try {
-        // Preparar variables para el mensaje
-        const clientName = updatedRecord.user.name || 'Cliente';
-        const courierName = updatedRecord.selectedCourier || 'Transportista';
-        const tracking = finalTrackingNumber;
-        const refId = shipmentId || 'Envío';
+        // 1. Detectar idioma del usuario (Fallback: Inglés)
+        // Usamos 'any' porque Prisma puede no tener tipado estricto en el campo language si es nuevo
+        const userLang = (updatedRecord.user as any).language || 'en';
+        const t = getT(userLang);
 
-        // 🚨 SOLUCIÓN: Creamos un mensaje de texto (String)
-        // Esto corrige el error "Argument of type object is not assignable to parameter of type string"
-        const emailMessage = `Hola ${clientName}, tu envío (${refId}) ha sido despachado exitosamente vía ${courierName}. Tu número de rastreo es: ${tracking}. Gracias por usar Gasp Maker.`;
+        console.log(`📧 Enviando notificación de despacho a ${updatedRecord.user.email} (${userLang})...`);
 
-        await sendPackageDispatchedEmail(
+        // 2. Enviar Email con Plantilla HTML (Tu Carga va en Camino)
+        await sendShipmentDispatchedEmail(
           updatedRecord.user.email,
-          emailMessage // Pasamos TEXTO, no un objeto
+          updatedRecord.user.name || 'Cliente',
+          shipmentId,        // ID Interno
+          finalCourier,      // Courier
+          finalTrackingNumber, // Tracking Real
+          userLang           // 👈 Pasamos el idioma para que el email salga traducido
         );
+
+        // 3. Enviar Notificación a la Campana (Dashboard)
+        // Construimos el mensaje usando el diccionario traducido
+        const dashMessage = `${t.dispatchedBody} (${t.tracking}: ${finalTrackingNumber})`;
+
+        await sendNotification({
+            userId: updatedRecord.userId,
+            title: t.dispatchedTitle, // Ej: "Package Dispatched!"
+            message: dashMessage,
+            type: "SUCCESS",
+            href: `/dashboard-cliente/rastreo/${shipmentId}`
+        });
+
       } catch (emailError) {
-        console.warn("⚠️ Correo de despacho falló, pero el registro se guardó:", emailError);
+        console.warn("⚠️ Error en notificación, pero el despacho se guardó:", emailError);
       }
     }
 
@@ -99,7 +123,6 @@ export async function POST(req: Request) {
   } catch (error: any) {
     console.error("🔥 Error dispatching:", error);
     
-    // P2025 es el código de "Record not found" de Prisma
     if (error.code === 'P2025') {
       return NextResponse.json({ message: "No se encontró el envío (ID incorrecto)" }, { status: 404 });
     }

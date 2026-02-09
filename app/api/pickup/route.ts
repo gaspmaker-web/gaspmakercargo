@@ -8,7 +8,12 @@ export async function POST(request: Request) {
     // 👇 VACUNA 2: Imports dentro de la función (Lazy Loading)
     const prisma = (await import('@/lib/prisma')).default;
     const { auth } = await import('@/auth');
-    const { sendPaymentReceiptEmail } = await import('@/lib/notifications');
+    // 🔥 IMPORTAMOS LAS NUEVAS FUNCIONES DE NOTIFICACIÓN
+    const { 
+        sendPaymentReceiptEmail, 
+        sendAdminPaymentAlert, 
+        sendNotification 
+    } = await import('@/lib/notifications');
 
     const session = await auth();
     // 1. Seguridad: Verificar que el usuario esté logueado
@@ -42,25 +47,38 @@ export async function POST(request: Request) {
       },
     });
 
-    // 3. --- ENVIAR NOTIFICACIÓN CON DEBUGGING ---
+    // 3. --- NOTIFICACIONES Y ALERTAS ---
     if (body.status === 'PAGADO' && session.user.email) {
-        console.log(`📨 Intentando enviar email a: ${session.user.email}...`);
         
-        const result = await sendPaymentReceiptEmail(
+        // A. Email al Cliente (Recibo con detalles de ruta)
+        const emailResult = await sendPaymentReceiptEmail(
             session.user.email,
             session.user.name || 'Cliente',
-            body.serviceType,
+            `Pickup: ${body.serviceType}`,
             body.totalPaid,
             newRequest.id,
-            `${body.originAddress} -> ${body.dropOffAddress || 'Almacén GMC'}`
+            `Ruta: ${body.originAddress} -> ${body.dropOffAddress || 'Almacén GMC'}`
         );
 
-        // Ahora sí imprimimos el resultado real
-        // 🚨 CORRECCIÓN: Usamos (result as any) para que TypeScript no bloquee el Build
-        if (result?.error) {
-            console.error("❌ ERROR RESEND:", result.error);
-        } else {
-            console.log("✅ ÉXITO RESEND. ID:", (result as any)?.data?.id);
+        // B. Alerta al Admin (Para que despaches al chofer)
+        await sendAdminPaymentAlert(
+            session.user.name || 'Cliente',
+            body.totalPaid,
+            `Solicitud Pickup (${body.serviceType})`,
+            newRequest.id
+        );
+
+        // C. Notificación en el Dashboard del Cliente (Campanita)
+        await sendNotification({
+            userId: session.user.id,
+            title: "Pickup Confirmado",
+            message: `Tu solicitud de recolección para el ${new Date(body.pickupDate).toLocaleDateString()} ha sido recibida.`,
+            type: "SUCCESS"
+        });
+
+        // Log para depuración (opcional, respetando tu estilo)
+        if ((emailResult as any)?.error) {
+            console.error("❌ ERROR RESEND:", (emailResult as any).error);
         }
     }
     // ----------------------------------------------------
