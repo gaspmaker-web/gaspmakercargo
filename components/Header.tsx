@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { Menu, ArrowLeft, ChevronDown, User } from 'lucide-react'; 
 import ProfileButton from "@/components/ProfileButton";
 import { useSession } from "next-auth/react";
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl'; // Importamos useLocale
 import NotificationBell from "@/components/ui/NotificationBell";
 
 interface HeaderProps {
@@ -16,6 +16,7 @@ interface HeaderProps {
 
 export default function Header({ backButtonUrl }: HeaderProps) {
   const t = useTranslations('Navigation'); 
+  const currentLocale = useLocale(); // Obtenemos el idioma real de next-intl
   const pathname = usePathname();
   const router = useRouter();
   
@@ -55,14 +56,32 @@ export default function Header({ backButtonUrl }: HeaderProps) {
     { code: 'fr', name: 'Français', flag: 'https://flagcdn.com/w20/fr.png' },
     { code: 'pt', name: 'Português', flag: 'https://flagcdn.com/w20/br.png' },
   ];
-  const segments = pathname.split('/');
-  const currentLocale = segments[1] || 'es';
+
+  // Encontrar el objeto del idioma actual para mostrar su bandera
   const currentLang = languages.find(l => l.code === currentLocale) || languages[0];
 
-  const handleLanguageChange = (code: string) => {
-    const newSegments = [...segments];
-    newSegments[1] = code;
-    const newPath = newSegments.join('/') || `/${code}`;
+  const handleLanguageChange = (newLocale: string) => {
+    // Si ya estamos en ese idioma, no hacemos nada
+    if (newLocale === currentLocale) {
+      setIsLangMenuOpen(false);
+      return;
+    }
+
+    // Lógica robusta para reemplazar el segmento del idioma en la URL
+    const segments = pathname.split('/');
+    // segments[0] es vacío porque la ruta empieza con /
+    // segments[1] suele ser el locale actual (es, en, fr, pt)
+    
+    // Verificamos si el primer segmento es un idioma conocido
+    const isLocalePresent = languages.some(l => l.code === segments[1]);
+
+    if (isLocalePresent) {
+      segments[1] = newLocale; // Reemplazamos el idioma existente
+    } else {
+      segments.splice(1, 0, newLocale); // Insertamos el idioma si no existía (raro en tu config, pero por seguridad)
+    }
+
+    const newPath = segments.join('/');
     router.push(newPath); 
     setIsLangMenuOpen(false);
   };
@@ -169,7 +188,7 @@ export default function Header({ backButtonUrl }: HeaderProps) {
                             isDashboard ? "border-gray-300 hover:bg-black/5" : "bg-white/5 hover:bg-white/10 border-white/10"
                         }`}
                     >
-                    <img src={currentLang.flag} alt={currentLang.name} className="w-5 h-auto rounded-sm" />
+                    <img src={currentLang.flag} alt={currentLang.name} className="w-5 h-auto rounded-sm shadow-sm" />
                     <ChevronDown size={14} className={`transition-transform duration-300 ${isLangMenuOpen ? 'rotate-180' : ''}`} />
                     </button>
                     {isLangMenuOpen && (
@@ -178,7 +197,9 @@ export default function Header({ backButtonUrl }: HeaderProps) {
                         <button 
                             key={lang.code} 
                             onClick={() => handleLanguageChange(lang.code)} 
-                            className="flex items-center gap-3 w-full px-4 py-3 text-sm hover:bg-white/5 transition-colors text-left"
+                            className={`flex items-center gap-3 w-full px-4 py-3 text-sm hover:bg-white/10 transition-colors text-left ${
+                                currentLocale === lang.code ? 'bg-white/5' : ''
+                            }`}
                         >
                             <img src={lang.flag} alt={lang.name} className="w-5 h-auto rounded-sm" />
                             <span className={currentLocale === lang.code ? 'text-gmc-dorado-principal font-bold' : 'text-white/80'}>{lang.name}</span>
