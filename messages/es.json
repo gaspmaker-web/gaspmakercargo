@@ -18,19 +18,6 @@
       "cta_primary": "Abrir Casillero Gratis",
       "cta_secondary": "Calcular Envío"
     },
-    "HowItWorks": {
-      "title": "Logística en 6 Pasos",
-      "subtitle": "Nuestro proceso está diseñado para ofrecerte control absoluto y rapidez máxima.",
-      "cta": "¡Regístrate para empezar!",
-      "steps": {
-        "1": { "title": "Regístrate y Obtén tu Dirección", "text": "Obtén una dirección exclusiva en nuestras instalaciones al instante." },
-        "2": { "title": "Compra Online", "text": "Usa tu dirección personal para comprar en USA o China." },
-        "3": { "title": "Pre-alerta tu Paquete", "text": "Avísanos antes para un procesamiento más rápido." },
-        "4": { "title": "Inspección y Proceso", "text": "Recibimos e inspeccionamos tus paquetes para el envío." },
-        "5": { "title": "Almacenaje y Consolidación", "text": "Combina múltiples paquetes en un solo envío para ahorrar.", "custom_text": "Combine hasta 7 múltiples paquetes para ahorrar en costos." },
-        "6": { "title": "Envío a tu Destino", "text": "Enviamos a tu puerta con seguimiento completo." }
-      }
-    },
     "Destinations": {
       "title_part1": "Expertos en",
       "title_part2": "Envíos a Trinidad y el Caribe.",
@@ -43,6 +30,10 @@
     "About": {
       "title": "Nuestra Historia de Compromiso",
       "subtitle": "En GaspMakerCargo, nuestra misión va más allá de mover mercancías...",
+      "mission": "Misión",
+      "missionText": "Brindar soluciones logísticas eficientes y seguras que conecten al mundo con tu puerta.",
+      "vision": "Visión",
+      "visionText": "Ser el aliado logístico número uno en el Caribe y Latinoamérica por nuestra puntualidad y transparencia.",
       "statPackages": "+100k",
       "labelPackages": "PAQUETES ENVIADOS",
       "statCustomers": "Cientos de",
@@ -54,6 +45,53 @@
       "cta_title": "¿Listo para mejorar tu logística?",
       "copyright": "Todos los derechos reservados."
     }
+  },
+  "HowItWorks": {
+    "badge": "GUÍA RÁPIDA",
+    "title": "Logística en Pasos Simples",
+    "subtitle": "Nuestro proceso está diseñado para darte control absoluto y máxima velocidad.",
+    "step1Title": "Regístrate Gratis",
+    "step1Desc": "Crea tu cuenta y obtén tu dirección en Miami (Casillero) al instante.",
+    "step2Title": "Compra Online",
+    "step2Desc": "Usa tu dirección de GaspMakerCargo como 'Shipping Address' en tus tiendas.",
+    "step3Title": "Pre-Alerta",
+    "step3Desc": "Sube tu factura en el panel de cliente para agilizar el trámite aduanal.",
+    "step4Title": "Recibimos y Enviamos",
+    "step4Desc": "Procesamos tu paquete, lo pesamos y lo enviamos a tu país en tiempo récord.",
+    "step5Title": "Almacenaje y Consolidación",
+    "step5Desc": "Combina varios paquetes para ahorrar costos. Los guardamos gratis por 30 días.",
+    "step6Title": "Envío a Destino",
+    "step6Desc": "Enviamos a tu puerta con rastreo completo y seguridad.",
+    "whyChooseUs": "¿Por qué elegirnos?",
+    "benefit1Title": "Rastreo en Tiempo Real",
+    "benefit1Desc": "Sigue tus paquetes desde que llegan a Miami hasta tu puerta.",
+    "benefit2Title": "Sin Costos Ocultos",
+    "benefit2Desc": "Paga por lo que traes. Usa nuestra calculadora para estimar costos.",
+    "benefit3Title": "Soporte Personalizado",
+    "benefit3Desc": "¿Dudas? Nuestro equipo te ayuda en cada paso de tu importación.",
+    "ctaTitle": "¿Listo para comenzar?",
+    "ctaFinalText": "Unirse es totalmente gratis. Obtén tu casillero y dirección en Miami hoy.",
+    "ctaBtn": "Crear Cuenta"
+  },
+  "ServicesPage": {
+    "title": "Nuestros Servicios",
+    "subtitle": "Soluciones logísticas diseñadas para ti y tu negocio.",
+    "lockerTitle": "Casillero en Miami",
+    "lockerDesc": "Tu dirección física en USA para recibir compras de Amazon, eBay, Shein y más.",
+    "consolidationTitle": "Consolidación de Paquetes",
+    "consolidationDesc": "Compra en varias tiendas, espera que lleguen todos y envíalos en una sola caja para ahorrar.",
+    "consolidationNote": "Combina hasta 7 paquetes múltiples para ahorrar costos.",
+    "pickupTitle": "Recogida y Delivery",
+    "pickupDesc": "Servicio de transporte local en Miami y entregas puerta a puerta en tu país.",
+    "corporateTitle": "Carga Comercial",
+    "corporateDesc": "Manejo de carga aérea y marítima para importadores y empresas.",
+    "badge": "LOGÍSTICA INTERNACIONAL",
+    "tagFast": "Rápido y Seguro",
+    "tagGuarantee": "Garantía GMC",
+    "ctaFooterTitle": "¿Listo para empezar a importar?",
+    "ctaFooterText": "Únete a miles de clientes que ya confían en Gasp Maker Cargo para mover sus paquetes de forma segura.",
+    "ctaBtnLocker": "Abrir mi Casillero Gratis",
+    "ctaBtnCalc": "Calcular Envíos"
   },
   "ProfilePage": {
     "title": "Configuración de Cuenta",
@@ -327,7 +365,7 @@
     "volLow": "Volumen Bajo (Auto/SUV)",
     "volMed": "Volumen Medio (Minivan/Pickup)",
     "volHigh": "Volumen Alto (Cargo Van)",
-    "volFull": "Flete Completo (Camión)",
+    "volFull": "Fret Complet (Camión)",
     "summaryTitle": "Resumen",
     "sumService": "Servicio",
     "sumDistance": "Distancia",
@@ -399,13 +437,14 @@
     "errorMismatch": "Las contraseñas no coinciden.",
     "errorToken": "El enlace es inválido o ha expirado."
   },
-  "ServicesPage": {
+ "ServicesPage": {
     "title": "Nuestros Servicios",
     "subtitle": "Soluciones logísticas diseñadas para ti y tu negocio.",
     "lockerTitle": "Casillero en Miami",
     "lockerDesc": "Tu dirección física en USA para recibir compras de Amazon, eBay, Shein y más.",
     "consolidationTitle": "Consolidación de Paquetes",
     "consolidationDesc": "Compra en varias tiendas, espera que lleguen todos y envíalos en una sola caja para ahorrar.",
+    "consolidationNote": "Combina hasta 7 paquetes múltiples para ahorrar costos.",
     "pickupTitle": "Recogida y Delivery",
     "pickupDesc": "Servicio de transporte local en Miami y entregas puerta a puerta en tu país.",
     "corporateTitle": "Carga Comercial",
@@ -418,7 +457,7 @@
     "ctaBtnLocker": "Abrir mi Casillero Gratis",
     "ctaBtnCalc": "Calcular Envíos"
   },
-"CalculatorPage": {
+  "CalculatorPage": {
     "title": "Calculadora de Envíos",
     "subtitle": "Obtén un estimado instantáneo de cuánto costará traer tu paquete.",
     "step1Title": "¿A dónde enviamos tu paquete?",
@@ -446,7 +485,7 @@
     "closeBtn": "Cerrar y calcular de nuevo",
     "alertError": "Por favor completa todos los campos con números válidos."
   },
-"HowItWorksPage": {
+  "HowItWorksPage": {
     "title": "¿Cómo Funciona?",
     "subtitle": "Importar nunca fue tan fácil. Sigue estos simples pasos.",
     "step1Title": "Regístrate Gratis",
@@ -482,7 +521,7 @@
     "statOnTime": "98%",
     "labelOnTime": "ENTREGAS A TIEMPO"
   },
- "FAQPage": {
+  "FAQPage": {
     "title": "Preguntas Frecuentes",
     "subtitle": "Todo lo que necesitas saber sobre tus envíos.",
     "hero_badge": "Centro de Ayuda",
@@ -676,19 +715,19 @@
     "success": "¡Número actualizado exitosamente!",
     "error": "Error al actualizar el número."
   },
-"MobileMenu": {
-  "myDashboard": "Mi Dashboard",
-  "settings": "Configuración",
-  "invite": "Invitar amigos",
-  "earn": "Gana $25",
-  "help": "Ayuda / FAQ",
-  "bills": "Facturas & Pagos",
-  "notifications": "Notificações",
-  "logout": "Cerrar Sesión",
-  "privacy": "Privacidad",
-  "terms": "Términos"
-},
-"TermsOfService": {
+  "MobileMenu": {
+    "myDashboard": "Mi Dashboard",
+    "settings": "Configuración",
+    "invite": "Invitar amigos",
+    "earn": "Gana $25",
+    "help": "Ayuda / FAQ",
+    "bills": "Facturas & Pagos",
+    "notifications": "Notificações",
+    "logout": "Cerrar Sesión",
+    "privacy": "Privacidad",
+    "terms": "Términos"
+  },
+  "TermsOfService": {
     "title": "Términos de Servicio",
     "subtitle": "Por favor lea estos términos cuidadosamente antes de utilizar nuestros servicios de logística y envío.",
     "lastUpdated": "ÚLTIMA ACTUALIZACIÓN: 3 DE FEBRERO DE 2026",
@@ -719,7 +758,7 @@
     "s4_ref_text": "Los servicios prestados (como envío o consolidación ya realizados) no son reembolsables. Las reclamaciones por carga perdida o dañada deben presentarse dentro de los 7 días posteriores a la recepción.",
     "s5_title": "5. Artículos Prohibidos y Restringidos",
     "s5_intro": "El Cliente es el único responsable de asegurar que su carga cumpla con todas las leyes de exportación/importación aplicables. Estrictamente NO enviamos:",
-    "s5_li1": "Explosivos o Inflamables",
+    "s5_li1": "Explosivos o Inflamáveis",
     "s5_li2": "Drogas Ilegales o Narcóticos",
     "s5_li3": "Armas de Fuego o Municiones",
     "s5_li4": "Alimentos Perecederos (sin aprobación previa)",

@@ -18,19 +18,6 @@
       "cta_primary": "Open Free Locker",
       "cta_secondary": "Calculate Shipping"
     },
-    "HowItWorks": {
-      "title": "Logistics in 6 Steps",
-      "subtitle": "Our process is designed to give you absolute control and maximum speed.",
-      "cta": "Sign Up to Start!",
-      "steps": {
-        "1": { "title": "Sign Up & Get Address", "text": "Get an exclusive address at our facility instantly." },
-        "2": { "title": "Shop Online", "text": "Use your personal address for shopping in US or China." },
-        "3": { "title": "Pre-Alert Package", "text": "Notify us in advance for faster processing." },
-        "4": { "title": "Inspection & Processing", "text": "We receive and inspect your packages for shipping." },
-        "5": { "title": "Storage & Consolidation", "text": "Combine multiple packages to save on costs.", "custom_text": "Combine up to 7 multiple packages to save on costs." },
-        "6": { "title": "Ship to Destination", "text": "We ship to your door with full tracking." }
-      }
-    },
     "Destinations": {
       "title_part1": "Experts in",
       "title_part2": "Shipping to Trinidad and the Caribbean.",
@@ -58,6 +45,53 @@
       "cta_title": "Ready to improve your logistics?",
       "copyright": "All rights reserved."
     }
+  },
+  "HowItWorks": {
+    "badge": "QUICK GUIDE",
+    "title": "Logistics in Simple Steps",
+    "subtitle": "Our process is designed to give you absolute control and maximum speed.",
+    "step1Title": "Sign Up Free",
+    "step1Desc": "Create your account and get your personalized Miami address (Locker) instantly.",
+    "step2Title": "Shop Online",
+    "step2Desc": "Use your GaspMakerCargo address as the 'Shipping Address' at your favorite stores.",
+    "step3Title": "Pre-Alert",
+    "step3Desc": "Upload your invoice in the client dashboard to speed up the customs process.",
+    "step4Title": "We Receive & Ship",
+    "step4Desc": "We process your package, weigh it, and ship it to your country in record time.",
+    "step5Title": "Storage & Consolidation",
+    "step5Desc": "Combine multiple packages to save on costs. We store them for free for 30 days.",
+    "step6Title": "Ship to Destination",
+    "step6Desc": "We ship to your door with full tracking and security.",
+    "whyChooseUs": "Why choose us?",
+    "benefit1Title": "Real-Time Tracking",
+    "benefit1Desc": "Follow your packages from arrival in Miami to your door.",
+    "benefit2Title": "No Hidden Costs",
+    "benefit2Desc": "Pay for what you bring. Use our calculator to estimate costs.",
+    "benefit3Title": "Personalized Support",
+    "benefit3Desc": "Questions? Our team helps you at every step of your import.",
+    "ctaTitle": "Ready to start?",
+    "ctaFinalText": "Joining is totally free. Get your locker and Miami address today.",
+    "ctaBtn": "Create Account"
+  },
+  "ServicesPage": {
+    "title": "Our Services",
+    "subtitle": "Logistics solutions designed for you and your business.",
+    "lockerTitle": "Miami Locker",
+    "lockerDesc": "Your physical US address to receive purchases from Amazon, eBay, Shein, and more.",
+    "consolidationTitle": "Package Consolidation",
+    "consolidationDesc": "Shop at multiple stores, wait for all to arrive, and ship them in one box to save money.",
+    "consolidationNote": "Combine up to 7 multiple packages to save on costs.",
+    "pickupTitle": "Pickup & Delivery",
+    "pickupDesc": "Local transport service in Miami and door-to-door delivery in your country.",
+    "corporateTitle": "Commercial Cargo",
+    "corporateDesc": "Air and ocean freight management for importers and businesses.",
+    "badge": "INTERNATIONAL LOGISTICS",
+    "tagFast": "Fast & Secure",
+    "tagGuarantee": "GMC Guarantee",
+    "ctaFooterTitle": "Ready to start importing?",
+    "ctaFooterText": "Join thousands of customers who already trust Gasp Maker Cargo to move their packages safely.",
+    "ctaBtnLocker": "Open Free Locker",
+    "ctaBtnCalc": "Calculate Shipping"
   },
   "ProfilePage": {
     "title": "Account Settings",
@@ -382,26 +416,7 @@
     "errorMismatch": "Passwords do not match.",
     "errorToken": "The link is invalid or has expired."
   },
-  "ServicesPage": {
-    "title": "Our Services",
-    "subtitle": "Logistics solutions designed for you and your business.",
-    "lockerTitle": "Miami Locker",
-    "lockerDesc": "Your physical US address to receive purchases from Amazon, eBay, Shein, and more.",
-    "consolidationTitle": "Package Consolidation",
-    "consolidationDesc": "Shop at multiple stores, wait for all to arrive, and ship them in one box to save money.",
-    "pickupTitle": "Pickup & Delivery",
-    "pickupDesc": "Local transport service in Miami and door-to-door delivery in your country.",
-    "corporateTitle": "Commercial Cargo",
-    "corporateDesc": "Air and ocean freight management for importers and businesses.",
-    "badge": "INTERNATIONAL LOGISTICS",
-    "tagFast": "Fast & Secure",
-    "tagGuarantee": "GMC Guarantee",
-    "ctaFooterTitle": "Ready to start importing?",
-    "ctaFooterText": "Join thousands of customers who already trust Gasp Maker Cargo to move their packages safely.",
-    "ctaBtnLocker": "Open Free Locker",
-    "ctaBtnCalc": "Calculate Shipping"
-  },
-"CalculatorPage": {
+  "CalculatorPage": {
     "title": "Shipping Calculator",
     "subtitle": "Get an instant estimate of how much it will cost to ship your package.",
     "step1Title": "Where are we shipping to?",
@@ -429,7 +444,7 @@
     "closeBtn": "Close and calculate again",
     "alertError": "Please complete all fields with valid numbers."
   },
-"HowItWorksPage": {
+  "HowItWorksPage": {
     "title": "How It Works",
     "subtitle": "Importing has never been easier. Follow these simple steps.",
     "step1Title": "Sign Up Free",
@@ -451,7 +466,7 @@
     "benefit3Desc": "Questions? Our team helps you at every step of your import.",
     "ctaFinalText": "Joining is totally free. Get your locker and Miami address today."
   },
-"AboutPage": {
+  "AboutPage": {
     "title": "Our Story of Commitment",
     "subtitle": "At GaspMakerCargo, our mission goes beyond moving goods; we move dreams and opportunities.",
     "mission": "Mission",
@@ -465,7 +480,7 @@
     "statOnTime": "98%",
     "labelOnTime": "ON-TIME DELIVERIES"
   },
- "FAQPage": {
+  "FAQPage": {
     "title": "Frequently Asked Questions",
     "subtitle": "Everything you need to know about your shipments.",
     "hero_badge": "Help Center",
@@ -541,7 +556,7 @@
       "7": "July", "8": "August", "9": "September", "10": "October", "11": "November", "12": "December"
     }
   },
-"HistoryPage": {
+  "HistoryPage": {
     "title": "Operations History",
     "subtitle": "Complete record of your local and international movements.",
     "loading": "Loading...",
@@ -659,19 +674,19 @@
     "success": "Phone number updated successfully!",
     "error": "Error updating number."
   },
-"MobileMenu": {
-  "myDashboard": "My Dashboard",
-  "settings": "Settings",
-  "invite": "Invite Friends",
-  "earn": "Get $25",
-  "help": "Help / FAQ",
-  "bills": "Bills & Payments",
-  "notifications": "Notifications",
-  "logout": "Log Out",
-  "privacy": "Privacy",
-  "terms": "Terms"
-},
-"TermsOfService": {
+  "MobileMenu": {
+    "myDashboard": "My Dashboard",
+    "settings": "Settings",
+    "invite": "Invite Friends",
+    "earn": "Get $25",
+    "help": "Help / FAQ",
+    "bills": "Bills & Payments",
+    "notifications": "Notifications",
+    "logout": "Log Out",
+    "privacy": "Privacy",
+    "terms": "Terms"
+  },
+  "TermsOfService": {
     "title": "Terms of Service",
     "subtitle": "Please read these terms carefully before using our logistics and shipping services.",
     "lastUpdated": "LAST UPDATED: FEBRUARY 3, 2026",

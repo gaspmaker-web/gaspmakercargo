@@ -130,7 +130,6 @@ export default function LocationsClient() {
 
             <div className="max-w-4xl mx-auto px-4 pb-20 text-center">
                 <p className="text-xs text-gray-400">
-                    * Los horarios de atención pueden variar según días festivos locales.
                 </p>
             </div>
         </div>

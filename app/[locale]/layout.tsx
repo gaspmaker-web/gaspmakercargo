@@ -4,6 +4,7 @@ import { Inter, Montserrat, Cormorant_Garamond } from 'next/font/google';
 // import Script from 'next/script'; // 👈 YA NO LO NECESITAMOS AQUÍ (Lo maneja TawkLoader)
 import '../globals.css';
 import Header from '@/components/Header';
+import Footer from '@/components/Footer'; // 👈 1. IMPORTAMOS EL COMPONENTE FOOTER
 import Providers from '@/components/Providers';
 import HeaderWrapper from '@/components/HeaderWrapper'; 
 import CookieBanner from '@/components/ui/CookieBanner';
@@ -52,12 +53,8 @@ export default async function RootLayout({
               {children}
             </main>
 
-            {/* ✨ FOOTER MINIMALISTA Y LIMPIO */}
-            <footer className="bg-gmc-gris-oscuro py-6 text-center mt-auto w-full">
-                <p className="text-sm text-gray-400 font-montserrat">
-                    © 2026 GaspMakerCargo .
-                </p>
-            </footer>
+            {/* 👈 2. USAMOS EL COMPONENTE FOOTER AQUÍ (Reemplazando el manual) */}
+            <Footer />
 
             <CookieBanner />
             <TawkLoader />

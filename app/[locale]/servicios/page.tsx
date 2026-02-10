@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { 
     MapPin, Layers, Truck, Building2, 
-    ArrowRight, CheckCircle, ShieldCheck, Globe 
+    ArrowRight, CheckCircle, ShieldCheck, Globe, Info 
 } from 'lucide-react';
 
 // 🛡️ ESCUDO NUCLEAR: Evita errores de generación estática
@@ -84,7 +84,7 @@ export default function ServicesPage() {
                             className={`
                                 bg-white rounded-2xl p-8 shadow-xl hover:shadow-2xl 
                                 transition-all duration-300 hover:-translate-y-2 
-                                border border-gray-100 ${service.borderColor} group
+                                border border-gray-100 ${service.borderColor} group flex flex-col
                             `}
                         >
                             <div className="flex justify-between items-start mb-6">
@@ -100,11 +100,21 @@ export default function ServicesPage() {
                                 {service.title}
                             </h3>
                             
-                            <p className="text-gray-500 text-sm leading-relaxed mb-6 h-20">
+                            <p className="text-gray-500 text-sm leading-relaxed mb-6 flex-grow">
                                 {service.desc}
                             </p>
 
-                            <div className="pt-6 border-t border-gray-50 space-y-3">
+                            {/* 🔥 NUEVO: ALERTA VISUAL (Solo para Consolidation) */}
+                            {service.id === 'consolidation' && (
+                                <div className="mb-6 p-3 bg-amber-50 border border-amber-100 rounded-xl flex gap-3 items-start animate-in fade-in slide-in-from-bottom-2">
+                                    <Info className="text-amber-600 shrink-0 mt-0.5" size={16} />
+                                    <p className="text-xs font-bold text-amber-800 leading-snug">
+                                        {t('consolidationNote')}
+                                    </p>
+                                </div>
+                            )}
+
+                            <div className="pt-6 border-t border-gray-50 space-y-3 mt-auto">
                                 <div className="flex items-center gap-2 text-xs text-gray-600 font-medium">
                                     <CheckCircle size={14} className="text-green-500" /> 
                                     <span>{t('tagFast')}</span>

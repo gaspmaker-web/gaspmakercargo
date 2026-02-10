@@ -84,7 +84,7 @@ export default auth((req: any) => {
       }
     }
 
-    // B) DRIVER: No puede estar en zona Cliente ni Admin
+    // B) DRIVER: No pode estar en zona Cliente ni Admin
     if (role === 'DRIVER' && (isClientArea || isAdminArea)) {
         return NextResponse.redirect(new URL(`/${currentLocale}/dashboard-driver`, req.url));
     }
@@ -100,8 +100,9 @@ export default auth((req: any) => {
 });
 
 export const config = {
-  // ✅ MATCHER OPTIMIZADO: Agregamos '|print' para excluir la ruta de impresión
+  // ✅ MATCHER DEFINITIVO: 
+  // Excluye API, archivos estáticos de Next, Vercel, ruta de impresión y archivos con extensiones de imagen.
   matcher: [
-    '/((?!api|_next|_vercel|.*\\..*|print).*)'
+    '/((?!api|_next/static|_next/image|_vercel|favicon.ico|print|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ]
 };

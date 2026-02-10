@@ -18,19 +18,6 @@
       "cta_primary": "Abrir Cacifo Grátis",
       "cta_secondary": "Calcular Envio"
     },
-    "HowItWorks": {
-      "title": "Logística em 6 Passos",
-      "subtitle": "Nosso processo foi desenhado para oferecer controle absoluto e rapidez máxima.",
-      "cta": "Cadastre-se para começar!",
-      "steps": {
-        "1": { "title": "Cadastre-se", "text": "Receba um endereço exclusivo em nossas instalações instantaneamente." },
-        "2": { "title": "Compre Online", "text": "Use seu endereço pessoal para compras nos EUA ou China." },
-        "3": { "title": "Pré-alerta", "text": "Avise-nos com antecedência para um processamento mais rápido." },
-        "4": { "title": "Inspeção", "text": "Recebemos e inspecionamos seus pacotes para o envio." },
-        "5": { "title": "Armazenamento", "text": "Combine vários pacotes em um envio para economizar.", "custom_text": "Combine até 7 múltiplos pacotes para economizar nos custos." },
-        "6": { "title": "Envio", "text": "Enviamos para sua porta com rastreamento completo." }
-      }
-    },
     "Destinations": {
       "title_part1": "Especialistas em",
       "title_part2": "Envios para Trinidad e o Caribe.",
@@ -58,6 +45,53 @@
       "cta_title": "Pronto para melhorar sua logística?",
       "copyright": "Todos os direitos reservados."
     }
+  },
+  "HowItWorks": {
+    "badge": "GUIA RÁPIDO",
+    "title": "Logística em Passos Simples",
+    "subtitle": "Nosso processo é projetado para lhe dar controle absoluto e velocidade máxima.",
+    "step1Title": "Cadastre-se Grátis",
+    "step1Desc": "Crie sua conta e obtenha seu endereço personalizado em Miami (Locker) instantaneamente.",
+    "step2Title": "Compre Online",
+    "step2Desc": "Use seu endereço GaspMakerCargo como 'Shipping Address' em suas lojas favoritas.",
+    "step3Title": "Pré-Alerta",
+    "step3Desc": "Envie sua fatura no painel do cliente para agilizar o processo alfandegário.",
+    "step4Title": "Recebemos e Enviamos",
+    "step4Desc": "Processamos seu pacote, pesamos e enviamos para seu país em tempo recorde.",
+    "step5Title": "Armazenagem e Consolidação",
+    "step5Desc": "Combine vários pacotes para economizar custos. Armazenamos grátis por 30 dias.",
+    "step6Title": "Envio ao Destino",
+    "step6Desc": "Enviamos para sua porta com rastreamento completo e segurança.",
+    "whyChooseUs": "Por que nos escolher?",
+    "benefit1Title": "Rastreamento em Tempo Real",
+    "benefit1Desc": "Acompanhe seus pacotes desde a chegada em Miami até sua porta.",
+    "benefit2Title": "Sem Custos Ocultos",
+    "benefit2Desc": "Pague pelo que você traz. Use nossa calculadora para estimar custos.",
+    "benefit3Title": "Suporte Personalizado",
+    "benefit3Desc": "Dúvidas? Nossa equipe ajuda você em cada etapa da sua importação.",
+    "ctaTitle": "Pronto para começar?",
+    "ctaFinalText": "A adesão é totalmente gratuita. Obtenha seu locker e endereço em Miami hoje.",
+    "ctaBtn": "Criar Conta"
+  },
+  "ServicesPage": {
+    "title": "Nossos Serviços",
+    "subtitle": "Soluções logísticas projetadas para você e sua empresa.",
+    "lockerTitle": "Locker em Miami",
+    "lockerDesc": "Seu endereço físico nos EUA para receber compras da Amazon, eBay, Shein e mais.",
+    "consolidationTitle": "Consolidação de Pacotes",
+    "consolidationDesc": "Compre em várias lojas, espere que todos cheguem e envie-os em uma única caixa para economizar.",
+    "consolidationNote": "Combine até 7 pacotes múltiplos para economizar nos custos.",
+    "pickupTitle": "Coleta e Entrega",
+    "pickupDesc": "Serviço de transporte local em Miami e entrega porta a porta no seu país.",
+    "corporateTitle": "Carga Comercial",
+    "corporateDesc": "Gestão de frete aéreo e marítimo para importadores e empresas.",
+    "badge": "LOGÍSTICA INTERNACIONAL",
+    "tagFast": "Rápido e Seguro",
+    "tagGuarantee": "Garantia GMC",
+    "ctaFooterTitle": "Pronto para começar a importar?",
+    "ctaFooterText": "Junte-se a milhares de clientes que já confiam na Gasp Maker Cargo para mover seus pacotes com segurança.",
+    "ctaBtnLocker": "Abrir meu Cacifo Grátis",
+    "ctaBtnCalc": "Calcular Envios"
   },
   "ProfilePage": {
     "title": "Configurações da Conta",
@@ -404,26 +438,7 @@
     "errorMismatch": "As senhas não coincidem.",
     "errorToken": "O link é inválido ou expirou."
   },
- "ServicesPage": {
-    "title": "Nossos Serviços",
-    "subtitle": "Soluções logísticas projetadas para você e sua empresa.",
-    "lockerTitle": "Locker em Miami",
-    "lockerDesc": "Seu endereço físico nos EUA para receber compras da Amazon, eBay, Shein e mais.",
-    "consolidationTitle": "Consolidação de Pacotes",
-    "consolidationDesc": "Compre em várias lojas, aguarde a chegada de tudo e envie em uma única caixa para economizar.",
-    "pickupTitle": "Coleta e Entrega",
-    "pickupDesc": "Serviço de transporte local em Miami e entrega porta a porta no seu país.",
-    "corporateTitle": "Carga Comercial",
-    "corporateDesc": "Gestão de frete aéreo e marítimo para importadores e empresas.",
-    "badge": "LOGÍSTICA INTERNACIONAL",
-    "tagFast": "Rápido e Seguro",
-    "tagGuarantee": "Garantia GMC",
-    "ctaFooterTitle": "Pronto para começar a importar?",
-    "ctaFooterText": "Junte-se a milhares de clientes que já confiam na Gasp Maker Cargo para mover seus pacotes com segurança.",
-    "ctaBtnLocker": "Abrir meu Cacifo Grátis",
-    "ctaBtnCalc": "Calcular Envios"
-  },
-"CalculatorPage": {
+  "CalculatorPage": {
     "title": "Calculadora de Envio",
     "subtitle": "Obtenha uma estimativa instantânea de quanto custará trazer seu pacote.",
     "step1Title": "Para onde enviamos seu pacote?",
@@ -451,7 +466,7 @@
     "closeBtn": "Fechar e calcular novamente",
     "alertError": "Por favor, preencha todos os campos com números válidos."
   },
- "HowItWorksPage": {
+  "HowItWorksPage": {
     "title": "Como Funciona?",
     "subtitle": "Importar nunca foi tão fácil. Siga estes passos simples.",
     "step1Title": "Cadastro Grátis",
@@ -683,24 +698,24 @@
     "success": "Número atualizado com sucesso!",
     "error": "Erro ao atualizar o número."
   },
-"MobileMenu": {
-  "myDashboard": "Meu Painel",
-  "settings": "Configurações",
-  "invite": "Convidar amigos",
-  "earn": "Ganhe $25",
-  "help": "Ajuda / FAQ",
-  "bills": "Faturas e Pagamentos",
-  "notifications": "Notificações",
-  "logout": "Sair",
-  "privacy": "Privacidade",
-  "terms": "Termos"
-},
-"TermsOfService": {
+  "MobileMenu": {
+    "myDashboard": "Meu Painel",
+    "settings": "Configurações",
+    "invite": "Convidar amigos",
+    "earn": "Ganhe $25",
+    "help": "Ajuda / FAQ",
+    "bills": "Faturas e Pagamentos",
+    "notifications": "Notificações",
+    "logout": "Sair",
+    "privacy": "Privacidade",
+    "terms": "Termos"
+  },
+  "TermsOfService": {
     "title": "Termos de Serviço",
     "subtitle": "Por favor, leia estes termos cuidadosamente antes de usar nossos serviços de logística e envio.",
     "lastUpdated": "ÚLTIMA ATUALIZAÇÃO: 3 DE FEVEREIRO DE 2026",
     "s1_title": "1. Aceitação dos Termos",
-    "s1_text": "Ao acessar e usar os serviços fornecidos pela GaspMakerCargo (GMC) (\"nós\", \"nosso\"), incluindo nosso site, instalações de armazém e serviços de envio, você (\"o Usuário\" ou \"Cliente\") concorda em cumprir e estar vinculado a estes Termos de Serviço. Se você não concordar com estes termos, por favor, não use nossos serviços.",
+    "s1_text": "Ao acessar e usar os serviços fornecidos pela GaspMakerCargo (GMC) (\"nós\", \"nosso\"), incluindo nosso site, instalações de armazém e serviços de envio, você (\"o Usuário\" ou \"Cliente\") concorda em cumprir e estar vinculado a estes Termos de Serviço. Se você não concordar com estes términos, por favor, não use nossos serviços.",
     "s2_title": "2. Descrição dos Serviços",
     "s2_intro": "A GaspMakerCargo fornece soluções logísticas, incluindo, mas não se limitando a:",
     "s2_li1": "Recebimento e processamento de pacotes em nosso armazém em Miami.",
