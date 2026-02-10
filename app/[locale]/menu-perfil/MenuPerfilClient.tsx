@@ -10,10 +10,11 @@ import {
   ArrowLeft, Edit2, Share2, HelpCircle, 
   FileText, Bell, ChevronRight, Loader2 
 } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl'; // 🔥 1. IMPORTAMOS useLocale
 
 export default function MenuPerfilClient() {
   const t = useTranslations('MobileMenu');
+  const locale = useLocale(); // 🔥 2. OBTENEMOS EL IDIOMA ACTUAL
   const { data: session, update } = useSession();
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -21,8 +22,12 @@ export default function MenuPerfilClient() {
   const [uploading, setUploading] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(session?.user?.image || null);
 
+  // 🔥 3. FUNCIÓN MÁGICA: Agrega el idioma a todos los links
+  const getLink = (path: string) => `/${locale}${path}`;
+
   if (!session) {
-    if (typeof window !== 'undefined') router.push('/login-cliente');
+    // Si no hay sesión, mandamos al login CON el idioma correcto
+    if (typeof window !== 'undefined') router.push(getLink('/login-cliente'));
     return null;
   }
 
@@ -72,14 +77,14 @@ export default function MenuPerfilClient() {
   };
 
   return (
-    // 1. FONDO LUXURY (Degradado Oscuro)
+    // 1. FONDO LUXURY
     <div className="fixed inset-0 z-50 bg-gradient-to-b from-[#0f172a] to-[#1e1b4b] font-montserrat overflow-y-auto animate-in fade-in duration-300">
       
-      {/* Efectos de fondo (Luces ambientales) */}
+      {/* Efectos de fondo */}
       <div className="fixed top-[-20%] right-[-10%] w-[300px] h-[300px] bg-gmc-dorado-principal/10 blur-[120px] rounded-full pointer-events-none" />
       <div className="fixed bottom-[-10%] left-[-10%] w-[250px] h-[250px] bg-blue-900/20 blur-[100px] rounded-full pointer-events-none" />
 
-      {/* Botón Volver (Estilo Glass) */}
+      {/* Botón Volver */}
       <div className="absolute top-6 left-4 z-20">
          <button 
             onClick={() => router.back()} 
@@ -89,7 +94,7 @@ export default function MenuPerfilClient() {
          </button>
       </div>
 
-      {/* 2. ZONA DE PERFIL (Glassmorphism Header) */}
+      {/* 2. ZONA DE PERFIL */}
       <div className="relative pt-24 px-5 pb-8">
         
         {/* Avatar Container */}
@@ -120,7 +125,6 @@ export default function MenuPerfilClient() {
                     )}
                 </div>
                 
-                {/* Botón Editar Lápiz (Estilo Lujo) */}
                 <div className="absolute bottom-1 right-1 bg-gmc-dorado-principal text-[#1a1f2e] p-2 rounded-full shadow-lg border-2 border-[#1a1f2e] hover:scale-110 transition-transform z-20">
                     <Edit2 size={14} />
                 </div>
@@ -143,16 +147,16 @@ export default function MenuPerfilClient() {
             <p className="text-gray-400 text-xs mt-2 uppercase tracking-[2px]">Miembro desde {memberSince}</p>
         </div>
 
-        {/* Botones Dashboard/Settings (Estilo Glass Gold) */}
+        {/* 🚨 BOTONES CORREGIDOS CON getLink() 🚨 */}
         <div className="flex gap-4">
             <Link 
-                href="/dashboard-cliente" 
+                href={getLink('/dashboard-cliente')} 
                 className="flex-1 bg-white/5 backdrop-blur-md border border-gmc-dorado-principal/30 rounded-[20px] py-3.5 text-sm font-bold text-gmc-dorado-principal text-center shadow-lg hover:bg-gmc-dorado-principal hover:text-[#1a1f2e] transition-all flex items-center justify-center gap-2 group"
             >
                 <LayoutDashboard size={18} className="group-hover:scale-110 transition-transform"/> {t('myDashboard')}
             </Link>
             <Link 
-                href="/account-settings" 
+                href={getLink('/account-settings')}
                 className="flex-1 bg-white/5 backdrop-blur-md border border-gmc-dorado-principal/30 rounded-[20px] py-3.5 text-sm font-bold text-gmc-dorado-principal text-center shadow-lg hover:bg-gmc-dorado-principal hover:text-[#1a1f2e] transition-all flex items-center justify-center gap-2 group"
             >
                 <Settings size={18} className="group-hover:rotate-90 transition-transform duration-500"/> {t('settings')}
@@ -160,40 +164,40 @@ export default function MenuPerfilClient() {
         </div>
       </div>
 
-      {/* 3. LISTA DE MENÚ (Glassmorphism List) */}
+      {/* 3. LISTA DE MENÚ CORREGIDA */}
       <div className="px-5 space-y-6 pb-12">
         <div className="bg-white/5 backdrop-blur-xl rounded-[2rem] border border-white/10 overflow-hidden shadow-2xl shadow-black/20">
             
             <MenuItem 
-                href="/dashboard-cliente/referidos" 
+                href={getLink('/dashboard-cliente/referidos')}
                 icon={<Share2 size={20} />} 
                 label={t('invite')} 
                 badge={t('earn')}
             />
             
             <MenuItem 
-                href="/faq" 
+                href={getLink('/faq')}
                 icon={<HelpCircle size={20} />} 
                 label={t('help')} 
             />
 
             <MenuItem 
-                href="/dashboard-cliente/pagar-facturas" 
+                href={getLink('/dashboard-cliente/pagar-facturas')}
                 icon={<FileText size={20} />} 
                 label={t('bills')} 
             />
 
             <MenuItem 
-                href="/dashboard-cliente/notificaciones" 
+                href={getLink('/dashboard-cliente/notificaciones')}
                 icon={<Bell size={20} />} 
                 label={t('notifications')} 
                 isLast
             />
         </div>
 
-        {/* Botón Logout (Estilo Glass Warning) */}
+        {/* Botón Logout */}
         <button 
-            onClick={() => signOut({ callbackUrl: '/' })}
+            onClick={() => signOut({ callbackUrl: getLink('/') })}
             className="w-full bg-red-500/10 backdrop-blur-md border border-red-500/30 rounded-[20px] py-4 text-red-400 font-bold shadow-lg hover:bg-red-500 hover:text-white transition-all flex items-center justify-center gap-2 group active:scale-95"
         >
             <LogOut size={20} className="group-hover:-translate-x-1 transition-transform"/> {t('logout')}
@@ -203,9 +207,9 @@ export default function MenuPerfilClient() {
         <div className="text-center text-[10px] text-gray-500 mt-8 pb-8 uppercase tracking-widest">
             <p className="mb-3 font-bold text-gmc-dorado-principal/50">Gasp Maker Cargo App</p>
             <div className="flex justify-center gap-4 text-gray-400">
-                <Link href="/privacy" className="hover:text-white transition-colors">{t('privacy')}</Link>
+                <Link href={getLink('/privacy')} className="hover:text-white transition-colors">{t('privacy')}</Link>
                 <span>•</span>
-                <Link href="/terms" className="hover:text-white transition-colors">{t('terms')}</Link>
+                <Link href={getLink('/terms')} className="hover:text-white transition-colors">{t('terms')}</Link>
             </div>
             <p className="mt-4 opacity-50">v1.0.5</p>
         </div>
@@ -214,7 +218,7 @@ export default function MenuPerfilClient() {
   );
 }
 
-// Componente Auxiliar para Items de Menú
+// Componente Auxiliar (No cambia)
 function MenuItem({ href, icon, label, badge, isLast = false }: { href: string, icon: React.ReactNode, label: string, badge?: string, isLast?: boolean }) {
     return (
         <Link 

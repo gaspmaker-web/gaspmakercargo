@@ -99,10 +99,9 @@ export default auth((req: any) => {
   return intlMiddleware(req);
 });
 
+// 🔥 CONFIGURACIÓN ÚNICA Y CORRECTA 🔥
 export const config = {
-  // ✅ MATCHER DEFINITIVO: 
-  // Excluye API, archivos estáticos de Next, Vercel, ruta de impresión y archivos con extensiones de imagen.
-  matcher: [
-    '/((?!api|_next/static|_next/image|_vercel|favicon.ico|print|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
-  ]
+  // Ignora: api, _next, _vercel, favicon y CUALQUIER archivo que tenga un punto (.*\\..*)
+  // Esto arregla el error de "apple-touch-icon.png"
+  matcher: ['/((?!api|_next|_vercel|.*\\..*).*)']
 };
