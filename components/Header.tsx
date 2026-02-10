@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { Menu, ArrowLeft, ChevronDown, User } from 'lucide-react'; 
 import ProfileButton from "@/components/ProfileButton";
 import { useSession } from "next-auth/react";
-import { useTranslations, useLocale } from 'next-intl'; // Importamos useLocale
+import { useTranslations, useLocale } from 'next-intl'; 
 import NotificationBell from "@/components/ui/NotificationBell";
 
 interface HeaderProps {
@@ -16,7 +16,7 @@ interface HeaderProps {
 
 export default function Header({ backButtonUrl }: HeaderProps) {
   const t = useTranslations('Navigation'); 
-  const currentLocale = useLocale(); // Obtenemos el idioma real de next-intl
+  const currentLocale = useLocale(); 
   const pathname = usePathname();
   const router = useRouter();
   
@@ -24,13 +24,9 @@ export default function Header({ backButtonUrl }: HeaderProps) {
   const langRef = useRef<HTMLDivElement>(null);
   const { data: session } = useSession(); 
 
-  // Detectar si estamos en alguna sección del Dashboard
   const isDashboard = pathname.includes('/dashboard-cliente') || pathname.includes('/menu') || pathname.includes('/account-settings');
-
-  // Detectar página de Facturas específicamente
   const isBillingPage = pathname.includes('/pagar-facturas');
 
-  // Lista de sub-páginas que muestran Flecha
   const isSubPage = 
     pathname.includes('/referidos') ||
     pathname.includes('/pre-alerta') ||
@@ -49,7 +45,6 @@ export default function Header({ backButtonUrl }: HeaderProps) {
 
   const iconColorClass = isDashboard ? "text-[#1a1f2e]" : "text-white";
 
-  // Idiomas
   const languages = [
     { code: 'es', name: 'Español', flag: 'https://flagcdn.com/w20/es.png' },
     { code: 'en', name: 'English', flag: 'https://flagcdn.com/w20/us.png' },
@@ -57,33 +52,30 @@ export default function Header({ backButtonUrl }: HeaderProps) {
     { code: 'pt', name: 'Português', flag: 'https://flagcdn.com/w20/br.png' },
   ];
 
-  // Encontrar el objeto del idioma actual para mostrar su bandera
   const currentLang = languages.find(l => l.code === currentLocale) || languages[0];
 
   const handleLanguageChange = (newLocale: string) => {
-    // Si ya estamos en ese idioma, no hacemos nada
     if (newLocale === currentLocale) {
       setIsLangMenuOpen(false);
       return;
     }
 
-    // Lógica robusta para reemplazar el segmento del idioma en la URL
+    // Lógica para reemplazar el idioma en la URL
     const segments = pathname.split('/');
-    // segments[0] es vacío porque la ruta empieza con /
-    // segments[1] suele ser el locale actual (es, en, fr, pt)
+    // segments[0] es vacío, segments[1] es el idioma actual
     
-    // Verificamos si el primer segmento es un idioma conocido
-    const isLocalePresent = languages.some(l => l.code === segments[1]);
-
-    if (isLocalePresent) {
-      segments[1] = newLocale; // Reemplazamos el idioma existente
+    if (languages.some(l => l.code === segments[1])) {
+      segments[1] = newLocale; // Reemplazamos (ej: /es/home -> /en/home)
     } else {
-      segments.splice(1, 0, newLocale); // Insertamos el idioma si no existía (raro en tu config, pero por seguridad)
+      segments.splice(1, 0, newLocale); // Insertamos si no existe
     }
 
     const newPath = segments.join('/');
-    router.push(newPath); 
-    setIsLangMenuOpen(false);
+    
+    // 🚀 CAMBIO CLAVE: Usamos window.location.href
+    // Esto fuerza una recarga completa del navegador. 
+    // Es la forma más segura de cambiar idiomas sin errores de caché.
+    window.location.href = newPath; 
   };
 
   useEffect(() => {
@@ -100,12 +92,8 @@ export default function Header({ backButtonUrl }: HeaderProps) {
     <header className={headerClasses}>
       <div className="container mx-auto px-4 h-full flex justify-between items-center relative z-50">
         
-        {/* =========================================================
-            ZONA IZQUIERDA (HAMBURGUESA / BACK)
-           ========================================================= */}
+        {/* IZQUIERDA */}
         <div className="flex items-center gap-4">
-            
-            {/* MÓVIL: Botones optimizados para tacto (min 48px) */}
             <div className="lg:hidden relative z-50">
                 {isSubPage ? (
                     <button 
@@ -131,7 +119,6 @@ export default function Header({ backButtonUrl }: HeaderProps) {
                 )}
             </div>
 
-            {/* DESKTOP */}
             <div className={`hidden lg:flex items-center flex-shrink-0 ${iconColorClass}`}>
                 {isSubPage ? (
                     <button 
@@ -157,9 +144,7 @@ export default function Header({ backButtonUrl }: HeaderProps) {
             </div>
         </div>
 
-        {/* =========================================================
-            ZONA CENTRAL (Navegación Desktop)
-           ========================================================= */}
+        {/* CENTRO */}
         {!isSubPage && !isBillingPage && (
             <div className={`hidden lg:flex items-center space-x-4 xl:space-x-6 ${iconColorClass}`}>
             <Link href="/como-funciona" className="text-[11px] xl:text-[13px] font-bold hover:text-gmc-dorado-principal transition-all uppercase tracking-[1px] opacity-90">{t('howItWorks')}</Link>
@@ -172,9 +157,7 @@ export default function Header({ backButtonUrl }: HeaderProps) {
             </div>
         )}
 
-        {/* =========================================================
-            ZONA DERECHA (Idiomas, Notif, Perfil)
-           ========================================================= */}
+        {/* DERECHA */}
         <div className="flex items-center gap-2 md:gap-4 relative z-50">
           
           {!isSubPage && (
@@ -224,7 +207,7 @@ export default function Header({ backButtonUrl }: HeaderProps) {
                                 <ProfileButton />
                             </div>
                             
-                            {/* 🔥 ICONO PERFIL MÓVIL OPTIMIZADO 🔥 */}
+                            {/* Icono Perfil Móvil */}
                             <Link 
                                 href="/menu-perfil" 
                                 className={`lg:hidden flex items-center justify-center min-w-[44px] min-h-[44px] rounded-full font-bold shadow-sm border active:scale-90 transition-transform overflow-hidden ${

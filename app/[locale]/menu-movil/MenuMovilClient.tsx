@@ -4,14 +4,15 @@ import React from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { X, Globe, ChevronRight } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl'; // Importamos useLocale
 
 export default function MenuMovilClient() {
   const t = useTranslations('Navigation');
+  const currentLocale = useLocale(); // Idioma real detectado
   const router = useRouter();
   const pathname = usePathname();
 
-  // Configuración de idiomas (Lógica original)
+  // Configuración de idiomas
   const languages = [
     { code: 'es', name: 'Español', flag: 'https://flagcdn.com/w20/es.png' },
     { code: 'en', name: 'English', flag: 'https://flagcdn.com/w20/us.png' },
@@ -19,18 +20,27 @@ export default function MenuMovilClient() {
     { code: 'pt', name: 'Português', flag: 'https://flagcdn.com/w20/br.png' },
   ];
 
-  const segments = pathname.split('/');
-  const currentLocale = segments[1] || 'es';
+  const handleLanguageChange = (newLocale: string) => {
+    // Si es el mismo idioma, no hacemos nada
+    if (newLocale === currentLocale) return;
 
-  const handleLanguageChange = (code: string) => {
-    const newSegments = [...segments];
-    if (newSegments.length > 1) {
-        newSegments[1] = code;
+    const segments = pathname.split('/');
+    // segments[0] es vacío
+    // segments[1] es el idioma actual
+    
+    // Verificamos si existe el segmento de idioma para reemplazarlo
+    const isLocalePresent = languages.some(l => l.code === segments[1]);
+
+    if (isLocalePresent) {
+        segments[1] = newLocale;
     } else {
-        newSegments.splice(1, 0, code);
+        segments.splice(1, 0, newLocale);
     }
-    const newPath = newSegments.join('/') || `/${code}`;
-    router.push(newPath);
+    
+    const newPath = segments.join('/');
+
+    // 🚀 FUERZA BRUTA: Recarga completa para asegurar el cambio de idioma
+    window.location.href = newPath;
   };
 
   return (
