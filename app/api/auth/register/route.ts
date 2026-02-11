@@ -50,40 +50,107 @@ export async function POST(req: Request) {
     });
 
     // =========================================================================
-    // 🔥 NUEVO: ENVIAR EMAIL DE BIENVENIDA AL CLIENTE
+    // 🔥 NUEVO: ENVIAR EMAIL DE BIENVENIDA AL CLIENTE (MULTILINGÜE)
     // =========================================================================
     try {
       const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.gaspmakercargo.com';
       
+      // 1. Determinar el idioma según el país (Inglés como sustituto universal)
+      const getLanguage = (code: string) => {
+        const upperCode = code.toUpperCase();
+        
+        // Países hispanohablantes
+        const spanishCountries = ['ES', 'MX', 'CO', 'AR', 'PE', 'VE', 'CL', 'EC', 'GT', 'CU', 'BO', 'DO', 'HN', 'PY', 'SV', 'NI', 'CR', 'PA', 'UY', 'PR', 'GQ'];
+        if (spanishCountries.includes(upperCode)) return 'es';
+        
+        // Países francófonos
+        const frenchCountries = ['FR', 'HT', 'CD', 'CG', 'ML', 'SN', 'CI', 'CM', 'BE', 'CH', 'MG', 'GN', 'BF', 'BI', 'BJ', 'TG', 'CF', 'GA', 'DJ', 'RW', 'VU', 'SC', 'KM', 'MC'];
+        if (frenchCountries.includes(upperCode)) return 'fr';
+        
+        // Países lusófonos
+        const portugueseCountries = ['BR', 'PT', 'AO', 'MZ', 'GW', 'CV', 'ST', 'TL'];
+        if (portugueseCountries.includes(upperCode)) return 'pt';
+        
+        // Si no es ninguno de los anteriores, es INGLÉS por defecto
+        return 'en'; 
+      };
+
+      const lang = getLanguage(country);
+
+      // 2. Diccionario de traducciones
+      const translations = {
+        es: {
+          subject: '¡Bienvenido a Gasp Maker Cargo! Tu casillero está listo 📦',
+          greeting: '¡Hola',
+          thanks: 'Gracias por registrarte en',
+          body1: 'Tu cuenta ha sido creada exitosamente. Nos emociona tenerte con nosotros y estamos listos para recibir tus compras.',
+          suiteLabel: 'Tu Número de Casillero (Suite) es:',
+          body2: 'Por favor, asegúrate de incluir este número de Suite junto a tu nombre cada vez que envíes paquetes a nuestras instalaciones para poder identificarlos rápidamente.',
+          button: 'Ir a mi panel de cliente',
+          footer: 'Si tienes alguna duda o necesitas ayuda, simplemente responde a este correo.<br>¡Gracias por confiar en Gasp Maker Cargo!'
+        },
+        en: {
+          subject: 'Welcome to Gasp Maker Cargo! Your locker is ready 📦',
+          greeting: 'Hello',
+          thanks: 'Thank you for registering at',
+          body1: 'Your account has been successfully created. We are excited to have you with us and are ready to receive your purchases.',
+          suiteLabel: 'Your Suite (Locker) Number is:',
+          body2: 'Please make sure to include this Suite number next to your name every time you send packages to our facilities so we can identify them quickly.',
+          button: 'Go to my client dashboard',
+          footer: 'If you have any questions or need help, simply reply to this email.<br>Thank you for trusting Gasp Maker Cargo!'
+        },
+        fr: {
+          subject: 'Bienvenue chez Gasp Maker Cargo ! Votre casier est prêt 📦',
+          greeting: 'Bonjour',
+          thanks: 'Merci de vous être inscrit chez',
+          body1: 'Votre compte a été créé avec succès. Nous sommes ravis de vous compter parmi nous et sommes prêts à recevoir vos achats.',
+          suiteLabel: 'Votre numéro de casier (Suite) est :',
+          body2: 'Veuillez vous assurer d\'inclure ce numéro de Suite à côté de votre nom chaque fois que vous envoyez des colis à nos installations afin que nous puissions les identifier rapidement.',
+          button: 'Aller à mon tableau de bord client',
+          footer: 'Si vous avez des questions ou avez besoin d\'aide, répondez simplement à cet e-mail.<br>Merci de faire confiance à Gasp Maker Cargo !'
+        },
+        pt: {
+          subject: 'Bem-vindo à Gasp Maker Cargo! Seu armário está pronto 📦',
+          greeting: 'Olá',
+          thanks: 'Obrigado por se registrar na',
+          body1: 'Sua conta foi criada com sucesso. Estamos animados em ter você conosco e prontos para receber suas compras.',
+          suiteLabel: 'O número do seu armário (Suite) é:',
+          body2: 'Por favor, certifique-se de incluir este número de Suite ao lado do seu nome toda vez que enviar pacotes para nossas instalações para que possamos identificá-los rapidamente.',
+          button: 'Ir para o painel do cliente',
+          footer: 'Se você tiver alguma dúvida ou precisar de ajuda, basta responder a este e-mail.<br>Obrigado por confiar na Gasp Maker Cargo!'
+        }
+      };
+
+      const t = translations[lang as keyof typeof translations];
+
       await resend.emails.send({
         from: 'Gasp Maker Cargo <info@gaspmakercargo.com>',
         to: email,
-        subject: '¡Bienvenido a Gasp Maker Cargo! Tu casillero está listo 📦',
+        subject: t.subject,
         html: `
           <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
             <div style="text-align: center; padding-bottom: 20px;">
-              <h1 style="color: #FBBF24; margin-bottom: 5px;">¡Hola, ${name}!</h1>
-              <p style="font-size: 16px;">Gracias por registrarte en <strong>Gasp Maker Cargo</strong>.</p>
+              <h1 style="color: #FBBF24; margin-bottom: 5px;">${t.greeting}, ${name}!</h1>
+              <p style="font-size: 16px;">${t.thanks} <strong>Gasp Maker Cargo</strong>.</p>
             </div>
             
-            <p>Tu cuenta ha sido creada exitosamente. Nos emociona tenerte con nosotros y estamos listos para recibir tus compras.</p>
+            <p>${t.body1}</p>
             
             <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; text-align: center; margin: 30px 0;">
-              <p style="margin: 0; font-size: 14px; color: #666; text-transform: uppercase; letter-spacing: 1px;">Tu Número de Casillero (Suite) es:</p>
+              <p style="margin: 0; font-size: 14px; color: #666; text-transform: uppercase; letter-spacing: 1px;">${t.suiteLabel}</p>
               <p style="margin: 10px 0 0 0; font-size: 28px; font-weight: bold; color: #111;">${suiteNo}</p>
             </div>
 
-            <p>Por favor, asegúrate de incluir este número de Suite junto a tu nombre cada vez que envíes paquetes a nuestras instalaciones para poder identificarlos rápidamente.</p>
+            <p>${t.body2}</p>
             
             <div style="text-align: center; margin-top: 40px;">
-              <a href="${baseUrl}/es/login-cliente" style="background-color: #FBBF24; color: #000; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
-                Ir a mi panel de cliente
+              <a href="${baseUrl}/${lang}/login-cliente" style="background-color: #FBBF24; color: #000; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
+                ${t.button}
               </a>
             </div>
             
             <p style="margin-top: 40px; font-size: 12px; color: #999; text-align: center; border-top: 1px solid #eee; padding-top: 20px;">
-              Si tienes alguna duda o necesitas ayuda, simplemente responde a este correo.<br>
-              ¡Gracias por confiar en Gasp Maker Cargo!
+              ${t.footer}
             </p>
           </div>
         `
