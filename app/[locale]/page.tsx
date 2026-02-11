@@ -12,7 +12,7 @@ import {
 
 export default function HomePage() {
   const t = useTranslations('HomePage');
-  const tSteps = useTranslations('HowItWorks'); // Usa las traducciones de la guía
+  const tSteps = useTranslations('HowItWorks'); 
   const tNav = useTranslations('Navigation');
 
   // Definimos los 6 pasos visualmente
@@ -37,7 +37,16 @@ export default function HomePage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div className="text-center lg:text-left">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-md mb-6">
-                <ShieldCheck size={16} className="text-gmc-dorado-principal" />
+                
+                {/* 🔥 AQUÍ ESTÁ EL CAMBIO: Quitamos el escudo y pusimos tu logo oficial */}
+                <Image 
+                  src="/logo.png" 
+                  alt="Gasp Maker Cargo Logo" 
+                  width={16} 
+                  height={16} 
+                  className="object-contain drop-shadow-md"
+                />
+                
                 <span className="text-xs font-bold tracking-[2px] text-gray-200 uppercase">
                   {t('Hero.badge')}
                 </span>
@@ -88,10 +97,6 @@ export default function HomePage() {
                     </div>
                     <span className="text-4xl font-black text-gray-200 group-hover:text-gmc-dorado-principal/20 transition-colors">0{step.id}</span>
                 </div>
-                {/* 🔥 CORRECCIÓN CLAVE: 
-                   Usa tSteps('step1Title'), tSteps('step2Title'), etc.
-                   Esto coincide con la estructura plana de los JSON actuales.
-                */}
                 <h3 className="text-xl font-bold text-gray-800 mb-3 font-garamond">
                   {tSteps(`step${step.id}Title`)}
                 </h3>
