@@ -40,12 +40,12 @@ export default function HomePage() {
                 
                 {/* 🔥 AQUÍ ESTÁ EL CAMBIO: Quitamos el escudo y pusimos tu logo oficial */}
                 <Image 
-                  src="/logo.png" 
+                  src="/gaspmakercargoproject.png" 
                   alt="Gasp Maker Cargo Logo" 
-                  width={16} 
-                  height={16} 
+                  width={18} 
+                  height={18} 
                   className="object-contain drop-shadow-md"
-                />
+/>
                 
                 <span className="text-xs font-bold tracking-[2px] text-gray-200 uppercase">
                   {t('Hero.badge')}

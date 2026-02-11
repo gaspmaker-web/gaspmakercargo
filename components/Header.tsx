@@ -92,7 +92,8 @@ export default function Header({ backButtonUrl }: HeaderProps) {
 
   return (
     <header className={headerClasses}>
-      <div className="container mx-auto px-4 h-full flex justify-between items-center">
+      {/* 🔥 NUEVO: Agregamos 'relative' al contenedor padre para poder centrar el logo móvil exactamente en medio */}
+      <div className="container mx-auto px-4 h-full flex justify-between items-center relative">
         
         {/* ZONA IZQUIERDA */}
         <div className="flex items-center gap-4">
@@ -145,6 +146,23 @@ export default function Header({ backButtonUrl }: HeaderProps) {
                 )}
             </div>
         </div>
+
+        {/* ========================================================================= */}
+        {/* 🔥 NUEVO: LOGO CENTRAL EXCLUSIVO PARA MÓVILES */}
+        {/* ========================================================================= */}
+        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 lg:hidden flex items-center justify-center">
+            <Link href={`/${locale}`} className="transition-transform hover:scale-105 active:scale-95">
+                <Image
+                    src="/gaspmakercargoproject.png" 
+                    alt="Gasp Maker Cargo Logo"
+                    width={45}
+                    height={45}
+                    priority
+                    className="object-contain drop-shadow-md"
+                />
+            </Link>
+        </div>
+        {/* ========================================================================= */}
 
         {/* ZONA CENTRAL (Links Desktop Corregidos) */}
         {!isSubPage && !isBillingPage && (
