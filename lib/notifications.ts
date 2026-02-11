@@ -2,7 +2,7 @@ import { Resend } from 'resend';
 import prisma from "@/lib/prisma"; 
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-const EMAIL_FROM = 'Gasp Maker Cargo <onboarding@resend.dev>';
+const EMAIL_FROM = 'Gasp Maker Cargo <info@gaspmakercargo.com>';
 const ADMIN_EMAIL = 'info@gaspmakercargo.com'; 
 
 // =============================================================================
