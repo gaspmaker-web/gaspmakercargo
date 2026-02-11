@@ -102,6 +102,6 @@ export default auth((req: any) => {
 // 🔥 CONFIGURACIÓN ÚNICA Y CORRECTA 🔥
 export const config = {
   // Ignora: api, _next, _vercel, favicon y CUALQUIER archivo que tenga un punto (.*\\..*)
-  // Esto arregla el error de "apple-touch-icon.png"
-  matcher: ['/((?!api|_next|_vercel|.*\\..*).*)']
+  // 🔥 CORRECCIÓN: Agregamos "print" a la lista de excepciones para que no rompa la etiqueta
+  matcher: ['/((?!api|_next|_vercel|print|.*\\..*).*)']
 };
