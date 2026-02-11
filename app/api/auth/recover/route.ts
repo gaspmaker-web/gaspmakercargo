@@ -44,7 +44,7 @@ export async function POST(req: Request) {
 
     // 5. Enviar Email con Resend
     await resend.emails.send({
-      from: 'Gasp Maker Cargo <onboarding@resend.dev>', // O tu dominio verificado
+      from: 'Gasp Maker Cargo <info@gaspmakercargo.com>', //  dominio verificado
       to: email,
       subject: 'Recuperar tu contraseña - Gasp Maker Cargo',
       html: `
