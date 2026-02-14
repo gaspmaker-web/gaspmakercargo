@@ -92,6 +92,20 @@ export async function POST(req: Request) {
     const wid = parseFloat(dimensions?.width) || undefined;
     const hgt = parseFloat(dimensions?.height) || undefined;
 
+    // ================================================================
+    // 🔥 CÁLCULO DE PESO COBRABLE (Regla Aerolínea / 139)
+    // ================================================================
+    // 1. Calculamos peso volumétrico si existen dimensiones
+    const volumetricWeight = (len && wid && hgt) 
+        ? (len * wid * hgt) / 139 
+        : 0;
+    
+    // 2. Definimos el Peso Cobrable (El mayor entre Real vs Volumétrico)
+    // Usamos Math.ceil para redondear hacia arriba (opcional, pero recomendado en logística)
+    const chargeableWeight = Math.max(finalWeightLbs, volumetricWeight);
+
+    // ================================================================
+
     // ==========================================
     // 3. DETECCIÓN DE PAÍS OMNISCIENTE
     // ==========================================
@@ -184,6 +198,7 @@ export async function POST(req: Request) {
                 phone: '555-555-5555'
             });
             
+            // Para EasyPost, enviamos el peso físico y dimensiones. Ellos calculan su propio peso dimensional según sus reglas.
             const parcelData: any = { weight: finalWeightLbs * 16 };
             if (len) parcelData.length = len;
             if (wid) parcelData.width = wid;
@@ -226,27 +241,29 @@ export async function POST(req: Request) {
 
     // ==========================================
     // 5. TARIFAS LOCALES (Gasp Maker Cargo)
+    // 🔥 USAMOS 'chargeableWeight' EN LUGAR DE 'finalWeightLbs'
     // ==========================================
     const gmcLogo = '/gaspmakercargoproject.png';
 
     if(targetCountryCode === 'GD') {
-        const gdPrice = calculateRate_GD(finalWeightLbs);
+        // Usa el mayor entre peso real y volumen
+        const gdPrice = calculateRate_GD(chargeableWeight);
         rawRates.push({ id: 'GMC-GD', carrier: 'Gasp Maker Cargo', service: 'Grenada Direct', price: gdPrice, days: '4-5 days', logo: gmcLogo });
     }
     if (targetCountryCode === 'BB') {
-        rawRates.push({ id: 'GMC-BB', carrier: 'Gasp Maker Cargo', service: 'Barbados Direct', price: calculateRate_BB(finalWeightLbs), days: '4-5 days', logo: gmcLogo });
+        rawRates.push({ id: 'GMC-BB', carrier: 'Gasp Maker Cargo', service: 'Barbados Direct', price: calculateRate_BB(chargeableWeight), days: '4-5 days', logo: gmcLogo });
     }
     if (targetCountryCode === 'TT') {
-        rawRates.push({ id: 'GMC-TT', carrier: 'Gasp Maker Cargo', service: 'Trinidad Direct', price: calculateRate_TT(finalWeightLbs), days: '3-5 days', logo: gmcLogo });
+        rawRates.push({ id: 'GMC-TT', carrier: 'Gasp Maker Cargo', service: 'Trinidad Direct', price: calculateRate_TT(chargeableWeight), days: '3-5 days', logo: gmcLogo });
     }
     if (targetCountryCode === 'JM') {
-        rawRates.push({ id: 'GMC-JM', carrier: 'Gasp Maker Cargo', service: 'Jamaica Direct', price: calculateRate_JM(finalWeightLbs), days: '4-5 days', logo: gmcLogo });
+        rawRates.push({ id: 'GMC-JM', carrier: 'Gasp Maker Cargo', service: 'Jamaica Direct', price: calculateRate_JM(chargeableWeight), days: '4-5 days', logo: gmcLogo });
     }
     if (targetCountryCode === 'CU') {
-        rawRates.push({ id: 'GMC-CU', carrier: 'Gasp Maker Cargo', service: 'Aerovaradero', price: calculateRate_CU(finalWeightLbs), days: '15-21 days', logo: gmcLogo });
+        rawRates.push({ id: 'GMC-CU', carrier: 'Gasp Maker Cargo', service: 'Aerovaradero', price: calculateRate_CU(chargeableWeight), days: '15-21 days', logo: gmcLogo });
     }
     if (isStThomas) {
-        rawRates.push({ id: 'GMC-VI', carrier: 'Gasp Maker Cargo', service: 'St. Thomas Direct', price: calculateRate_VI(finalWeightLbs), days: '4-5 days', logo: gmcLogo });
+        rawRates.push({ id: 'GMC-VI', carrier: 'Gasp Maker Cargo', service: 'St. Thomas Direct', price: calculateRate_VI(chargeableWeight), days: '4-5 days', logo: gmcLogo });
     }
 
     // ==========================================
@@ -262,7 +279,8 @@ export async function POST(req: Request) {
 
     rawRates.sort((a, b) => a.price - b.price);
     
-    return NextResponse.json({ success: true, rates: rawRates });
+    // Opcional: Devolvemos también el peso cobrable en la respuesta para depuración
+    return NextResponse.json({ success: true, rates: rawRates, chargeableWeight });
 
   } catch (error: any) {
     console.error("API Error:", error.message);
