@@ -230,8 +230,11 @@ export default function CalculadoraClient() {
                                 })}
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                <div>
+                            {/* 🔥 CAMBIO ESTRUCTURAL AQUÍ: USAMOS GRID PARA QUE ALINEE PESO Y PRECIO */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-end">
+                                
+                                {/* A. DIMENSIONES (Izquierda) */}
+                                <div className="h-full flex flex-col justify-end">
                                     <div className="flex justify-between items-center mb-3">
                                         <span className="text-[10px] font-black text-gray-400 uppercase tracking-tighter">{t('dimensionsLabel')}</span>
                                         <div className="flex bg-gray-100 p-1 rounded-xl">
@@ -239,29 +242,35 @@ export default function CalculadoraClient() {
                                             <button type="button" onClick={() => setDimUnit('in')} className={`px-3 py-1 text-[10px] font-black rounded-lg transition-all ${dimUnit === 'in' ? 'bg-white shadow text-black' : 'text-gray-400'}`}>IN</button>
                                         </div>
                                     </div>
-                                    <div className="flex border-2 border-gray-100 rounded-2xl overflow-hidden focus-within:border-gmc-dorado-principal transition-colors bg-gray-50">
-                                        <input type="number" placeholder="L" className="w-1/3 p-4 bg-transparent outline-none text-center border-r border-gray-100 font-bold" value={length} onChange={(e) => setLength(e.target.value === '' ? '' : Number(e.target.value))} />
-                                        <input type="number" placeholder="W" className="w-1/3 p-4 bg-transparent outline-none text-center border-r border-gray-100 font-bold" value={width} onChange={(e) => setWidth(e.target.value === '' ? '' : Number(e.target.value))} />
-                                        <input type="number" placeholder="H" className="w-1/3 p-4 bg-transparent outline-none text-center font-bold" value={height} onChange={(e) => setHeight(e.target.value === '' ? '' : Number(e.target.value))} />
+                                    <div className="flex border-2 border-gray-100 rounded-2xl overflow-hidden focus-within:border-gmc-dorado-principal transition-colors bg-gray-50 h-[3.5rem] items-center">
+                                        <input type="number" placeholder="L" className="w-1/3 h-full bg-transparent outline-none text-center border-r border-gray-100 font-bold" value={length} onChange={(e) => setLength(e.target.value === '' ? '' : Number(e.target.value))} />
+                                        <input type="number" placeholder="W" className="w-1/3 h-full bg-transparent outline-none text-center border-r border-gray-100 font-bold" value={width} onChange={(e) => setWidth(e.target.value === '' ? '' : Number(e.target.value))} />
+                                        <input type="number" placeholder="H" className="w-1/3 h-full bg-transparent outline-none text-center font-bold" value={height} onChange={(e) => setHeight(e.target.value === '' ? '' : Number(e.target.value))} />
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <div className="flex justify-between items-center mb-3">
-                                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-tighter">{t('weightLabel')}</span>
-                                            <div className="flex bg-gray-100 p-1 rounded-xl">
-                                                <button type="button" onClick={() => setWeightUnit('kg')} className={`px-3 py-1 text-[10px] font-black rounded-lg transition-all ${weightUnit === 'kg' ? 'bg-white shadow text-black' : 'text-gray-400'}`}>KG</button>
-                                                <button type="button" onClick={() => setWeightUnit('lbs')} className={`px-3 py-1 text-[10px] font-black rounded-lg transition-all ${weightUnit === 'lbs' ? 'bg-white shadow text-black' : 'text-gray-400'}`}>LB</button>
+                                {/* B. PESO Y PRECIO (Derecha - Alineados) */}
+                                <div className="grid grid-cols-2 gap-4 items-end">
+                                    {/* Peso */}
+                                    <div className="flex flex-col justify-end">
+                                        <div className="flex justify-between items-center mb-3 h-8">
+                                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-tighter self-end pb-1">{t('weightLabel')}</span>
+                                            <div className="flex bg-gray-100 p-1 rounded-xl shrink-0">
+                                                <button type="button" onClick={() => setWeightUnit('kg')} className={`px-2 py-1 text-[10px] font-black rounded-lg transition-all ${weightUnit === 'kg' ? 'bg-white shadow text-black' : 'text-gray-400'}`}>KG</button>
+                                                <button type="button" onClick={() => setWeightUnit('lbs')} className={`px-2 py-1 text-[10px] font-black rounded-lg transition-all ${weightUnit === 'lbs' ? 'bg-white shadow text-black' : 'text-gray-400'}`}>LB</button>
                                             </div>
                                         </div>
-                                        <input type="number" placeholder="0.0" className="w-full p-4 border-2 border-gray-100 bg-gray-50 rounded-2xl text-gray-800 font-bold focus:outline-none focus:border-gmc-dorado-principal focus:bg-white transition-all" value={weight} onChange={(e) => setWeight(e.target.value === '' ? '' : Number(e.target.value))} />
+                                        <input type="number" placeholder="0.0" className="w-full h-[3.5rem] px-4 border-2 border-gray-100 bg-gray-50 rounded-2xl text-gray-800 font-bold focus:outline-none focus:border-gmc-dorado-principal focus:bg-white transition-all" value={weight} onChange={(e) => setWeight(e.target.value === '' ? '' : Number(e.target.value))} />
                                     </div>
-                                    <div>
-                                        <div className="mb-3"><span className="text-[10px] font-black text-gray-400 uppercase tracking-tighter">{t('priceLabel')}</span></div>
-                                        <div className="relative">
+                                    
+                                    {/* Precio */}
+                                    <div className="flex flex-col justify-end">
+                                        <div className="mb-3 h-8 flex items-end">
+                                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-tighter pb-1 truncate block w-full">{t('priceLabel')}</span>
+                                        </div>
+                                        <div className="relative h-[3.5rem]">
                                             <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-black">$</span>
-                                            <input type="number" value={value} onChange={(e) => setValue(e.target.value === '' ? '' : Number(e.target.value))} placeholder="0.00" className="w-full p-4 pl-8 border-2 border-gray-100 bg-gray-50 rounded-2xl text-gray-800 font-bold focus:outline-none focus:border-gmc-dorado-principal focus:bg-white transition-all" />
+                                            <input type="number" value={value} onChange={(e) => setValue(e.target.value === '' ? '' : Number(e.target.value))} placeholder="0.00" className="w-full h-full pl-8 pr-4 border-2 border-gray-100 bg-gray-50 rounded-2xl text-gray-800 font-bold focus:outline-none focus:border-gmc-dorado-principal focus:bg-white transition-all" />
                                         </div>
                                     </div>
                                 </div>
