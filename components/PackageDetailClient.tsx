@@ -175,6 +175,7 @@ export default function PackageDetailClient({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           weight: pkg.weightLbs || 1,
+          // 🔥 ENVIANDO DIMENSIONES REALES (HONESTIDAD TOTAL)
           dimensions: {
             length: pkg.lengthIn,
             width: pkg.widthIn,
@@ -187,6 +188,7 @@ export default function PackageDetailClient({
 
       let availableRates = [];
       if (res.ok && data.rates && data.rates.length > 0) {
+        // ✅ CÓDIGO PROFESIONAL: Usamos DIRECTAMENTE lo que devuelve la API.
         availableRates = data.rates.map((r: any) => ({
           ...r,
           logo: getCarrierLogo(r.carrier),
@@ -239,14 +241,7 @@ export default function PackageDetailClient({
   };
 
   const handlePay = async () => {
-    // 🔥 UX MEJORADA: Si no hay tarjeta seleccionada, ABRIMOS el menú móvil
-    if (!selectedCardId) {
-        setShowMobileDetails(true); // <--- Despliega la flecha automáticamente
-        if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(50);
-        return; // Detiene el pago hasta que el usuario agregue la tarjeta
-    }
-
-    if (!selectedRate) { alert("Selecciona un método de envío."); return; }
+    if (!selectedRate || !selectedCardId) { alert("Selecciona un método de envío y una tarjeta."); return; }
 
     setIsPaying(true);
 
@@ -330,9 +325,13 @@ export default function PackageDetailClient({
   };
 
   // 🔥 CÁLCULO DESGLOSADO PARA TRANSPARENCIA
-  const servicePrice = selectedRate ? selectedRate.price : 0; 
+  const servicePrice = selectedRate ? selectedRate.price : 0; // Costo puro del flete
   const baseAmount = servicePrice + handlingFee + insuranceCost;
+  
+  // Calculamos el Processing Fee aparte
   const processingFee = selectedRate ? (getProcessingFee ? getProcessingFee(baseAmount) : baseAmount * 0.0727) : 0;
+  
+  // Total Sumado
   const totalAmount = Math.max(0, servicePrice + processingFee + handlingFee + insuranceCost - discount);
 
   if (isDelivered) {
@@ -658,8 +657,7 @@ export default function PackageDetailClient({
                   </span>
                   <div className="text-3xl font-garamond font-bold leading-none text-white">${totalAmount.toFixed(2)}</div>
                 </div>
-                {/* 🔥 BOTÓN MÓVIL: Siempre habilitado (disabled={isPaying}) para permitir el clic de apertura */}
-                <button onClick={handlePay} disabled={isPaying} className="bg-[#EAD8B1] text-[#222b3c] py-3.5 px-8 rounded-xl text-base font-bold shadow-lg active:scale-95 transition-transform flex items-center gap-2">
+                <button onClick={handlePay} disabled={isPaying || (!selectedCardId && cards.length > 0)} className="bg-[#EAD8B1] text-[#222b3c] py-3.5 px-8 rounded-xl text-base font-bold shadow-lg active:scale-95 transition-transform flex items-center gap-2">
                   {isPaying ? <Loader2 className="animate-spin" /> : <CreditCard size={18} />} {tPickup("btnPay")}
                 </button>
               </div>
