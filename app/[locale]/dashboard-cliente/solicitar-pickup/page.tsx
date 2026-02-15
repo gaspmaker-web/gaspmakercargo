@@ -312,7 +312,13 @@ export default function SolicitarPickupPage() {
             alert("⚠️ Faltan dirección de entrega."); return;
         }
         if (!formData.pickupDate) { alert("Completa los campos."); return; }
-        if (!selectedCardId) { alert("Selecciona un método de pago."); return; }
+
+        // 🔥 LOGICA UX MEJORADA: Si no hay tarjeta, abrimos el menú en lugar de bloquear
+        if (!selectedCardId) { 
+            setShowMobileSummary(true); // Desplegar menú
+            if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(50);
+            return; 
+        }
     }
 
     setIsLoading(true);
@@ -670,9 +676,10 @@ export default function SolicitarPickupPage() {
                             <div className="text-3xl font-garamond font-bold leading-none text-white">${quote.total.toFixed(2)}</div>
                         </div>
 
+                        {/* 🔥 BOTÓN DESBLOQUEADO - Se eliminó '!selectedCardId' del disabled */}
                         <button 
                             onClick={handlePaymentAndSubmit} 
-                            disabled={isLoading || quote.total === 0 || !selectedCardId || !isAddressValid} 
+                            disabled={isLoading || quote.total === 0 || !isAddressValid} 
                             className="bg-[#EAD8B1] text-[#222b3c] px-8 py-3.5 rounded-xl font-bold text-base shadow-lg active:scale-95 transition-transform flex items-center gap-2 disabled:opacity-50 disabled:shadow-none"
                         >
                             {isLoading ? <Loader2 className="animate-spin" size={20}/> : <CreditCard size={20}/>} 

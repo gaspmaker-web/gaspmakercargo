@@ -202,7 +202,14 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
 
   // 5. PAGAR
   const handlePay = async () => {
-      if (totals.count === 0 || !selectedCardId) return;
+      // 🔥 UX MEJORADA: Si no hay tarjeta seleccionada, ABRIMOS el menú móvil
+      if (!selectedCardId) {
+          setShowMobileSummary(true); // Desplegar menú
+          if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(50);
+          return;
+      }
+
+      if (totals.count === 0) return;
       setIsProcessing(true);
 
       try {
@@ -572,9 +579,11 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                             </span>
                             <div className="text-3xl font-garamond font-bold leading-none text-white">${totals.total.toFixed(2)}</div>
                         </div>
+                        
+                        {/* 🔥 BOTÓN MÓVIL: Siempre activo para permitir despliegue */}
                         <button 
                             onClick={handlePay} 
-                            disabled={isProcessing || totals.count === 0 || !selectedCardId} 
+                            disabled={isProcessing || totals.count === 0} 
                             className="bg-[#EAD8B1] text-[#222b3c] py-3.5 px-8 rounded-xl text-base font-bold shadow-lg active:scale-95 transition-transform flex items-center gap-2 disabled:opacity-50"
                         >
                             {isProcessing ? <Loader2 className="animate-spin" size={18}/> : <DollarSign size={18}/>} {tPickup('btnPay')}
