@@ -241,7 +241,14 @@ export default function PackageDetailClient({
   };
 
   const handlePay = async () => {
-    if (!selectedRate || !selectedCardId) { alert("Selecciona un método de envío y una tarjeta."); return; }
+    // 🔥 CAMBIO: Si no hay tarjeta seleccionada, ABRIMOS el menú móvil
+    if (!selectedCardId) {
+        setShowMobileDetails(true);
+        if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(50);
+        return;
+    }
+
+    if (!selectedRate) { alert("Selecciona un método de envío."); return; }
 
     setIsPaying(true);
 
@@ -657,7 +664,7 @@ export default function PackageDetailClient({
                   </span>
                   <div className="text-3xl font-garamond font-bold leading-none text-white">${totalAmount.toFixed(2)}</div>
                 </div>
-                <button onClick={handlePay} disabled={isPaying || (!selectedCardId && cards.length > 0)} className="bg-[#EAD8B1] text-[#222b3c] py-3.5 px-8 rounded-xl text-base font-bold shadow-lg active:scale-95 transition-transform flex items-center gap-2">
+                <button onClick={handlePay} disabled={isPaying} className="bg-[#EAD8B1] text-[#222b3c] py-3.5 px-8 rounded-xl text-base font-bold shadow-lg active:scale-95 transition-transform flex items-center gap-2">
                   {isPaying ? <Loader2 className="animate-spin" /> : <CreditCard size={18} />} {tPickup("btnPay")}
                 </button>
               </div>
