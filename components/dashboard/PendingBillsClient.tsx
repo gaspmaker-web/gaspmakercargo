@@ -34,7 +34,7 @@ const cleanCarrierName = (name: string) => {
   return name;
 };
 
-// 🔥 NUEVO HELPER PARA SERVICIOS (Igual que en PackageDetailClient)
+// 🔥 NUEVO HELPER PARA SERVICIOS
 const cleanServiceName = (name: string) => {
   if (!name) return '';
   return name
@@ -160,7 +160,6 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
       selectedBillIds.forEach(id => {
           const bill = bills.find(b => b.id === id);
           if (bill) {
-              // 🧠 LÓGICA INTELIGENTE: Single vs Consolidated
               const isConsolidated = bill.serviceType === 'CONSOLIDATION' || 
                                      bill.description?.toLowerCase().includes('consolid') ||
                                      (bill.packages && bill.packages.length > 1);
@@ -168,7 +167,6 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
               const dynamicHandling = isConsolidated ? 10.00 : 0.00;
               handlingSubtotal += dynamicHandling;
 
-              // Seguro
               const val = Number(bill.declaredValue) || 0;
               const ins = val > 100 ? val * 0.03 : 0;
               insuranceSubtotal += ins;
@@ -179,7 +177,6 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
               if (rate) {
                   itemServicePrice = rate.price;
               } else {
-                  // Fallback si no hay rate seleccionado
                   const totalFromServer = bill.totalAmount || 0;
                   itemServicePrice = Math.max(0, totalFromServer - (bill.handlingFee || 0) - ins);
               }
@@ -190,11 +187,9 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
       });
 
       const taxableAmount = serviceSubtotal + handlingSubtotal + insuranceSubtotal;
-      
-      // Calculamos Fee de Procesamiento (Stripe) aparte para transparencia
       const fee = getProcessingFee(taxableAmount);
       
-      // Aplicar Descuento
+      // Aplicar descuento
       const total = Math.max(0, taxableAmount + fee - discount);
       
       return { 
@@ -235,9 +230,9 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
 
   // 5. PAGAR
   const handlePay = async () => {
-      // 🔥 UX MEJORADA: Si no hay tarjeta seleccionada, ABRIMOS el menú móvil
+      // 🔥 UX MEJORADA: Si no hay tarjeta, abrir menú
       if (!selectedCardId) {
-          setShowMobileSummary(true); // Desplegar menú
+          setShowMobileSummary(true); 
           if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(50);
           return;
       }
@@ -276,7 +271,6 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
              const bill = bills.find(b => b.id === id);
              const rate = selectedRateMap[id];
              
-             // Recalcular handling individual para el payload
              const isConsolidated = bill?.serviceType === 'CONSOLIDATION' || 
                                     bill?.description?.toLowerCase().includes('consolid') ||
                                     (bill?.packages && bill?.packages.length > 1);
@@ -290,7 +284,7 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                  itemServicePrice = rate.price;
              } else {
                  const totalFromServer = bill?.totalAmount || 0;
-                 itemServicePrice = Math.max(0, totalFromServer - (bill?.handlingFee || 0) - ins);
+                 itemServicePrice = Math.max(0, totalFromServer - (bill.handlingFee || 0) - ins);
              }
 
              return {
@@ -393,7 +387,6 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                                     const rates = ratesMap[bill.id];
                                     const selectedRate = selectedRateMap[bill.id];
                                     
-                                    // Detectar consolidación para mostrar fee correcto
                                     const isConsolidated = bill.serviceType === 'CONSOLIDATION' || 
                                                            bill.description?.toLowerCase().includes('consolid') ||
                                                            (bill.packages && bill.packages.length > 1);
@@ -415,7 +408,6 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                                     return (
                                         <div key={bill.id} className={`relative bg-white p-5 rounded-2xl border-2 transition-all shadow-sm flex flex-col ${isSelected ? 'border-gmc-dorado-principal ring-2 ring-yellow-50/50' : 'border-gray-100 hover:border-gray-300'}`}>
                                             
-                                            {/* CHECKBOX Y HEADER */}
                                             <div className="flex justify-between items-start mb-4">
                                                 <div className="flex items-start gap-4">
                                                     <div 
@@ -434,7 +426,6 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                                                                     📦 {bill.packages.length} {t('packages')}
                                                                 </span>
                                                             )}
-                                                            {/* SOLO MOSTRAR BADGE DE FEE SI ES CONSOLIDACIÓN */}
                                                             {effectiveHandling > 0 && <span className="text-[10px] bg-yellow-50 text-yellow-700 px-2 py-1 rounded font-bold border border-yellow-100">Fee $10</span>}
                                                         </div>
                                                     </div>
@@ -450,7 +441,6 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                                                 </span>
                                             </div>
 
-                                            {/* SELECCIÓN DE COURIER */}
                                             <div className="pl-0 sm:pl-2">
                                                 {needsQuote && !rates ? (
                                                     <button 
@@ -480,7 +470,6 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                                                                     <p className="text-xl font-bold text-gmc-gris-oscuro">${displayPrice.toFixed(2)}</p>
                                                                 </div>
                                                                 
-                                                                {/* DESGLOSE RÁPIDO TRANSPARENTE */}
                                                                 <div className="border-t border-gray-100 pt-2 mt-2 space-y-1">
                                                                     <div className="flex justify-between text-xs text-gray-500">
                                                                         <span>Freight Cost</span><span>${selectedRate.price.toFixed(2)}</span>
@@ -515,7 +504,6 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                                                                                     </div>
                                                                                     <div className="text-sm">
                                                                                         <p className="font-bold text-gray-700">{cleanCarrierName(rate.carrier)}</p>
-                                                                                        {/* 🔥 SERVICIO AGREGADO AQUÍ */}
                                                                                         <p className="text-[11px] text-gray-500 font-medium leading-tight mt-0.5 line-clamp-2">{cleanServiceName(rate.service)}</p>
                                                                                         <p className="text-[10px] text-gray-400 font-bold mt-1 flex items-center gap-1"><Clock size={10} /> {rate.days}</p>
                                                                                     </div>
@@ -545,7 +533,7 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                     </div>
                 </div>
 
-                {/* DERECHA: RESUMEN DE PAGO (DESKTOP) */}
+                {/* DERECHA: RESUMEN DE PAGO (DESKTOP) - 🔥 CONDICIONAL AÑADIDA */}
                 <div className="hidden lg:block lg:col-span-1">
                     <div ref={paymentSectionRef} className="bg-gmc-gris-oscuro text-white p-6 rounded-2xl shadow-xl sticky top-6">
                         <h3 className="font-bold text-gmc-dorado-principal text-lg mb-4 border-b border-gray-600 pb-2">{tPickup('summaryTitle')}</h3>
@@ -639,7 +627,7 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
             </div>
         )}
 
-        {/* --- BARRA MÓVIL PREMIUM --- */}
+        {/* --- BARRA MÓVIL PREMIUM (CONDICIONAL AÑADIDA: SOLO SI TOTAL > 0) --- */}
         {bills.length > 0 && totals.count > 0 && (
             <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50">
                 <div className="absolute bottom-full left-0 right-0 h-8 bg-gradient-to-t from-gray-200/40 to-transparent pointer-events-none" />
@@ -653,7 +641,6 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                             <div className="text-3xl font-garamond font-bold leading-none text-white">${totals.total.toFixed(2)}</div>
                         </div>
                         
-                        {/* 🔥 BOTÓN MÓVIL DESBLOQUEADO */}
                         <button 
                             onClick={handlePay} 
                             disabled={isProcessing} 
@@ -664,8 +651,8 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                     </div>
 
                     {showMobileSummary && (
-                        <div className="mt-5 pt-5 border-t border-gray-600 space-y-3 text-sm animate-fadeIn">
-                            {/* 🔥 MOBILE TRANSPARENCY */}
+                        /* 🔥 CORRECCIÓN CLAVE: max-h y overflow-y-auto PARA EVITAR DISTORSIÓN DEL TECLADO */
+                        <div className="mt-5 pt-5 border-t border-gray-600 space-y-3 text-sm animate-fadeIn max-h-[60vh] overflow-y-auto">
                             <div className="flex justify-between text-gray-300">
                                 <span>Freight Cost</span>
                                 <span>${totals.serviceSubtotal.toFixed(2)}</span>
@@ -689,16 +676,16 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                                 </div>
                             )}
 
-                            {/* CUPÓN MÓVIL */}
+                            {/* CUPÓN MÓVIL - 🔥 CORRECCIÓN: text-base PARA EVITAR ZOOM EN IPHONE */}
                             <div className="pt-3">
                                 <div className="flex gap-2">
-                                    <input type="text" placeholder="Promo Code" value={couponCode} onChange={(e) => setCouponCode(e.target.value.toUpperCase())} disabled={discount > 0} className="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#EAD8B1]" />
+                                    <input type="text" placeholder="Promo Code" value={couponCode} onChange={(e) => setCouponCode(e.target.value.toUpperCase())} disabled={discount > 0} className="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-base text-white focus:outline-none focus:border-[#EAD8B1]" />
                                     <button onClick={handleApplyCoupon} className="bg-gray-600 text-white px-3 rounded-lg text-xs hover:bg-gray-500">Apply</button>
                                 </div>
                                 {couponMsg.text && <p className={`text-[10px] mt-1 ${couponMsg.type === "error" ? "text-red-400" : "text-green-400"}`}>{couponMsg.type === "error" ? <AlertCircle size={10} /> : <CheckCircle size={10} />}{couponMsg.text}</p>}
                             </div>
 
-                            <div className="pt-3 border-t border-gray-600">
+                            <div className="pt-3 border-t border-gray-600 pb-4">
                                 <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Tarjeta Seleccionada</label>
                                 {cards.length > 0 ? (
                                     <div className="space-y-2">

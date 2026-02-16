@@ -665,14 +665,15 @@ export default function PackageDetailClient({
                   </span>
                   <div className="text-3xl font-garamond font-bold leading-none text-white">${totalAmount.toFixed(2)}</div>
                 </div>
-                {/* 🔥 BOTÓN DESBLOQUEADO: Siempre activo para abrir el menú */}
+                {/* 🔥 BOTÓN DESBLOQUEADO PARA ABRIR MENÚ */}
                 <button onClick={handlePay} disabled={isPaying} className="bg-[#EAD8B1] text-[#222b3c] py-3.5 px-8 rounded-xl text-base font-bold shadow-lg active:scale-95 transition-transform flex items-center gap-2">
                   {isPaying ? <Loader2 className="animate-spin" /> : <CreditCard size={18} />} {tPickup("btnPay")}
                 </button>
               </div>
 
+              {/* 🔥 CORRECCIÓN: SCROLL INTERNO PARA EVITAR ROTURA CON TECLADO */}
               {showMobileDetails && (
-                <div className="mt-5 pt-5 border-t border-gray-600 space-y-3 text-sm animate-fadeIn">
+                <div className="mt-5 pt-5 border-t border-gray-600 space-y-3 text-sm animate-fadeIn max-h-[60vh] overflow-y-auto">
                   <div className="flex justify-between text-gray-300">
                     <span>Freight Cost</span>
                     <span>${servicePrice.toFixed(2)}</span>
@@ -709,15 +710,16 @@ export default function PackageDetailClient({
                     </div>
                   )}
 
+                  {/* 🔥 CORRECCIÓN: text-base PARA EVITAR ZOOM EN IPHONE */}
                   <div className="pt-3">
                     <div className="flex gap-2">
-                      <input type="text" placeholder="Promo Code" value={couponCode} onChange={(e) => setCouponCode(e.target.value.toUpperCase())} disabled={discount > 0} className="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#EAD8B1]" />
+                      <input type="text" placeholder="Promo Code" value={couponCode} onChange={(e) => setCouponCode(e.target.value.toUpperCase())} disabled={discount > 0} className="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-base text-white focus:outline-none focus:border-[#EAD8B1]" />
                       <button onClick={handleApplyCoupon} className="bg-gray-600 text-white px-3 rounded-lg text-xs hover:bg-gray-500">Apply</button>
                     </div>
                     {couponMsg.text && <p className={`text-[10px] mt-1 ${couponMsg.type === "error" ? "text-red-400" : "text-green-400"}`}>{couponMsg.type === "error" ? <AlertCircle size={10} /> : <CheckCircle size={10} />}{couponMsg.text}</p>}
                   </div>
 
-                  <div className="pt-4 border-t border-gray-600">
+                  <div className="pt-4 border-t border-gray-600 pb-4">
                     <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Tarjeta Seleccionada</label>
                     {cards.length > 0 ? (
                       <div className="space-y-2">
