@@ -8,7 +8,7 @@ export default function TawkLoader() {
   const pathname = usePathname();
   const [cookiesAccepted, setCookiesAccepted] = useState(false);
   
-  // Lista de páginas permitidas (Whitelist)
+  // Lista de páginas permitidas (Whitelist) - TAL CUAL TU CÓDIGO
   const allowedPages = [
       '/', 
       '/en', '/es', '/fr', '/pt',
@@ -35,16 +35,35 @@ export default function TawkLoader() {
     return () => window.removeEventListener('cookie_consent_updated', checkConsent);
   }, []);
 
-  // 2. LIMPIEZA DE "RESIDUOS" AL NAVEGAR 🧹
-  // Si vienes de la Landing hacia el Dashboard, el widget podría quedarse pegado.
-  // Este efecto asegura que se elimine visualmente.
+  // 2. 🔥 FIX PARA ANDROID Y WINDOWS (Z-INDEX)
+  // ESTE ES EL ÚNICO BLOQUE NUEVO NECESARIO PARA QUE SE VEA BIEN
+  useEffect(() => {
+    // Solo ejecutamos si es página permitida y hay cookies aceptadas
+    if (!isAllowedPage || !cookiesAccepted) return;
+
+    const interval = setInterval(() => {
+        const tawkIframes = document.querySelectorAll('iframe[title*="chat"]');
+        tawkIframes.forEach((iframe) => {
+            if (iframe) {
+                // @ts-ignore
+                iframe.style.setProperty("z-index", "2147483647", "important");
+                // @ts-ignore
+                iframe.style.setProperty("position", "fixed", "important");
+            }
+        });
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [isAllowedPage, cookiesAccepted]);
+
+  // 3. LIMPIEZA DE "RESIDUOS" AL NAVEGAR 🧹
   useEffect(() => {
     if (!isAllowedPage && typeof window !== 'undefined' && (window as any).Tawk_API) {
         // Si entramos a zona prohibida, forzamos ocultar inmediatamente
-        (window as any).Tawk_API.hideWidget();
+        try { (window as any).Tawk_API.hideWidget(); } catch (e) {}
     } else if (isAllowedPage && cookiesAccepted && typeof window !== 'undefined' && (window as any).Tawk_API) {
         // Si volvimos a zona permitida, asegurar que se vea
-        (window as any).Tawk_API.showWidget();
+        try { (window as any).Tawk_API.showWidget(); } catch (e) {}
     }
   }, [pathname, isAllowedPage, cookiesAccepted]);
 
@@ -61,7 +80,7 @@ export default function TawkLoader() {
       onLoad={() => {
           // Doble seguridad al terminar de cargar
           if ((window as any).Tawk_API) {
-              (window as any).Tawk_API.showWidget();
+              try { (window as any).Tawk_API.showWidget(); } catch (e) {}
           }
       }}
     >
