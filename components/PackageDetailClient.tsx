@@ -665,7 +665,7 @@ export default function PackageDetailClient({
                   </span>
                   <div className="text-3xl font-garamond font-bold leading-none text-white">${totalAmount.toFixed(2)}</div>
                 </div>
-                {/* 🔥 BOTÓN DESBLOQUEADO PARA ABRIR MENÚ */}
+                {/* 🔥 BOTÓN DESBLOQUEADO: Siempre activo para abrir el menú */}
                 <button onClick={handlePay} disabled={isPaying} className="bg-[#EAD8B1] text-[#222b3c] py-3.5 px-8 rounded-xl text-base font-bold shadow-lg active:scale-95 transition-transform flex items-center gap-2">
                   {isPaying ? <Loader2 className="animate-spin" /> : <CreditCard size={18} />} {tPickup("btnPay")}
                 </button>
