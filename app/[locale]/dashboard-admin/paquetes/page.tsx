@@ -26,6 +26,7 @@ export default async function ActivePackagesPage({
 
   try {
       // 1. BUSCAR PAQUETES SUELTOS
+      // Nota: Al usar 'include' y no 'select' principal, Prisma trae todos los campos escalares (incluyendo labelUrl)
       const loosePackages = await prisma.package.findMany({
         where: {
           status: { notIn: ['ENTREGADO', 'CANCELADO'] },
@@ -88,6 +89,10 @@ export default async function ActivePackagesPage({
         heightIn: ship.heightIn,
         shippingTotalPaid: ship.totalAmount, 
         status: ship.status,
+        
+        // 🔥 IMPORTANTE: Agregamos el labelUrl para que el botón lo detecte
+        labelUrl: ship.labelUrl, 
+
         isProcessing: false,
         isStorePickup: false 
       }));
