@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { 
   Calendar, Scale, AlertCircle, CheckCircle, Truck, 
-  DollarSign, Ruler, MapPin, Box, X, User 
+  DollarSign, Ruler, MapPin, Box, X, User, Printer 
 } from 'lucide-react';
 // Asegúrate de que estos componentes existan
 import PackageSearch from '@/components/admin/PackageSearch';
@@ -252,12 +252,27 @@ export default function ActivePackagesClient({ allItems, currentLocale }: Packag
                                     </td>
 
                                     <td className="p-4 text-right">
-                                        {/* 🔥 PASAMOS LA FUNCIÓN DE APERTURA AL COMPONENTE HIJO */}
-                                        <PackageActions 
-                                            pkg={pkg} 
-                                            locale={currentLocale} 
-                                            onDeliverStore={() => handleOpenDeliverModal(pkg.id)}
-                                        />
+                                        <div className="flex items-center justify-end gap-2">
+                                            {/* 🔥 AQUÍ ESTÁ EL BOTÓN DE IMPRESIÓN DEL CARRIER (EASYPOST) */}
+                                            {pkg.labelUrl && (
+                                                <a 
+                                                    href={pkg.labelUrl} 
+                                                    target="_blank" 
+                                                    rel="noopener noreferrer"
+                                                    className="p-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors shadow-sm"
+                                                    title="Imprimir Label Carrier (EasyPost)"
+                                                >
+                                                    <Printer size={18} />
+                                                </a>
+                                            )}
+                                            
+                                            {/* 🔥 PASAMOS LA FUNCIÓN DE APERTURA AL COMPONENTE HIJO */}
+                                            <PackageActions 
+                                                pkg={pkg} 
+                                                locale={currentLocale} 
+                                                onDeliverStore={() => handleOpenDeliverModal(pkg.id)}
+                                            />
+                                        </div>
                                     </td>
                                 </tr>
                             )})
