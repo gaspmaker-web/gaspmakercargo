@@ -6,7 +6,8 @@ import { ShoppingBag, ExternalLink } from 'lucide-react';
 
 // 🛒 TUS ENLACES DE AFILIADO
 const AFFILIATE_STORES = [
-  { id: 'amazon', name: 'Amazon', bg: 'bg-[#FF9900]', url: 'https://www.amazon.com/?tag=TU_AFILIADO' },
+  // 🔥 AQUÍ ESTÁ TU ENLACE OFICIAL DE AMAZON
+  { id: 'amazon', name: 'Amazon', bg: 'bg-[#FF9900]', url: 'https://www.amazon.com/?tag=gaspmakercarg-20' },
   { id: 'ebay', name: 'eBay', bg: 'bg-[#E53238]', url: 'https://www.ebay.com/' },
   { id: 'shein', name: 'Shein', bg: 'bg-[#222222]', url: 'https://us.shein.com/' },
   { id: 'walmart', name: 'Walmart', bg: 'bg-[#0071CE]', url: 'https://www.walmart.com/' },
