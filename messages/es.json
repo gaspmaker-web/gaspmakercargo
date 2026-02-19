@@ -209,7 +209,8 @@
     "tipText": "Copia y pega estos datos tal cual aparecen en tus tiendas favoritas (Amazon, eBay, etc.) para asegurar la entrega.",
     "affiliateTitle": "Tiendas Recomendadas",
     "affiliateDesc": "Encuentra los mejores productos y envíalos directo a tu casillero.",
-    "buyNow": "Visitar tienda"
+    "buyNow": "Visitar tienda",
+    "amazonDisclaimer": "* Como Afiliado de Amazon, percibo dinero con las compras elegibles."
   },
   "Referral": {
     "bannerTitle": "Consigue $25 USD",
@@ -817,5 +818,10 @@
     "s4_li3_text": "Vercel y Supabase (para alojamiento y seguridad de la base de datos).",
     "s5_title": "5. Contáctenos",
     "s5_text": "Si tiene preguntas o comentarios sobre esta política, puede enviarnos un correo electrónico a:"
+  },
+  "AffiliateDisclaimer": {
+    "title": "Divulgación de Afiliados",
+    "text": "Este sitio web contiene enlaces de afiliados. Esto significa que si haces clic en los enlaces de tiendas como eBay, Shein, Walmart, Temu, AliExpress u otras plataformas mencionadas, y realizas una compra, podemos recibir una pequeña comisión sin costo adicional para ti. Estas comisiones nos ayudan a mantener el sitio en funcionamiento.",
+    "amazon": "* Como Afiliado de Amazon, percibo dinero con las compras elegibles."
   }
 }

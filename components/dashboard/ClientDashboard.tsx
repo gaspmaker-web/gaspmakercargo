@@ -249,7 +249,7 @@ export default function ClientDashboard({
       <div className="max-w-7xl mx-auto">
         
         {/* Header */}
-        <div className="mb-6 md:mb-8 mt-2 flex justify-between items-end">
+       <div className="mb-6 md:mb-8 mt-2 hidden sm:flex justify-between items-end">
             <div>
                 <h1 className="text-2xl md:text-3xl font-bold text-gasp-maker-dark-gray font-garamond">
                     {t('welcome', { name: (user as any).name || 'Cliente' })}
@@ -262,8 +262,8 @@ export default function ClientDashboard({
             )}
         </div>
 
-        {/* ADDRESS CARD */}
-        <div className="mb-8">
+        {/* 🔥 ADDRESS CARD CON MARGEN SUPERIOR PARA MÓVILES */}
+        <div className="mt-6 sm:mt-0 mb-8">
             <AddressCard recipient={(user as any).name || 'Cliente'} suiteNo={(user as any).suiteNo || 'GMC-PENDING'} />
         </div>
 

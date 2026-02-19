@@ -209,7 +209,8 @@
     "tipText": "Copy and paste these details exactly as they appear in your favorite stores (Amazon, eBay, etc.) to ensure delivery.",
     "affiliateTitle": "Recommended Stores",
     "affiliateDesc": "Find the best products and ship them directly to your locker.",
-    "buyNow": "Visit store"
+    "buyNow": "Visit store",
+    "amazonDisclaimer": "* As an Amazon Associate I earn from qualifying purchases."
   },
   "Referral": {
     "bannerTitle": "Get $25 USD",
@@ -776,5 +777,10 @@
     "s4_li3_text": "Vercel and Supabase (for hosting and database security).",
     "s5_title": "5. Contact Us",
     "s5_text": "If you have questions or comments about this policy, you may email us at:"
+  },
+  "AffiliateDisclaimer": {
+    "title": "Affiliate Disclosure",
+    "text": "This website contains affiliate links. This means that if you click on links to stores such as eBay, Shein, Walmart, Temu, AliExpress, or other mentioned platforms, and make a purchase, we may receive a small commission at no extra cost to you. These commissions help us keep the site running.",
+    "amazon": "* As an Amazon Associate I earn from qualifying purchases."
   }
 }
