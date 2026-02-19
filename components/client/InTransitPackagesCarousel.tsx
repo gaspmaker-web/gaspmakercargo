@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { Search, MapPin, Calendar, Plane, ExternalLink, Box, Copy, Truck, Scale, ArrowRight, Check } from 'lucide-react';
 // 🔥 1. Importamos el hook
 import { useTranslations } from 'next-intl';
-// 🔥 2. Importamos la función de tracking
+// 🔥 2. Importamos la función de tracking (NUEVO)
 import { getTrackingUrl } from '@/lib/getTrackingUrl';
 
 interface Props {
@@ -29,7 +29,7 @@ export default function InTransitPackagesCarousel({ packages, userCountryCode }:
         pkg.gmcTrackingNumber?.toLowerCase().includes(term) ||
         pkg.carrierTrackingNumber?.toLowerCase().includes(term) ||
         parent?.finalTrackingNumber?.toLowerCase().includes(term) ||
-        pkg.finalTrackingNumber?.toLowerCase().includes(term) // Filtro para sueltos
+        pkg.finalTrackingNumber?.toLowerCase().includes(term) // 🔥 Agregado para buscar por tracking final
     );
   });
 
@@ -60,27 +60,23 @@ export default function InTransitPackagesCarousel({ packages, userCountryCode }:
       {filteredPackages.length > 0 ? (
         <div className="flex overflow-x-auto pb-12 -mx-4 px-4 gap-6 snap-x snap-mandatory scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent pt-2">
             {filteredPackages.map((pkg) => {
-                // 1. Identificar si es Consolidado o Suelto
+                // Datos Calculados - LÓGICA ORIGINAL RESPETADA
                 const parent = pkg.consolidatedShipment;
-                const isConsolidated = !!parent;
+                const hasMasterTracking = !!parent?.finalTrackingNumber;
                 
-                // 2. Extraer el Número de Rastreo de EasyPost (Si existe)
-                // Buscamos en el padre (si es consolidado) o en el propio paquete (si es suelto)
-                const easyPostTracking = isConsolidated 
-                    ? parent.finalTrackingNumber 
-                    : pkg.finalTrackingNumber;
+                // 🔥 SEPARAMOS EL TRACKING INTERNO DEL EXTERNO
+                const internalTracking = pkg.gmcTrackingNumber || t('processing');
+                const easyPostTracking = hasMasterTracking ? parent.finalTrackingNumber : pkg.finalTrackingNumber;
 
-                // 3. Extraer el Courier Real (FedEx, USPS, etc.)
-                const actualCourier = isConsolidated 
+                const displayCourier = hasMasterTracking 
                     ? (parent.selectedCourier || 'Gasp Maker Cargo') 
                     : (pkg.selectedCourier || 'Gasp Maker Cargo');
                 
-                // 4. Determinar si es un envío interno (Gasp Maker) o externo (FedEx/USPS)
-                const isInternalCourier = actualCourier.toUpperCase().includes('GASP') || actualCourier.toUpperCase().includes('MAKER') || actualCourier.toUpperCase().includes('MARITIMO');
+                const isGMC = displayCourier.toUpperCase().includes('GASP') || displayCourier.toUpperCase().includes('MAKER') || displayCourier.toUpperCase().includes('MARITIMO');
 
-                // 5. GENERAR URL DE RASTREO (Solo si hay tracking de EasyPost y no es interno)
-                const trackingUrl = (easyPostTracking && !isInternalCourier)
-                    ? getTrackingUrl(actualCourier, easyPostTracking)
+                // 🔥 LA URL USA EL TRACKING DE EASYPOST
+                const trackingUrl = (easyPostTracking && !isGMC)
+                    ? getTrackingUrl(displayCourier, easyPostTracking)
                     : "#";
 
                 return (
@@ -125,28 +121,30 @@ export default function InTransitPackagesCarousel({ packages, userCountryCode }:
                                     {pkg.description || t('noDescription')}
                                 </h3>
                                 <div className="flex items-center gap-2">
-                                    {isConsolidated && (
+                                    {/* 🔥 ESTO VUELVE A FUNCIONAR PERFECTO */}
+                                    {hasMasterTracking && (
                                         <span title="Consolidado" className="bg-purple-50 text-purple-600 px-2 py-0.5 rounded text-[10px] font-bold border border-purple-100 flex items-center gap-1">
                                             <Box size={10}/> CONSOLIDATED
                                         </span>
                                     )}
                                     <span className="text-xs text-gray-400 font-medium">
-                                        {actualCourier}
+                                        {displayCourier}
                                     </span>
                                 </div>
                             </div>
 
-                            {/* Tracking Interno (El cliente siempre ve su código GM-US) */}
+                            {/* Tracking Number con Copia */}
                             <div className="bg-gray-50 rounded-xl p-3 border border-gray-200 group-hover:border-blue-200 transition-colors relative">
                                 <p className="text-[9px] text-gray-400 uppercase font-bold tracking-widest mb-1">
-                                    {t('tracking')} (Ref Interna)
+                                    {t('tracking')}
                                 </p>
                                 <div className="flex justify-between items-center">
+                                    {/* 🔥 SIEMPRE MOSTRAMOS EL TRACKING GM-US EN GRANDE */}
                                     <p className="font-mono text-base font-bold text-slate-800 truncate tracking-tight">
-                                        {pkg.gmcTrackingNumber}
+                                        {internalTracking}
                                     </p>
                                     <button 
-                                        onClick={() => handleCopy(pkg.gmcTrackingNumber, pkg.id)}
+                                        onClick={() => handleCopy(internalTracking, pkg.id)}
                                         className="text-gray-400 hover:text-blue-600 transition-colors p-1"
                                         title="Copy"
                                     >
@@ -154,11 +152,11 @@ export default function InTransitPackagesCarousel({ packages, userCountryCode }:
                                     </button>
                                 </div>
                                 
-                                {/* Si existe un tracking de EasyPost, se lo mostramos en pequeño abajo */}
-                                {easyPostTracking && (
+                                {/* 🔥 SI HAY TRACKING EXTERNO, LO MOSTRAMOS ABAJO */}
+                                {easyPostTracking && !isGMC && (
                                     <div className="mt-2 pt-2 border-t border-gray-200 flex justify-between items-center">
                                         <p className="text-[9px] text-gray-500 uppercase font-bold tracking-widest">
-                                            Guía {actualCourier}:
+                                            {displayCourier}:
                                         </p>
                                         <span className="font-mono text-xs font-bold text-blue-600">
                                             {easyPostTracking}
@@ -178,8 +176,8 @@ export default function InTransitPackagesCarousel({ packages, userCountryCode }:
                                     </div>
                                 </div>
 
-                                {/* 🔥 BOTÓN INTELIGENTE DE RASTREO */}
-                                {isInternalCourier ? (
+                                {/* 🔥 BOTÓN INTELIGENTE QUE USA EL TRACKING DE EASYPOST */}
+                                {isGMC ? (
                                     <button
                                         type="button"
                                         disabled={true}
