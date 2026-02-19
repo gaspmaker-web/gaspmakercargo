@@ -254,13 +254,13 @@ export default function ActivePackagesClient({ allItems, currentLocale }: Packag
                                     <td className="p-4 text-right">
                                         <div className="flex items-center justify-end gap-2">
                                             {/* 🔥 AQUÍ ESTÁ EL BOTÓN DE IMPRESIÓN DEL CARRIER (EASYPOST) */}
-                                            {pkg.labelUrl && (
+                                            {(pkg.shippingLabelUrl || pkg.labelUrl) && (
                                                 <a 
-                                                    href={pkg.labelUrl} 
+                                                    href={pkg.shippingLabelUrl || pkg.labelUrl} 
                                                     target="_blank" 
                                                     rel="noopener noreferrer"
                                                     className="p-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors shadow-sm"
-                                                    title="Imprimir Label Carrier (EasyPost)"
+                                                    title="Imprimir Label Carrier"
                                                 >
                                                     <Printer size={18} />
                                                 </a>

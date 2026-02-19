@@ -77,7 +77,10 @@ export async function POST(req: Request) {
         data: {
             status: 'ENVIADO',
             gmcTrackingNumber: boughtShipment.tracker.tracking_code, // Tracking Real
-            receiptUrl: boughtShipment.postage_label.label_url // PDF de la etiqueta
+            receiptUrl: boughtShipment.postage_label.label_url, // Lo dejamos por si lo usas en otro lado
+            
+            // 🔥 AQUÍ ESTÁ LA MAGIA: Guardamos el PDF en el nuevo campo
+            shippingLabelUrl: boughtShipment.postage_label.label_url 
         }
     });
 

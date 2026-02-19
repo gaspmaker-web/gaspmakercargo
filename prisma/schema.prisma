@@ -110,7 +110,7 @@ model Package {
   photoUrlMiami          String?
   receiptUrl             String?
   invoiceUrl             String?
-  
+  shippingLabelUrl       String?
   deliveryPhotoUrl       String?   
   deliverySignature      String?   
   deliveredBy            String?   // 🔥 NUEVO: Nombre del personal que entregó
