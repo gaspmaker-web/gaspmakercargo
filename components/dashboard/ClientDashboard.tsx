@@ -289,13 +289,25 @@ export default function ClientDashboard({
           <div className="lg:col-span-2 space-y-4">
              <div className="flex justify-between items-center px-1 cursor-pointer select-none" onClick={() => setIsExpanded(!isExpanded)}>
                 
+                {/* 🔥 MEJORA DE UX: Título + Solo Flecha */}
                 <div className="flex items-center gap-3">
                     <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
                         <Box className="text-gmc-dorado-principal" size={20}/> {t('packagesInWarehouse')}
                     </h2>
+                    {displayPackages.length > 1 && (
+                        <span className="hidden md:flex bg-blue-50 text-blue-600 px-2 py-1 rounded-full animate-pulse border border-blue-100">
+                            <ArrowRight size={14} />
+                        </span>
+                    )}
                 </div>
 
                 <div className="flex items-center gap-3">
+                    {/* Indicador móvil: Solo Flecha */}
+                    {displayPackages.length > 1 && (
+                        <span className="md:hidden text-blue-500 font-bold flex items-center animate-pulse">
+                            <ArrowRight size={18} />
+                        </span>
+                    )}
                     <div className="text-gray-400 hover:text-blue-600 transition-colors">
                         {isExpanded ? <ChevronUp size={20}/> : <ChevronDown size={20}/>}
                     </div>
