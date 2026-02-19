@@ -76,10 +76,10 @@ export async function POST(req: Request) {
         where: { id: packageId },
         data: {
             status: 'ENVIADO',
-            gmcTrackingNumber: boughtShipment.tracker.tracking_code, // Tracking Real
-            receiptUrl: boughtShipment.postage_label.label_url, // Lo dejamos por si lo usas en otro lado
+            // ✅ AHORA GUARDAMOS EL TRACKING DE EASYPOST EN SU CAMPO CORRECTO
+            finalTrackingNumber: boughtShipment.tracker.tracking_code, 
             
-            // 🔥 AQUÍ ESTÁ LA MAGIA: Guardamos el PDF en el nuevo campo
+            receiptUrl: boughtShipment.postage_label.label_url, 
             shippingLabelUrl: boughtShipment.postage_label.label_url 
         }
     });
