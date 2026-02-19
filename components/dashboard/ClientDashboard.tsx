@@ -252,7 +252,6 @@ export default function ClientDashboard({
         <div className="mb-6 md:mb-8 mt-2 flex justify-between items-end">
             <div>
                 <h1 className="text-2xl md:text-3xl font-bold text-gasp-maker-dark-gray font-garamond">
-                    {/* 🚨 CORRECCIÓN: Usamos (as any) para asegurar que TypeScript encuentre 'name' */}
                     {t('welcome', { name: (user as any).name || 'Cliente' })}
                 </h1>
             </div>
@@ -265,7 +264,6 @@ export default function ClientDashboard({
 
         {/* ADDRESS CARD */}
         <div className="mb-8">
-            {/* 🚨 CORRECCIÓN: Aseguramos el acceso a name y suiteNo */}
             <AddressCard recipient={(user as any).name || 'Cliente'} suiteNo={(user as any).suiteNo || 'GMC-PENDING'} />
         </div>
 
@@ -290,12 +288,19 @@ export default function ClientDashboard({
           
           <div className="lg:col-span-2 space-y-4">
              <div className="flex justify-between items-center px-1 cursor-pointer select-none" onClick={() => setIsExpanded(!isExpanded)}>
-                <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-                    <Box className="text-gmc-dorado-principal" size={20}/> {t('packagesInWarehouse')}
-                </h2>
-                <div className="text-gray-400 hover:text-blue-600 transition-colors">
-                    {isExpanded ? <ChevronUp size={20}/> : <ChevronDown size={20}/>}
+                
+                <div className="flex items-center gap-3">
+                    <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                        <Box className="text-gmc-dorado-principal" size={20}/> {t('packagesInWarehouse')}
+                    </h2>
                 </div>
+
+                <div className="flex items-center gap-3">
+                    <div className="text-gray-400 hover:text-blue-600 transition-colors">
+                        {isExpanded ? <ChevronUp size={20}/> : <ChevronDown size={20}/>}
+                    </div>
+                </div>
+
             </div>
 
             {isExpanded && (
@@ -317,7 +322,7 @@ export default function ClientDashboard({
                                     key={pkg.id} 
                                     onClick={() => togglePackage(pkg.id, isBlocked)}
                                     className={`
-                                        min-w-[85vw] sm:min-w-[320px] snap-center 
+                                        min-w-[80vw] sm:min-w-[280px] snap-center 
                                         bg-white rounded-2xl shadow-sm border transition-all relative overflow-hidden flex flex-col
                                         ${isBlocked ? 'border-red-200 ring-1 ring-red-100 opacity-95' : ''}
                                         ${isSelected 
@@ -399,7 +404,8 @@ export default function ClientDashboard({
                                 </div>
                             );
                         })}
-                        <div className="w-1 shrink-0"></div>
+                        {/* 🔥 Espacio final para que el scroll termine suave y no pegado al borde */}
+                        <div className="min-w-[5vw] shrink-0"></div>
                     </div>
                 )
             )}
