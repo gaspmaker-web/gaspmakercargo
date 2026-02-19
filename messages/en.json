@@ -18,6 +18,11 @@
       "cta_primary": "Open Free Locker",
       "cta_secondary": "Calculate Shipping"
     },
+      "RecommendedStores": {
+      "title": "Shop in the US, receive in your country",
+      "description": "Find the best products in the most popular US stores. Shop online, use your GaspMakerCargo locker address at checkout, and we'll take care of delivering it right to your door.",
+      "shopNow": "Shop now"
+    },
     "Destinations": {
       "title_part1": "Experts in",
       "title_part2": "Shipping to Trinidad and the Caribbean.",

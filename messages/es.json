@@ -18,6 +18,11 @@
       "cta_primary": "Abrir Casillero Gratis",
       "cta_secondary": "Calcular Envío"
     },
+      "RecommendedStores": {
+      "title": "Compra en USA, recibe en tu país",
+      "description": "Encuentra los mejores productos en las tiendas más populares de Estados Unidos. Compra en línea, usa tu dirección de casillero GaspMakerCargo al finalizar la compra, y nosotros nos encargamos de llevarlo hasta tu puerta.",
+      "shopNow": "Comprar ahora"
+    },
     "Destinations": {
       "title_part1": "Expertos en",
       "title_part2": "Envíos a Trinidad y el Caribe.",

@@ -18,6 +18,11 @@
       "cta_primary": "Ouvrir un Casier Gratuit",
       "cta_secondary": "Calculer l'Envoi"
     },
+      "RecommendedStores": {
+      "title": "Achetez aux États-Unis, recevez dans votre pays",
+      "description": "Trouvez les meilleurs produits dans les boutiques américaines les plus populaires. Achetez en ligne, utilisez l'adresse de votre casier GaspMakerCargo lors du paiement, et nous nous occupons de vous livrer à votre porte.",
+      "shopNow": "Acheter maintenant"
+    },
     "Destinations": {
       "title_part1": "Experts en",
       "title_part2": "Expédition vers Trinité et les Caraïbes.",

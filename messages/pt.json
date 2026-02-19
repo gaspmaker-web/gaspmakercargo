@@ -18,6 +18,11 @@
       "cta_primary": "Abrir Cacifo Grátis",
       "cta_secondary": "Calcular Envio"
     },
+      "RecommendedStores": {
+      "title": "Compre nos EUA, receba no seu país",
+      "description": "Encontre os melhores produtos nas lojas mais populares dos Estados Unidos. Compre online, use o endereço do seu armário GaspMakerCargo na finalização da compra, e nós cuidamos de entregar na sua porta.",
+      "shopNow": "Comprar agora"
+    },
     "Destinations": {
       "title_part1": "Especialistas em",
       "title_part2": "Envios para Trinidad e o Caribe.",

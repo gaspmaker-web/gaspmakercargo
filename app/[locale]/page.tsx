@@ -10,6 +10,9 @@ import {
   CheckCircle, Box
 } from 'lucide-react';
 
+// 🔥 IMPORTAMOS TU NUEVO COMPONENTE DE TIENDAS AFILIADAS
+import RecommendedStores from '@/components/RecommendedStores';
+
 export default function HomePage() {
   const t = useTranslations('HomePage');
   const tSteps = useTranslations('HowItWorks'); 
@@ -38,14 +41,14 @@ export default function HomePage() {
             <div className="text-center lg:text-left">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-md mb-6">
                 
-                {/* 🔥 AQUÍ ESTÁ EL CAMBIO: Quitamos el escudo y pusimos tu logo oficial */}
+                {/* Logo oficial */}
                 <Image 
                   src="/gaspmakercargoproject.png" 
                   alt="Gasp Maker Cargo Logo" 
                   width={18} 
                   height={18} 
                   className="object-contain drop-shadow-md"
-/>
+                />
                 
                 <span className="text-xs font-bold tracking-[2px] text-gray-200 uppercase">
                   {t('Hero.badge')}
@@ -141,6 +144,7 @@ export default function HomePage() {
                 <div className="absolute inset-0 flex items-center justify-center">
                     <svg className="w-[70%] h-[70%] animate-[spin_60s_linear_infinite]" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <defs>
+                        {/* 🔥 AQUÍ ESTABA EL ERROR: Ya está corregido sin el punto */}
                         <radialGradient id="globeBlue" cx="50%" cy="50%" r="50%">
                             <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.1" />
                             <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.05" />
@@ -172,7 +176,10 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* --- 4. CTA & NAVEGACIÓN --- */}
+      {/* 🔥 4. NUEVA SECCIÓN DE TIENDAS AFILIADAS (ESTRATÉGICO PARA AMAZON) */}
+      <RecommendedStores />
+
+      {/* --- 5. CTA & NAVEGACIÓN --- */}
       <section className="py-20 bg-white border-t border-gray-100 text-center">
         <div className="container mx-auto px-4">
             <h2 className="text-3xl md:text-4xl font-bold font-garamond text-gray-900 mb-10">
