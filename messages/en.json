@@ -206,7 +206,10 @@
     "country": "Country",
     "phone": "Phone",
     "tip": "Tip",
-    "tipText": "Copy and paste these details exactly as they appear in your favorite stores (Amazon, eBay, etc.) to ensure delivery."
+    "tipText": "Copy and paste these details exactly as they appear in your favorite stores (Amazon, eBay, etc.) to ensure delivery.",
+    "affiliateTitle": "Recommended Stores",
+    "affiliateDesc": "Find the best products and ship them directly to your locker.",
+    "buyNow": "Visit store"
   },
   "Referral": {
     "bannerTitle": "Get $25 USD",

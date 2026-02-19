@@ -206,7 +206,10 @@
     "country": "Pays",
     "phone": "Téléphone",
     "tip": "Conseil",
-    "tipText": "Copiez et collez ces détails exactement comme ils apparaissent sur vos boutiques préférées (Amazon, eBay, etc.) pour assurer la livraison."
+    "tipText": "Copiez et collez ces détails exactement comme ils apparaissent sur vos boutiques préférées (Amazon, eBay, etc.) pour assurer la livraison.",
+    "affiliateTitle": "Boutiques Recommandées",
+    "affiliateDesc": "Trouvez les meilleurs produits et expédiez-les directement vers votre locker.",
+    "buyNow": "Visiter la boutique"
   },
   "Referral": {
     "bannerTitle": "Obtenez 25 $ USD",

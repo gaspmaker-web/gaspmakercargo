@@ -206,7 +206,10 @@
     "country": "País",
     "phone": "Telefone",
     "tip": "Dica",
-    "tipText": "Copie e cole esses dados exatamente como aparecem em suas lojas favoritas (Amazon, eBay, etc.) para garantir a entrega."
+    "tipText": "Copie e cole esses dados exatamente como aparecem em suas lojas favoritas (Amazon, eBay, etc.) para garantir a entrega.",
+    "affiliateTitle": "Lojas Recomendadas",
+    "affiliateDesc": "Encontre os melhores produtos e envie direto para o seu locker.",
+    "buyNow": "Visitar loja"
   },
   "Referral": {
     "bannerTitle": "Ganhe $25 USD",
