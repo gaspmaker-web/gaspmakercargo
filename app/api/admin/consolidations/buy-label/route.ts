@@ -9,7 +9,7 @@ export async function POST(req: Request) {
     const easypost = (await import("@/lib/easypost")).default;
 
     const session = await auth();
-    // Validar Admin o Warehouse
+    // Validar Admin o Warehouse (Respetado)
     if (!session?.user || (session.user.role !== 'ADMIN' && session.user.role !== 'WAREHOUSE')) {
         return NextResponse.json({ message: "No autorizado." }, { status: 401 });
     }
@@ -32,29 +32,47 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "Usa despacho manual." }, { status: 400 });
     }
 
-    // 2. Lógica de Dirección (Igual que paquetes)
-    let destinationCountry = consolidation.user.country?.trim().toUpperCase();
-    if (!destinationCountry) destinationCountry = 'US'; // Fallback seguro
+    // =========================================================================
+    // 🔥 2. Lógica de Dirección (MODO ESTRICTO: Leyendo de la consolidación)
+    // =========================================================================
+    let toAddress: any = {};
 
-    if (destinationCountry.length > 2) {
-        if (destinationCountry.includes('TRINIDAD')) destinationCountry = 'TT';
-        else if (destinationCountry.includes('UNITED')) destinationCountry = 'US';
+    if (consolidation.shippingAddress) {
+        // Ejemplo: "kevermay | whetley shopping center, st. thomas, AL 00802, VI | Tel: 333"
+        const parts = consolidation.shippingAddress.split('|');
+        const name = parts[0]?.trim() || consolidation.user.name;
+        const addressBlock = parts[1]?.trim() || '';
+        const phoneBlock = parts[2]?.trim() || '';
+
+        // Extraer teléfono
+        let phone = phoneBlock.replace(/[^0-9]/g, '');
+        if (phone.length < 10) phone = '7862820763';
+
+        // Partir el bloque de dirección
+        const addrChunks = addressBlock.split(',').map(c => c.trim());
+        const countryRaw = addrChunks.pop() || 'US'; 
+        let destinationCountry = countryRaw.length > 2 ? (countryRaw.toUpperCase().includes('TRINIDAD') ? 'TT' : 'US') : countryRaw.toUpperCase();
+
+        const cityZipChunk = addrChunks.pop() || '';
+        const streetChunk = addrChunks.join(', ') || 'N/A';
+
+        const zip = cityZipChunk.match(/\d{4,}/)?.[0] || '00000';
+        const stateMatch = cityZipChunk.match(/\b[A-Z]{2}\b/);
+        const state = stateMatch ? stateMatch[0] : (destinationCountry === 'US' ? 'FL' : undefined);
+        const city = cityZipChunk.replace(zip, '').replace(state || '', '').replace(/[^a-zA-Z\s]/g, '').trim() || 'City';
+
+        toAddress = {
+            name: name,
+            street1: streetChunk,
+            city: city,
+            state: state,
+            zip: zip,
+            country: destinationCountry,
+            phone: phone
+        };
+    } else {
+        return NextResponse.json({ error: "⚠️ MODO ESTRICTO: Esta consolidación no tiene una dirección válida asignada. Asegúrese de que el cliente haya pagado con una dirección seleccionada." }, { status: 400 });
     }
-
-    let cleanPhone = consolidation.user.phone?.replace(/[^0-9]/g, '') || '';
-    if (cleanPhone.length < 10) cleanPhone = '7862820763';
-
-    const rawLocation = consolidation.user.cityZip || ''; 
-    const city = rawLocation.split(',')[0].replace(/\d+/g, '').trim() || 'City'; 
-    const zip = rawLocation.match(/\d{4,}/)?.[0] || '00000';
-
-    let state = undefined;
-    if (destinationCountry === 'US' || destinationCountry === 'CA') {
-        const stateMatch = rawLocation.match(/\b[A-Z]{2}\b/);
-        state = stateMatch ? stateMatch[0] : (destinationCountry === 'US' ? 'FL' : undefined);
-    }
-
-    console.log(`📦 Consolidation Target: ${city}, ${destinationCountry}`);
 
     // 3. Aduanas
     const customsItem = {
@@ -78,15 +96,7 @@ export async function POST(req: Request) {
 
     // 4. Crear Envío
     const shipment = await easypost.Shipment.create({
-      to_address: {
-        name: consolidation.user.name,
-        street1: consolidation.user.address,
-        city: city,
-        state: state, 
-        zip: zip,
-        country: destinationCountry,
-        phone: cleanPhone
-      },
+      to_address: toAddress, // 👈 USAMOS LA DIRECCIÓN GANADORA
       from_address: {
         company: 'GaspMaker Cargo',
         street1: '1861 NW 22nd St',
@@ -139,6 +149,15 @@ export async function POST(req: Request) {
             finalTrackingNumber: boughtShipment.tracker.tracking_code,
             shippingLabelUrl: boughtShipment.postage_label.label_url,
             courierService: `${boughtShipment.selected_rate.carrier} - ${boughtShipment.selected_rate.service}`
+        }
+    });
+
+    // 8. Actualizar paquetes hijos (Para que el cliente vea el tracking en sus cajitas individuales)
+    await prisma.package.updateMany({
+        where: { consolidatedShipmentId: consolidationId },
+        data: {
+            status: 'ENVIADO',
+            finalTrackingNumber: boughtShipment.tracker.tracking_code
         }
     });
 

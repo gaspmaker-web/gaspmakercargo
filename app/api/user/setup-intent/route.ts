@@ -15,6 +15,9 @@ export async function POST(req: Request) {
     // ✅ FORMA CORRECTA: Leemos de Vercel + Limpiamos espacios invisibles
     const stripeKey = process.env.STRIPE_SECRET_KEY;
 
+    // 🕵️‍♂️ EL CHISMOSO DEL BACKEND: ¡Que confiese la llave!
+    console.log("🕵️‍♂️ SETUP-INTENT leyendo llave secreta:", stripeKey ? stripeKey.substring(0, 12) + "..." : "¡NINGUNA LLAVE!");
+
     if (!stripeKey) {
         throw new Error("La clave de Stripe no está configurada en Vercel");
     }
@@ -32,21 +35,21 @@ export async function POST(req: Request) {
     }
 
     let customerId = user.stripeCustomerId;
-    let shouldCreateCustomer = !customerId;
+    let buildCustomer = !customerId;
 
     // 1. Validar cliente existente
     if (customerId) {
         try {
             const existingCustomer = await stripe.customers.retrieve(customerId);
-            if (existingCustomer.deleted) shouldCreateCustomer = true;
+            if (existingCustomer.deleted) buildCustomer = true;
         } catch (error) {
             console.log("⚠️ Cliente antiguo no válido. Creando nuevo...");
-            shouldCreateCustomer = true;
+            buildCustomer = true;
         }
     }
 
     // 2. Crear cliente nuevo si hace falta
-    if (shouldCreateCustomer) {
+    if (buildCustomer) {
       const newCustomer = await stripe.customers.create({
         email: user.email,
         name: user.name || "Cliente GaspMaker",

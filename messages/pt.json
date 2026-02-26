@@ -118,7 +118,12 @@
     "btnEdit": "Editar",
     "btnDelete": "Excluir",
     "noAddressFound": "Você não adicionou nenhum endereço de envio.",
-    "btnAddAddress": "Adicionar endereço"
+    "btnAddAddress": "Adicionar endereço",
+    "deliveryDetailsPrompt": "Por favor, insira seus dados de entrega com precisão.",
+  "fullNameRecipient": "NOME COMPLETO (DESTINATÁRIO)",
+  "addNewAddress": "Adicionar Novo Endereço",
+  "makeDefault": "Tornar Padrão",
+  "edit": "Editar"
   },
   "Dashboard": {
     "welcome": "Bem-vindo, {name}",

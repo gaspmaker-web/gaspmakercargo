@@ -118,7 +118,12 @@
     "btnEdit": "Modifier",
     "btnDelete": "Supprimer",
     "noAddressFound": "Vous n'avez ajouté aucune adresse de livraison.",
-    "btnAddAddress": "Ajouter une adresse"
+    "btnAddAddress": "Ajouter une adresse",
+    "deliveryDetailsPrompt": "Veuillez saisir vos informations de livraison avec précision.",
+  "fullNameRecipient": "NOM COMPLET (DESTINATAIRE)",
+  "addNewAddress": "Ajouter une nouvelle adresse",
+  "makeDefault": "Définir par défaut",
+  "edit": "Modifier"
   },
   "Dashboard": {
     "welcome": "Bienvenue, {name}",

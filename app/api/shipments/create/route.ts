@@ -16,8 +16,8 @@ export async function POST(req: Request) {
     // 🔥 IMPORTAMOS LAS NOTIFICACIONES CORRECTAS Y EL TRADUCTOR
     const { 
         sendPaymentReceiptEmail, 
-        sendConsolidationRequestEmail, // 👈 Nuevo import
-        sendAdminConsolidationAlert,   // 👈 Nuevo import
+        sendConsolidationRequestEmail, 
+        sendAdminConsolidationAlert,   
         getT 
     } = await import('@/lib/notifications');
 
@@ -31,7 +31,8 @@ export async function POST(req: Request) {
         packageIds, 
         type, // 'WAREHOUSE_PICKUP', 'CONSOLIDATION', o 'SHIPPING_INTL'
         scheduledDate, scheduledTime,
-        selectedCourier, courierService, totalWeight, subtotal, processingFee, totalPaid, stripePaymentId, shippingAddress
+        selectedCourier, courierService, totalWeight, subtotal, processingFee, totalPaid, stripePaymentId, 
+        shippingAddress // 🔥 RECIBIMOS LA DIRECCIÓN DEL MENÚ NIVEL AMAZON
     } = body;
 
     if (!packageIds || packageIds.length === 0) {
@@ -147,6 +148,9 @@ export async function POST(req: Request) {
             selectedCourier,
             courierService,
             weightLbs: totalWeight,
+            // 🔥 GUARDAMOS LA DIRECCIÓN ELEGIDA PARA QUE EASYPOST LA PUEDA LEER DESPUÉS
+            // Nota: Si tu Prisma te marca error aquí, es porque debes agregar 'shippingAddress String?' al modelo ConsolidatedShipment
+            shippingAddress: shippingAddress || null,
             packages: { connect: packageIds.map((id: string) => ({ id })) }
         }
     });
@@ -197,7 +201,7 @@ export async function POST(req: Request) {
     }
 
     // =========================================================================
-    // 🔔 NOTIFICACIONES (CORREGIDO Y SEPARADO)
+    // 🔔 NOTIFICACIONES
     // =========================================================================
     try {
         const userLang = (session.user as any).language || 'en';

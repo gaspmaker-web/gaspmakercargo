@@ -118,7 +118,12 @@
     "btnEdit": "Edit",
     "btnDelete": "Delete",
     "noAddressFound": "You haven't added any shipping address.",
-    "btnAddAddress": "Add address"
+    "btnAddAddress": "Add address",
+    "deliveryDetailsPrompt": "Please enter your delivery details accurately.",
+  "fullNameRecipient": "FULL NAME (RECIPIENT)",
+  "addNewAddress": "Add New Address",
+  "makeDefault": "Make Default",
+  "edit": "Edit"
   },
   "Dashboard": {
     "welcome": "Welcome, {name}",

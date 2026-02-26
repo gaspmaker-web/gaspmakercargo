@@ -55,6 +55,7 @@ model User {
   consolidatedShipments ConsolidatedShipment[]
   pickupRequests        PickupRequest[]       
   paymentMethods        PaymentMethod[]
+  addresses              Address[]
   
   // Tareas asignadas como Chofer
   assignedTasks         PickupRequest[]       @relation("DriverAssignments")
@@ -96,7 +97,8 @@ model Package {
   declaredValue          Float?   @default(0.0) 
   
   selectedCourier        String?   
-  courierService         String?   
+  courierService         String? 
+  shippingAddress        String?   // 🔥 NUEVO: Dirección para paquetes individuales Nivel Amazon  
 
   shippingSubtotal       Float?   @default(0.0) 
   shippingProcessingFee  Float?   @default(0.0) 
@@ -136,6 +138,10 @@ model ConsolidatedShipment {
 
   gmcShipmentNumber      String   @unique 
   destinationCountryCode String?
+
+// 🔥 NUEVO: Dirección exacta de entrega seleccionada Nivel Amazon
+  shippingAddress        String?
+
   status                 String   
   
   serviceType            String   @default("CONSOLIDATION")
@@ -222,4 +228,24 @@ model Notification {
 
   @@index([userId])
   @@index([userId, isRead]) 
+}
+
+model Address {
+  id            String   @id @default(uuid())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  fullName      String   // Para guardar "anto sol"
+  address       String   // La calle
+  cityZip       String   // La ciudad y código postal
+  country       String   // El país
+  countryCode   String?  // Código de 2 letras (US, TT, etc)
+  phone         String?  // Teléfono del contacto
+
+  isDefault     Boolean  @default(false)
+
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }

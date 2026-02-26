@@ -18,7 +18,13 @@ export default async function PickupRequestsPage({ params, searchParams }: { par
 
   // Lógica de Búsqueda
   const query = searchParams.q || "";
-  const whereClause = query ? {
+  
+  // 🛡️ FILTRO ESTRICTO: Excluimos TODAS las variantes de almacenaje (STORAGE y STORAGE_FEE)
+  const baseWhereClause = {
+    serviceType: { notIn: ['STORAGE', 'STORAGE_FEE'] }
+  };
+
+  const searchWhereClause = query ? {
     OR: [
         { user: { name: { contains: query, mode: 'insensitive' } } },
         { user: { suiteNo: { contains: query, mode: 'insensitive' } } },
@@ -26,8 +32,14 @@ export default async function PickupRequestsPage({ params, searchParams }: { par
     ]
   } : {};
 
+  // Combinamos de forma segura el filtro de servicio con la búsqueda
+  const finalWhereClause = {
+      ...baseWhereClause,
+      ...(query ? searchWhereClause : {}) 
+  };
+
   const requests = await prisma.pickupRequest.findMany({
-    where: whereClause as any,
+    where: finalWhereClause as any,
     orderBy: { createdAt: 'desc' },
     include: {
       user: {
@@ -39,17 +51,18 @@ export default async function PickupRequestsPage({ params, searchParams }: { par
   // Helpers
   const getServiceIcon = (type: string) => {
     switch (type) {
-        case 'STORAGE': return <Container className="text-orange-600" size={20} />;
         case 'DELIVERY': return <MapPin className="text-green-600" size={20} />;
-        default: return <Truck className="text-blue-600" size={20} />;
+        case 'PICKUP': return <Truck className="text-blue-600" size={20} />;
+        default: return <Package className="text-gray-600" size={20} />; // Para envíos internacionales
     }
   };
 
   const getServiceLabel = (type: string) => {
     switch (type) {
-        case 'STORAGE': return 'Storage / Almacén';
         case 'DELIVERY': return 'Delivery Local';
-        default: return 'Envío Internacional';
+        case 'PICKUP': return 'Pickup (A → Bodega)';
+        case 'SHIPPING': return 'Envío Internacional';
+        default: return type;
     }
   };
 
@@ -107,7 +120,7 @@ export default async function PickupRequestsPage({ params, searchParams }: { par
                         Gestión de Transporte
                     </h1>
                 </div>
-                <p className="text-gray-500 ml-8 mb-4">Monitor de Pick-ups, Deliveries y Storage.</p>
+                <p className="text-gray-500 ml-8 mb-4">Monitor de Pick-ups y Deliveries Locales.</p>
                 
                 {/* BUSCADOR */}
                 <form className="ml-8 flex gap-2">

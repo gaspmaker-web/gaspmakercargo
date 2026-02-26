@@ -1,4 +1,4 @@
-import { auth } from '@/auth'; // Ya no necesitamos signOut del servidor aquí
+import { auth } from '@/auth'; 
 import prisma from '@/lib/prisma';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 
 import AcceptTaskButton from '@/components/driver/AcceptTaskButton'; 
-import DriverLogoutButton from '@/components/DriverLogoutButton'; // 👈 IMPORTAMOS EL BOTÓN NUEVO
+import DriverLogoutButton from '@/components/DriverLogoutButton'; 
 
 export const dynamic = 'force-dynamic';
 
@@ -17,9 +17,6 @@ export default async function DriverDashboardPage(props: any) {
   const params = await props.params;
   const locale = params?.locale || 'en';
 
-  // ===========================================================================
-  // 🔐 SEGURIDAD
-  // ===========================================================================
   const userRole = session?.user?.role?.trim()?.toUpperCase();
 
   if (!session || userRole !== 'DRIVER') {
@@ -28,7 +25,6 @@ export default async function DriverDashboardPage(props: any) {
 
   const driverId = session.user.id;
 
-  // 1. OBTENER DATOS DEL CHOFER
   const driver = await prisma.user.findUnique({
     where: { id: driverId },
     select: { countryCode: true, country: true, name: true }
@@ -42,8 +38,6 @@ export default async function DriverDashboardPage(props: any) {
             <ShieldAlert size={64} className="text-red-500 mb-4"/>
             <h1 className="text-2xl font-bold">Zona No Asignada</h1>
             <p className="text-slate-400">Tu usuario no tiene un código de país (Ej: US) asignado.</p>
-            
-            {/* Usamos el botón de cliente para asegurar limpieza total */}
             <div className="mt-6">
                 <DriverLogoutButton locale={locale} />
             </div>
@@ -57,85 +51,114 @@ export default async function DriverDashboardPage(props: any) {
   // 🧠 SMART FLOW LOGIC
   // =================================================================================
 
-  // A. OPORTUNIDADES DISPONIBLES
+  // 1. OPORTUNIDADES DISPONIBLES (Pickups)
   let availableTasks: any[] = [];
   if (isMiamiDriver) {
       availableTasks = await prisma.pickupRequest.findMany({
         where: { 
             status: { in: ['PENDIENTE', 'PAGADO'] }, 
-            driverId: null 
+            driverId: null,
+            serviceType: { notIn: ['STORAGE', 'STORAGE_FEE'] }
         },
         orderBy: { pickupDate: 'asc' }, 
         include: { user: { select: { name: true } } }
       });
   }
 
-  // B. MIS TAREAS ACTIVAS (Pickups)
+  // 2. MIS TAREAS ACTIVAS (Pickups)
   const myPickupTasks = await prisma.pickupRequest.findMany({
     where: { 
         driverId: driverId,
-        status: { in: ['ACEPTADO', 'EN_CAMINO', 'EN_REPARTO'] }
+        status: { in: ['ACEPTADO', 'EN_CAMINO', 'EN_REPARTO', 'EN_RUTA'] },
+        serviceType: { notIn: ['STORAGE', 'STORAGE_FEE'] }
     },
     orderBy: { pickupDate: 'asc' } 
   });
 
-  // C. MIS ENTREGAS (Paquetes y Consolidaciones)
-  const rawPackages = await prisma.package.findMany({
-    where: { 
-        status: { in: ['EN_REPARTO', 'OUT_FOR_DELIVERY', 'EN_CAMINO'] },
-        user: { country: driverZone }
-    },
-    include: { 
-        user: { select: { name: true, address: true } },
-        consolidatedShipment: true 
-    },
-    orderBy: { updatedAt: 'desc' }
+  // 🔥 3. BUSCAR CONSOLIDACIONES REALES (Cajas Grandes)
+  const activeConsolidations = await prisma.consolidatedShipment.findMany({
+      where: {
+          status: { in: ['EN_REPARTO', 'OUT_FOR_DELIVERY', 'EN_CAMINO', 'EN_RUTA'] },
+          serviceType: 'CONSOLIDATION', // Solo consolidaciones de verdad
+          OR: [
+              { shippingAddress: { contains: driverZone, mode: 'insensitive' } },
+              { user: { countryCode: driverZone } }
+          ],
+          NOT: {
+              OR: [
+                  { selectedCourier: { contains: 'UPS', mode: 'insensitive' } },
+                  { selectedCourier: { contains: 'DHL', mode: 'insensitive' } },
+                  { selectedCourier: { contains: 'FEDEX', mode: 'insensitive' } }
+              ]
+          }
+      },
+      include: {
+          user: { select: { name: true, address: true, country: true, countryCode: true } },
+          packages: true // Traemos todos los paquetes que vienen dentro de la caja
+      },
+      orderBy: { updatedAt: 'desc' }
   });
 
-  // 2. LOGICA DE AGRUPACIÓN
-  const processedDeliveries: any[] = [];
-  const processedShipments = new Set(); 
-
-  for (const pkg of rawPackages) {
-      if (pkg.consolidatedShipmentId && pkg.consolidatedShipment) {
-          const parentStatus = pkg.consolidatedShipment.status;
-          if (parentStatus === 'ENTREGADO' || parentStatus === 'DELIVERED' || parentStatus === 'COMPLETADO') {
-              continue;
+  // 🔥 4. BUSCAR PAQUETES SUELTOS (Ignorando los que están dentro de las consolidaciones de arriba)
+  const activePackages = await prisma.package.findMany({
+      where: {
+          status: { in: ['EN_REPARTO', 'OUT_FOR_DELIVERY', 'EN_CAMINO', 'EN_RUTA'] },
+          OR: [
+              { consolidatedShipmentId: null },
+              { consolidatedShipment: { serviceType: { not: 'CONSOLIDATION' } } } // Permitimos pagos envueltos
+          ],
+          OR: [
+              { shippingAddress: { contains: driverZone, mode: 'insensitive' } },
+              { user: { countryCode: driverZone } }
+          ],
+          NOT: {
+              OR: [
+                  { selectedCourier: { contains: 'UPS', mode: 'insensitive' } },
+                  { selectedCourier: { contains: 'DHL', mode: 'insensitive' } },
+                  { selectedCourier: { contains: 'FEDEX', mode: 'insensitive' } }
+              ]
           }
-          if (processedShipments.has(pkg.consolidatedShipmentId)) continue;
-          
-          processedShipments.add(pkg.consolidatedShipmentId);
+      },
+      include: {
+          user: { select: { name: true, address: true, country: true, countryCode: true } }
+      },
+      orderBy: { updatedAt: 'desc' }
+  });
 
-          const childPackages = rawPackages.filter(p => p.consolidatedShipmentId === pkg.consolidatedShipmentId);
-          const count = childPackages.length;
-          const childTrackings = childPackages.map(p => p.gmcTrackingNumber).filter(t => t);
 
-          processedDeliveries.push({
-              id: pkg.consolidatedShipment.id, 
-              type: 'CONSOLIDATION',
-              tracking: pkg.consolidatedShipment.gmcShipmentNumber || 'Consolidación',
-              user: pkg.user,
-              count: count,
-              childTrackings: childTrackings 
-          });
-      } else {
-          processedDeliveries.push({
-              id: pkg.id,
-              type: 'PACKAGE',
-              tracking: pkg.gmcTrackingNumber || pkg.carrierTrackingNumber || 'Paquete',
-              user: pkg.user,
-              count: 1,
-              childTrackings: []
-          });
-      }
+  // =========================================================
+  // 📦 UNIFICACIÓN DE LA VISTA DEL CHOFER
+  // =========================================================
+  const processedDeliveries: any[] = [];
+
+  // A. Agregamos las Cajas Consolidadas a la lista
+  for (const cons of activeConsolidations) {
+      processedDeliveries.push({
+          id: cons.id, 
+          type: 'CONSOLIDATION',
+          tracking: cons.gmcShipmentNumber || 'Consolidación',
+          user: cons.user,
+          count: cons.packages.length,
+          childTrackings: cons.packages.map((p: any) => p.gmcTrackingNumber).filter((t: any) => t) 
+      });
+  }
+
+  // B. Agregamos los Paquetes Sueltos a la lista
+  for (const pkg of activePackages) {
+      processedDeliveries.push({
+          id: pkg.id, 
+          type: 'PACKAGE',
+          tracking: pkg.gmcTrackingNumber || pkg.carrierTrackingNumber || 'Paquete',
+          user: pkg.user,
+          count: 1,
+          childTrackings: []
+      });
   }
 
   const totalActiveTasks = myPickupTasks.length + processedDeliveries.length;
 
   return (
     <div className="min-h-screen bg-gray-50 pb-24 font-sans">
-      
-      {/* HEADER */}
       <div className="bg-[#222b3c] text-white p-6 rounded-b-[30px] shadow-xl mb-6 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-10 -mt-10 blur-2xl"></div>
         <div className="relative z-10 flex justify-between items-center mb-4">
@@ -153,16 +176,12 @@ export default async function DriverDashboardPage(props: any) {
                 <div className="bg-white/10 p-3 rounded-full backdrop-blur-md border border-white/5 hidden sm:block">
                     <Truck size={28} className="text-gmc-dorado-principal"/>
                 </div>
-
-                {/* 🔥 AQUÍ USAMOS EL NUEVO BOTÓN QUE LIMPIA TODO 🔥 */}
                 <DriverLogoutButton locale={locale} />
             </div>
         </div>
       </div>
 
       <div className="px-4 space-y-8">
-        
-        {/* --- 1. CARRUSEL DE OPORTUNIDADES --- */}
         {isMiamiDriver && availableTasks.length > 0 && (
             <div className="animate-in slide-in-from-right-5 duration-700">
                 <h2 className="text-gray-800 font-bold mb-3 flex items-center gap-2 px-1">
@@ -220,7 +239,6 @@ export default async function DriverDashboardPage(props: any) {
             </div>
         )}
 
-        {/* --- 2. LISTA MI RUTA --- */}
         <div>
             <h2 className="text-gray-800 font-bold mb-4 flex items-center gap-2 px-1">
                 <Briefcase size={20} className="text-gray-600"/> 
@@ -298,7 +316,7 @@ export default async function DriverDashboardPage(props: any) {
                                                 <Box size={10}/> {item.count} PACKS
                                             </span>
                                         ) : (
-                                            <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-[10px] font-bold flex items-center gap-1">
+                                            <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-[10px] font-bold flex items-center gap-1 border border-blue-200">
                                                 <Globe size={10}/> DELIVERY
                                             </span>
                                         )}

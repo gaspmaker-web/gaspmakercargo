@@ -1,23 +1,17 @@
 import { NextResponse } from 'next/server';
 
-// 🛡️ OBLIGATORIO: Forzamos a que esta ruta sea dinámica
-// Esto evita que Vercel intente ejecutarla durante el proceso de Build
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    // ✅ IMPORTACIÓN PEREZOSA (LAZY LOAD)
-    // Solo cargamos la conexión a la BD cuando la API se ejecuta realmente, no en el build.
     const { default: prisma } = await import('@/lib/prisma');
 
-    // Fechas auxiliares para los cálculos
     const hoy = new Date();
     hoy.setHours(0, 0, 0, 0);
     
     const haceSieteDias = new Date();
     haceSieteDias.setDate(haceSieteDias.getDate() - 7);
 
-    // Ejecutamos todas las consultas en paralelo (Promise.all) para que sea súper rápido
     const [
       paquetesActivos,
       clientesTotal,
@@ -27,15 +21,12 @@ export async function GET() {
       entregasHoy,
       nuevosClientes
     ] = await Promise.all([
-      // 1. Paquetes Activos
       prisma.package.count({
         where: { status: { not: 'ENTREGADO' } }
       }),
-      // 2. Total Clientes
       prisma.user.count({
         where: { role: 'CLIENTE' }
       }),
-      // 3. Consolidaciones Pendientes (Tu lógica compleja)
       prisma.consolidatedShipment.count({
         where: { 
             serviceType: 'CONSOLIDATION',
@@ -46,23 +37,23 @@ export async function GET() {
             ]
         }
       }),
-      // 4. Pickups Pendientes
       prisma.pickupRequest.count({
-        where: { status: 'PAGADO' }
+        where: { 
+            status: 'PAGADO',
+            serviceType: { not: 'STORAGE_FEE' }
+        }
       }),
-      // 5. Ventas de la semana
       prisma.consolidatedShipment.aggregate({
         _sum: { totalAmount: true },
         where: { createdAt: { gte: haceSieteDias } }
       }),
-      // 6. Entregas de Hoy
       prisma.pickupRequest.count({
         where: { 
             status: 'ENTREGADO',
-            updatedAt: { gte: hoy }
+            updatedAt: { gte: hoy },
+            serviceType: { not: 'STORAGE_FEE' }
         }
       }),
-      // 7. Nuevos Clientes (Semana)
       prisma.user.count({
         where: { 
             role: 'CLIENTE',
@@ -71,7 +62,6 @@ export async function GET() {
       })
     ]);
 
-    // Devolvemos los datos en formato JSON para el Cliente
     return NextResponse.json({
       success: true,
       stats: {
@@ -86,8 +76,6 @@ export async function GET() {
     });
 
   } catch (error) {
-    console.error("Error API Stats:", error);
-    // En caso de error (o durante build si pasara algo raro), devolvemos ceros para no romper nada
     return NextResponse.json({
       success: false,
       stats: {

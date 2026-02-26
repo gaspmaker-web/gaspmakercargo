@@ -13,7 +13,7 @@ import EditPackageAdminModal from './EditPackageAdminModal';
 interface PackageActionsProps {
   pkg: any;
   locale: string;
-  onDeliverStore?: () => void; // 🔥 NUEVO: Función para abrir el modal del padre
+  onDeliverStore?: () => void; 
 }
 
 export default function PackageActions({ pkg, locale, onDeliverStore }: PackageActionsProps) {
@@ -41,6 +41,9 @@ export default function PackageActions({ pkg, locale, onDeliverStore }: PackageA
   // ========================================================================
   // 🔥 LÓGICA DE VISIBILIDAD DE BOTONES
   // ========================================================================
+  
+  // Obtenemos el tracking sea paquete o consolidación
+  const trackingString = pkg.gmcTrackingNumber || pkg.gmcShipmentNumber || '';
 
   const isPreAlert = pkg.status === 'PRE_ALERTA';
   const isReadyToShip = pkg.status === 'EN_PROCESO_ENVIO';
@@ -49,7 +52,11 @@ export default function PackageActions({ pkg, locale, onDeliverStore }: PackageA
   const isGaspMaker = pkg.selectedCourier?.toUpperCase().includes('GASP') || 
                       pkg.selectedCourier?.toUpperCase().includes('MAKER');
 
-  const isStorePickup = pkg.status === 'PENDIENTE_RETIRO' || pkg.selectedCourier === 'CLIENTE_RETIRO';
+  // 🔥 REGLA INVENCIBLE: Si dice PICKUP, muestra el botón de mostrador
+  const isStorePickup = pkg.status === 'PENDIENTE_RETIRO' || 
+                        pkg.selectedCourier === 'CLIENTE_RETIRO' || 
+                        pkg.isStorePickup === true ||
+                        trackingString.toUpperCase().startsWith('PICKUP');
 
   // ========================================================================
   // 🖨️ FUNCIÓN PARA IMPRIMIR
@@ -143,6 +150,7 @@ export default function PackageActions({ pkg, locale, onDeliverStore }: PackageA
       } 
   };
 
+  // 🔥 AQUÍ ESTÁ LA CORRECCIÓN MÁGICA DE EASYPOST
   const handleBuyLabel = async () => { 
       if (!confirm(`¿Comprar Label?`)) return; 
       setIsSaving(true); 
@@ -152,9 +160,18 @@ export default function PackageActions({ pkg, locale, onDeliverStore }: PackageA
               body: JSON.stringify({ packageId: pkg.id }) 
           }); 
           const data = await res.json(); 
-          if (res.ok) { alert(`✅ Label: ${data.tracking}`); router.refresh(); } 
+          
+          if (res.ok) { 
+              alert(`✅ Label comprado exitosamente: ${data.tracking}`); 
+              
+              if (data.label) {
+                  window.open(data.label, '_blank');
+              }
+              
+              router.refresh(); 
+          } 
           else { alert(`Error: ${data.error}`); } 
-      } catch (e) { alert("Error EasyPost"); } 
+      } catch (e) { alert("Error al conectar con EasyPost"); } 
       finally { setIsSaving(false); } 
   };
 
@@ -186,7 +203,7 @@ export default function PackageActions({ pkg, locale, onDeliverStore }: PackageA
         <>
           <div className="fixed inset-0 z-10" onClick={() => setIsMenuOpen(false)} />
           <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl border border-gray-100 z-20 overflow-hidden font-montserrat animate-in fade-in zoom-in-95 duration-100 text-sm">
-            
+
             {/* 1. EDITAR */}
             <button onClick={() => { setIsEditOpen(true); setIsMenuOpen(false); }} className="w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center gap-3 text-gray-700">
               <Edit size={16} className="text-gray-400" /> Editar Detalles
@@ -219,37 +236,34 @@ export default function PackageActions({ pkg, locale, onDeliverStore }: PackageA
             )}
 
             {/* DESPACHAR / API */}
-            {isReadyToShip && (
+            {isReadyToShip && !isStorePickup && (
                 <>
                 {!isGaspMaker && (
                     <button onClick={handleBuyLabel} disabled={isSaving} className="w-full text-left px-4 py-3 bg-purple-50 hover:bg-purple-100 flex items-center gap-3 font-bold text-purple-700 border-t border-gray-100">
                         <Printer size={16} /> Comprar Label (API)
                     </button>
                 )}
-                <button onClick={() => { setShowDispatchModal(true); setIsMenuOpen(false); }} className="w-full text-left px-4 py-3 hover:bg-green-50 flex items-center gap-3 font-bold text-green-700">
+                <button onClick={() => { setShowDispatchModal(true); setIsMenuOpen(false); }} className="w-full text-left px-4 py-3 hover:bg-blue-50 flex items-center gap-3 font-bold text-blue-700 border-t border-gray-100">
                     <Truck size={16} /> {isGaspMaker ? "Despachar (GMC)" : "Tracking Manual"}
                 </button>
                 </>
             )}
 
+            {/* 🔥 EL BOTÓN PARA ENTREGAR EN TIENDA QUE ABRE EL MODAL DEL EMPLEADO 🔥 */}
             {isStorePickup && (
-                <>
-                    <div className="border-t border-gray-100 my-1"></div>
-                    {/* 🔥 MODIFICADO: AHORA LLAMA AL CALLBACK DEL PADRE */}
-                    <button 
-                        onClick={() => { 
-                            if (onDeliverStore) {
-                                onDeliverStore(); // Abrir modal del padre
-                                setIsMenuOpen(false); 
-                            } else {
-                                alert("Error: Función de entrega no conectada.");
-                            }
-                        }} 
-                        className="w-full text-left px-4 py-3 hover:bg-green-50 flex items-center gap-3 text-green-700 font-bold transition-colors"
-                    >
-                        <MapPin size={16}/> Entregar en Tienda
-                    </button>
-                </>
+                <button 
+                    onClick={() => { 
+                        if (onDeliverStore) {
+                            onDeliverStore(); 
+                            setIsMenuOpen(false); 
+                        } else {
+                            alert("Error: Función de entrega no conectada.");
+                        }
+                    }} 
+                    className="w-full text-left px-4 py-3 bg-emerald-50 hover:bg-emerald-100 flex items-center gap-3 text-emerald-700 font-bold border-t border-emerald-100 transition-colors"
+                >
+                    <MapPin size={16}/> Entregar en Tienda
+                </button>
             )}
 
           </div>

@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useSession } from 'next-auth/react'; 
 import { 
   Package, Users, Truck, MapPin, PlusCircle, Layers, 
-  Activity, DollarSign, ClipboardList, Car, Loader2, TrendingUp 
+  Activity, DollarSign, ClipboardList, Car, Loader2, TrendingUp, Container 
 } from 'lucide-react';
 
 export default function AdminDashboardClient({ locale }: { locale: string }) {
@@ -188,6 +188,20 @@ export default function AdminDashboardClient({ locale }: { locale: string }) {
                   </div>
                   <div className="bg-indigo-50 p-2 rounded-lg text-indigo-600 group-hover:bg-indigo-100 transition-colors">
                     <Layers size={20} strokeWidth={2} />
+                  </div>
+                </div>
+              </Link>
+
+              {/* 🔥 NUEVA TARJETA: CONTROL DE ALMACENAJE 🔥 */}
+              <Link href={`/${locale}/dashboard-admin/pagos-almacenaje`} 
+                className="group bg-white p-5 rounded-xl border border-gray-200 hover:border-amber-500 hover:shadow-md transition-all cursor-pointer block">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h3 className="text-base font-bold text-gmc-gris-oscuro group-hover:text-amber-600 transition-colors">Control de Almacenaje</h3>
+                    <p className="text-xs text-gray-500 mt-1 font-medium">Ver ingresos por tiempo excedido.</p>
+                  </div>
+                  <div className="bg-amber-50 p-2 rounded-lg text-amber-600 group-hover:bg-amber-100 transition-colors">
+                    <Container size={20} strokeWidth={2} />
                   </div>
                 </div>
               </Link>

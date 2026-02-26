@@ -2,14 +2,14 @@
 
 import { useState, useEffect } from 'react'; 
 import { useSession } from "next-auth/react"; 
-import { Edit, Plus, Settings } from 'lucide-react'; 
+// 🔥 1. AGREGAMOS LAS FLECHITAS DE LUCIDE-REACT (ChevronDown, ChevronUp)
+import { Edit, Plus, Settings, MapPin, CheckCircle, Trash2, Star, ChevronDown, ChevronUp } from 'lucide-react'; 
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 
 // --- Imports ---
 import LanguageSwitcher from '@/components/LanguageSwitcher'; 
 import { ALL_COUNTRIES } from '@/lib/countries'; 
-// Asegúrate de que estos componentes existan en tu proyecto
 import EditNameModal from '@/components/modals/EditNameModal'; 
 import ChangePasswordModal from '@/components/modals/ChangePasswordModal';
 import EditMobileModal from '@/components/modals/EditMobileModal';
@@ -34,140 +34,143 @@ export default function AccountContent() {
     const [isEditMobileModalOpen, setIsEditMobileModalOpen] = useState(false);
     const [isEditCountryModalOpen, setIsEditCountryModalOpen] = useState(false);
     const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+    
+    // ESTADOS PARA LA LIBRETA DE DIRECCIONES
     const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
+    // 🔥 2. NUEVO ESTADO PARA ESCONDER/MOSTRAR LA LISTA (Falso por defecto para que inicie escondida)
+    const [isAddressesExpanded, setIsAddressesExpanded] = useState(false);
+    
+    const [addresses, setAddresses] = useState<any[]>([]);
+    const [loadingAddresses, setLoadingAddresses] = useState(true);
+    const [editingAddressId, setEditingAddressId] = useState<string | null>(null);
+    const [currentAddressData, setCurrentAddressData] = useState({
+        fullName: '', address: '', cityZip: '', country: '', phone: ''
+    });
 
     // Estado de Datos de Usuario
     const [userData, setUserData] = useState({
-        name: '...',
-        email: '...',
-        suiteNumber: '...',
-        country: '...',
-        countryCode: 'US',
-        phone: '...',
-        dob: '...',
-        address: '',
-        cityZip: '',
-        addressCountry: ''
+        name: '...', email: '...', suiteNumber: '...', country: '...', countryCode: 'US', phone: '...', dob: '...'
     });
 
     const [isMounted, setIsMounted] = useState(false);
 
-    useEffect(() => {
-        setIsMounted(true);
-    }, []);
+    useEffect(() => { setIsMounted(true); }, []);
 
+    // Cargar Datos del Perfil Base
     useEffect(() => {
         if (session?.user) {
             const user = session.user as any;
-
             let dobFormatted = 'N/A';
             if (user.dateOfBirth) {
                 const date = new Date(user.dateOfBirth);
                 dobFormatted = date.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
             }
-
             const code = user.countryCode || 'US';
             const countryObj = ALL_COUNTRIES.find(c => c.code.toLowerCase() === code.toLowerCase());
-            const countryName = countryObj ? countryObj.name : code; 
-
+            
             setUserData({
                 name: user.name || 'Usuario',
                 email: user.email || 'Sin email',
                 suiteNumber: user.suiteNo || 'Pendiente',
-                country: countryName,
+                country: countryObj ? countryObj.name : code,
                 countryCode: code,
                 phone: user.phone || 'N/A',
                 dob: dobFormatted,
-                address: user.address || '',
-                cityZip: user.cityZip || '',
-                addressCountry: user.country || ''
             });
+            
+            fetchAddresses();
         }
     }, [session]);
+
+    // Traer todas las direcciones de la base de datos
+    const fetchAddresses = async () => {
+        setLoadingAddresses(true);
+        try {
+            const res = await fetch('/api/user/addresses');
+            if (res.ok) {
+                const data = await res.json();
+                setAddresses(data.addresses || []);
+            }
+        } catch (e) { console.error("Error fetching addresses", e); }
+        finally { setLoadingAddresses(false); }
+    };
 
     if (!isMounted || status === "loading") {
         return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
     }
 
-    // --- Handlers ---
+    // --- Handlers del Perfil ---
     const handleSaveName = async (newName: string) => {
         try {
-            const res = await fetch('/api/user/update-name', {
-                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: newName }),
-            });
-            if (res.ok) { 
-                await update({ ...session, user: { ...session?.user, name: newName } }); 
-                router.refresh(); 
-                setIsEditNameModalOpen(false); 
-            }
+            const res = await fetch('/api/user/update-name', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: newName }) });
+            if (res.ok) { await update({ ...session, user: { ...session?.user, name: newName } }); router.refresh(); setIsEditNameModalOpen(false); }
         } catch(e) { console.error(e); }
     };
 
     const handleSaveMobile = async (newMobile: string) => {
         try {
-            const res = await fetch('/api/user/update-mobile', {
-                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone: newMobile }),
-            });
-            if (res.ok) { 
-                await update({ ...session, user: { ...session?.user, phone: newMobile } }); 
-                router.refresh(); 
-                setIsEditMobileModalOpen(false); 
-            }
+            const res = await fetch('/api/user/update-mobile', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone: newMobile }) });
+            if (res.ok) { await update({ ...session, user: { ...session?.user, phone: newMobile } }); router.refresh(); setIsEditMobileModalOpen(false); }
         } catch(e) { console.error(e); }
     };
 
     const handleSaveCountry = async (newCode: string) => {
         try {
-            const res = await fetch('/api/user/update-country', {
-                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ countryCode: newCode }),
-            });
-            if (res.ok) { 
-                await update({ ...session, user: { ...session?.user, countryCode: newCode } }); 
-                router.refresh(); 
-                setIsEditCountryModalOpen(false); 
-            }
+            const res = await fetch('/api/user/update-country', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ countryCode: newCode }) });
+            if (res.ok) { await update({ ...session, user: { ...session?.user, countryCode: newCode } }); router.refresh(); setIsEditCountryModalOpen(false); }
         } catch(e) { console.error(e); }
     };
 
-    // 🔥 ESTE ES EL QUE RECIBE LOS DATOS DEL MODAL NUEVO
-    const handleSaveAddress = async (data: { address: string; cityZip: string; country: string; phone: string }) => {
-        // Actualizamos estado local inmediatamente para feedback rápido
-        setUserData(prev => ({ 
-            ...prev, 
-            address: data.address, 
-            cityZip: data.cityZip, 
-            addressCountry: data.country, 
-            phone: data.phone 
-        }));
-        
-        setIsAddressModalOpen(false);
+    // --- Handlers de Libreta de Direcciones ---
+    const openNewAddressModal = () => {
+        setEditingAddressId(null);
+        setCurrentAddressData({ fullName: '', address: '', cityZip: '', country: '', phone: '' });
+        setIsAddressModalOpen(true);
+    };
 
+    const openEditAddressModal = (addr: any) => {
+        setEditingAddressId(addr.id);
+        setCurrentAddressData({ fullName: addr.fullName, address: addr.address, cityZip: addr.cityZip, country: addr.country, phone: addr.phone });
+        setIsAddressModalOpen(true);
+    };
+
+    const handleSaveAddress = async (data: any) => {
         try {
-            const res = await fetch('/api/user/update-address', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data),
+            const endpoint = editingAddressId ? '/api/user/addresses/update' : '/api/user/addresses/create';
+            const payload = editingAddressId ? { ...data, id: editingAddressId } : data;
+
+            const res = await fetch(endpoint, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
             });
 
             if (res.ok) {
-                await update({
-                    ...session,
-                    user: { 
-                        ...session?.user, 
-                        address: data.address, 
-                        cityZip: data.cityZip, 
-                        country: data.country,
-                        phone: data.phone
-                    }
-                });
+                setIsAddressModalOpen(false);
+                fetchAddresses(); 
                 router.refresh();
+                // 🔥 Abrimos el acordeón automáticamente si guardan una nueva dirección para que la vean
+                setIsAddressesExpanded(true);
             }
-        } catch (error) {
-            console.error(error);
-        }
+        } catch (error) { console.error("Error saving address", error); }
     };
 
-    const hasAddress = userData.address && userData.address.trim() !== '';
+    const handleMakeDefault = async (id: string) => {
+        try {
+            const res = await fetch('/api/user/addresses/set-default', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }),
+            });
+            if (res.ok) fetchAddresses(); 
+        } catch (error) { console.error("Error setting default", error); }
+    };
+
+    const handleDeleteAddress = async (id: string) => {
+        if (!confirm("¿Estás seguro de eliminar esta dirección?")) return;
+        try {
+            const res = await fetch('/api/user/addresses/delete', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }),
+            });
+            if (res.ok) fetchAddresses();
+        } catch (error) { console.error("Error deleting address", error); }
+    };
 
     return (
         <div className="bg-gray-100 min-h-screen p-4 sm:p-6 lg:p-8 font-montserrat">
@@ -177,9 +180,7 @@ export default function AccountContent() {
                         <div className="bg-white p-3 rounded-full text-gmc-dorado-principal shadow-sm border border-gray-100">
                             <Settings size={28} />
                         </div>
-                        <h1 className="text-3xl font-bold text-gmc-gris-oscuro font-garamond tracking-tight">
-                            {t('title')}
-                        </h1>
+                        <h1 className="text-3xl font-bold text-gmc-gris-oscuro font-garamond tracking-tight">{t('title')}</h1>
                     </div>
                 </div>
 
@@ -206,22 +207,67 @@ export default function AccountContent() {
                     </div>
                 </div>
                 
-                {/* DIRECCIONES */}
-                <div className="bg-white p-6 rounded-xl shadow-md mb-6">
-                    <h2 className="text-xl font-bold text-gmc-gris-oscuro mb-6 font-garamond">{t('sectionAddresses')}</h2>
-                    {hasAddress ? (
-                        <div className="pb-5 border-b last:border-b-0">
-                            <span className="inline-block bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full mb-2">{t('defaultTag')}</span>
-                            <p className="text-gmc-gris-oscuro font-bold">{userData.name}</p>
-                            <p className="text-gmc-gris-oscuro">{userData.address}</p>
-                            {/* Aquí mostramos el cityZip tal cual se guardó (Ej: Miami, FL 33122) */}
-                            <p className="text-gmc-gris-oscuro">{userData.cityZip}</p>
-                            <p className="text-gmc-gris-oscuro">{userData.addressCountry}</p>
-                            <p className="text-gmc-gris-oscuro">{userData.phone}</p>
-                            <div className="flex space-x-4 mt-3 text-sm font-medium"><button onClick={() => setIsAddressModalOpen(true)} className="text-gmc-dorado-principal hover:underline">{t('btnEdit')}</button><button onClick={() => alert("No se puede borrar la dirección principal")} className="text-red-300 cursor-not-allowed">{t('btnDelete')}</button></div>
+                {/* 🔥 LIBRETA DE DIRECCIONES (MODO ACORDEÓN) 🔥 */}
+                <div className="bg-white p-6 rounded-xl shadow-md mb-6 transition-all duration-300">
+                    {/* 3. Cabecera clickeable */}
+                    <div 
+                        className="flex justify-between items-center cursor-pointer group"
+                        onClick={() => setIsAddressesExpanded(!isAddressesExpanded)}
+                    >
+                        <h2 className="text-xl font-bold text-gmc-gris-oscuro font-garamond flex items-center gap-2 group-hover:text-gmc-dorado-principal transition-colors">
+                            <MapPin size={22}/> {t('sectionAddresses')}
+                        </h2>
+                        {/* 4. Flechita que cambia si está abierto o cerrado */}
+                        <button className="text-gray-400 group-hover:text-gmc-dorado-principal transition-all">
+                            {isAddressesExpanded ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
+                        </button>
+                    </div>
+
+                    {/* 5. Contenido oculto/mostrado dinámicamente */}
+                    {isAddressesExpanded && (
+                        <div className="mt-6 border-t border-gray-100 pt-6 animate-in slide-in-from-top-2 fade-in duration-300">
+                            {loadingAddresses ? (
+                                <div className="text-center py-6 text-gray-400">Cargando direcciones...</div>
+                            ) : addresses.length > 0 ? (
+                                <div className="space-y-4">
+                                    {addresses.map((addr) => (
+                                        <div key={addr.id} className={`p-5 border-2 rounded-xl transition-all ${addr.isDefault ? 'border-green-500 bg-green-50 shadow-sm' : 'border-gray-100 hover:border-gray-300 bg-white'}`}>
+                                            {addr.isDefault && (
+                                                <div className="flex items-center gap-1 text-green-700 text-xs font-black uppercase tracking-wider mb-3 bg-green-200/50 inline-block px-3 py-1 rounded-full">
+                                                    <CheckCircle size={14} /> DEFAULT
+                                                </div>
+                                            )}
+                                            <p className="text-lg text-gray-900 font-bold mb-1">{addr.fullName}</p>
+                                            <p className="text-gray-600 text-sm">{addr.address}</p>
+                                            <p className="text-gray-600 text-sm">{addr.cityZip}</p>
+                                            <p className="text-gray-600 text-sm font-bold mt-1">{addr.country}</p>
+                                            <p className="text-gray-500 text-xs mt-1">{addr.phone}</p>
+                                            
+                                            <div className="flex flex-wrap items-center gap-4 mt-4 pt-4 border-t border-gray-200/60">
+                                                {!addr.isDefault && (
+                                                    <button onClick={() => handleMakeDefault(addr.id)} className="text-sm font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1"><Star size={16}/> {t('makeDefault')}</button>
+                                                )}
+                                                <button onClick={() => openEditAddressModal(addr)} className="text-sm font-bold text-gmc-dorado-principal hover:underline flex items-center gap-1"><Edit size={16}/> {t('edit')}</button>
+                                                {!addr.isDefault && (
+                                                    <button onClick={() => handleDeleteAddress(addr.id)} className="text-sm font-bold text-red-500 hover:text-red-700 flex items-center gap-1 ml-auto"><Trash2 size={16}/> {t('btnDelete')}</button>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-center py-6 border-2 border-dashed border-gray-200 rounded-xl">
+                                    <p className="text-gray-500 mb-2 font-medium">{t('noAddressFound') || "No tienes direcciones guardadas."}</p>
+                                </div>
+                            )}
+
+                            <button 
+                                onClick={openNewAddressModal} 
+                                className="mt-6 w-full py-3.5 bg-gray-800 text-white font-bold rounded-xl hover:bg-gray-900 flex items-center justify-center gap-2 transition-all shadow-md active:scale-[0.98]"
+                            >
+                                <Plus size={20} /> {t('addNewAddress')}
+                            </button>
                         </div>
-                    ) : (
-                        <div className="text-center py-4"><p className="text-gray-500 mb-4">{t('noAddressFound')}</p><button onClick={() => setIsAddressModalOpen(true)} className="w-full text-center py-2 bg-gray-100 text-gmc-gris-oscuro font-bold rounded-lg hover:bg-gray-200 flex items-center justify-center gap-2"><Plus size={18} /> {t('btnAddAddress')}</button></div>
                     )}
                 </div>
 
@@ -237,17 +283,11 @@ export default function AccountContent() {
             <EditMobileModal isOpen={isEditMobileModalOpen} onClose={() => setIsEditMobileModalOpen(false)} onSave={handleSaveMobile} currentMobile={userData.phone} />
             <EditCountryModal isOpen={isEditCountryModalOpen} onClose={() => setIsEditCountryModalOpen(false)} onSave={handleSaveCountry} currentCountryCode={userData.countryCode} />
             
-            {/* 🔥 MODAL DE DIRECCIÓN (Ahora recibe currentData completo) */}
             <EditAddressModal 
                 isOpen={isAddressModalOpen} 
                 onClose={() => setIsAddressModalOpen(false)} 
                 onSave={handleSaveAddress} 
-                currentData={{ 
-                    address: userData.address, 
-                    cityZip: userData.cityZip, 
-                    country: userData.addressCountry, 
-                    phone: userData.phone 
-                }} 
+                currentData={currentAddressData} 
             />
         </div>
     );

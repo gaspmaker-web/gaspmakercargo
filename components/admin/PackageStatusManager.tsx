@@ -4,12 +4,11 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Plane, Truck, Loader2, PackageCheck } from 'lucide-react';
 
-export default function PackageStatusManager({ pkg }: { pkg: any }) {
+export default function PackageStatusManager({ pkg, isConsolidation = false }: { pkg: any, isConsolidation?: boolean }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
   const changeStatus = async (newStatus: string) => {
-    // Confirmación visual
     const confirm = window.confirm(
         newStatus === 'EN_REPARTO' 
         ? "¿Confirmas que el paquete LLEGÓ FÍSICAMENTE a destino y sale a reparto?" 
@@ -22,11 +21,15 @@ export default function PackageStatusManager({ pkg }: { pkg: any }) {
       const res = await fetch('/api/admin/packages/update-status', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ packageId: pkg.id, newStatus })
+        body: JSON.stringify({ 
+            packageId: pkg.id, 
+            newStatus,
+            isConsolidation 
+        })
       });
       
       if (res.ok) {
-        router.refresh(); // Recarga la página para ver el cambio
+        router.refresh(); 
       } else {
         alert("Error al actualizar estado");
       }
@@ -37,10 +40,7 @@ export default function PackageStatusManager({ pkg }: { pkg: any }) {
     }
   };
 
-  // --- LÓGICA DEL GATILLO ---
-
-  // 1. GATILLO MIAMI: Si el cliente pagó o está en almacén -> Enviar a Destino
-  // Agregamos RECIBIDO_MIAMI y EN_ALMACEN por si quieres forzar el envío
+  // 1. GATILLO MIAMI
   if (pkg.status === 'PROCESADO' || pkg.status === 'PAGADO' || pkg.status === 'RECIBIDO_MIAMI' || pkg.status === 'EN_ALMACEN') {
     return (
         <div className="bg-blue-50 p-4 rounded-xl border border-blue-200 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm animate-in fade-in mb-6">
@@ -63,8 +63,7 @@ export default function PackageStatusManager({ pkg }: { pkg: any }) {
     );
   }
 
-  // 2. GATILLO BARBADOS: Si está en tránsito/enviado -> Recibir y sacar a Reparto
-  // Agregamos 'ENVIADO' para que reconozca tu estado actual
+  // 2. GATILLO DESTINO: Recibir y sacar a Reparto
   if (pkg.status === 'EN_TRANSITO' || pkg.status === 'ENVIADO') {
     return (
         <div className="bg-purple-50 p-4 rounded-xl border border-purple-200 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm animate-in fade-in ring-2 ring-purple-100 mb-6">
@@ -76,6 +75,8 @@ export default function PackageStatusManager({ pkg }: { pkg: any }) {
                 </div>
             </div>
             <button 
+                // 🔥 SOLUCIÓN: Volvemos al estado oficial 'EN_REPARTO'. 
+                // El Admin ya no se confundirá, y el Chofer lo seguirá viendo.
                 onClick={() => changeStatus('EN_REPARTO')} 
                 disabled={loading} 
                 className="w-full sm:w-auto bg-purple-600 text-white px-6 py-3 rounded-lg font-bold text-sm hover:bg-purple-700 transition flex items-center justify-center gap-2 shadow-md"
@@ -87,8 +88,8 @@ export default function PackageStatusManager({ pkg }: { pkg: any }) {
     );
   }
 
-  // 3. EN REPARTO: Solo informativo (El Driver cierra este ciclo)
-  if (pkg.status === 'EN_REPARTO' || pkg.status === 'OUT_FOR_DELIVERY') {
+  // 3. EN REPARTO: (Informativo)
+  if (pkg.status === 'EN_REPARTO' || pkg.status === 'OUT_FOR_DELIVERY' || pkg.status === 'EN_RUTA') {
     return (
         <div className="bg-orange-50 p-4 rounded-xl border border-orange-200 flex items-center justify-between shadow-sm mb-6">
              <div className="flex items-center gap-3">

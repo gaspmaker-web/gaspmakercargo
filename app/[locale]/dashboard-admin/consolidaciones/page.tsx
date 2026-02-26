@@ -66,7 +66,10 @@ export default async function ConsolidacionesPage({
 
     if (s === 'PENDIENTE_PAGO') return false;
     if (isPaidState && !isZeroMoney) return false; 
-    if (s === 'ENVIADO' || s === 'ENTREGADO' || s === 'CANCELADO' || s === 'EN_REPARTO' || s === 'EN_ALMACEN_DESTINO') return false;
+    
+    // 🔥 CORRECCIÓN: Agregamos EN_RUTA y EN_TRANSITO al filtro para que no regresen a esta columna
+    if (s === 'ENVIADO' || s === 'ENTREGADO' || s === 'CANCELADO' || s === 'EN_REPARTO' || s === 'EN_ALMACEN_DESTINO' || s === 'EN_RUTA' || s === 'EN_TRANSITO') return false;
+    
     if ((!c.packages || c.packages.length <= 1) && !isZeroError(c)) return false; 
 
     return true;

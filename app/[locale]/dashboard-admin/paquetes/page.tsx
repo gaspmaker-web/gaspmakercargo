@@ -3,7 +3,6 @@ import prisma from '@/lib/prisma';
 import { redirect } from 'next/navigation';
 import ActivePackagesClient from './ActivePackagesClient';
 
-// 🛡️ MODO DINÁMICO
 export const dynamic = 'force-dynamic';
 
 export default async function ActivePackagesPage({ 
@@ -15,9 +14,8 @@ export default async function ActivePackagesPage({
 }) {
   const session = await auth();
 
-  // Redirección si no es admin (solo en runtime)
   if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'WAREHOUSE')) {
-    // redirect('/login-cliente'); // Comentado temporalmente por seguridad de build
+    // redirect('/login-cliente'); 
   }
 
   const query = searchParams.q || '';
@@ -25,8 +23,8 @@ export default async function ActivePackagesPage({
   let allItems: any[] = [];
 
   try {
-      // 1. BUSCAR PAQUETES SUELTOS
-      const loosePackages = await prisma.package.findMany({
+      // 1. 🔥 PAQUETES INDIVIDUALES (Mercancía real en tu bodega)
+      const loosePackagesRaw = await prisma.package.findMany({
         where: {
           status: { notIn: ['ENTREGADO', 'CANCELADO'] },
           OR: [
@@ -35,6 +33,7 @@ export default async function ActivePackagesPage({
           ],
           ...(query ? {
             OR: [
+              { id: { contains: query, mode: 'insensitive' } }, 
               { gmcTrackingNumber: { contains: query, mode: 'insensitive' } },
               { carrierTrackingNumber: { contains: query, mode: 'insensitive' } },
               { user: { name: { contains: query, mode: 'insensitive' } } },
@@ -46,6 +45,7 @@ export default async function ActivePackagesPage({
           consolidatedShipment: { 
             select: { 
                 totalAmount: true,
+                paymentId: true,
                 packages: { select: { id: true } } 
             } 
           }
@@ -53,13 +53,23 @@ export default async function ActivePackagesPage({
         orderBy: { createdAt: 'desc' }
       });
 
-      // 2. BUSCAR CONSOLIDACIONES
+      // 🛠️ EL ARREGLO PARA PAQUETES: Truco Ninja para forzar a la pantalla a leer el Total
+      const formattedLoosePackages = loosePackagesRaw.map(pkg => ({
+        ...pkg,
+        type: 'PACKAGE',
+        // 🔥 Engañamos a la pantalla: Si hay un total pagado con comisión, sobrescribimos el subtotal
+        shippingSubtotal: pkg.shippingTotalPaid ? pkg.shippingTotalPaid : pkg.shippingSubtotal, 
+        totalAmount: pkg.shippingTotalPaid || 0, // 🔥 Aseguramos la variable
+      }));
+
+      // 2. 🔥 CONSOLIDACIONES REALES (El Escudo Definitivo)
       const activeShipments = await prisma.consolidatedShipment.findMany({
         where: {
           status: { notIn: ['ENTREGADO', 'CANCELADO'] },
-          serviceType: 'CONSOLIDATION', 
+          serviceType: 'CONSOLIDATION', // 🛡️ EL ESCUDO
           ...(query ? {
             OR: [
+              { id: { contains: query, mode: 'insensitive' } }, 
               { gmcShipmentNumber: { contains: query, mode: 'insensitive' } },
               { user: { name: { contains: query, mode: 'insensitive' } } },
             ]
@@ -71,12 +81,11 @@ export default async function ActivePackagesPage({
         orderBy: { createdAt: 'desc' }
       });
 
-      // 3. UNIFICAR LISTAS
       const formattedShipments = activeShipments.map(ship => ({
         id: ship.id,
         type: 'SHIPMENT', 
         gmcTrackingNumber: ship.gmcShipmentNumber,
-        carrierTrackingNumber: `CAJA (${ship.weightLbs} lbs)`, 
+        carrierTrackingNumber: `CAJA (${ship.weightLbs || 0} lbs)`, 
         user: ship.user,
         description: 'Consolidación', 
         createdAt: ship.createdAt,
@@ -87,26 +96,28 @@ export default async function ActivePackagesPage({
         widthIn: ship.widthIn,
         heightIn: ship.heightIn,
         shippingTotalPaid: ship.totalAmount, 
+        totalAmount: ship.totalAmount, // 🔥 Aseguramos la variable para el frontend
+        paymentId: ship.paymentId, 
+        finalTrackingNumber: ship.finalTrackingNumber,
         status: ship.status,
-        
-        // 🔥 AGREGADO: Pasamos el link de la etiqueta al cliente para el botón de impresión
         shippingLabelUrl: ship.shippingLabelUrl, 
-
         isProcessing: false,
         isStorePickup: false 
       }));
 
-      allItems = [...loosePackages, ...formattedShipments].sort((a: any, b: any) => 
+      // ✂️ AQUÍ FUE ELIMINADO EL PASO 3 (SOLICITUDES DE RETIRO / PICKUPS) ✂️
+      // Ya no "robamos" información de la tabla PickupRequest.
+
+      // 3. UNIFICAMOS SOLO LAS 2 TABLAS DE INVENTARIO
+      allItems = [...formattedLoosePackages, ...formattedShipments].sort((a: any, b: any) => 
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       );
 
   } catch (error) {
-      console.error("⚠️ Error de base de datos (Build Time):", error);
-      // Si falla la BD, devolvemos una lista vacía
+      console.error("⚠️ Error de base de datos:", error);
       allItems = [];
   }
 
-  // Serializamos para evitar errores de objetos complejos en el cliente
   const serializedItems = JSON.parse(JSON.stringify(allItems));
 
   return (

@@ -69,12 +69,14 @@ interface PackageDetailProps {
   pkg: any;
   userProfile: any;
   savedCards?: any[];
+  allAddresses?: any[]; // 🔥 NUEVO: Recibimos la libreta de direcciones
 }
 
 export default function PackageDetailClient({
   pkg,
   userProfile,
   savedCards = [],
+  allAddresses = [], // 🔥 Inicializado vacío por si acaso
 }: PackageDetailProps) {
   const t = useTranslations("PackageDetail");
   const tPickup = useTranslations("Pickup");
@@ -94,6 +96,10 @@ export default function PackageDetailClient({
 
   const [cards, setCards] = useState<any[]>(savedCards);
   const [selectedCardId, setSelectedCardId] = useState<string>("");
+  
+  // 🔥 NUEVOS ESTADOS PARA EL SELECTOR DE DIRECCIONES
+  const [selectedAddressId, setSelectedAddressId] = useState<string>("");
+
   const [isPaying, setIsPaying] = useState(false);
   const [showMobileDetails, setShowMobileDetails] = useState(false);
 
@@ -118,10 +124,17 @@ export default function PackageDetailClient({
   const warehousePhoto = pkg.photoUrlMiami && pkg.photoUrlMiami.startsWith("http") ? pkg.photoUrlMiami : null;
   const isReadyToShip = pkg.status === "RECIBIDO_MIAMI" || pkg.status === "EN_ALMACEN";
   const hasInvoice = !!invoiceUrl && invoiceUrl.startsWith("http");
-  const hasAddress = !!userProfile.address;
   const isOverdue = Number(pkg.storageDebt) > 0;
   const isDelivered = pkg.status === "ENTREGADO";
   const isAdminVerifiedValue = declaredValue > 0;
+
+  // 🔥 EFECTO PARA SELECCIONAR LA DIRECCIÓN DEFAULT INICIAL
+  useEffect(() => {
+    if (allAddresses.length > 0 && !selectedAddressId) {
+      const def = allAddresses.find((a) => a.isDefault);
+      setSelectedAddressId(def ? def.id : allAddresses[0].id);
+    }
+  }, [allAddresses, selectedAddressId]);
 
   useEffect(() => {
     if (cards.length > 0 && !selectedCardId) {
@@ -155,13 +168,26 @@ export default function PackageDetailClient({
     }
   }, [selectedRate, discount]);
 
+  // 🔥 HELPER: OBTIENE LOS DATOS COMPLETOS DE LA DIRECCIÓN SELECCIONADA
+  const currentAddress = allAddresses.find((a) => a.id === selectedAddressId);
+  const currentDestination = currentAddress ? {
+    name: currentAddress.fullName,
+    address: currentAddress.address,
+    cityZip: currentAddress.cityZip,
+    countryCode: currentAddress.country, 
+    countryName: currentAddress.country, 
+    phone: currentAddress.phone
+  } : userProfile;
+
+  const currentHasAddress = !!currentDestination.address;
+
   const handleAddCardRedirect = () => {
     router.push(`/${locale}/account-settings?tab=billing`);
   };
 
   const handleQuote = async () => {
     if (!hasInvoice) { alert("⚠️ " + t("invoiceRequired")); return; }
-    if (!hasAddress) { alert("⚠️ " + tBills("errorAddress")); return; }
+    if (!currentHasAddress) { alert("⚠️ " + tBills("errorAddress")); return; }
     if (!isAdminVerifiedValue) { alert("⚠️ Esperando validación del valor por el Admin."); return; }
 
     setLoadingRates(true);
@@ -175,20 +201,19 @@ export default function PackageDetailClient({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           weight: pkg.weightLbs || 1,
-          // 🔥 ENVIANDO DIMENSIONES REALES (HONESTIDAD TOTAL)
           dimensions: {
             length: pkg.lengthIn,
             width: pkg.widthIn,
             height: pkg.heightIn,
           },
-          destination: userProfile,
+          // 🔥 MANDAMOS AL MOTOR LA DIRECCIÓN EXACTA SELECCIONADA EN EL MENÚ
+          destination: currentDestination,
         }),
       });
       const data = await res.json();
 
       let availableRates = [];
       if (res.ok && data.rates && data.rates.length > 0) {
-        // ✅ CÓDIGO PROFESIONAL: Usamos DIRECTAMENTE lo que devuelve la API.
         availableRates = data.rates.map((r: any) => ({
           ...r,
           logo: getCarrierLogo(r.carrier),
@@ -241,12 +266,10 @@ export default function PackageDetailClient({
   };
 
   const handlePay = async () => {
-    // 🔥 UX MEJORADA: Si no hay tarjeta seleccionada, ABRIMOS el menú móvil
     if (!selectedCardId) {
-        setShowMobileDetails(true); // <--- Despliega la flecha automáticamente
-        // Vibración suave si el dispositivo lo soporta
+        setShowMobileDetails(true); 
         if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(50);
-        return; // Detenemos aquí para que el usuario agregue la tarjeta
+        return; 
     }
 
     if (!selectedRate) { alert("Selecciona un método de envío."); return; }
@@ -258,6 +281,9 @@ export default function PackageDetailClient({
     const fee = getProcessingFee ? getProcessingFee(baseAmount) : baseAmount * 0.0727;
     const total = Math.max(0, baseAmount + fee - discount);
 
+    // 👇 1. CREAMOS LA DIRECCIÓN (Esto faltaba en tu código)
+    const formattedAddress = `${currentDestination.name} | ${currentDestination.address}, ${currentDestination.cityZip}, ${currentDestination.countryCode || currentDestination.countryName} | Tel: ${currentDestination.phone || 'N/A'}`;
+    
     try {
       const payRes = await fetch("/api/payments/charge", {
         method: "POST",
@@ -266,9 +292,11 @@ export default function PackageDetailClient({
           amountNet: total,
           paymentMethodId: selectedCardId,
           serviceType: "SINGLE_SHIPMENT",
-          description: `Envío ${pkg.gmcTrackingNumber} via ${selectedRate.carrier} ${discount > 0 ? "(Promo Applied)" : ""}`,
+          description: `Envío ${pkg.gmcTrackingNumber} via ${selectedRate.carrier}`,
           packageIds: [pkg.id],
           discountApplied: discount,
+          // 👇 3. ENVIAMOS LA DIRECCIÓN A LA BASE DE DATOS (Vital)
+          shippingAddress: formattedAddress 
         }),
       });
 
@@ -290,7 +318,8 @@ export default function PackageDetailClient({
           discount: discount,
           totalPaid: total,
           stripePaymentId: payData.paymentId,
-          shippingAddress: `${userProfile.address}, ${userProfile.cityZip}, ${userProfile.countryName || userProfile.countryCode}`,
+          // 🔥 GUARDAMOS LA DIRECCIÓN COMPLETA SELECCIONADA EN EL MENÚ
+          shippingAddress: `${currentDestination.name} | ${currentDestination.address}, ${currentDestination.cityZip}, ${currentDestination.countryName || currentDestination.countryCode}`,
         }),
       });
 
@@ -332,14 +361,9 @@ export default function PackageDetailClient({
     } catch (e) { alert("Error subir"); } finally { setIsUploading(false); }
   };
 
-  // 🔥 CÁLCULO DESGLOSADO PARA TRANSPARENCIA
-  const servicePrice = selectedRate ? selectedRate.price : 0; // Costo puro del flete
+  const servicePrice = selectedRate ? selectedRate.price : 0; 
   const baseAmount = servicePrice + handlingFee + insuranceCost;
-  
-  // Calculamos el Processing Fee aparte
   const processingFee = selectedRate ? (getProcessingFee ? getProcessingFee(baseAmount) : baseAmount * 0.0727) : 0;
-  
-  // Total Sumado
   const totalAmount = Math.max(0, servicePrice + processingFee + handlingFee + insuranceCost - discount);
 
   if (isDelivered) {
@@ -486,18 +510,42 @@ export default function PackageDetailClient({
 
             <div className="bg-white border border-blue-200 rounded-xl overflow-hidden shadow-sm">
               <div className="bg-blue-50 p-5 border-b border-blue-100 flex flex-col sm:flex-row justify-between items-start gap-4">
-                <div className="flex items-start gap-3">
-                  <div className="bg-white p-2 rounded-full shadow-sm text-blue-600"><MapPin size={24} /></div>
-                  <div>
+                <div className="flex items-start gap-3 w-full sm:w-auto flex-1">
+                  <div className="bg-white p-2 rounded-full shadow-sm text-blue-600 shrink-0"><MapPin size={24} /></div>
+                  <div className="w-full">
                     <p className="text-[10px] font-bold text-blue-400 uppercase tracking-wide mb-1">{t("quotingFor")}:</p>
-                    {hasAddress ? (
+                    
+                    {/* 🔥 NUEVO: SELECTOR DE DIRECCIONES NIVEL AMAZON */}
+                    {allAddresses.length > 0 ? (
+                      <div className="mt-1 relative max-w-sm">
+                          <select 
+                              value={selectedAddressId} 
+                              onChange={(e) => {
+                                  setSelectedAddressId(e.target.value);
+                                  setRates([]); // Limpiar tarifas al cambiar destino
+                                  setSelectedRate(null);
+                              }}
+                              className="w-full bg-white text-blue-900 text-sm font-bold p-2.5 pr-8 rounded-lg border border-blue-200 focus:border-blue-400 focus:ring-1 focus:ring-blue-400 outline-none appearance-none cursor-pointer shadow-sm"
+                          >
+                              {allAddresses.map((addr) => (
+                                  <option key={addr.id} value={addr.id}>
+                                      {addr.fullName} • {addr.cityZip} ({addr.country}) {addr.isDefault ? '⭐' : ''}
+                                  </option>
+                              ))}
+                          </select>
+                          <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-blue-500 pointer-events-none" />
+                          <div className="text-xs text-blue-600 mt-1 pl-1 line-clamp-1">
+                              {currentDestination.address}
+                          </div>
+                      </div>
+                    ) : currentHasAddress ? (
                       <div className="text-blue-900 leading-snug">
-                        <p className="font-bold text-base">{userProfile.name}</p>
-                        <p className="text-sm">{userProfile.address}</p>
+                        <p className="font-bold text-base">{currentDestination.name}</p>
+                        <p className="text-sm">{currentDestination.address}</p>
                         <div className="flex items-center gap-2 mt-1">
-                          <span className="text-sm">{userProfile.cityZip}</span>
+                          <span className="text-sm">{currentDestination.cityZip}</span>
                           <span className="font-bold bg-blue-200 text-blue-800 text-[10px] px-2 py-0.5 rounded uppercase">
-                            {userProfile.countryName || userProfile.countryCode}
+                            {currentDestination.countryName || currentDestination.countryCode}
                           </span>
                         </div>
                       </div>
@@ -506,13 +554,14 @@ export default function PackageDetailClient({
                     )}
                   </div>
                 </div>
+
                 {isReadyToShip && !rates.length && (
                     isOverdue ? (
-                        <div className="bg-red-100 text-red-700 px-4 py-2 rounded-lg text-xs font-bold border border-red-200 flex items-center gap-2">
+                        <div className="bg-red-100 text-red-700 px-4 py-2 rounded-lg text-xs font-bold border border-red-200 flex items-center gap-2 mt-4 sm:mt-0">
                             <AlertCircle size={16} /> {tBills("alertBlocked")}
                         </div>
                     ) : !isAdminVerifiedValue ? (
-                        <div className="bg-yellow-50 text-yellow-800 px-6 py-3 rounded-xl text-sm font-bold border border-yellow-200 flex items-center gap-3 w-full sm:w-auto animate-pulse">
+                        <div className="bg-yellow-50 text-yellow-800 px-6 py-3 rounded-xl text-sm font-bold border border-yellow-200 flex items-center gap-3 w-full sm:w-auto animate-pulse mt-4 sm:mt-0">
                             <Clock size={18} className="text-yellow-600" />
                             <div className="flex flex-col">
                                 <span>Esperando verificación...</span>
@@ -520,7 +569,7 @@ export default function PackageDetailClient({
                             </div>
                         </div>
                     ) : (
-                        <button onClick={handleQuote} disabled={loadingRates || !hasAddress} className="w-full sm:w-auto bg-blue-600 text-white px-6 py-2.5 rounded-xl text-sm font-bold hover:bg-blue-700 transition shadow-md flex items-center justify-center gap-2">
+                        <button onClick={handleQuote} disabled={loadingRates || !currentHasAddress} className="w-full sm:w-auto bg-blue-600 text-white px-6 py-2.5 rounded-xl text-sm font-bold hover:bg-blue-700 transition shadow-md flex items-center justify-center gap-2 mt-4 sm:mt-0">
                             {loadingRates ? <Loader2 className="animate-spin" size={16} /> : <Truck size={16} />} {t("viewRatesBtn")}
                         </button>
                     )
@@ -566,7 +615,6 @@ export default function PackageDetailClient({
               {selectedRate ? (
                 <>
                   <div className="space-y-4 border-b border-gray-600 pb-6 mb-6">
-                    {/* 🔥 1. FREIGHT COST (PURO) */}
                     <div className="flex justify-between text-sm">
                       <span>Freight Cost ({cleanCarrierName(selectedRate.carrier)})</span>
                       <span>${servicePrice.toFixed(2)}</span>
@@ -579,7 +627,6 @@ export default function PackageDetailClient({
                       </div>
                     )}
 
-                    {/* 🔥 2. HANDLING FEE (GMC) */}
                     {handlingFee > 0 ? (
                       <div className="flex justify-between text-sm" style={{ color: "#EAD8B1" }}>
                         <span>Fee: Handling (GMC)</span>
@@ -592,7 +639,6 @@ export default function PackageDetailClient({
                       </div>
                     )}
 
-                    {/* 🔥 3. PROCESSING FEE (SEPARADO) */}
                     <div className="flex justify-between text-sm text-gray-400">
                         <span>Processing Fee</span>
                         <span>+${processingFee.toFixed(2)}</span>
@@ -653,7 +699,6 @@ export default function PackageDetailClient({
           </div>
         </div>
 
-        {/* 🔥 BARRA MÓVIL PREMIUM */}
         {selectedRate && (
           <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50">
             <div className="absolute bottom-full left-0 right-0 h-10 bg-gradient-to-t from-gray-200/50 to-transparent pointer-events-none" />
@@ -665,13 +710,11 @@ export default function PackageDetailClient({
                   </span>
                   <div className="text-3xl font-garamond font-bold leading-none text-white">${totalAmount.toFixed(2)}</div>
                 </div>
-                {/* 🔥 BOTÓN DESBLOQUEADO: Siempre activo para abrir el menú */}
                 <button onClick={handlePay} disabled={isPaying} className="bg-[#EAD8B1] text-[#222b3c] py-3.5 px-8 rounded-xl text-base font-bold shadow-lg active:scale-95 transition-transform flex items-center gap-2">
                   {isPaying ? <Loader2 className="animate-spin" /> : <CreditCard size={18} />} {tPickup("btnPay")}
                 </button>
               </div>
 
-              {/* 🔥 CORRECCIÓN: SCROLL INTERNO PARA EVITAR ROTURA CON TECLADO */}
               {showMobileDetails && (
                 <div className="mt-5 pt-5 border-t border-gray-600 space-y-3 text-sm animate-fadeIn max-h-[60vh] overflow-y-auto">
                   <div className="flex justify-between text-gray-300">
@@ -710,7 +753,6 @@ export default function PackageDetailClient({
                     </div>
                   )}
 
-                  {/* 🔥 CORRECCIÓN: text-base PARA EVITAR ZOOM EN IPHONE */}
                   <div className="pt-3">
                     <div className="flex gap-2">
                       <input type="text" placeholder="Promo Code" value={couponCode} onChange={(e) => setCouponCode(e.target.value.toUpperCase())} disabled={discount > 0} className="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-base text-white focus:outline-none focus:border-[#EAD8B1]" />

@@ -2,12 +2,12 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { 
   Calendar, Scale, AlertCircle, CheckCircle, Truck, 
   DollarSign, Ruler, MapPin, Box, X, User, Printer 
 } from 'lucide-react';
-// Asegúrate de que estos componentes existan
+
 import PackageSearch from '@/components/admin/PackageSearch';
 import PackageActions from '@/components/admin/PackageActions'; 
 import BackButton from '@/components/admin/BackButton';
@@ -19,6 +19,8 @@ interface PackageProps {
 
 export default function ActivePackagesClient({ allItems, currentLocale }: PackageProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const filterParam = searchParams.get('filter');
   
   // --- ESTADOS PARA EL MODAL DE ENTREGA ---
   const [isDeliverModalOpen, setIsDeliverModalOpen] = useState(false);
@@ -26,15 +28,25 @@ export default function ActivePackagesClient({ allItems, currentLocale }: Packag
   const [staffName, setStaffName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // --- FUNCIÓN PARA ABRIR EL MODAL ---
-  // Esta función se pasará a PackageActions o se usará directamente
+  // LÓGICA DEL FILTRO DE LA CAMPANITA
+  const displayItems = allItems.filter((pkg: any) => {
+      if (filterParam === 'pagados') {
+          const isConsolidatedBox = pkg.type === 'SHIPMENT';
+          if (isConsolidatedBox) {
+              return pkg.paymentId && !pkg.finalTrackingNumber && pkg.status !== 'ENVIADO' && pkg.status !== 'ENTREGADO';
+          } else {
+              return pkg.stripePaymentId && !pkg.finalTrackingNumber && pkg.status !== 'ENVIADO' && pkg.status !== 'ENTREGADO' && pkg.status !== 'RECIBIDO_EN_TIENDA';
+          }
+      }
+      return true;
+  });
+
   const handleOpenDeliverModal = (pkgId: string) => {
       setSelectedPackageId(pkgId);
-      setStaffName(""); // Limpiar campo
+      setStaffName(""); 
       setIsDeliverModalOpen(true);
   };
 
-  // --- FUNCIÓN PARA CONFIRMAR LA ENTREGA ---
   const handleConfirmDelivery = async () => {
       if (!staffName.trim()) {
           alert("Por favor, escribe el nombre del personal.");
@@ -54,7 +66,7 @@ export default function ActivePackagesClient({ allItems, currentLocale }: Packag
 
           if (res.ok) {
               setIsDeliverModalOpen(false);
-              router.refresh(); // Refrescar la tabla
+              router.refresh(); 
           } else {
               const data = await res.json();
               alert(data.message || "Error al procesar la entrega.");
@@ -84,19 +96,37 @@ export default function ActivePackagesClient({ allItems, currentLocale }: Packag
             <div className="flex flex-col md:flex-row items-end gap-3 w-full md:w-auto">
                 <div className="flex flex-col items-end gap-1">
                    <div className="text-xs font-bold text-gray-400 mb-1">
-                      {allItems.length} {allItems.length === 1 ? 'Item' : 'Items'}
+                      {displayItems.length} {displayItems.length === 1 ? 'Item' : 'Items'}
                    </div>
                    <PackageSearch />
                 </div>
             </div>
         </div>
 
+        {filterParam === 'pagados' && (
+            <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl flex justify-between items-center shadow-sm animate-in fade-in slide-in-from-top-4">
+                <div className="flex items-center gap-3 font-bold text-sm">
+                    <span className="relative flex h-3 w-3">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                    </span>
+                    Mostrando únicamente paquetes pagados pendientes de despacho ({displayItems.length})
+                </div>
+                <button 
+                    onClick={() => router.push(`/${currentLocale}/dashboard-admin/paquetes`)}
+                    className="flex items-center gap-1 text-red-500 hover:text-red-800 bg-red-100 hover:bg-red-200 px-3 py-1.5 rounded-lg transition-colors text-xs font-bold"
+                >
+                    <X size={14} /> Quitar Filtro
+                </button>
+            </div>
+        )}
+
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden relative z-0">
             <div className="overflow-x-auto min-h-[400px]">
                 <table className="w-full text-left border-collapse">
                     <thead className="bg-gray-50 text-gray-500 text-xs uppercase font-bold border-b border-gray-200">
                         <tr>
-                            <th className="p-4">Tracking</th>
+                            <th className="p-4">Tracking & ID</th>
                             <th className="p-4">Cliente</th>
                             <th className="p-4">Descripción</th>
                             <th className="p-4 text-center">Info Envío / Peso</th>
@@ -106,18 +136,27 @@ export default function ActivePackagesClient({ allItems, currentLocale }: Packag
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
-                        {allItems.length === 0 ? (
-                             <tr><td colSpan={7} className="p-10 text-center text-gray-400">No hay paquetes activos.</td></tr>
+                        {displayItems.length === 0 ? (
+                             <tr>
+                                <td colSpan={7} className="p-10 text-center text-gray-400">
+                                    {filterParam === 'pagados' ? 'No hay paquetes pagados pendientes.' : 'No hay paquetes activos.'}
+                                </td>
+                             </tr>
                         ) : (
-                            allItems.map((pkg: any) => {
+                            displayItems.map((pkg: any) => {
                                 const isConsolidatedBox = pkg.type === 'SHIPMENT'; 
 
+                               // 🔥 USAMOS EL ID DEL GRUPO PARA QUE COINCIDA CON EL RECIBO DEL CLIENTE
+                                const idToUse = pkg.consolidatedShipmentId ? pkg.consolidatedShipmentId : pkg.id;
+                                const shortId = idToUse ? idToUse.substring(0, 8).toUpperCase() : 'N/A';
+                                
                                 const isPreAlert = pkg.status === 'PRE_ALERTA';
                                 const isProcessing = pkg.status === 'EN_PROCESAMIENTO';
                                 const isStorePickup = !isConsolidatedBox && (pkg.status === 'PENDIENTE_RETIRO' || pkg.selectedCourier === 'CLIENTE_RETIRO');
 
-                                const isReadyToShip = (!isConsolidatedBox && pkg.status === 'EN_PROCESO_ENVIO') || 
-                                                      (isConsolidatedBox && pkg.status === 'PAGADO');
+                                const hasCourierAssigned = Boolean(pkg.selectedCourier && pkg.selectedCourier !== 'CLIENTE_RETIRO');
+                                const isReadyToShip = (!isConsolidatedBox && (pkg.status === 'EN_PROCESO_ENVIO' || pkg.status === 'ENVIADO' || hasCourierAssigned)) || 
+                                                      (isConsolidatedBox && (pkg.status === 'PAGADO' || pkg.status === 'ENVIADO' || hasCourierAssigned));
 
                                 let price = pkg.shippingTotalPaid || 0;
                                 if (!isConsolidatedBox && pkg.consolidatedShipmentId && pkg.shippingSubtotal > 0) {
@@ -144,6 +183,10 @@ export default function ActivePackagesClient({ allItems, currentLocale }: Packag
                                                 {isConsolidatedBox && <Box size={16} className="text-purple-600"/>}
                                                 {pkg.gmcTrackingNumber}
                                                 {isProcessing && <span className="h-2 w-2 rounded-full bg-orange-500 animate-pulse"></span>}
+                                            </div>
+                                            {/* 🔥 AQUÍ ESTÁ EL SHORT ID 🔥 */}
+                                            <div className="text-[10px] text-gray-500 font-bold font-mono mt-1 bg-gray-100 inline-block px-1.5 py-0.5 rounded border border-gray-200">
+                                                ID: {shortId}
                                             </div>
                                             <div className="text-[10px] text-gray-400 flex items-center gap-1 font-mono mt-1">
                                                 Ref: {pkg.carrierTrackingNumber || 'N/A'}
@@ -224,7 +267,11 @@ export default function ActivePackagesClient({ allItems, currentLocale }: Packag
                                     </td>
 
                                     <td className="p-4 text-center">
-                                        {isReadyToShip ? (
+                                        {pkg.status === 'ENVIADO' ? (
+                                            <span className="text-[10px] font-bold px-2 py-1 rounded-full border bg-blue-100 text-blue-800 border-blue-200 shadow-sm flex items-center justify-center gap-1">
+                                                <CheckCircle size={10}/> ENVIADO
+                                            </span>
+                                        ) : isReadyToShip ? (
                                             <span className="text-[10px] font-bold px-2 py-1 rounded-full border bg-green-100 text-green-800 border-green-200 animate-pulse flex items-center justify-center gap-1">
                                                 <CheckCircle size={10}/> LISTO PARA ENVÍO
                                             </span>
@@ -253,7 +300,6 @@ export default function ActivePackagesClient({ allItems, currentLocale }: Packag
 
                                     <td className="p-4 text-right">
                                         <div className="flex items-center justify-end gap-2">
-                                            {/* 🔥 AQUÍ ESTÁ EL BOTÓN DE IMPRESIÓN DEL CARRIER (EASYPOST) */}
                                             {(pkg.shippingLabelUrl || pkg.labelUrl) && (
                                                 <a 
                                                     href={pkg.shippingLabelUrl || pkg.labelUrl} 
@@ -265,8 +311,6 @@ export default function ActivePackagesClient({ allItems, currentLocale }: Packag
                                                     <Printer size={18} />
                                                 </a>
                                             )}
-                                            
-                                            {/* 🔥 PASAMOS LA FUNCIÓN DE APERTURA AL COMPONENTE HIJO */}
                                             <PackageActions 
                                                 pkg={pkg} 
                                                 locale={currentLocale} 
@@ -282,14 +326,11 @@ export default function ActivePackagesClient({ allItems, currentLocale }: Packag
             </div>
         </div>
 
-        {/* ===================================================================
-           MODAL DE ENTREGA EN TIENDA (NUEVO)
-           =================================================================== */}
+        {/* Modal de Entrega (se mantiene intacto) */}
         {isDeliverModalOpen && (
             <div className="fixed inset-0 bg-black/60 z-[9999] flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in">
                 <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-200 border border-gray-100">
                     
-                    {/* Header del Modal */}
                     <div className="bg-emerald-50 p-5 border-b border-emerald-100 flex justify-between items-center">
                         <h3 className="font-bold text-emerald-800 flex items-center gap-2 text-lg">
                             <MapPin className="text-emerald-600" size={20}/>
@@ -323,7 +364,6 @@ export default function ActivePackagesClient({ allItems, currentLocale }: Packag
                             </div>
                         </div>
 
-                        {/* Botones de Acción */}
                         <div className="flex gap-3">
                             <button 
                                 onClick={() => setIsDeliverModalOpen(false)}
@@ -343,7 +383,6 @@ export default function ActivePackagesClient({ allItems, currentLocale }: Packag
                 </div>
             </div>
         )}
-
       </div>
     </div>
   );

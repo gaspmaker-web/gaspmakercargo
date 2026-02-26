@@ -17,7 +17,7 @@ export default async function PagarFacturasPage({ params: { locale } }: { params
     redirect('/login-cliente');
   }
 
-  // 1. Obtener Perfil (Dirección para facturación)
+  // 1. Obtener Perfil Viejo (Respaldo)
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
     select: {
@@ -29,6 +29,18 @@ export default async function PagarFacturasPage({ params: { locale } }: { params
       phone: true
     }
   });
+
+  // 🔥 NUEVO: Traemos TODAS las direcciones de la nueva libreta, ordenando la DEFAULT primero
+  const userAddresses = await prisma.address.findMany({
+    where: { userId: session.user.id },
+    orderBy: [
+      { isDefault: 'desc' },
+      { createdAt: 'desc' }
+    ]
+  });
+
+  // Definimos la dirección principal
+  const defaultAddress = userAddresses.length > 0 ? userAddresses[0] : null;
 
   // 2. BUSCAR CONSOLIDACIONES PENDIENTES
   // ⚠️ Nota: Asegúrate que los status coincidan con lo que guarda tu Admin API
@@ -120,12 +132,14 @@ export default async function PagarFacturasPage({ params: { locale } }: { params
     };
   });
 
+  // 🔥 DATOS LIMPIOS: Priorizamos la nueva libreta, si está vacía usamos el perfil viejo
   const userProfile = {
-    name: user?.name || '',
-    address: user?.address || '',
-    cityZip: user?.cityZip || '',
-    countryCode: user?.country || user?.countryCode || 'DO', 
-    phone: user?.phone || ''
+    name: defaultAddress?.fullName || user?.name || '',
+    address: defaultAddress?.address || user?.address || '',
+    cityZip: defaultAddress?.cityZip || user?.cityZip || '',
+    // Usamos el country de la libreta, o el del perfil viejo
+    countryCode: defaultAddress?.country || user?.country || user?.countryCode || 'US', 
+    phone: defaultAddress?.phone || user?.phone || ''
   };
 
   return (
@@ -134,6 +148,8 @@ export default async function PagarFacturasPage({ params: { locale } }: { params
             bills={bills} 
             locale={locale} 
             userProfile={userProfile} 
+            // 🔥 Le mandamos la libreta completa a la pantalla para crear el menú desplegable
+            allAddresses={userAddresses} 
         />
     </div>
   );

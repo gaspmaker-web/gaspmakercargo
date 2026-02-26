@@ -7,7 +7,7 @@ import Image from 'next/image';
 import { 
     FileText, CreditCard, Loader2, Check, CheckCircle, ChevronDown, ChevronUp, 
     DollarSign, AlertCircle, Package, Truck, Box, Ruler, Scale, ShieldCheck, 
-    ExternalLink, Plus, Clock, Info, Tag, XCircle 
+    ExternalLink, Plus, Clock, Info, Tag, XCircle, MapPin 
 } from 'lucide-react';
 import { getProcessingFee } from '@/lib/stripeCalc';
 import { useTranslations } from 'next-intl';
@@ -34,7 +34,7 @@ const cleanCarrierName = (name: string) => {
   return name;
 };
 
-// 🔥 NUEVO HELPER PARA SERVICIOS
+// 🔥 HELPER PARA SERVICIOS
 const cleanServiceName = (name: string) => {
   if (!name) return '';
   return name
@@ -58,9 +58,10 @@ interface PendingBillsClientProps {
   bills: any[]; 
   locale: string;
   userProfile: any;
+  allAddresses?: any[]; 
 }
 
-export default function PendingBillsClient({ bills: initialBills, locale, userProfile }: PendingBillsClientProps) {
+export default function PendingBillsClient({ bills: initialBills, locale, userProfile, allAddresses = [] }: PendingBillsClientProps) {
   const t = useTranslations('PendingBills');
   const tPickup = useTranslations('Pickup'); 
   const tPackage = useTranslations('PackageDetail'); 
@@ -73,6 +74,9 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
   const [cards, setCards] = useState<any[]>([]);
   const [selectedCardId, setSelectedCardId] = useState<string>('');
   
+  // ESTADO DE DIRECCIONES
+  const [selectedAddressId, setSelectedAddressId] = useState<string>('');
+
   // Estado de Proceso
   const [isProcessing, setIsProcessing] = useState(false);
   const [loadingRatesId, setLoadingRatesId] = useState<string | null>(null);
@@ -92,6 +96,14 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
   const [couponMsg, setCouponMsg] = useState({ type: "", text: "" });
   const [validatingCoupon, setValidatingCoupon] = useState(false);
 
+  // EFECTO: Seleccionar dirección DEFAULT al cargar
+  useEffect(() => {
+    if (allAddresses.length > 0 && !selectedAddressId) {
+      const def = allAddresses.find((a) => a.isDefault);
+      setSelectedAddressId(def ? def.id : allAddresses[0].id);
+    }
+  }, [allAddresses, selectedAddressId]);
+
   // 1. CARGAR TARJETAS
   useEffect(() => {
       const fetchCards = async () => {
@@ -107,9 +119,38 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
       fetchCards();
   }, []);
 
+  // OBTENER DIRECCIÓN ACTUAL SELECCIONADA
+  const currentAddress = allAddresses.find((a) => a.id === selectedAddressId);
+  const currentDestination = currentAddress ? {
+    name: currentAddress.fullName,
+    address: currentAddress.address,
+    cityZip: currentAddress.cityZip,
+    countryCode: currentAddress.country, 
+    countryName: currentAddress.country, 
+    phone: currentAddress.phone
+  } : userProfile;
+
+  const currentHasAddress = !!currentDestination.address;
+
+  // MANEJADOR DE CAMBIO DE DIRECCIÓN
+  const handleAddressChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+      setSelectedAddressId(e.target.value);
+      // Por seguridad, borramos las tarifas si el cliente cambia de país/dirección
+      setRatesMap({});
+      setSelectedRateMap({});
+      
+      // Desmarcamos las facturas (quitamos el check)
+      setSelectedBillIds([]); 
+      
+      // Reiniciamos los cupones
+      setDiscount(0);
+      setCouponCode("");
+      setCouponMsg({ type: "", text: "" });
+  };
+
   // 2. OBTENER TARIFAS (Cotizar)
   const handleGetRates = async (bill: any) => {
-      if (!userProfile.address) { alert("⚠️ " + t('errorAddress')); return; }
+      if (!currentHasAddress) { alert("⚠️ " + t('errorAddress')); return; }
       
       setLoadingRatesId(bill.id);
       try {
@@ -121,17 +162,13 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                   dimensions: { 
                       length: bill.lengthIn || 10, width: bill.widthIn || 10, height: bill.heightIn || 10 
                   },
-                  destination: { 
-                      name: userProfile.name, address: userProfile.address, city: userProfile.cityZip, 
-                      zip: userProfile.cityZip, country: userProfile.countryCode, phone: userProfile.phone
-                  }
+                  destination: currentDestination
               })
           });
           
           const data = await res.json();
           if (res.ok && data.rates) {
               const processed = data.rates.map((r: Rate) => ({ ...r, logo: getCarrierLogo(r.carrier) }));
-              // Fallback si no hay tarifas
               if(processed.length === 0) processed.push({ id: 'std-gmc', carrier: 'Gasp Maker Cargo', service: 'Standard', price: (bill.weightLbs * 4.5) + 15, currency: 'USD', days: '5-7', logo: '/gaspmakercargoproject.png' });
               
               setRatesMap(prev => ({ ...prev, [bill.id]: processed }));
@@ -150,7 +187,7 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
       }
   };
 
-  // 🔥 4. CALCULAR TOTALES
+  // 4. CALCULAR TOTALES
   const calculateTotals = () => {
       let serviceSubtotal = 0;
       let handlingSubtotal = 0; 
@@ -189,7 +226,6 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
       const taxableAmount = serviceSubtotal + handlingSubtotal + insuranceSubtotal;
       const fee = getProcessingFee(taxableAmount);
       
-      // Aplicar descuento
       const total = Math.max(0, taxableAmount + fee - discount);
       
       return { 
@@ -204,7 +240,7 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
 
   const totals = calculateTotals();
 
-  // 🔥 MANEJO DE CUPÓN
+  // MANEJO DE CUPÓN
   const handleApplyCoupon = async () => {
     if (!couponCode.trim()) return;
     if (totals.count === 0) { setCouponMsg({ type: "error", text: "Select items first." }); return; }
@@ -230,7 +266,6 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
 
   // 5. PAGAR
   const handlePay = async () => {
-      // 🔥 UX MEJORADA: Si no hay tarjeta, abrir menú
       if (!selectedCardId) {
           setShowMobileSummary(true); 
           if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(50);
@@ -239,6 +274,10 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
 
       if (totals.count === 0) return;
       setIsProcessing(true);
+
+      const finalShippingAddress = currentAddress 
+          ? `${currentAddress.fullName} | ${currentAddress.address}, ${currentAddress.cityZip}, ${currentAddress.country} | Tel: ${currentAddress.phone}`
+          : `${userProfile.name} | ${userProfile.address}, ${userProfile.cityZip}, ${userProfile.countryCode} | Tel: ${userProfile.phone}`;
 
       try {
           let selectedCourier = null;
@@ -314,7 +353,8 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                   billIds: selectedBillIds,          
                   selectedCourier: selectedCourier,  
                   courierService: courierService,
-                  discountApplied: discount     
+                  discountApplied: discount,
+                  shippingAddress: finalShippingAddress     
               })
           });
           
@@ -371,7 +411,6 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                 <div className="lg:col-span-2 space-y-4">
                     <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
                         
-                        {/* ALERTA DE PENDIENTES */}
                         <div onClick={() => setIsBillsOpen(!isBillsOpen)} className="p-5 flex justify-between items-center cursor-pointer bg-white border-b border-gray-100">
                             <div className="flex items-center gap-3">
                                 <span className="bg-red-50 text-red-600 p-2 rounded-full border border-red-100"><AlertCircle size={18}/></span>
@@ -453,7 +492,6 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                                                     </button>
                                                 ) : (
                                                     <div className="space-y-3">
-                                                        {/* SI YA SELECCIONÓ UNO (Tarjeta Resumida) */}
                                                         {isSelected && selectedRate ? (
                                                             <div className="bg-white border border-gmc-dorado-principal rounded-xl p-4 shadow-sm animate-fadeIn">
                                                                 <div className="flex justify-between items-center mb-3">
@@ -487,7 +525,6 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                                                                 </div>
                                                             </div>
                                                         ) : (
-                                                            /* LISTA DE OPCIONES DISPONIBLES */
                                                             rates && (
                                                                 <div className="animate-slideDown">
                                                                     <p className="text-[10px] font-bold text-gray-400 uppercase mb-2 tracking-wider">{t('select')}:</p>
@@ -516,10 +553,11 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                                                             )
                                                         )}
                                                         
+                                                        {/* 🔥 AQUÍ ESTÁ LA CORRECCIÓN DE LOS $0.00 HARDCODED */}
                                                         {isPickup && !selectedRate && (
                                                             <div className="flex justify-between items-center p-3 bg-green-50 border border-green-200 rounded-xl">
                                                                 <span className="flex items-center gap-2 text-green-700 font-bold text-sm"><Box size={14}/> Pickup en Tienda</span>
-                                                                <span className="text-lg font-bold text-green-800">$0.00</span>
+                                                                <span className="text-lg font-bold text-green-800">${(bill.totalAmount || 0).toFixed(2)}</span>
                                                             </div>
                                                         )}
                                                     </div>
@@ -533,19 +571,44 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                     </div>
                 </div>
 
-                {/* DERECHA: RESUMEN DE PAGO (DESKTOP) - 🔥 CONDICIONAL AÑADIDA */}
+                {/* DERECHA: RESUMEN DE PAGO (DESKTOP) */}
                 <div className="hidden lg:block lg:col-span-1">
                     <div ref={paymentSectionRef} className="bg-gmc-gris-oscuro text-white p-6 rounded-2xl shadow-xl sticky top-6">
                         <h3 className="font-bold text-gmc-dorado-principal text-lg mb-4 border-b border-gray-600 pb-2">{tPickup('summaryTitle')}</h3>
                         
-                        {/* 🔥 ESTADO VACÍO (SIN SELECCIÓN) */}
+                        {/* SELECTOR DE DIRECCIONES (NIVEL AMAZON) */}
+                        <div className="mb-6 bg-gray-800 p-4 rounded-xl border border-gray-700">
+                            <label className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase mb-3">
+                                <MapPin size={16} className="text-gmc-dorado-principal" /> Destino de Envío
+                            </label>
+                            {allAddresses.length > 0 ? (
+                                <div className="relative">
+                                    <select 
+                                        value={selectedAddressId} 
+                                        onChange={handleAddressChange}
+                                        className="w-full bg-gray-700 text-white text-sm font-bold p-3 pr-10 rounded-lg border border-gray-600 focus:border-gmc-dorado-principal focus:ring-1 focus:ring-gmc-dorado-principal outline-none appearance-none cursor-pointer"
+                                    >
+                                        {allAddresses.map((addr) => (
+                                            <option key={addr.id} value={addr.id}>
+                                                {addr.fullName} - {addr.country} {addr.isDefault ? '(DEFAULT)' : ''}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <ChevronDown size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                                </div>
+                            ) : (
+                                <div className="text-sm text-yellow-400 bg-yellow-400/10 p-3 rounded border border-yellow-400/20">
+                                    No tienes direcciones. <Link href={`/${locale}/account-settings`} className="underline font-bold">Agrégala aquí</Link>.
+                                </div>
+                            )}
+                        </div>
+
                         {totals.count === 0 ? (
-                            <div className="flex flex-col justify-center items-center h-[300px] text-center opacity-50">
+                            <div className="flex flex-col justify-center items-center h-[200px] text-center opacity-50">
                                 <Truck size={48} className="mb-4 text-gray-400" />
                                 <p className="text-sm text-gray-300 max-w-[200px]">Selecciona una factura o paquete a la izquierda para ver el total a pagar.</p>
                             </div>
                         ) : (
-                            /* 🔥 ESTADO ACTIVO (CON SELECCIÓN) */
                             <div className="animate-fadeIn">
                                 <div className="space-y-3 text-sm mb-6">
                                     <div className="flex justify-between">
@@ -572,7 +635,6 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                                         <span>+${totals.fee.toFixed(2)}</span>
                                     </div>
 
-                                    {/* DESCUENTO */}
                                     {discount > 0 && (
                                         <div className="flex justify-between text-green-400 font-bold bg-green-900/30 p-2 rounded">
                                             <span className="flex items-center gap-1"><Tag size={12} /> Discount</span>
@@ -580,7 +642,6 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                                         </div>
                                     )}
 
-                                    {/* INPUT DE CUPÓN */}
                                     <div className="pt-2 border-t border-gray-600">
                                         <div className="flex gap-2">
                                             <input type="text" placeholder="Promo Code" value={couponCode} onChange={(e) => setCouponCode(e.target.value.toUpperCase())} disabled={discount > 0} className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-xs text-white placeholder-gray-400 focus:outline-none focus:border-[#EAD8B1]" />
@@ -627,7 +688,7 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
             </div>
         )}
 
-        {/* --- BARRA MÓVIL PREMIUM (CONDICIONAL AÑADIDA: SOLO SI TOTAL > 0) --- */}
+        {/* --- BARRA MÓVIL PREMIUM --- */}
         {bills.length > 0 && totals.count > 0 && (
             <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50">
                 <div className="absolute bottom-full left-0 right-0 h-8 bg-gradient-to-t from-gray-200/40 to-transparent pointer-events-none" />
@@ -651,8 +712,33 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                     </div>
 
                     {showMobileSummary && (
-                        /* 🔥 CORRECCIÓN CLAVE: max-h y overflow-y-auto PARA EVITAR DISTORSIÓN DEL TECLADO */
                         <div className="mt-5 pt-5 border-t border-gray-600 space-y-3 text-sm animate-fadeIn max-h-[60vh] overflow-y-auto">
+                            
+                            {/* SELECTOR DE DIRECCIONES EN MÓVIL */}
+                            <div className="pb-3 border-b border-gray-600 mb-3">
+                                <label className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase mb-2">
+                                    <MapPin size={14} className="text-gmc-dorado-principal" /> Destino de Envío
+                                </label>
+                                {allAddresses.length > 0 ? (
+                                    <div className="relative bg-gray-700 rounded-lg border border-gray-600">
+                                        <select 
+                                            value={selectedAddressId} 
+                                            onChange={handleAddressChange}
+                                            className="w-full p-2.5 pr-8 bg-transparent text-white text-sm font-bold outline-none appearance-none"
+                                        >
+                                            {allAddresses.map((addr) => (
+                                                <option key={addr.id} value={addr.id} className="text-black">
+                                                    {addr.fullName} - {addr.country} {addr.isDefault ? '(DEF)' : ''}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                                    </div>
+                                ) : (
+                                    <span className="text-xs text-yellow-400">Sin dirección. Ve a Configuración.</span>
+                                )}
+                            </div>
+
                             <div className="flex justify-between text-gray-300">
                                 <span>Freight Cost</span>
                                 <span>${totals.serviceSubtotal.toFixed(2)}</span>
@@ -668,7 +754,6 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                             
                             <div className="flex justify-between text-gray-500 text-xs"><span>Processing Fee</span><span>+${totals.fee.toFixed(2)}</span></div>
 
-                            {/* DESCUENTO MÓVIL */}
                             {discount > 0 && (
                                 <div className="flex justify-between text-green-400 font-bold">
                                     <span>Discount</span>
@@ -676,7 +761,6 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                                 </div>
                             )}
 
-                            {/* CUPÓN MÓVIL - 🔥 CORRECCIÓN: text-base PARA EVITAR ZOOM EN IPHONE */}
                             <div className="pt-3">
                                 <div className="flex gap-2">
                                     <input type="text" placeholder="Promo Code" value={couponCode} onChange={(e) => setCouponCode(e.target.value.toUpperCase())} disabled={discount > 0} className="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-base text-white focus:outline-none focus:border-[#EAD8B1]" />

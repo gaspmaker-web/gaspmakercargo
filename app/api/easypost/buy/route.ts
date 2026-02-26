@@ -6,7 +6,6 @@ export const dynamic = 'force-dynamic';
 export async function POST(req: Request) {
   try {
     // 👇 VACUNA 2: Imports dentro de la función (Lazy Loading)
-    // Esto es crucial para APIs externas como EasyPost
     const prisma = (await import("@/lib/prisma")).default;
     const easypost = (await import("@/lib/easypost")).default;
 
@@ -15,7 +14,10 @@ export async function POST(req: Request) {
     // 1. Buscar datos del paquete y usuario
     const pkg = await prisma.package.findUnique({
       where: { id: packageId },
-      include: { user: true }
+      include: { 
+          user: true,
+          consolidatedShipment: true 
+      }
     });
 
     if (!pkg) return NextResponse.json({ error: "Paquete no encontrado" }, { status: 404 });
@@ -26,16 +28,68 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "Gasp Maker es envío interno, no requiere EasyPost." }, { status: 400 });
     }
 
+    // =========================================================================
+    // 🛑 MODO ESTRICTO NIVEL AMAZON: SIN DIRECCIÓN EXACTA, SE CANCELA LA COMPRA
+    // =========================================================================
+    
+    // Leemos la dirección del paquete individual O de la consolidación
+    const savedAddress = pkg.shippingAddress || pkg.consolidatedShipment?.shippingAddress;
+    
+    if (!savedAddress) {
+        // 🔥 EL SISTEMA SE DETIENE. NO HAY SUPOSICIONES.
+        return NextResponse.json({ 
+            error: "⚠️ ERROR CRÍTICO: Este paquete no tiene una dirección de entrega asignada por el cliente. Compra bloqueada para evitar envío erróneo." 
+        }, { status: 400 });
+    }
+
+    let finalName = pkg.user.name || 'Cliente';
+    let finalStreet = '';
+    let finalCity = '';
+    let finalCountry = '';
+    let finalZip = '00000';
+    let finalPhone = pkg.user.phone || '0000000000';
+
+    // Desglosamos el texto de la dirección (Ej: "Jason | 123 Main St, Miami 33101, US | Tel: 555-1234")
+    const segments = savedAddress.split('|').map(s => s.trim());
+    
+    if (segments.length > 0 && segments[0]) finalName = segments[0]; 
+    
+    if (segments.length > 1 && segments[1]) {
+        const geoParts = segments[1].split(',').map(s => s.trim());
+        if (geoParts[0]) finalStreet = geoParts[0]; 
+        
+        if (geoParts.length > 1 && geoParts[1]) {
+            finalCity = geoParts[1].replace(/[0-9]/g, '').trim() || 'City';
+            finalZip = geoParts[1].match(/\d+/)?.[0] || '00000';
+        }
+        
+        if (geoParts.length > 2 && geoParts[2]) {
+            finalCountry = geoParts[2].substring(0, 2).toUpperCase(); 
+        }
+    }
+
+    if (segments.length > 2 && segments[2].toLowerCase().includes('tel:')) {
+        finalPhone = segments[2].replace(/tel:/i, '').trim() || finalPhone;
+    }
+
+    // Validación de seguridad extra
+    if (!finalStreet || !finalCountry) {
+        return NextResponse.json({ 
+            error: "⚠️ ERROR: La dirección guardada está incompleta (falta calle o país). Revisa los datos." 
+        }, { status: 400 });
+    }
+
+    // =========================================================================
+
     // 3. Crear el envío en EasyPost (Para comprarlo)
-    // Recreamos el objeto porque las cotizaciones caducan
     const shipment = await easypost.Shipment.create({
       to_address: {
-        name: pkg.user.name,
-        street1: pkg.user.address,
-        city: pkg.user.cityZip?.split(' ')[0] || 'City', // Lógica simple, ideal mejorar
-        country: pkg.user.countryCode || 'TT',
-        zip: pkg.user.cityZip?.match(/\d+/)?.[0] || '00000',
-        phone: pkg.user.phone || '5555555555'
+        name: finalName,
+        street1: finalStreet,
+        city: finalCity,
+        country: finalCountry,
+        zip: finalZip,
+        phone: finalPhone
       },
       from_address: {
         company: 'Gasp Maker Cargo',
@@ -52,23 +106,20 @@ export async function POST(req: Request) {
         height: pkg.heightIn,
         weight: pkg.weightLbs * 16 // EasyPost usa onzas
       },
-      service: pkg.courierService || 'Standard', // Usamos el servicio que eligió el cliente
-      carrier: pkg.selectedCourier // 'FedEx', 'UPS', etc.
+      service: pkg.courierService || 'Standard', 
+      carrier: pkg.selectedCourier 
     });
 
-    // 4. COMPRAR LA ETIQUETA (Aquí gastamos dinero real)
-    // EasyPost requiere seleccionar la tarifa específica (rate id)
+    // 4. COMPRAR LA ETIQUETA
     const selectedRate = shipment.rates.find((r: any) => 
         r.carrier.toLowerCase() === courier && 
         (r.service === pkg.courierService || !pkg.courierService)
     );
 
     if (!selectedRate) {
-        // Fallback: Si no hay tarifa exacta, devolvemos error (Más seguro)
-        return NextResponse.json({ error: "No se encontró tarifa exacta. Revisa los datos." }, { status: 400 });
+        return NextResponse.json({ error: "No se encontró tarifa exacta en EasyPost. Revisa los datos de la caja." }, { status: 400 });
     }
 
-    // Usamos el método estático correcto para comprar
     const boughtShipment = await easypost.Shipment.buy(shipment.id, selectedRate.id);
 
     // 5. Guardar Tracking y Label en Base de Datos
@@ -76,9 +127,7 @@ export async function POST(req: Request) {
         where: { id: packageId },
         data: {
             status: 'ENVIADO',
-            // ✅ AHORA GUARDAMOS EL TRACKING DE EASYPOST EN SU CAMPO CORRECTO
             finalTrackingNumber: boughtShipment.tracker.tracking_code, 
-            
             receiptUrl: boughtShipment.postage_label.label_url, 
             shippingLabelUrl: boughtShipment.postage_label.label_url 
         }

@@ -19,7 +19,6 @@ export async function POST(req: Request) {
     const { consolidationId } = await req.json();
 
     // 2. Buscar la Consolidación y el Usuario
-    // NOTA: Incluimos 'packages' por si quieres iterar sobre ellos, pero usaremos el peso total de la consolidación
     const consolidation = await prisma.consolidatedShipment.findUnique({
       where: { id: consolidationId },
       include: { user: true }
@@ -37,43 +36,50 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "Para Gasp Maker usa el despacho manual." }, { status: 400 });
     }
 
-    // 👇 3. LÓGICA DE DIRECCIÓN (IDÉNTICA A PAQUETES) 🌍
-    
-    // A. País
-    let destinationCountry = consolidation.user.country?.trim().toUpperCase();
-    
-    if (!destinationCountry) {
-        // Fallback al profile si es estrictamente necesario, pero idealmente debe venir del envío
-        destinationCountry = consolidation.user.countryCode?.trim().toUpperCase(); 
+    // =========================================================================
+    // 🔥 MODO ESTRICTO NIVEL AMAZON: LEER LA DIRECCIÓN REAL DE LA BASE DE DATOS
+    // =========================================================================
+    let toAddress: any = {};
+
+    if (consolidation.shippingAddress) {
+        // Ejemplo: "ADENIN LEON | 485 E 188TH ST APT 1F, BRONX NY 10458, US | Tel: 123456789"
+        const parts = consolidation.shippingAddress.split('|');
+        const name = parts[0]?.trim() || consolidation.user.name;
+        const addressBlock = parts[1]?.trim() || '';
+        const phoneBlock = parts[2]?.trim() || '';
+
+        // Extraer teléfono
+        let phone = phoneBlock.replace(/[^0-9]/g, '');
+        if (phone.length < 10) phone = '7862820763';
+
+        // Partir el bloque de dirección
+        const addrChunks = addressBlock.split(',').map(c => c.trim());
+        const countryRaw = addrChunks.pop() || 'US'; 
+        let destinationCountry = countryRaw.length > 2 ? (countryRaw.toUpperCase().includes('TRINIDAD') ? 'TT' : 'US') : countryRaw.toUpperCase();
+
+        const cityZipChunk = addrChunks.pop() || '';
+        const streetChunk = addrChunks.join(', ') || 'N/A';
+
+        const zip = cityZipChunk.match(/\d{4,}/)?.[0] || '00000';
+        const stateMatch = cityZipChunk.match(/\b[A-Z]{2}\b/);
+        const state = stateMatch ? stateMatch[0] : (destinationCountry === 'US' ? 'FL' : undefined);
+        const city = cityZipChunk.replace(zip, '').replace(state || '', '').replace(/[^a-zA-Z\s]/g, '').trim() || 'City';
+
+        toAddress = {
+            name: name,
+            street1: streetChunk,
+            city: city,
+            state: state,
+            zip: zip,
+            country: destinationCountry,
+            phone: phone
+        };
+    } else {
+        // 🔒 CANDADO DE SEGURIDAD
+        return NextResponse.json({ error: "⚠️ MODO ESTRICTO: Esta consolidación no tiene una dirección válida asignada. Por favor, asegúrese de que el cliente haya pagado con una dirección seleccionada." }, { status: 400 });
     }
 
-    if (!destinationCountry) return NextResponse.json({ error: "Falta país de destino." }, { status: 400 });
-
-    // Normalización
-    if (destinationCountry.length > 2) {
-        if (destinationCountry.includes('TRINIDAD')) destinationCountry = 'TT';
-        else if (destinationCountry.includes('UNITED')) destinationCountry = 'US';
-    }
-
-    // B. Teléfono
-    let cleanPhone = consolidation.user.phone?.replace(/[^0-9]/g, '') || '';
-    if (cleanPhone.length < 10) cleanPhone = '7862820763'; 
-
-    // C. Ciudad y Zip
-    const rawLocation = consolidation.user.cityZip || ''; 
-    const city = rawLocation.split(',')[0].replace(/\d+/g, '').trim() || 'City'; 
-    const zip = rawLocation.match(/\d{4,}/)?.[0] || '00000';
-
-    // D. Estado
-    let state = undefined;
-    if (destinationCountry === 'US' || destinationCountry === 'CA') {
-        const stateMatch = rawLocation.match(/\b[A-Z]{2}\b/);
-        state = stateMatch ? stateMatch[0] : (destinationCountry === 'US' ? 'FL' : undefined);
-    }
-
-    console.log(`📦 Consolidación Target: ${city}, ${destinationCountry} (State: ${state})`);
-
-    // 👇 4. INFORMACIÓN DE ADUANAS (Agregada) 🛃
+    // 👇 4. INFORMACIÓN DE ADUANAS 🛃
     const customsItem = {
         description: 'Consolidated Personal Effects', // Descripción genérica para consolidaciones
         quantity: 1,
@@ -95,15 +101,7 @@ export async function POST(req: Request) {
 
     // 5. Crear Envío EasyPost
     const shipment = await easypost.Shipment.create({
-      to_address: {
-        name: consolidation.user.name,
-        street1: consolidation.user.address,
-        city: city,
-        state: state, 
-        zip: zip,
-        country: destinationCountry,
-        phone: cleanPhone
-      },
+      to_address: toAddress, // 👈 ¡AQUÍ INYECTAMOS LA DIRECCIÓN GANADORA!
       from_address: {
         company: 'GaspMaker Cargo',
         street1: '1861 NW 22nd St',
@@ -123,7 +121,7 @@ export async function POST(req: Request) {
     });
 
     if (!shipment.rates || shipment.rates.length === 0) {
-        throw new Error(`EasyPost no devolvió tarifas para consolidación a ${destinationCountry}.`);
+        throw new Error(`EasyPost no devolvió tarifas para la consolidación seleccionada.`);
     }
 
     // 6. Selección de Tarifa (Smart Fallback)
@@ -150,14 +148,23 @@ export async function POST(req: Request) {
     // 7. COMPRAR
     const boughtShipment = await easypost.Shipment.buy(shipment.id, selectedRate.id);
 
-    // 8. GUARDAR EN BASE DE DATOS (Actualizamos ConsolidatedShipment)
+    // 8. GUARDAR EN BASE DE DATOS
     await prisma.consolidatedShipment.update({
         where: { id: consolidationId },
         data: {
-            status: 'ENVIADO', // O el estado que uses para "Enviado"
+            status: 'ENVIADO', 
             finalTrackingNumber: boughtShipment.tracker.tracking_code,
-            shippingLabelUrl: boughtShipment.postage_label.label_url, // Ojo: Verifica si tu campo se llama receiptUrl o shippingLabelUrl en esta tabla
+            shippingLabelUrl: boughtShipment.postage_label.label_url, 
             courierService: `${boughtShipment.selected_rate.carrier} - ${boughtShipment.selected_rate.service}`
+        }
+    });
+
+    // 9. ACTUALIZAR LOS PAQUETES HIJOS A "ENVIADO" (OPCIONAL PERO RECOMENDADO)
+    await prisma.package.updateMany({
+        where: { consolidatedShipmentId: consolidationId },
+        data: {
+            status: 'ENVIADO',
+            finalTrackingNumber: boughtShipment.tracker.tracking_code
         }
     });
 

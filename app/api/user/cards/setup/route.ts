@@ -8,16 +8,19 @@ export async function POST(req: Request) {
     const prisma = (await import("@/lib/prisma")).default;
     const Stripe = (await import("stripe")).default;
 
-    // 🕵️‍♂️ CAMUFLAJE ACTIVADO:
-    // Esta cadena extraña es tu llave SK_LIVE encriptada en Base64.
-    // GitHub NO sabrá que es una llave, así que te dejará subirlo.
-    const ENCRYPTED_KEY = "c2tfbGl2ZV81MUdsTlA1SndiRjJqU3ZDc3VKczJqNTJEUExMVE9rcDVlT0djNndxZGtwczJvdWMwU1hQYWxlOHRCR1lxNDRMZmtoempHVVZWZ09rWjdZTE5SME56U1pOrMDAwaDJQbGNyMFA=";
-    
-    // Aquí la desencriptamos para que Stripe la pueda usar:
-    const SECRET_KEY_FINAL = Buffer.from(ENCRYPTED_KEY, 'base64').toString('utf-8');
+    // Leemos la llave directamente desde el entorno (.env o .env.local).
+    const stripeKey = process.env.STRIPE_SECRET_KEY;
 
-    // Inicializamos Stripe con la llave REAL (desencriptada)
-    const stripe = new Stripe(SECRET_KEY_FINAL, { 
+    // 🕵️‍♂️ EL CHISMOSO DEL BACKEND: Imprime los primeros 12 caracteres de la llave en tu terminal de VS Code
+    console.log("🕵️‍♂️ CHISMOSO BACKEND - Llave secreta detectada:", stripeKey ? stripeKey.substring(0, 12) + "..." : "¡NINGUNA LLAVE!");
+
+    if (!stripeKey) {
+        console.error("❌ ERROR: No se encontró STRIPE_SECRET_KEY en las variables de entorno.");
+        return NextResponse.json({ message: "Error interno de configuración de pagos" }, { status: 500 });
+    }
+
+    // Inicializamos Stripe de forma limpia y profesional
+    const stripe = new Stripe(stripeKey, { 
         apiVersion: "2024-12-18.acacia" as any, 
         typescript: true,
     });
@@ -70,7 +73,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ clientSecret: setupIntent.client_secret });
 
   } catch (error: any) {
-    console.error("🔥 Error:", error);
+    console.error("🔥 Error en setup de tarjeta:", error);
     return NextResponse.json({ message: error.message }, { status: 500 });
   }
 }

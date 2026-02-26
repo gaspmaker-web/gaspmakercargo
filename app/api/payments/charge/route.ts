@@ -26,7 +26,8 @@ export async function POST(req: Request) {
         billIds,    
         billDetails, 
         selectedCourier, 
-        courierService   
+        courierService,
+        shippingAddress // 🔥 NUEVO: Recibimos la dirección desde el frontend
     } = await req.json();
 
     if (!amountNet || !paymentMethodId) {
@@ -125,8 +126,6 @@ export async function POST(req: Request) {
             });
 
             // 🚨 CORRECCIÓN VITAL: Definir el estado correcto
-            // Si es 'STORAGE_FEE', es un Pickup -> 'PENDIENTE_RETIRO' (o LISTO_PARA_RETIRO)
-            // Si es cualquier otra cosa -> 'LISTO_PARA_ENVIO'
             const isPickup = currentShipment?.serviceType === 'STORAGE_FEE';
             const nextStatus = isPickup ? 'LISTO_PARA_RETIRO' : 'LISTO_PARA_ENVIO';
 
@@ -147,6 +146,7 @@ export async function POST(req: Request) {
                     paymentId: paymentIntent.id,
                     selectedCourier: selectedCourier || undefined, 
                     courierService: courierService || undefined,   
+                    shippingAddress: shippingAddress || undefined, // 🔥 GUARDAMOS LA DIRECCIÓN AQUÍ
                     
                     subtotalAmount: cleanSubtotal,
                     processingFee: cleanFee,
@@ -169,8 +169,9 @@ export async function POST(req: Request) {
                 await prisma.package.updateMany({
                     where: { consolidatedShipmentId: detail.id },
                     data: {
-                        status: nextStatus, // 👈 USAMOS EL ESTADO CORRECTO (NO SIEMPRE ES ENVÍO)
+                        status: nextStatus, 
                         stripePaymentId: paymentIntent.id,
+                        shippingAddress: shippingAddress || undefined, // 🔥 GUARDAMOS LA DIRECCIÓN EN EL HIJO TAMBIÉN
                         
                         shippingTotalPaid: pkgTotal,
                         shippingSubtotal: pkgSub,
@@ -183,12 +184,11 @@ export async function POST(req: Request) {
         }));
 
     } else {
-        // --- FALLBACK (Lógica Antigua - También protegida) ---
+        // --- FALLBACK (Lógica Antigua - PAQUETES INDIVIDUALES) ---
         if (packageIds) {
              const idsArray = Array.isArray(packageIds) ? packageIds : packageIds.split(',');
              const count = idsArray.length || 1;
              
-             // Por defecto asumimos envio, a menos que el serviceType diga lo contrario
              const fallbackStatus = (serviceType === 'Warehousing' || serviceType === 'Pickup') 
                 ? 'PENDIENTE_RETIRO' 
                 : 'LISTO_PARA_ENVIO';
@@ -198,7 +198,8 @@ export async function POST(req: Request) {
                 data: {
                     status: fallbackStatus, 
                     shippingTotalPaid: Number((totalToCharge / count).toFixed(2)),
-                    stripePaymentId: paymentIntent.id
+                    stripePaymentId: paymentIntent.id,
+                    shippingAddress: shippingAddress || undefined // 🔥 GUARDAMOS LA DIRECCIÓN PARA PAQUETES INDIVIDUALES
                 }
              });
         }
@@ -210,13 +211,14 @@ export async function POST(req: Request) {
                 data: {
                     status: 'PAGADO', 
                     totalAmount: Number((totalToCharge / count).toFixed(2)),
-                    paymentId: paymentIntent.id
+                    paymentId: paymentIntent.id,
+                    shippingAddress: shippingAddress || undefined // 🔥 GUARDAMOS LA DIRECCIÓN AQUÍ TAMBIÉN
                 }
              });
         }
     }
 
-    // CASO C: Pickup Request (Si existe un objeto PickupRequest separado)
+    // CASO C: Pickup Request
     if (pickupId) {
         await prisma.pickupRequest.update({
             where: { id: pickupId },

@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 
-// 👇 VACUNA 1: Forzar modo dinámico
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
@@ -27,66 +26,63 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "Para Gasp Maker usa el despacho manual." }, { status: 400 });
     }
 
-    // 3. PREPARACIÓN DE DATOS
-    let destinationCountry = pkg.user.country?.trim().toUpperCase();
+    let toAddress: any = {};
 
-    if (!destinationCountry) {
-        return NextResponse.json({ error: "Error: El cliente no tiene país de envío configurado." }, { status: 400 });
+    if (pkg.shippingAddress) {
+        const parts = pkg.shippingAddress.split('|');
+        const name = parts[0]?.trim() || pkg.user.name;
+        const addressBlock = parts[1]?.trim() || '';
+        const phoneBlock = parts[2]?.trim() || '';
+
+        let phone = phoneBlock.replace(/[^0-9]/g, '');
+        if (phone.length < 10) phone = '7862820763';
+
+        const addrChunks = addressBlock.split(',').map(c => c.trim());
+        const countryRaw = addrChunks.pop() || 'US'; 
+        let destinationCountry = countryRaw.length > 2 ? (countryRaw.toUpperCase().includes('TRINIDAD') ? 'TT' : 'US') : countryRaw.toUpperCase();
+
+        const cityZipChunk = addrChunks.pop() || '';
+        const streetChunk = addrChunks.join(', ') || 'N/A';
+
+        const zip = cityZipChunk.match(/\d{4,}/)?.[0] || '00000';
+        const stateMatch = cityZipChunk.match(/\b[A-Z]{2}\b/);
+        const state = stateMatch ? stateMatch[0] : (destinationCountry === 'US' ? 'FL' : undefined);
+        const city = cityZipChunk.replace(zip, '').replace(state || '', '').replace(/[^a-zA-Z\s]/g, '').trim() || 'City';
+
+        toAddress = {
+            name: name,
+            street1: streetChunk,
+            city: city,
+            state: state,
+            zip: zip,
+            country: destinationCountry,
+            phone: phone
+        };
+    } else {
+        return NextResponse.json({ error: "Este paquete no tiene una dirección válida asignada." }, { status: 400 });
     }
 
-    if (destinationCountry.length > 2) {
-        if (destinationCountry.includes('TRINIDAD')) destinationCountry = 'TT';
-        else if (destinationCountry.includes('UNITED')) destinationCountry = 'US';
-    }
-
-    let cleanPhone = pkg.user.phone?.replace(/[^0-9]/g, '') || '';
-    if (cleanPhone.length < 10) cleanPhone = '7862820763'; 
-
-    const rawLocation = pkg.user.cityZip || ''; 
-    const city = rawLocation.split(',')[0].replace(/\d+/g, '').trim() || 'City'; 
-    const zip = rawLocation.match(/\d{4,}/)?.[0] || '00000';
-
-    let state = undefined;
-    if (destinationCountry === 'US' || destinationCountry === 'CA') {
-        const stateMatch = rawLocation.match(/\b[A-Z]{2}\b/);
-        state = stateMatch ? stateMatch[0] : (destinationCountry === 'US' ? 'FL' : undefined);
-    }
-
-    console.log(`📍 Target: ${city}, ${state || 'N/A'}, ${destinationCountry}`);
-
-    // 👇 4. INFORMACIÓN DE ADUANAS (NUEVO REQUISITO) 🛃
-    // Solo es obligatorio para internacional, pero EasyPost lo acepta siempre.
-    
     const customsItem = {
-        description: pkg.description || 'Personal Effects', // Qué es
+        description: pkg.description || 'Personal Effects', 
         quantity: 1,
-        value: parseFloat(pkg.declaredValue as any) || 10.0, // Cuánto vale (Obligatorio)
-        weight: (parseFloat(pkg.weightLbs as any) || 1) * 16, // Peso en onzas
-        origin_country: 'US', // De dónde sale
-        hs_tariff_number: '650500' // Código genérico para ropa/varios (ayuda a evitar rechazos)
+        value: parseFloat(pkg.declaredValue as any) || 10.0, 
+        weight: (parseFloat(pkg.weightLbs as any) || 1) * 16, 
+        origin_country: 'US', 
+        hs_tariff_number: '650500' 
     };
 
     const customsInfo = {
-        eel_pfc: 'NOEEI 30.37(a)', // Exención estándar para envíos < $2500
+        eel_pfc: 'NOEEI 30.37(a)', 
         customs_certify: true,
-        customs_signer: 'GaspMaker Agent', // Quién firma
+        customs_signer: 'GaspMaker Agent', 
         contents_type: 'merchandise',
         restriction_type: 'none',
         non_delivery_option: 'return',
         customs_items: [customsItem]
     };
 
-    // 5. Crear Envío con Aduanas
     const shipment = await easypost.Shipment.create({
-      to_address: {
-        name: pkg.user.name,
-        street1: pkg.user.address,
-        city: city,
-        state: state, 
-        zip: zip,
-        country: destinationCountry,
-        phone: cleanPhone
-      },
+      to_address: toAddress,
       from_address: {
         company: 'GaspMaker Cargo',
         street1: '1861 NW 22nd St',
@@ -102,14 +98,13 @@ export async function POST(req: Request) {
         height: parseFloat(pkg.heightIn as any) || 4,
         weight: (parseFloat(pkg.weightLbs as any) || 1) * 16
       },
-      customs_info: customsInfo // 👈 AQUÍ INYECTAMOS LA ADUANA
+      customs_info: customsInfo 
     });
 
     if (!shipment.rates || shipment.rates.length === 0) {
-        throw new Error(`EasyPost no devolvió tarifas para ${city}, ${destinationCountry}.`);
+        throw new Error(`EasyPost no devolvió tarifas para la dirección seleccionada.`);
     }
 
-    // 6. Selección de Tarifa
     let selectedRate;
     const carrierRates = shipment.rates.filter((r: any) => 
         r.carrier.toLowerCase().includes(courierName)
@@ -130,16 +125,15 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: `No hay tarifa para ${pkg.selectedCourier}.` }, { status: 400 });
     }
 
-    // 7. Comprar
     const boughtShipment = await easypost.Shipment.buy(shipment.id, selectedRate.id);
 
-    // 8. Guardar
     await prisma.package.update({
         where: { id: packageId },
         data: {
             status: 'ENVIADO',
             finalTrackingNumber: boughtShipment.tracker.tracking_code,
             receiptUrl: boughtShipment.postage_label.label_url,
+            shippingLabelUrl: boughtShipment.postage_label.label_url,
             courierService: `${boughtShipment.selected_rate.carrier} - ${boughtShipment.selected_rate.service}`
         }
     });
@@ -151,7 +145,6 @@ export async function POST(req: Request) {
     });
 
   } catch (error: any) {
-    console.error("EasyPost Buy Error:", error);
     const msg = error.error?.message || error.message || "Error desconocido";
     return NextResponse.json({ error: msg }, { status: 500 });
   }

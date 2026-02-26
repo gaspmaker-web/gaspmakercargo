@@ -8,7 +8,7 @@ import { useTranslations } from 'next-intl'; // 🔥 Importamos traducciones
 import StripeCardForm from './StripeCardForm';
 
 // 👇 CAMBIO CLAVE: Usamos la llave LIVE directamente para evitar errores de caché/env
-const stripePromise = loadStripe("pk_live_T0abxWmSgNZQ7dDDm6U3Rk8A00PwAsynLw");
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
 interface SavedCard {
   id: string;

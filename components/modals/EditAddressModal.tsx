@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, Fragment } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
-import { X, MapPin, Building2, Phone, Globe, Hash } from 'lucide-react';
+import { X, MapPin, Building2, Phone, Globe, Hash, User } from 'lucide-react';
 import { useTranslations } from 'next-intl'; 
 import { ALL_COUNTRIES } from '@/lib/countries';
 
@@ -31,15 +31,17 @@ const US_STATES = [
 interface EditAddressModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (data: { address: string; cityZip: string; country: string; phone: string }) => void;
-  currentData: { address: string; cityZip: string; country: string; phone: string };
+  onSave: (data: { fullName: string; address: string; cityZip: string; country: string; phone: string }) => void;
+  currentData: { fullName?: string; address: string; cityZip: string; country: string; phone: string };
 }
 
 export default function EditAddressModal({ isOpen, onClose, onSave, currentData }: EditAddressModalProps) {
   const t = useTranslations('EditAddressModal');
+  // 🔥 CONECTAMOS CON LAS TRADUCCIONES NUEVAS
+  const tProfile = useTranslations('ProfilePage'); 
   const [isLoading, setIsLoading] = useState(false);
 
-  // Estados separados para control total
+  const [fullName, setFullName] = useState(''); 
   const [address, setAddress] = useState('');
   const [city, setCity] = useState('');
   const [state, setState] = useState('');
@@ -47,24 +49,21 @@ export default function EditAddressModal({ isOpen, onClose, onSave, currentData 
   const [country, setCountry] = useState('');
   const [phone, setPhone] = useState('');
 
-  // 🔥 LÓGICA INTELIGENTE: Desarmar el string "CityZip" al abrir
   useEffect(() => {
     if (isOpen) {
+        setFullName(currentData.fullName || ''); 
         setAddress(currentData.address || '');
         setCountry(currentData.country ? currentData.country.toUpperCase() : 'US');
         setPhone(currentData.phone || '');
 
         const fullString = currentData.cityZip || '';
         
-        // 1. Extraer ZIP (5 dígitos)
         const zipMatch = fullString.match(/\b\d{5}(?:-\d{4})?\b/);
         const foundZip = zipMatch ? zipMatch[0] : '';
         setZip(foundZip);
 
-        // 2. Limpiar para buscar Ciudad y Estado
         let remainder = fullString.replace(foundZip, '').trim().replace(/,$/, ''); 
         
-        // 3. Extraer Estado (2 letras mayúsculas al final)
         let foundState = '';
         const parts = remainder.split(' ');
         const lastPart = parts[parts.length - 1];
@@ -83,18 +82,16 @@ export default function EditAddressModal({ isOpen, onClose, onSave, currentData 
     e.preventDefault();
     setIsLoading(true);
 
-    // 🔥 RE-ARMADO: Juntamos todo para que la base de datos no sufra
-    // El trim final elimina espacios extra si el zip está vacío
     const finalCityZip = `${city}, ${state} ${zip}`.trim().replace(/^, /, '').replace(/, $/, '');
 
     try {
       await onSave({
+        fullName, 
         address,
         cityZip: finalCityZip,
         country,
         phone
       });
-      onClose();
     } finally {
       setIsLoading(false);
     }
@@ -104,7 +101,6 @@ export default function EditAddressModal({ isOpen, onClose, onSave, currentData 
     <Transition appear show={isOpen} as={Fragment}>
       <Dialog as="div" className="relative z-50" onClose={onClose}>
         
-        {/* Fondo Oscuro con Blur (Efecto Moderno) */}
         <Transition.Child
           as={Fragment}
           enter="ease-out duration-300"
@@ -137,7 +133,8 @@ export default function EditAddressModal({ isOpen, onClose, onSave, currentData 
                     <h3 className="text-2xl font-bold text-gmc-gris-oscuro font-garamond tracking-tight">
                         {t('title') || "Shipping Address"}
                     </h3>
-                    <p className="text-sm text-gray-400 mt-1">Please enter your delivery details accurately.</p>
+                    {/* 🔥 SUBTÍTULO TRADUCIDO */}
+                    <p className="text-sm text-gray-400 mt-1">{tProfile('deliveryDetailsPrompt')}</p>
                   </div>
                   <button 
                     onClick={onClose} 
@@ -149,6 +146,27 @@ export default function EditAddressModal({ isOpen, onClose, onSave, currentData 
 
                 <form onSubmit={handleSubmit} className="space-y-6">
                   
+                  {/* FULL NAME */}
+                  <div className="group">
+                    {/* 🔥 LABEL DE NOMBRE TRADUCIDO */}
+                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 ml-1">
+                        {tProfile('fullNameRecipient')}
+                    </label>
+                    <div className="relative transition-all duration-300 group-focus-within:scale-[1.01]">
+                        <div className="absolute left-4 top-3.5 text-gray-300 group-focus-within:text-gmc-dorado-principal transition-colors">
+                            <User size={18} />
+                        </div>
+                        <input
+                            type="text"
+                            required
+                            value={fullName}
+                            onChange={(e) => setFullName(e.target.value)}
+                            placeholder="Jason Bosland"
+                            className="w-full pl-11 pr-4 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl text-gray-700 font-medium outline-none focus:bg-white focus:border-gmc-dorado-principal focus:ring-4 focus:ring-gmc-dorado-principal/10 transition-all shadow-sm placeholder:text-gray-300"
+                        />
+                    </div>
+                  </div>
+
                   {/* Address Line 1 */}
                   <div className="group">
                     <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 ml-1">
@@ -209,7 +227,7 @@ export default function EditAddressModal({ isOpen, onClose, onSave, currentData 
                           </div>
                       </div>
 
-                      {/* ZIP (MODIFICADO: Opcional y permite letras para internacional) */}
+                      {/* ZIP */}
                       <div className="col-span-5 sm:col-span-3 group">
                           <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 ml-1">Zip</label>
                           <div className="relative">
@@ -218,9 +236,8 @@ export default function EditAddressModal({ isOpen, onClose, onSave, currentData 
                             </div>
                             <input
                                 type="text"
-                                // required eliminado para permitir campo vacío
                                 value={zip}
-                                onChange={(e) => setZip(e.target.value)} // Eliminado filtro numérico para permitir códigos internacionales o vacío
+                                onChange={(e) => setZip(e.target.value)} 
                                 placeholder="Optional"
                                 className="w-full pl-9 pr-2 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl text-gray-700 font-medium outline-none focus:bg-white focus:border-gmc-dorado-principal focus:ring-4 focus:ring-gmc-dorado-principal/10 transition-all shadow-sm font-mono text-center placeholder:text-gray-300 placeholder:text-xs"
                             />
