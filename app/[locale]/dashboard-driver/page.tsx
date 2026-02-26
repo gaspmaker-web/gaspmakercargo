@@ -99,11 +99,10 @@ export default async function DriverDashboardPage(props: any) {
       orderBy: { updatedAt: 'desc' }
   });
 
-  // 🔥 4. BUSCAR PAQUETES SUELTOS (Corregido el doble OR)
+  // 🔥 4. BUSCAR PAQUETES SUELTOS (Corregido el error de sintaxis del doble OR)
   const activePackages = await prisma.package.findMany({
       where: {
           status: { in: ['EN_REPARTO', 'OUT_FOR_DELIVERY', 'EN_CAMINO', 'EN_RUTA'] },
-          // Envolvemos los dos OR dentro de un AND para que Prisma no se queje
           AND: [
               {
                   OR: [
@@ -126,11 +125,6 @@ export default async function DriverDashboardPage(props: any) {
               ]
           }
       },
-      include: {
-          user: { select: { name: true, address: true, country: true, countryCode: true } }
-      },
-      orderBy: { updatedAt: 'desc' }
-  });
       include: {
           user: { select: { name: true, address: true, country: true, countryCode: true } }
       },
