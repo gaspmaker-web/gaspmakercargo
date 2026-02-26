@@ -99,17 +99,24 @@ export default async function DriverDashboardPage(props: any) {
       orderBy: { updatedAt: 'desc' }
   });
 
-  // 🔥 4. BUSCAR PAQUETES SUELTOS (Ignorando los que están dentro de las consolidaciones de arriba)
+  // 🔥 4. BUSCAR PAQUETES SUELTOS (Corregido el doble OR)
   const activePackages = await prisma.package.findMany({
       where: {
           status: { in: ['EN_REPARTO', 'OUT_FOR_DELIVERY', 'EN_CAMINO', 'EN_RUTA'] },
-          OR: [
-              { consolidatedShipmentId: null },
-              { consolidatedShipment: { serviceType: { not: 'CONSOLIDATION' } } } // Permitimos pagos envueltos
-          ],
-          OR: [
-              { shippingAddress: { contains: driverZone, mode: 'insensitive' } },
-              { user: { countryCode: driverZone } }
+          // Envolvemos los dos OR dentro de un AND para que Prisma no se queje
+          AND: [
+              {
+                  OR: [
+                      { consolidatedShipmentId: null },
+                      { consolidatedShipment: { serviceType: { not: 'CONSOLIDATION' } } } 
+                  ]
+              },
+              {
+                  OR: [
+                      { shippingAddress: { contains: driverZone, mode: 'insensitive' } },
+                      { user: { countryCode: driverZone } }
+                  ]
+              }
           ],
           NOT: {
               OR: [
@@ -119,6 +126,11 @@ export default async function DriverDashboardPage(props: any) {
               ]
           }
       },
+      include: {
+          user: { select: { name: true, address: true, country: true, countryCode: true } }
+      },
+      orderBy: { updatedAt: 'desc' }
+  });
       include: {
           user: { select: { name: true, address: true, country: true, countryCode: true } }
       },
