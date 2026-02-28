@@ -637,7 +637,7 @@
     "noMovements": "Sin movimientos",
     "tryFilter": "Intenta cambiar los filtros."
   },
-  "StorageLock": {
+"StorageLock": {
     "title": "Paquete Bloqueado",
     "subtitle": "Acción Requerida: Pago de Almacenaje",
     "description": "Este paquete ha permanecido en bodega por <strong>{days} días</strong>, superando el límite gratuito de {limit} días.",
@@ -653,6 +653,7 @@
     "totalToPay": "Total a Pagar:",
     "savedCards": "Mis Tarjetas Guardadas",
     "noCards": "No tienes tarjetas guardadas. Por favor agrega una en tu perfil.",
+    "goToAddCard": "Ir a Agregar Tarjeta",
     "payBtn": "Pagar",
     "processing": "Procesando Pago...",
     "alertSelectMethod": "Por favor selecciona un método de pago.",

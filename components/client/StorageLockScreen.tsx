@@ -1,9 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Lock, DollarSign, Clock, AlertTriangle, Box, Loader2, CreditCard, X, CheckCircle } from 'lucide-react';
+import { Lock, DollarSign, Clock, AlertTriangle, Box, Loader2, CreditCard, X, CheckCircle, Plus } from 'lucide-react';
 // 🔥 1. Importamos el hook
 import { useTranslations } from 'next-intl';
 
@@ -34,6 +33,12 @@ export default function StorageLockScreen({
   const [selectedCard, setSelectedCard] = useState(paymentMethods[0]?.id || '');
   const router = useRouter();
 
+  // ============================================================================
+  // 🧮 CÁLCULO DE FEE DE STRIPE INTERNACIONAL (7.2%)
+  // ============================================================================
+  const stripeFee = storageDebt * 0.072;
+  const totalToPay = storageDebt + stripeFee;
+
   const handleProcessPayment = async () => {
     if (!selectedCard) {
         alert(t('alertSelectMethod')); // "Por favor selecciona un método de pago."
@@ -48,7 +53,7 @@ export default function StorageLockScreen({
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 packageId: pkg.id,
-                amount: storageDebt,
+                amount: totalToPay, // 🔥 Enviamos el TOTAL con el fee del 7.2% incluido
                 paymentMethodId: selectedCard
             })
         });
@@ -56,7 +61,6 @@ export default function StorageLockScreen({
         const data = await res.json();
 
         if (res.ok) {
-            // 🔥 ELIMINADO EL MENSAJE DE ÉXITO (ALERT)
             setShowPaymentModal(false);
             router.refresh(); 
         } else {
@@ -89,7 +93,10 @@ export default function StorageLockScreen({
                     <div className="p-6">
                         <div className="text-center mb-6">
                             <p className="text-sm text-gray-500 mb-1">{t('totalToPay')}</p>
-                            <p className="text-3xl font-black text-gray-900">${storageDebt.toFixed(2)}</p>
+                            <p className="text-3xl font-black text-gray-900">${totalToPay.toFixed(2)}</p>
+                            <p className="text-xs text-gray-400 mt-1">
+                                Incluye tarifa de procesamiento
+                            </p>
                         </div>
 
                         <p className="text-xs font-bold text-gray-500 uppercase mb-3">{t('savedCards')}</p>
@@ -123,9 +130,18 @@ export default function StorageLockScreen({
                                     </label>
                                 ))
                             ) : (
-                                <p className="text-sm text-red-500 text-center p-4 border border-red-100 rounded-lg bg-red-50">
-                                    {t('noCards')}
-                                </p>
+                                /* 🔥 BOTÓN MULTILINGÜE PARA CUANDO NO HAY TARJETAS 🔥 */
+                                <div className="flex flex-col gap-3">
+                                    <p className="text-sm text-red-500 text-center p-4 border border-red-100 rounded-lg bg-red-50">
+                                        {t('noCards')}
+                                    </p>
+                                    <button 
+                                        onClick={() => router.push('/account-settings')} 
+                                        className="w-full bg-[#374151] hover:bg-[#4B5563] border border-[#4B5563] text-white py-3 rounded-xl font-bold text-sm shadow-sm transition-all flex items-center justify-center gap-2"
+                                    >
+                                        <Plus size={18} /> {t('goToAddCard')}
+                                    </button>
+                                </div>
                             )}
                         </div>
 
@@ -135,7 +151,7 @@ export default function StorageLockScreen({
                             className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl font-bold text-sm shadow-md flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {loading ? <Loader2 className="animate-spin" size={18}/> : <DollarSign size={18}/>}
-                            {loading ? t('processing') : `${t('payBtn')} $${storageDebt.toFixed(2)}`}
+                            {loading ? t('processing') : `${t('payBtn')} $${totalToPay.toFixed(2)}`}
                         </button>
                     </div>
                 </div>
@@ -196,10 +212,26 @@ export default function StorageLockScreen({
                         </div>
                         
                         <div className="w-full h-px bg-gray-200 my-3"></div>
+
+                        {/* 🔥 DESGLOSE DE COSTOS Y FEE OCULTO 🔥 */}
+                        <div className="space-y-2 mb-3">
+                            <div className="flex justify-between items-center">
+                                <span className="text-xs text-gray-500 font-medium">Subtotal de Almacenaje</span>
+                                <span className="text-sm font-bold text-gray-700">${storageDebt.toFixed(2)}</span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                                <span className="text-xs text-gray-500 font-medium">
+                                    Processing Fee 
+                                </span>
+                                <span className="text-sm font-bold text-gray-500">+${stripeFee.toFixed(2)}</span>
+                            </div>
+                        </div>
                         
+                        <div className="w-full h-px bg-gray-200 my-3"></div>
+
                         <div className="flex justify-between items-center">
                             <span className="text-sm font-extrabold text-gray-800 uppercase">{t('labelTotal')}</span>
-                            <span className="text-3xl font-black text-gray-900 tracking-tight">${storageDebt.toFixed(2)}</span>
+                            <span className="text-3xl font-black text-gray-900 tracking-tight">${totalToPay.toFixed(2)}</span>
                         </div>
                     </div>
                 </div>
@@ -207,17 +239,10 @@ export default function StorageLockScreen({
                 {/* BOTÓN PRINCIPAL */}
                 <button 
                     onClick={() => setShowPaymentModal(true)}
-                    className="w-full bg-red-600 hover:bg-red-700 text-white py-4 rounded-xl font-bold text-base shadow-lg hover:shadow-red-200 transition-all flex items-center justify-center gap-2 mb-4 active:scale-[0.98]"
+                    className="w-full bg-red-600 hover:bg-red-700 text-white py-4 rounded-xl font-bold text-base shadow-lg hover:shadow-red-200 transition-all flex items-center justify-center gap-2 active:scale-[0.98]"
                 >
                     <DollarSign size={20}/> {t('payNowBtn')}
                 </button>
-
-                <Link 
-                    href="/dashboard-cliente"
-                    className="block w-full text-center py-2 text-gray-400 text-xs font-bold hover:text-gray-600 transition-colors uppercase tracking-wider"
-                >
-                    {t('backToDashboard')}
-                </Link>
             </div>
         </div>
     </div>

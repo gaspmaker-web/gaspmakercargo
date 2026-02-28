@@ -599,7 +599,7 @@
     "noMovements": "Aucun mouvement",
     "tryFilter": "Changez les filtres."
   },
-  "StorageLock": {
+ "StorageLock": {
     "title": "Colis Bloqué",
     "subtitle": "Action Requise : Paiement de Stockage",
     "description": "Ce colis est resté en entrepôt pendant <strong>{days} jours</strong>, dépassant la limite gratuite de {limit} jours.",
@@ -615,6 +615,7 @@
     "totalToPay": "Total à Payer :",
     "savedCards": "Mes Cartes Enregistrées",
     "noCards": "Vous n'avez pas de cartes enregistrées. Veuillez en ajouter une dans votre profil.",
+    "goToAddCard": "Aller ajouter une carte",
     "payBtn": "Payer",
     "processing": "Traitement du Paiement...",
     "alertSelectMethod": "Veuillez sélectionner un mode de paiement.",

@@ -620,7 +620,7 @@
     "noMovements": "Nenhum movimento",
     "tryFilter": "Altere os filtros."
   },
-  "StorageLock": {
+"StorageLock": {
     "title": "Pacote Bloqueado",
     "subtitle": "Ação Necessária: Pagamento de Armazenagem",
     "description": "Este pacote permaneceu no armazém por <strong>{days} dias</strong>, excedendo o limite gratuito de {limit} dias.",
@@ -636,6 +636,7 @@
     "totalToPay": "Total a Pagar:",
     "savedCards": "Meus Cartões Salvos",
     "noCards": "Você não tem cartões salvos. Adicione um no seu perfil.",
+    "goToAddCard": "Ir para Adicionar Cartão",
     "payBtn": "Pagar",
     "processing": "Processando Pagamento...",
     "alertSelectMethod": "Por favor, selecione um método de pagamento.",

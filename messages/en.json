@@ -612,6 +612,7 @@
     "totalToPay": "Total to Pay:",
     "savedCards": "My Saved Cards",
     "noCards": "You have no saved cards. Please add one in your profile.",
+    "goToAddCard": "Go to Add Card",
     "payBtn": "Pay",
     "processing": "Processing Payment...",
     "alertSelectMethod": "Please select a payment method.",
