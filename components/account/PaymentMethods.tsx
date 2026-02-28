@@ -9,7 +9,7 @@ import StripeCardForm from './StripeCardForm';
 
 // 👇 CAMBIO CLAVE: Usamos la llave LIVE directamente para evitar errores de caché/env
 // Reemplaza esto con tu verdadera llave pk_live_ de Stripe
-const stripePromise = loadStripe("pk_live_PON_TU_LLAVE_REAL_AQUI_XXXXXXXXXXXXXXXXX");
+const stripePromise = loadStripe("pk_live_T0abxWmSgNZQ7dDDm6U3Rk8A00PwAsynLw");
 
 interface SavedCard {
   id: string;
