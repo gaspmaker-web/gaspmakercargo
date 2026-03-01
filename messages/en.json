@@ -793,5 +793,33 @@
     "title": "Affiliate Disclosure",
     "text": "This website contains affiliate links. This means that if you click on links to stores such as eBay, Shein, Walmart, Temu, AliExpress, or other mentioned platforms, and make a purchase, we may receive a small commission at no extra cost to you. These commissions help us keep the site running.",
     "amazon": "* As an Amazon Associate I earn from qualifying purchases."
+  },
+  "TrackingDetails": {
+    "titlePackage": "Shipment Details",
+    "titleConsolidated": "Consolidated Details",
+    "trackingLabel": "Tracking GMC:",
+    "notFoundTitle": "Shipment Not Found",
+    "notFoundDesc": "The tracking number {tracking} does not exist in our records.",
+    "defaultDestination": "International Destination",
+    "statusDelivered": "Successfully Delivered",
+    "statusDestination": "In Destination Country",
+    "statusTransit": "In Transit to Destination",
+    "statusProcessing": "Processing in Miami",
+    "updatedAt": "Updated:",
+    "today": "Today",
+    "routeTitle": "Shipment Route",
+    "origin": "Origin",
+    "destination": "Destination",
+    "specsTitle": "Specifications",
+    "volume": "Volume:",
+    "pieces": "Pieces:",
+    "weight": "Weight:",
+    "historyTitle": "Tracking History",
+    "currentStatus": "Current Status:",
+    "lastUpdate": "Last database update",
+    "processedTitle": "Processed in Miami",
+    "processedDesc": "Gasp Maker Cargo HQ",
+    "receivedTitle": "Received at Warehouse",
+    "receivedDesc": "Entered into the system"
   }
 }

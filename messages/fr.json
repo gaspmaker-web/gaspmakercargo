@@ -796,5 +796,33 @@
     "title": "Divulgation d'Affiliation",
     "text": "Ce site Web contient des liens d'affiliation. Cela signifie que si vous cliquez sur des liens vers des boutiques telles qu'eBay, Shein, Walmart, Temu, AliExpress ou d'autres plateformes mentionnées, et effectuez un achat, nous pouvons recevoir une petite commission sans frais supplémentaires pour vous. Ces commissions nous aident à faire fonctionner le site.",
     "amazon": "* En tant que Partenaire Amazon, je réalise un bénéfice sur les achats remplissant les conditions requises."
+  },
+  "TrackingDetails": {
+    "titlePackage": "Détails de l'Expédition",
+    "titleConsolidated": "Détails Consolidés",
+    "trackingLabel": "Suivi GMC :",
+    "notFoundTitle": "Expédition Non Trouvée",
+    "notFoundDesc": "Le numéro de suivi {tracking} n'existe pas dans nos dossiers.",
+    "defaultDestination": "Destination Internationale",
+    "statusDelivered": "Livré avec Succès",
+    "statusDestination": "Dans le Pays de Destination",
+    "statusTransit": "En Transit vers la Destination",
+    "statusProcessing": "Traitement à Miami",
+    "updatedAt": "Mis à jour :",
+    "today": "Aujourd'hui",
+    "routeTitle": "Itinéraire de l'Expédition",
+    "origin": "Origine",
+    "destination": "Destination",
+    "specsTitle": "Spécifications",
+    "volume": "Volume :",
+    "pieces": "Pièces :",
+    "weight": "Poids :",
+    "historyTitle": "Historique de Suivi",
+    "currentStatus": "Statut Actuel :",
+    "lastUpdate": "Dernière mise à jour de la base de données",
+    "processedTitle": "Traité à Miami",
+    "processedDesc": "Gasp Maker Cargo HQ",
+    "receivedTitle": "Reçu à l'Entrepôt",
+    "receivedDesc": "Entré dans le système"
   }
 }

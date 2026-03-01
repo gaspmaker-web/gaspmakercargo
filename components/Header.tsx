@@ -28,7 +28,7 @@ export default function Header({ backButtonUrl }: HeaderProps) {
   const isDashboard = pathname.includes('/dashboard-cliente') || pathname.includes('/menu') || pathname.includes('/account-settings');
   const isBillingPage = pathname.includes('/pagar-facturas');
 
-  // Sub-páginas
+  // Sub-páginas (🔥 AQUÍ SE AGREGÓ EL RASTREO PARA OCULTAR LA HAMBURGUESA)
   const isSubPage = 
     pathname.includes('/referidos') ||
     pathname.includes('/pre-alerta') ||
@@ -39,7 +39,8 @@ export default function Header({ backButtonUrl }: HeaderProps) {
     pathname.includes('/pagar-facturas') || 
     pathname.includes('/notificaciones') ||
     pathname.includes('/account-settings') ||
-    pathname.includes('/paquetes');
+    pathname.includes('/paquetes') ||
+    pathname.includes('/rastreo'); // 🔥 <- REGLA AÑADIDA
 
   const headerClasses = isDashboard 
     ? "bg-transparent fixed top-0 z-40 w-full h-[72px] transition-colors duration-300" 

@@ -834,5 +834,33 @@
     "title": "Divulgación de Afiliados",
     "text": "Este sitio web contiene enlaces de afiliados. Esto significa que si haces clic en los enlaces de tiendas como eBay, Shein, Walmart, Temu, AliExpress u otras plataformas mencionadas, y realizas una compra, podemos recibir una pequeña comisión sin costo adicional para ti. Estas comisiones nos ayudan a mantener el sitio en funcionamiento.",
     "amazon": "* Como Afiliado de Amazon, percibo dinero con las compras elegibles."
+  },
+  "TrackingDetails": {
+    "titlePackage": "Detalles del Envío",
+    "titleConsolidated": "Detalles del Consolidado",
+    "trackingLabel": "Tracking GMC:",
+    "notFoundTitle": "Envío no encontrado",
+    "notFoundDesc": "El número de tracking {tracking} no existe en nuestros registros.",
+    "defaultDestination": "Destino Internacional",
+    "statusDelivered": "Entregado con Éxito",
+    "statusDestination": "En País de Destino",
+    "statusTransit": "Viajando a Destino",
+    "statusProcessing": "Procesando en Miami",
+    "updatedAt": "Actualizado:",
+    "today": "Hoy",
+    "routeTitle": "Ruta del Envío",
+    "origin": "Origen",
+    "destination": "Destino",
+    "specsTitle": "Especificaciones",
+    "volume": "Volumen:",
+    "pieces": "Piezas:",
+    "weight": "Peso:",
+    "historyTitle": "Historial de Movimientos",
+    "currentStatus": "Estado Actual:",
+    "lastUpdate": "Última actualización de la base de datos",
+    "processedTitle": "Procesado en Miami",
+    "processedDesc": "Gasp Maker Cargo HQ",
+    "receivedTitle": "Recibido en Almacén",
+    "receivedDesc": "Ingresado al sistema"
   }
 }
