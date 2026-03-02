@@ -119,12 +119,6 @@ export default async function PackageDetailPage({ params }: Props) {
   if (isDelivered) {
     return (
       <div className="min-h-screen bg-gray-50 p-4 sm:p-6 font-montserrat flex flex-col items-center">
-        
-        <div className="w-full max-w-md mb-6">
-            <Link href={`/${params.locale}/dashboard-cliente`} className="flex items-center text-gray-500 hover:text-gray-800 font-bold text-sm transition-colors">
-                <ArrowLeft size={18} className="mr-1" /> Volver al inicio
-            </Link>
-        </div>
 
         <div className="max-w-md w-full space-y-6">
           {/* Banner Principal */}
