@@ -106,13 +106,31 @@ export default function DeliveredPackagesCarousel({ packages, userCountryCode }:
                         </div>
                     </div>
 
-                    {/* 🔥 BOTÓN CORREGIDO: Enlace interno a la prueba de entrega 🔥 */}
-                    <Link 
-                        href={`/${locale}/dashboard-cliente/paquetes/${pkg.id}`}
-                        className="w-full py-3 rounded-xl bg-gray-900 text-white text-sm font-bold flex items-center justify-center gap-2 hover:bg-black transition-all shadow-lg shadow-gray-200 active:scale-[0.98]"
-                    >
-                        <ExternalLink size={16}/> {tDelivered('viewProof') || "View Proof"}
-                    </Link>
+                    {/* 🔥 ZONA DE BOTONES DE ACCIÓN 🔥 */}
+                    <div className="flex flex-col gap-2 mt-auto relative z-10 pt-2 border-t border-gray-100">
+                        
+                        {/* 1. BOTÓN DE RASTREO DORADO INYECTADO */}
+                       <Link 
+    href={`/${locale}/dashboard-cliente/rastreo/${pkg.consolidatedShipment?.gmcShipmentNumber || pkg.gmcTrackingNumber}`}
+    className="w-full flex items-center justify-center gap-2 bg-gmc-dorado-principal hover:bg-yellow-600 text-white text-sm font-bold py-3 px-4 rounded-xl transition-all active:scale-[0.98] shadow-sm"
+>
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"/>
+        <circle cx="12" cy="10" r="3"/>
+    </svg>
+    {/* 👇 CAMBIAMOS EL TEXTO FIJO POR LA TRADUCCIÓN 👇 */}
+    {tDelivered('trackPackage') || "Track Package"}
+</Link>
+
+                        {/* 2. BOTÓN DE VER PRUEBA ORIGINAL */}
+                        <Link 
+                            href={`/${locale}/dashboard-cliente/paquetes/${pkg.id}`}
+                            className="w-full py-3 rounded-xl bg-gray-900 text-white text-sm font-bold flex items-center justify-center gap-2 hover:bg-black transition-all shadow-lg shadow-gray-200 active:scale-[0.98]"
+                        >
+                            <ExternalLink size={16}/> {tDelivered('viewProof') || "View Proof"}
+                        </Link>
+                    </div>
+
                 </div>
             ))}
         </div>

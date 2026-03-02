@@ -625,16 +625,18 @@
   },
   "InTransitPage": {
     "title": "En Transit",
-    "subtitle": "Glissez pour voir vos colis en route"
+    "subtitle": "Glissez pour voir vos colis en route",
+    "trackPackage": "Suivre le Colis"
   },
-  "DeliveredPage": {
+ "DeliveredPage": {
     "title": "Livré (Historique)",
     "subtitle": "Archives des colis livrés.",
     "statusDelivered": "Livré",
     "destination": "Destination",
     "viewProof": "Voir Preuve de Livraison",
     "noDeliveries": "Aucune livraison trouvée",
-    "trySearch": "Essayez un autre terme de recherche."
+    "trySearch": "Essayez un autre terme de recherche.",
+    "trackPackage": "Suivre le Colis"
   },
   "ChangePasswordModal": {
     "title": "Changer le mot de passe",

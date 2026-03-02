@@ -4,20 +4,23 @@ import prisma from '@/lib/prisma';
 import { getTranslations } from 'next-intl/server';
 
 export default async function RastreoPage({ params }: { params: { trackingNumber: string, locale: string } }) {
-  const trackingNumber = params.trackingNumber;
+  // 🔥 Decodificamos la URL por si viene con caracteres raros
+  const trackingNumber = decodeURIComponent(params.trackingNumber).trim();
   const t = await getTranslations('TrackingDetails');
 
-  // 1️⃣ BUSCAMOS SI ES UN PAQUETE INDIVIDUAL (Solo incluimos al user)
-  let itemData: any = await prisma.package.findUnique({
-    where: { gmcTrackingNumber: trackingNumber },
-    include: { user: true } // ❌ Quitamos el address: true porque es un campo de texto, no una tabla
-  });
-  
+  let itemData: any = null;
   let isConsolidated = false;
   let piecesCount = 1;
 
-  // 2️⃣ SI NO ES PAQUETE, BUSCAMOS SI ES UNA CONSOLIDACIÓN
-  if (!itemData) {
+  // 1️⃣ INTENTAMOS BUSCAR COMO PAQUETE SUELTO (GM-US-...)
+  if (trackingNumber.startsWith('GM-US-') || trackingNumber.startsWith('GM-CU-')) {
+    itemData = await prisma.package.findUnique({
+      where: { gmcTrackingNumber: trackingNumber },
+      include: { user: true } 
+    });
+  } 
+  // 2️⃣ INTENTAMOS BUSCAR COMO CONSOLIDACIÓN (GMC-SHIP-...)
+  else if (trackingNumber.startsWith('GMC-SHIP-')) {
     itemData = await prisma.consolidatedShipment.findUnique({
       where: { gmcShipmentNumber: trackingNumber },
       include: { packages: true, user: true }
@@ -27,7 +30,26 @@ export default async function RastreoPage({ params }: { params: { trackingNumber
       piecesCount = itemData.packages?.length || 0;
     }
   }
+  // 3️⃣ SI NO TIENE PREFIJO CLARO, BUSCAMOS EN AMBOS (Modo Seguridad)
+  else {
+      itemData = await prisma.package.findFirst({
+        where: { gmcTrackingNumber: { equals: trackingNumber, mode: 'insensitive' } },
+        include: { user: true }
+      });
+      
+      if (!itemData) {
+          itemData = await prisma.consolidatedShipment.findFirst({
+            where: { gmcShipmentNumber: { equals: trackingNumber, mode: 'insensitive' } },
+            include: { packages: true, user: true }
+          });
+          if (itemData) {
+              isConsolidated = true;
+              piecesCount = itemData.packages?.length || 0;
+          }
+      }
+  }
 
+  // 🛑 SI NO ENCUENTRA NADA DESPUÉS DE LA BÚSQUEDA EXHAUSTIVA
   if (!itemData) {
     return (
       <div className="p-8 max-w-2xl mx-auto text-center mt-20 font-montserrat">
@@ -141,7 +163,6 @@ export default async function RastreoPage({ params }: { params: { trackingNumber
                     <ArrowRight size={20} className="text-gray-300 w-1/3 text-center" />
                     <div className="text-center truncate w-1/3">
                         <p className="text-xs text-gray-500 font-medium">{t('destination')}</p>
-                        {/* 👇 AQUI IMPRIMIMOS EL PAÍS QUE SACAMOS DEL TEXTO 👇 */}
                         <p className="font-bold text-gray-900 truncate capitalize" title={destination}>{destination}</p>
                     </div>
                 </div>

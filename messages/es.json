@@ -661,18 +661,20 @@
     "alertError": "❌ Error al procesar el pago.",
     "alertConnection": "Error de conexión."
   },
-  "InTransitPage": {
+ "InTransitPage": {
     "title": "En Tránsito",
-    "subtitle": "Desliza para ver tus paquetes en camino"
+    "subtitle": "Desliza para ver tus paquetes en camino",
+    "trackPackage": "Rastrear Paquete"
   },
-  "DeliveredPage": {
+ "DeliveredPage": {
     "title": "En Destino (Historial)",
     "subtitle": "Archivo de paquetes entregados.",
     "statusDelivered": "Entregado",
     "destination": "Destino",
     "viewProof": "Ver Prueba de Entrega",
     "noDeliveries": "No se encontraron entregas",
-    "trySearch": "Intenta con otro término de búsqueda."
+    "trySearch": "Intenta con otro término de búsqueda.",
+    "trackPackage": "Rastrear Paquete"
   },
   "ChangePasswordModal": {
     "title": "Cambiar Contraseña",

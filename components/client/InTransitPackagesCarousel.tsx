@@ -6,6 +6,8 @@ import { Search, MapPin, Calendar, Plane, ExternalLink, Box, Copy, Truck, Scale,
 import { useTranslations } from 'next-intl';
 // 🔥 2. Importamos la función de tracking (NUEVO)
 import { getTrackingUrl } from '@/lib/getTrackingUrl';
+import Link from 'next/link';
+import { useParams } from 'next/navigation';
 
 interface Props {
   packages: any[];
@@ -16,6 +18,10 @@ export default function InTransitPackagesCarousel({ packages, userCountryCode }:
   // 🔥 3. Inicializamos traducciones
   const t = useTranslations('PackageDetail'); 
   const tPage = useTranslations('InTransitPage');
+  
+  // Para el enlace dinámico interno
+  const params = useParams();
+  const locale = params?.locale || 'es';
 
   const [searchTerm, setSearchTerm] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -166,39 +172,48 @@ export default function InTransitPackagesCarousel({ packages, userCountryCode }:
                             </div>
 
                             {/* Footer: Peso y Botón */}
-                            <div className="flex items-end justify-between gap-4 mt-auto">
-                                <div>
-                                    <p className="text-[10px] text-gray-400 font-bold uppercase mb-0.5">{t('weight')}</p>
-                                    <div className="flex items-baseline gap-1">
-                                        <Scale size={14} className="text-gray-400" />
-                                        <span className="text-xl font-bold text-slate-800">{pkg.weightLbs}</span>
-                                        <span className="text-xs font-bold text-gray-400">lb</span>
+                            <div className="flex flex-col gap-3 mt-auto">
+                                <div className="flex items-end justify-between">
+                                    <div>
+                                        <p className="text-[10px] text-gray-400 font-bold uppercase mb-0.5">{t('weight')}</p>
+                                        <div className="flex items-baseline gap-1">
+                                            <Scale size={14} className="text-gray-400" />
+                                            <span className="text-xl font-bold text-slate-800">{pkg.weightLbs}</span>
+                                            <span className="text-xs font-bold text-gray-400">lb</span>
+                                        </div>
                                     </div>
                                 </div>
 
-                                {/* 🔥 BOTÓN INTELIGENTE QUE USA EL TRACKING DE EASYPOST */}
+                                {/* 🔥 ZONA DE BOTONES DE RASTREO MULTILINGÜES 🔥 */}
                                 {isGMC ? (
-                                    <button
-                                        type="button"
-                                        disabled={true}
-                                        className="flex-1 py-3 px-4 rounded-xl text-xs font-bold text-white flex items-center justify-center gap-2 transition-all shadow-none opacity-50 cursor-not-allowed select-none bg-slate-800"
+                                    /* BOTÓN DORADO PARA RASTREO INTERNO (GMC) */
+                                    <Link 
+                                        href={`/${locale}/dashboard-cliente/rastreo/${pkg.consolidatedShipment?.gmcShipmentNumber || pkg.gmcTrackingNumber}`}
+                                        className="w-full flex items-center justify-center gap-2 bg-gmc-dorado-principal hover:bg-yellow-600 text-white text-sm font-bold py-3 px-4 rounded-xl transition-all active:scale-[0.98] shadow-sm"
                                     >
-                                        {t('internalRoute') || "Internal Route"} <Box size={14}/>
-                                    </button>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"/>
+                                            <circle cx="12" cy="10" r="3"/>
+                                        </svg>
+                                        {/* Aprovechamos la traducción que agregaste en el paso anterior */}
+                                        {tPage('trackPackage') || "Rastrear Paquete"}
+                                    </Link>
                                 ) : easyPostTracking ? (
+                                    /* BOTÓN AZUL PARA RASTREO EXTERNO (FedEx, UPS, etc.) */
                                     <a
                                         href={trackingUrl}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="flex-1 py-3 px-4 rounded-xl text-xs font-bold text-white flex items-center justify-center gap-2 transition-all shadow-md hover:shadow-lg bg-blue-600 hover:bg-blue-700 active:scale-95"
+                                        className="w-full py-3 px-4 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-2 transition-all shadow-md hover:shadow-lg bg-blue-600 hover:bg-blue-700 active:scale-95"
                                     >
-                                        {t('trackBtn') || "Track"} <ExternalLink size={14}/>
+                                        {t('trackBtn') || "Track in Courier"} <ExternalLink size={16}/>
                                     </a>
                                 ) : (
+                                    /* BOTÓN GRIS CUANDO AÚN NO HAY GUÍA */
                                     <button
                                         type="button"
                                         disabled={true}
-                                        className="flex-1 py-3 px-4 rounded-xl text-[10px] font-bold text-gray-500 bg-gray-100 flex items-center justify-center gap-1 cursor-not-allowed border border-gray-200"
+                                        className="w-full py-3 px-4 rounded-xl text-xs font-bold text-gray-500 bg-gray-100 flex items-center justify-center gap-1 cursor-not-allowed border border-gray-200"
                                     >
                                         Procesando Guía...
                                     </button>

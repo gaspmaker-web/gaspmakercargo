@@ -646,16 +646,18 @@
   },
   "InTransitPage": {
     "title": "Em Trânsito",
-    "subtitle": "Deslize para ver seus pacotes a caminho"
+    "subtitle": "Deslize para ver seus pacotes a caminho",
+    "trackPackage": "Rastrear Pacote"
   },
-  "DeliveredPage": {
+ "DeliveredPage": {
     "title": "Entregue (Histórico)",
     "subtitle": "Arquivo de pacotes entregues.",
     "statusDelivered": "Entregue",
     "destination": "Destino",
     "viewProof": "Ver Comprovante de Entrega",
     "noDeliveries": "Nenhuma entrega encontrada",
-    "trySearch": "Tente outro termo de pesquisa."
+    "trySearch": "Tente outro termo de pesquisa.",
+    "trackPackage": "Rastrear Pacote"
   },
   "ChangePasswordModal": {
     "title": "Alterar Senha",

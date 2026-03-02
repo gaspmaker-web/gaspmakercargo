@@ -59,13 +59,14 @@ export default async function EnDestinoPage({ params: { locale } }: { params: { 
           }
       ]
     },
-    include: {
+   include: {
         user: {
             select: { country: true }
         },
         consolidatedShipment: {
             select: {
                 id: true,
+                gmcShipmentNumber: true, // <--- 🔥 AGREGAMOS ESTA LÍNEA
                 finalTrackingNumber: true,
                 serviceType: true
             }

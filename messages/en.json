@@ -622,16 +622,18 @@
   },
   "InTransitPage": {
     "title": "In Transit",
-    "subtitle": "Swipe to see your packages on the way"
+    "subtitle": "Swipe to see your packages on the way",
+    "trackPackage": "Track Package"
   },
-  "DeliveredPage": {
+ "DeliveredPage": {
     "title": "Delivered (History)",
     "subtitle": "Archive of delivered packages.",
     "statusDelivered": "Delivered",
     "destination": "Destination",
     "viewProof": "View Proof of Delivery",
     "noDeliveries": "No deliveries found",
-    "trySearch": "Try another search term."
+    "trySearch": "Try another search term.",
+    "trackPackage": "Track Package"
   },
   "ChangePasswordModal": {
     "title": "Change Password",

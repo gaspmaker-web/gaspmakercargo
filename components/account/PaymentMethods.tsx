@@ -9,8 +9,8 @@ import StripeCardForm from './StripeCardForm';
 
 // 👇 CAMBIO CLAVE: Usamos la llave LIVE directamente para evitar errores de caché/env
 // Reemplaza esto con tu verdadera llave pk_live_ de Stripe
+console.log("Mi navegador está usando la llave:", process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
-
 interface SavedCard {
   id: string;
   brand: string;
