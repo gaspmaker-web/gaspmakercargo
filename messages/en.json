@@ -320,7 +320,8 @@
     "select": "Select",
     "selected": "Selected",
     "errorAddress": "Missing shipping address in your profile.",
-    "configureAddress": "Configure Address"
+    "configureAddress": "Configure Address",
+    "pickupInStore": "Store Pickup"
   },
   "PreAlertPage": {
     "title": "Pre-Alert Package",

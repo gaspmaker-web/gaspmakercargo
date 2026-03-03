@@ -556,7 +556,7 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                                                         {/* 🔥 AQUÍ ESTÁ LA CORRECCIÓN DE LOS $0.00 HARDCODED */}
                                                         {isPickup && !selectedRate && (
                                                             <div className="flex justify-between items-center p-3 bg-green-50 border border-green-200 rounded-xl">
-                                                                <span className="flex items-center gap-2 text-green-700 font-bold text-sm"><Box size={14}/> Pickup en Tienda</span>
+                                                                <span className="flex items-center gap-2 text-green-700 font-bold text-sm"><Box size={14}/> {t('pickupInStore') || "Pickup en Tienda"}</span>
                                                                 <span className="text-lg font-bold text-green-800">${(bill.totalAmount || 0).toFixed(2)}</span>
                                                             </div>
                                                         )}

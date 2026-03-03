@@ -320,7 +320,8 @@
     "select": "Seleccionar",
     "selected": "Seleccionado",
     "errorAddress": "Falta dirección de envío en tu perfil.",
-    "configureAddress": "Configurar Dirección"
+    "configureAddress": "Configurar Dirección",
+    "pickupInStore": "Pickup en Tienda"
   },
   "PreAlertPage": {
     "title": "Pre-Alertar Paquete",

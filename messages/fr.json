@@ -320,7 +320,8 @@
     "select": "Sélectionner",
     "selected": "Sélectionné",
     "errorAddress": "Adresse d'expédition manquante dans votre profil.",
-    "configureAddress": "Configurer l'Adresse"
+    "configureAddress": "Configurer l'Adresse",
+    "pickupInStore": "Retrait en Magasin"
   },
   "PreAlertPage": {
     "title": "Pré-Alerter un Colis",

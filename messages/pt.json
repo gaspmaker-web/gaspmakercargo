@@ -320,7 +320,8 @@
     "select": "Selecionar",
     "selected": "Selecionado",
     "errorAddress": "Endereço de envio ausente no seu perfil.",
-    "configureAddress": "Configurar Endereço"
+    "configureAddress": "Configurar Endereço",
+    "pickupInStore": "Retirada na Loja"
   },
   "PreAlertPage": {
     "title": "Pré-Alertar Pacote",
