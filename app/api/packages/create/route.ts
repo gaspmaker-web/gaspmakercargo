@@ -32,7 +32,9 @@ export async function POST(req: Request) {
       heightIn, 
       photoUrlMiami,
       // 🔥 NUEVO CAMPO: Recibimos el valor declarado
-      declaredValue 
+      declaredValue,
+      // 🔥 NUEVO CAMPO: Recibimos el invoice
+      invoiceUrl 
     } = body;
 
     // Validaciones
@@ -64,10 +66,13 @@ export async function POST(req: Request) {
           heightIn,
           photoUrlMiami: photoUrlMiami || null, // Agregamos la foto del almacén
           
+          // 🔥 GUARDAMOS EL INVOICE (Si el admin lo subió, lo guardamos. Si no, mantenemos el que el cliente haya subido)
+          invoiceUrl: invoiceUrl || existingPackage.invoiceUrl,
+
           // 🔥 GUARDAMOS EL VALOR (Si el admin lo ingresó, actualizamos la pre-alerta)
           declaredValue: declaredValue ? parseFloat(declaredValue) : existingPackage.declaredValue,
 
-          // NO tocamos 'invoiceUrl' ni 'description', así se mantiene lo que subió el cliente
+          // NO tocamos 'description', así se mantiene lo que subió el cliente
           // NO tocamos 'userId', respetamos al dueño original de la pre-alerta
         },
         include: { user: true } // 👈 IMPORTANTE: Traemos al usuario para tener su email e idioma
@@ -126,7 +131,9 @@ export async function POST(req: Request) {
           heightIn,
           status: 'RECIBIDO_MIAMI',
           photoUrlMiami: photoUrlMiami || null,
-          invoiceUrl: null,
+          
+          // 🔥 GUARDAMOS EL INVOICE (Enviado por el Admin)
+          invoiceUrl: invoiceUrl || null,
           
           // 🔥 GUARDAMOS EL VALOR DECLARADO (Default 0)
           declaredValue: declaredValue ? parseFloat(declaredValue) : 0

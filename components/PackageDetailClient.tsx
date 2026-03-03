@@ -88,8 +88,10 @@ export default function PackageDetailClient({
 
   const couriersRef = useRef<HTMLDivElement>(null);
 
-  const [invoiceUrl, setInvoiceUrl] = useState<string | null>(pkg.invoiceUrl);
+  // 🔥 AQUÍ CONECTAMOS LA FACTURA QUE VIENE DE LA BASE DE DATOS
+  const [invoiceUrl, setInvoiceUrl] = useState<string | null>(pkg.invoiceUrl || null);
   const [isUploading, setIsUploading] = useState(false);
+  
   const [rates, setRates] = useState<any[]>([]);
   const [loadingRates, setLoadingRates] = useState(false);
   const [selectedRate, setSelectedRate] = useState<any>(null);
@@ -123,7 +125,10 @@ export default function PackageDetailClient({
 
   const warehousePhoto = pkg.photoUrlMiami && pkg.photoUrlMiami.startsWith("http") ? pkg.photoUrlMiami : null;
   const isReadyToShip = pkg.status === "RECIBIDO_MIAMI" || pkg.status === "EN_ALMACEN";
-  const hasInvoice = !!invoiceUrl && invoiceUrl.startsWith("http");
+  
+  // 🔥 MEJORADA: Validación robusta para saber si hay invoice (acepta PDF o imagen)
+  const hasInvoice = !!invoiceUrl && (invoiceUrl.startsWith("http") || invoiceUrl.startsWith("https"));
+  
   const isOverdue = Number(pkg.storageDebt) > 0;
   const isDelivered = pkg.status === "ENTREGADO";
   const isAdminVerifiedValue = declaredValue > 0;
@@ -356,7 +361,7 @@ export default function PackageDetailClient({
           body: JSON.stringify({ packageId: pkg.id, invoiceUrl: data.secure_url }),
         });
         setInvoiceUrl(data.secure_url);
-        router.refresh();
+        router.refresh(); // 🔥 Refrescamos los datos en el servidor
       }
     } catch (e) { alert("Error subir"); } finally { setIsUploading(false); }
   };
@@ -490,6 +495,7 @@ export default function PackageDetailClient({
               </div>
             </div>
 
+            {/* 🔥 TARJETA DE FACTURA CONECTADA CORRECTAMENTE 🔥 */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
                 <div className={`p-3 rounded-full ${hasInvoice ? "bg-blue-50 text-blue-600" : "bg-orange-50 text-orange-400"}`}>
@@ -498,11 +504,13 @@ export default function PackageDetailClient({
                 <div>
                   <p className="text-sm font-bold text-gray-700">{hasInvoice ? t("fileUploaded") : t("noInvoice")}</p>
                   {hasInvoice && (
-                    <a href={invoiceUrl!} target="_blank" className="text-xs text-blue-500 underline">{t("viewFile")}</a>
+                    <a href={invoiceUrl!} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-500 underline font-medium hover:text-blue-700 flex items-center gap-1 mt-1">
+                      <ExternalLink size={12}/> {t("viewFile")}
+                    </a>
                   )}
                 </div>
               </div>
-              <label className="cursor-pointer bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-xs font-bold hover:bg-gray-50 flex items-center gap-2">
+              <label className="cursor-pointer bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-xs font-bold hover:bg-gray-50 flex items-center gap-2 transition-colors active:scale-95 shadow-sm">
                 {isUploading ? <Loader2 className="animate-spin" size={14} /> : <Upload size={14} />} {hasInvoice ? t("replaceBtn") : t("uploadBtn")}
                 <input type="file" accept="image/*,application/pdf" className="hidden" onChange={handleInvoiceUpload} disabled={isUploading} />
               </label>

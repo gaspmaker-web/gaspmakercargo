@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { Camera, Search, CheckCircle, X, ScanBarcode, Printer, Tag, DollarSign, User, Save, Scale, Ruler } from 'lucide-react';
+import { Camera, Search, CheckCircle, X, ScanBarcode, Printer, Tag, DollarSign, User, Save, Scale, Ruler, FileText } from 'lucide-react';
 import Image from 'next/image';
 import BarcodeScannerModal from '@/components/BarcodeScannerModal';
 
@@ -18,8 +18,15 @@ export default function CreatePackageForm() {
   const [loading, setLoading] = useState(false);
   const [searchingUser, setSearchingUser] = useState(false);
   const [foundUser, setFoundUser] = useState<UserData | null>(null);
+  
+  // Estados para Evidencia
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  
+  // 🔥 NUEVOS: Estados para el Invoice
+  const [invoiceUrl, setInvoiceUrl] = useState<string | null>(null);
+  const [isUploadingInvoice, setIsUploadingInvoice] = useState(false);
+
   const [isScannerOpen, setIsScannerOpen] = useState(false);
 
   // Estado para impresión
@@ -110,6 +117,37 @@ export default function CreatePackageForm() {
     }
   };
 
+  // 🔥 NUEVA: Función para subir el Invoice a Cloudinary
+  const handleInvoiceUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingInvoice(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('upload_preset', process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || 'ml_default');
+
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`, {
+        method: 'POST',
+        body: formData
+      });
+      const data = await res.json();
+      
+      if (data.secure_url) {
+        setInvoiceUrl(data.secure_url);
+        if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate([50, 50]);
+      } else {
+        throw new Error("No se recibió URL");
+      }
+    } catch (error) {
+      console.error("Error upload invoice:", error);
+      alert("Error al subir el invoice");
+    } finally {
+      setIsUploadingInvoice(false);
+    }
+  };
+
   const onSubmit = async (data: any) => {
     if (!foundUser) {
       alert("⚠️ Asigna un cliente primero.");
@@ -129,6 +167,7 @@ export default function CreatePackageForm() {
         heightIn: parseFloat(data.height || 0),
         userId: foundUser.id,
         photoUrlMiami: photoUrl,
+        invoiceUrl: invoiceUrl, // 🔥 ENVIAMOS EL INVOICE AL BACKEND
         countryCode: 'US',
         declaredValue: parseFloat(data.declaredValue) || 0
       };
@@ -155,8 +194,10 @@ export default function CreatePackageForm() {
         date: new Date().toLocaleDateString()
       });
       
+      // Reseteamos todo al terminar
       reset();
       setPhotoUrl(null);
+      setInvoiceUrl(null); // 🔥 Limpiamos el Invoice
       window.scrollTo({ top: 0, behavior: 'smooth' });
 
     } catch (error: any) {
@@ -322,7 +363,7 @@ export default function CreatePackageForm() {
                 </div>
             </div>
 
-            {/* 🔥 DIMENSIONES (MOVIDO AQUÍ) 🔥 */}
+            {/* 🔥 DIMENSIONES 🔥 */}
             <details className="group bg-gray-50 rounded-xl border border-gray-200 overflow-hidden">
                 <summary className="cursor-pointer p-3 font-bold text-xs text-gray-500 uppercase hover:bg-gray-100 flex items-center gap-2 select-none">
                     <Ruler size={14} /> Opciones Avanzadas (Dimensiones)
@@ -346,57 +387,119 @@ export default function CreatePackageForm() {
                 />
             </div>
 
-            {/* FOTO EVIDENCIA */}
-            <div>
-                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">
-                    4. Foto de Recepción
-                </label>
-                
-                <div className="relative">
-                    <label className={`
-                        relative w-full h-32 rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-2 transition-all cursor-pointer active:scale-[0.99] overflow-hidden
-                        ${photoUrl ? 'border-green-500 bg-green-50' : 'border-gray-300 bg-gray-50 hover:bg-gray-100'}
-                    `}>
-                        {photoUrl ? (
-                            <>
-                                <Image src={photoUrl} alt="Preview" fill className="object-cover opacity-60" />
-                                <div className="z-10 bg-white/90 px-4 py-2 rounded-full flex items-center gap-2 shadow-sm">
-                                    <CheckCircle size={18} className="text-green-600" />
-                                    <span className="text-xs font-bold text-green-800">FOTO LISTA</span>
-                                </div>
-                            </>
-                        ) : (
-                            <>
-                                {isUploading ? (
-                                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                                ) : (
-                                    <Camera size={32} className="text-gray-400" />
-                                )}
-                                <span className="text-xs font-bold text-gray-500 uppercase">
-                                    {isUploading ? 'SUBIENDO...' : 'TOCAR PARA ABRIR CÁMARA'}
-                                </span>
-                            </>
-                        )}
-                        
-                        <input 
-                            type="file" 
-                            accept="image/*" 
-                            capture="environment" 
-                            className="hidden" 
-                            onChange={handlePhotoUpload} 
-                            disabled={isUploading}
-                        />
+            {/* 🔥 GRID PARA FOTOS (EVIDENCIA E INVOICE) 🔥 */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                {/* 1. FOTO EVIDENCIA */}
+                <div>
+                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">
+                        4. Foto del Paquete
                     </label>
+                    
+                    <div className="relative">
+                        <label className={`
+                            relative w-full h-32 rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-2 transition-all cursor-pointer active:scale-[0.99] overflow-hidden
+                            ${photoUrl ? 'border-green-500 bg-green-50' : 'border-gray-300 bg-gray-50 hover:bg-gray-100'}
+                        `}>
+                            {photoUrl ? (
+                                <>
+                                    <Image src={photoUrl} alt="Preview" fill className="object-cover opacity-60" />
+                                    <div className="z-10 bg-white/90 px-4 py-2 rounded-full flex items-center gap-2 shadow-sm">
+                                        <CheckCircle size={18} className="text-green-600" />
+                                        <span className="text-xs font-bold text-green-800">FOTO LISTA</span>
+                                    </div>
+                                </>
+                            ) : (
+                                <>
+                                    {isUploading ? (
+                                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                                    ) : (
+                                        <Camera size={32} className="text-gray-400" />
+                                    )}
+                                    <span className="text-xs font-bold text-gray-500 text-center px-2">
+                                        {isUploading ? 'SUBIENDO...' : 'TOMAR FOTO'}
+                                    </span>
+                                </>
+                            )}
+                            
+                            <input 
+                                type="file" 
+                                accept="image/*" 
+                                capture="environment" 
+                                className="hidden" 
+                                onChange={handlePhotoUpload} 
+                                disabled={isUploading}
+                            />
+                        </label>
 
-                    {photoUrl && (
-                        <button 
-                            type="button"
-                            onClick={(e) => { e.preventDefault(); setPhotoUrl(null); }}
-                            className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full shadow-md z-20"
-                        >
-                            <X size={16} />
-                        </button>
-                    )}
+                        {photoUrl && (
+                            <button 
+                                type="button"
+                                onClick={(e) => { e.preventDefault(); setPhotoUrl(null); }}
+                                className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full shadow-md z-20"
+                            >
+                                <X size={16} />
+                            </button>
+                        )}
+                    </div>
+                </div>
+
+                {/* 2. FOTO INVOICE (OPCIONAL) */}
+                <div>
+                    <label className="text-xs font-bold text-blue-600 uppercase tracking-wider mb-2 block flex items-center gap-1">
+                        <FileText size={14}/> 5. Factura / Invoice <span className="text-gray-400 normal-case font-medium">(Opcional)</span>
+                    </label>
+                    
+                    <div className="relative">
+                        <label className={`
+                            relative w-full h-32 rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-2 transition-all cursor-pointer active:scale-[0.99] overflow-hidden
+                            ${invoiceUrl ? 'border-blue-500 bg-blue-50' : 'border-blue-200 bg-blue-50/50 hover:bg-blue-50'}
+                        `}>
+                            {invoiceUrl ? (
+                                <>
+                                    {invoiceUrl.endsWith('.pdf') ? (
+                                        <div className="flex items-center justify-center bg-blue-100 w-full h-full">
+                                            <FileText size={40} className="text-blue-500" />
+                                        </div>
+                                    ) : (
+                                        <Image src={invoiceUrl} alt="Invoice Preview" fill className="object-cover opacity-60" />
+                                    )}
+                                    <div className="z-10 bg-white/90 px-4 py-2 rounded-full flex items-center gap-2 shadow-sm">
+                                        <CheckCircle size={18} className="text-blue-600" />
+                                        <span className="text-xs font-bold text-blue-800">INVOICE LISTO</span>
+                                    </div>
+                                </>
+                            ) : (
+                                <>
+                                    {isUploadingInvoice ? (
+                                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                                    ) : (
+                                        <FileText size={32} className="text-blue-400" />
+                                    )}
+                                    <span className="text-xs font-bold text-blue-600 text-center px-2">
+                                        {isUploadingInvoice ? 'SUBIENDO...' : 'SUBIR INVOICE / FOTO'}
+                                    </span>
+                                </>
+                            )}
+                            
+                            <input 
+                                type="file" 
+                                accept="image/*,application/pdf" 
+                                className="hidden" 
+                                onChange={handleInvoiceUpload} 
+                                disabled={isUploadingInvoice}
+                            />
+                        </label>
+
+                        {invoiceUrl && (
+                            <button 
+                                type="button"
+                                onClick={(e) => { e.preventDefault(); setInvoiceUrl(null); }}
+                                className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full shadow-md z-20"
+                            >
+                                <X size={16} />
+                            </button>
+                        )}
+                    </div>
                 </div>
             </div>
 
