@@ -8,6 +8,9 @@ import {
     Footprints, Shirt, SprayCan, Box, Info, X, Check, Truck, Loader2, AlertCircle 
 } from 'lucide-react';
 
+// 🔥 IMPORTAMOS TU DICCIONARIO MAESTRO DE PAÍSES 🔥
+import { ALL_COUNTRIES } from '@/lib/countries';
+
 // --- HELPER: Limpiar nombres de Carriers (Ej: UPSDAP -> UPS) ---
 const cleanCarrierName = (name: string) => {
     if (!name) return '';
@@ -19,20 +22,6 @@ const cleanCarrierName = (name: string) => {
     if (n.includes('GMC') || n.includes('GASP')) return 'Gasp Maker Cargo';
     return name; // Si no coincide con ninguno, devuelve el original
 };
-
-// --- DATA: Lista de países ---
-const ALL_COUNTRIES = [
-    { name: "Anguilla", code: "AI" }, { name: "Antigua and Barbuda", code: "AG" }, { name: "Aruba", code: "AW" },
-    { name: "Bahamas", code: "BS" }, { name: "Barbados", code: "BB" }, { name: "Bermuda", code: "BM" },
-    { name: "British Virgin Islands", code: "VG" }, { name: "Cayman Islands", code: "KY" },
-    { name: "Dominican Republic", code: "DO" }, { name: "Grenada", code: "GD" },
-    { name: "Jamaica", code: "JM" }, { name: "Mexico", code: "MX" }, 
-    { name: "Puerto Rico", code: "PR" }, { name: "Trinidad and Tobago", code: "TT" },
-    // { name: "United States", code: "US" }, // 🇺🇸 ELIMINADO POR LÓGICA DE NEGOCIO
-    { name: "Colombia", code: "CO" },
-    { name: "Spain", code: "ES" }, { name: "Canada", code: "CA" }, { name: "Venezuela", code: "VE" },
-    { name: "Panama", code: "PA" }, { name: "Saint Thomas (USVI)", code: "VI" }
-];
 
 export default function CalculadoraClient() { 
     const t = useTranslations('CalculatorPage'); 
@@ -47,7 +36,7 @@ export default function CalculadoraClient() {
     
     const [dimUnit, setDimUnit] = useState('cm'); 
     const [weightUnit, setWeightUnit] = useState('kg'); 
-    const [country, setCountry] = useState('DO'); 
+    const [country, setCountry] = useState('do'); // 🇩🇴 Por defecto DO
     const [activePreset, setActivePreset] = useState('other'); 
 
     // Estados de resultados
@@ -56,8 +45,12 @@ export default function CalculadoraClient() {
     const [isLoading, setIsLoading] = useState(false);
     const [errorMsg, setErrorMsg] = useState('');
     
+    // 🔥 FILTRAMOS Y ORDENAMOS LA LISTA MAESTRA
     const sortedCountries = useMemo(() => {
-        return [...ALL_COUNTRIES].sort((a, b) => a.name.localeCompare(b.name));
+        return ALL_COUNTRIES
+            // 🇺🇸 ELIMINADO POR LÓGICA DE NEGOCIO (No se cotiza hacia USA)
+            .filter(c => c.code.toLowerCase() !== 'us') 
+            .sort((a, b) => a.name.localeCompare(b.name));
     }, []);
     
     // Definición de presets 
@@ -107,7 +100,7 @@ export default function CalculadoraClient() {
         const heightIn = dimUnit === 'cm' ? Number(height) / 2.54 : Number(height);
 
         // 2. Obtener Nombre del País
-        const selectedCountry = ALL_COUNTRIES.find(c => c.code === country);
+        const selectedCountry = ALL_COUNTRIES.find(c => c.code.toLowerCase() === country.toLowerCase());
 
         try {
             const res = await fetch('/api/rates', {
@@ -122,9 +115,9 @@ export default function CalculadoraClient() {
                         height: heightIn
                     },
                     destination: {
-                        countryCode: country,
+                        countryCode: country.toUpperCase(),
                         countryName: selectedCountry?.name || '', 
-                        country: country
+                        country: country.toUpperCase()
                     }
                 })
             });
@@ -194,11 +187,12 @@ export default function CalculadoraClient() {
                                 />
                                 <select
                                     value={country}
-                                    onChange={(e) => setCountry(e.target.value)}
+                                    onChange={(e) => setCountry(e.target.value.toLowerCase())}
                                     className="w-full pl-14 pr-10 py-4 border-2 border-gray-100 bg-gray-50 rounded-2xl text-gray-800 font-bold appearance-none focus:outline-none focus:border-gmc-dorado-principal focus:bg-white transition-all cursor-pointer"
                                 >
+                                    {/* 🔥 GENERADO DESDE EL DICCIONARIO MAESTRO 🔥 */}
                                     {sortedCountries.map(c => (
-                                        <option key={c.code} value={c.code}>{c.name}</option>
+                                        <option key={c.code} value={c.code.toLowerCase()}>{c.name}</option>
                                     ))}
                                 </select>
                             </div>
@@ -230,7 +224,6 @@ export default function CalculadoraClient() {
                                 })}
                             </div>
 
-                            {/* 🔥 CAMBIO ESTRUCTURAL AQUÍ: USAMOS GRID PARA QUE ALINEE PESO Y PRECIO */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-end">
                                 
                                 {/* A. DIMENSIONES (Izquierda) */}
@@ -249,7 +242,7 @@ export default function CalculadoraClient() {
                                     </div>
                                 </div>
 
-                                {/* B. PESO Y PRECIO (Derecha - Alineados) */}
+                                {/* B. PESO Y PRECIO (Derecha) */}
                                 <div className="grid grid-cols-2 gap-4 items-end">
                                     {/* Peso */}
                                     <div className="flex flex-col justify-end">
@@ -313,16 +306,13 @@ export default function CalculadoraClient() {
 
                         <div className="p-8 max-h-[60vh] overflow-y-auto space-y-4">
                             {apiRates.map((rate, index) => {
-                                // Pasamos el carrier al cálculo para detectar GMC
                                 const details = calculateTotal(rate.price, rate.carrier);
                                 
                                 return (
                                     <div key={rate.id} className={`group border-2 rounded-[1.5rem] p-5 transition-all relative ${index === 0 ? 'border-gmc-dorado-principal bg-yellow-50/30' : 'border-gray-50 bg-white hover:border-gray-200'}`}>
                                         {index === 0 && (<div className="absolute top-0 right-0 bg-gmc-dorado-principal text-black text-[8px] font-black px-3 py-1 rounded-bl-xl uppercase">Best Value</div>)}
                                         
-                                        {/* 🔥 ESTRUCTURA DE GRID BLINDADA */}
                                         <div className="grid grid-cols-[3.5rem_1fr_min-content] gap-4 items-center mb-4">
-                                            {/* Col 1: Logo (Ancho Fijo) */}
                                             <div className="bg-white p-2 rounded-xl border border-gray-100 h-14 w-14 flex items-center justify-center shadow-sm shrink-0">
                                                 <img 
                                                     src={rate.logo || "/gaspmakercargoproject.png"} 
@@ -332,23 +322,19 @@ export default function CalculadoraClient() {
                                                 />
                                             </div>
                                             
-                                            {/* Col 2: Info Texto */}
                                             <div className="overflow-hidden">
                                                 <h3 className="font-black text-gray-900 text-sm uppercase truncate">
-                                                    {/* Usamos el helper para limpiar el nombre (UPSDAP -> UPS) */}
                                                     {cleanCarrierName(rate.carrier)}
                                                 </h3>
                                                 <p className="text-[10px] text-gray-400 font-bold truncate">{rate.service}</p>
                                             </div>
 
-                                            {/* Col 3: Precio (Ancho Min Fijo) */}
                                             <div className="text-right min-w-[5rem]">
                                                 <p className="text-2xl font-black text-gray-900 leading-none">${details.total.toFixed(2)}</p>
                                                 <p className="text-[8px] text-gray-400 font-black uppercase tracking-widest">Total</p>
                                             </div>
                                         </div>
 
-                                        {/* 🔥 DESGLOSE EN GRID */}
                                         <div className="grid grid-cols-2 gap-4 text-[10px] font-bold text-gray-500 border-t border-dashed border-gray-200 pt-4 mb-4 items-start">
                                             <div className="flex items-center gap-2">
                                                 <Truck size={14} className="text-gmc-dorado-principal shrink-0"/> 
@@ -360,7 +346,6 @@ export default function CalculadoraClient() {
                                                 {details.insurance > 0 && (
                                                     <span className="text-blue-600">+ Ins: ${details.insurance.toFixed(2)}</span>
                                                 )}
-                                                {/* Solo mostramos el fee si es mayor a 0 */}
                                                 {details.handling > 0 && (
                                                     <span className="text-gray-400 whitespace-nowrap">+ Fee: ${details.handling.toFixed(2)}</span>
                                                 )}

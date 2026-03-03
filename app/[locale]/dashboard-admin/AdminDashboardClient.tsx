@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useSession } from 'next-auth/react'; 
 import { 
   Package, Users, Truck, MapPin, PlusCircle, Layers, 
-  Activity, DollarSign, ClipboardList, Car, Loader2, TrendingUp, Container 
+  Activity, DollarSign, ClipboardList, Car, Loader2, TrendingUp, Container, Store 
 } from 'lucide-react';
 
 export default function AdminDashboardClient({ locale }: { locale: string }) {
@@ -139,6 +139,36 @@ export default function AdminDashboardClient({ locale }: { locale: string }) {
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               
+              {/* 🔥 NUEVO: TARJETA DROP & GO (DESTACADA) 🔥 */}
+              <Link href={`/${locale}/dashboard-admin/pay-and-go`} 
+                className="group bg-slate-900 p-5 rounded-xl border border-slate-700 hover:border-gmc-dorado-principal hover:shadow-[0_0_15px_rgba(234,216,177,0.3)] transition-all cursor-pointer block relative md:col-span-2 overflow-hidden">
+                <div className="absolute -right-10 -top-10 opacity-10 text-white">
+                  <Store size={150} />
+                </div>
+                <div className="flex items-start justify-between relative z-10">
+                  <div>
+                    <h3 className="text-xl font-black text-white group-hover:text-gmc-dorado-principal transition-colors tracking-wide">Drop & Go (Mostrador)</h3>
+                    <p className="text-sm text-gray-300 mt-1 font-medium">Recepción, cotización y cobro rápido para clientes físicos.</p>
+                  </div>
+                  <div className="bg-white/10 p-3 rounded-lg text-gmc-dorado-principal backdrop-blur-sm">
+                    <Store size={28} strokeWidth={2} />
+                  </div>
+                </div>
+              </Link>
+              
+              <Link href={`/${locale}/dashboard-admin/crear-envio`} 
+                className="group bg-white p-5 rounded-xl border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all cursor-pointer block">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h3 className="text-base font-bold text-gmc-gris-oscuro group-hover:text-blue-600 transition-colors">Crear Envío (Bodega)</h3>
+                    <p className="text-xs text-gray-500 mt-1 font-medium">Registrar paquete a cliente con suite.</p>
+                  </div>
+                  <div className="bg-blue-50 p-2 rounded-lg text-blue-600 group-hover:bg-blue-100 transition-colors">
+                    <PlusCircle size={20} strokeWidth={2} />
+                  </div>
+                </div>
+              </Link>
+
               <Link href={`/${locale}/dashboard-admin/solicitudes-pickup`} 
                 className="group bg-white p-5 rounded-xl border border-gray-200 hover:border-orange-400 hover:shadow-md transition-all cursor-pointer block relative">
                 
@@ -155,19 +185,6 @@ export default function AdminDashboardClient({ locale }: { locale: string }) {
                   </div>
                   <div className="bg-orange-50 p-2 rounded-lg text-orange-600 group-hover:bg-orange-100 transition-colors">
                     <Car size={20} strokeWidth={2} />
-                  </div>
-                </div>
-              </Link>
-              
-              <Link href={`/${locale}/dashboard-admin/crear-envio`} 
-                className="group bg-white p-5 rounded-xl border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all cursor-pointer block">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <h3 className="text-base font-bold text-gmc-gris-oscuro group-hover:text-blue-600 transition-colors">Crear Envío</h3>
-                    <p className="text-xs text-gray-500 mt-1 font-medium">Registrar un nuevo pedido.</p>
-                  </div>
-                  <div className="bg-blue-50 p-2 rounded-lg text-blue-600 group-hover:bg-blue-100 transition-colors">
-                    <PlusCircle size={20} strokeWidth={2} />
                   </div>
                 </div>
               </Link>
@@ -192,7 +209,7 @@ export default function AdminDashboardClient({ locale }: { locale: string }) {
                 </div>
               </Link>
 
-              {/* 🔥 NUEVA TARJETA: CONTROL DE ALMACENAJE 🔥 */}
+              {/* 🔥 TARJETA: CONTROL DE ALMACENAJE 🔥 */}
               <Link href={`/${locale}/dashboard-admin/pagos-almacenaje`} 
                 className="group bg-white p-5 rounded-xl border border-gray-200 hover:border-amber-500 hover:shadow-md transition-all cursor-pointer block">
                 <div className="flex items-start justify-between">

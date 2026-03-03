@@ -5,32 +5,76 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 // ==========================================
-// 🗺️ DICCIONARIO DE CAPITALES
+// 🗺️ DICCIONARIO DE CAPITALES MAESTRO (ACTUALIZADO CON TODOS TUS PAÍSES)
 // ==========================================
 const DEFAULT_CAPITALS: Record<string, { city: string, zip?: string, state?: string }> = {
-    'DO': { city: 'Santo Domingo', zip: '10100' },
-    'CO': { city: 'Bogota', zip: '110111' },
-    'MX': { city: 'Mexico City', zip: '06000', state: 'CMX' },
-    'ES': { city: 'Madrid', zip: '28001' },
+    // Norte y Centroamérica
     'US': { city: 'Miami', state: 'FL', zip: '33166' },
-    'VE': { city: 'Caracas', zip: '1010' },
-    'PA': { city: 'Panama City', zip: '0801' },
     'CA': { city: 'Toronto', zip: 'M5V 2T6', state: 'ON' },
-    'GB': { city: 'London', zip: 'SW1A 1AA' },
-    'FR': { city: 'Paris', zip: '75001' },
+    'MX': { city: 'Mexico City', zip: '06000', state: 'CMX' },
+    'GT': { city: 'Guatemala City', zip: '01001' },
+    'HN': { city: 'Tegucigalpa', zip: '11101' },
+    'SV': { city: 'San Salvador', zip: '1101' },
+    'NI': { city: 'Managua', zip: '11001' },
+    'CR': { city: 'San Jose', zip: '10101' },
+    'PA': { city: 'Panama City', zip: '0801' },
+    
+    // Sudamérica
+    'CO': { city: 'Bogota', zip: '110111' },
+    'VE': { city: 'Caracas', zip: '1010' },
+    'AR': { city: 'Buenos Aires', zip: 'C1000' },
+    'PE': { city: 'Lima', zip: '15001' },
+    'CL': { city: 'Santiago', zip: '8320000' },
+    'EC': { city: 'Quito', zip: '170150' },
+    'BO': { city: 'La Paz', zip: '0000' },
+    'PY': { city: 'Asuncion', zip: '1209' },
+    'UY': { city: 'Montevideo', zip: '11000' },
+    'BR': { city: 'Brasilia', zip: '70000-000' },
+
+    // Caribe (GMC Core)
+    'DO': { city: 'Santo Domingo', zip: '10100' },
+    'PR': { city: 'San Juan', state: 'PR', zip: '00901' },
     'JM': { city: 'Kingston', zip: '' },
     'BS': { city: 'Nassau', zip: '' },
-    'KY': { city: 'George Town', zip: '' },
+    'KY': { city: 'George Town', zip: 'KY1-1100' },
     'BB': { city: 'Bridgetown', zip: 'BB11000' },
     'TT': { city: 'Port of Spain', zip: '' },
     'AG': { city: 'St. John\'s', zip: '' },
-    'AI': { city: 'The Valley', zip: '' },
+    'AI': { city: 'The Valley', zip: 'AI2640' },
     'AW': { city: 'Oranjestad', zip: '' },
     'BM': { city: 'Hamilton', zip: 'HM 11' },
-    'VG': { city: 'Road Town', zip: '' },
+    'VG': { city: 'Road Town', zip: 'VG1110' },
     'GD': { city: 'St. George\'s', zip: '' },
-    'PR': { city: 'San Juan', state: 'PR', zip: '00901' },
-    'VI': { city: 'Charlotte Amalie', state: 'VI', zip: '00802' }
+    'VI': { city: 'Charlotte Amalie', state: 'VI', zip: '00802' },
+    'BQ': { city: 'Kralendijk', zip: '' },
+    'CW': { city: 'Willemstad', zip: '' },
+    'DM': { city: 'Roseau', zip: '' },
+    'GP': { city: 'Basse-Terre', zip: '97100' },
+    'HT': { city: 'Port-au-Prince', zip: 'HT6110' },
+    'MQ': { city: 'Fort-de-France', zip: '97200' },
+    'MS': { city: 'Brades', zip: 'MSR1110' },
+    'BL': { city: 'Gustavia', zip: '97133' },
+    'KN': { city: 'Basseterre', zip: '' },
+    'LC': { city: 'Castries', zip: 'LC04101' },
+    'MF': { city: 'Marigot', zip: '97150' },
+    'VC': { city: 'Kingstown', zip: 'VC0100' },
+    'SX': { city: 'Philipsburg', zip: '' },
+    'TC': { city: 'Cockburn Town', zip: 'TKCA 1ZZ' },
+
+    // Europa y Resto del Mundo
+    'ES': { city: 'Madrid', zip: '28001' },
+    'GB': { city: 'London', zip: 'SW1A 1AA' },
+    'FR': { city: 'Paris', zip: '75001' },
+    'DE': { city: 'Berlin', zip: '10115' },
+    'IT': { city: 'Rome', zip: '00118' },
+    'PT': { city: 'Lisbon', zip: '1000-001' },
+    'AD': { city: 'Andorra la Vella', zip: 'AD500' },
+    'AL': { city: 'Tirana', zip: '1001' },
+    'JP': { city: 'Tokyo', zip: '100-0001' },
+    'IN': { city: 'New Delhi', zip: '110001' },
+    'AF': { city: 'Kabul', zip: '1001' },
+    'DZ': { city: 'Algiers', zip: '16000' },
+    'AO': { city: 'Luanda', zip: '0000' }
 };
 
 // ==========================================

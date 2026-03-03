@@ -17,7 +17,6 @@ export const ALL_COUNTRIES: Country[] = [
     { name: "Bonaire", code: "bq", dial_code: "+599" },
     { name: "British Virgin Islands", code: "vg", dial_code: "+1-284" },
     { name: "Cayman Islands", code: "ky", dial_code: "+1-345" },
-    { name: "Cuba", code: "cu", dial_code: "+53" },
     { name: "Curaçao", code: "cw", dial_code: "+599" },
     { name: "Dominica", code: "dm", dial_code: "+1-767" },
     { name: "Dominican Republic", code: "do", dial_code: "+1" }, // +1-809, 829, 849
