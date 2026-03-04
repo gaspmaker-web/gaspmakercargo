@@ -15,7 +15,8 @@ import {
   LogOut,
   Menu,
   X,
-  Bell // 🔥 1. AGREGAMOS EL ÍCONO DE LA CAMPANITA
+  Bell, // 🔥 1. AGREGAMOS EL ÍCONO DE LA CAMPANITA
+  Zap   // 🔥 NUEVO: Ícono de relámpago para Pay & Go
 } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 
@@ -59,10 +60,12 @@ export default function AdminSidebar() {
     return () => clearInterval(interval);
   }, []);
 
+  // 🔥 AQUÍ AGREGAMOS PAY & GO AL MENÚ 🔥
   const menuItems = [
     { name: "Dashboard", href: "/dashboard-admin", icon: LayoutDashboard, roles: ["ADMIN"] },
     { name: "Paquetes", href: "/dashboard-admin/paquetes", icon: Package, roles: ["ADMIN", "WAREHOUSE"] },
     { name: "Crear Envío", href: "/dashboard-admin/crear-envio", icon: Truck, roles: ["ADMIN", "WAREHOUSE"] },
+    { name: "Pay & Go", href: "/dashboard-admin/pay-and-go", icon: Zap, roles: ["ADMIN", "WAREHOUSE"] }, // <-- AQUÍ ESTÁ
     { name: "Consolidaciones", href: "/dashboard-admin/consolidaciones", icon: Layers, roles: ["ADMIN", "WAREHOUSE"] },
     { name: "Clientes", href: "/dashboard-admin/clientes", icon: Users, roles: ["ADMIN"] },
     { name: "Finanzas", href: "/dashboard-admin/finanzas", icon: DollarSign, roles: ["ADMIN"] },
