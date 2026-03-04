@@ -102,6 +102,57 @@ export async function POST(req: Request) {
       }
     });
 
+    // 🔥 4.5 ENVIAR CORREO DE RECIBO AL CLIENTE CON RESEND 🔥
+    try {
+      if (process.env.RESEND_API_KEY) {
+        const { Resend } = await import('resend');
+        const resend = new Resend(process.env.RESEND_API_KEY);
+        
+        await resend.emails.send({
+          from: 'GaspMaker <noreply@gaspmaker.com>', // <-- Cambia el dominio al oficial de tu empresa si es necesario
+          to: user.email,
+          subject: `📦 Recibo de Envío Pay & Go - Tracking: ${finalTracking}`,
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden;">
+              <div style="background-color: #1e293b; padding: 24px; text-align: center;">
+                <h1 style="color: #ead8b1; margin: 0; font-size: 24px;">Recibo de Envío en Mostrador</h1>
+              </div>
+              <div style="padding: 24px; color: #374151;">
+                <p style="font-size: 16px;">Hola <strong>${user.name}</strong>,</p>
+                <p>Tu paquete ha sido procesado exitosamente en nuestra sucursal y el pago ha sido recibido.</p>
+                
+                <div style="background-color: #f8fafc; padding: 16px; border-radius: 8px; margin: 24px 0; border: 1px solid #e2e8f0;">
+                  <h3 style="margin-top: 0; color: #0f172a; border-bottom: 1px solid #cbd5e1; padding-bottom: 8px;">Detalles del Envío</h3>
+                  <p style="margin: 8px 0;"><strong>Tracking Oficial:</strong> <span style="color: #2563eb; font-weight: bold;">${finalTracking}</span></p>
+                  <p style="margin: 8px 0;"><strong>Destinatario:</strong> ${body.receiverName}</p>
+                  <p style="margin: 8px 0;"><strong>Destino:</strong> ${body.receiverCity}, ${body.receiverCountry}</p>
+                  <p style="margin: 8px 0;"><strong>Courier:</strong> ${body.courier} - ${body.service}</p>
+                  <p style="margin: 8px 0;"><strong>Contenido:</strong> ${body.description}</p>
+                </div>
+
+                <div style="background-color: #f8fafc; padding: 16px; border-radius: 8px; margin: 24px 0; border: 1px solid #e2e8f0;">
+                  <h3 style="margin-top: 0; color: #0f172a; border-bottom: 1px solid #cbd5e1; padding-bottom: 8px;">Detalles del Pago</h3>
+                  <p style="margin: 8px 0;"><strong>Total Pagado:</strong> <span style="font-size: 18px; font-weight: bold; color: #16a34a;">$${parseFloat(body.price).toFixed(2)}</span></p>
+                  <p style="margin: 8px 0;"><strong>Método:</strong> ${body.paymentMethod === 'CARD' ? 'Tarjeta (POS)' : 'Efectivo'}</p>
+                </div>
+
+                <p style="color: #64748b; font-size: 14px; text-align: center; margin-top: 32px;">
+                  Gracias por confiar en <strong>GaspMaker</strong>.<br>
+                  Puedes hacer seguimiento a tu paquete en cualquier momento utilizando tu número de tracking.
+                </p>
+              </div>
+            </div>
+          `
+        });
+        console.log(`✉️ Email de recibo enviado exitosamente a: ${user.email}`);
+      } else {
+        console.warn("⚠️ RESEND_API_KEY no está configurado. No se envió el correo.");
+      }
+    } catch (emailError) {
+      console.error("🔥 Error enviando el email con Resend:", emailError);
+      // No lanzamos el error para que la transacción del cajero siga siendo exitosa
+    }
+
     // 5. RESPONDER AL FRONTEND
     return NextResponse.json({
       success: true,
