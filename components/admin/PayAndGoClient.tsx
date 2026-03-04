@@ -50,6 +50,7 @@ export default function PayAndGoClient() {
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successData, setSuccessData] = useState<any>(null);
+  const [isBuyingLabel, setIsBuyingLabel] = useState(false);
 
   const watchWeight = watch('weight');
   const watchWeightUnit = watch('weightUnit');
@@ -59,7 +60,6 @@ export default function PayAndGoClient() {
   const watchState = watch('receiverState');
   const watchDeclaredValue = watch('declaredValue');
 
-  // Lista maestra ordenada alfabéticamente
   const sortedCountries = [...ALL_COUNTRIES].sort((a, b) => a.name.localeCompare(b.name));
 
   const basePrice = selectedRate ? selectedRate.price : 0;
@@ -119,7 +119,6 @@ export default function PayAndGoClient() {
 
   const onSubmit = async (data: any) => {
     if (!selectedRate) return alert("Selecciona una tarifa de envío primero.");
-    if (!photoUrl) return alert("Toma una foto del paquete para el registro.");
     if (data.customsItems.length === 0) return alert("Debes agregar al menos 1 artículo en la Declaración de Aduanas.");
 
     setIsSubmitting(true);
@@ -134,7 +133,7 @@ export default function PayAndGoClient() {
         weight: finalWeightLbs,
         senderPhone: finalPhone,
         description: combinedDescription,
-        photoUrl,
+        photoUrl, // Ahora puede ir nulo y no hay problema
         courier: selectedRate.carrier,
         service: selectedRate.service,
         rateId: selectedRate.id, 
@@ -170,6 +169,37 @@ export default function PayAndGoClient() {
     alert(`⚠️ Faltan campos obligatorios por llenar.\n\nRevisa: ${missingFields.toUpperCase()}`);
   };
 
+  const handleBuyLabel = async () => { 
+    const pkgId = successData?.packageId || successData?.package?.id || successData?.id;
+    if (!pkgId) return alert("Error: No se encontró el ID del paquete en la respuesta.");
+    
+    if (!confirm(`¿Comprar Label para el tracking ${successData.tracking}?`)) return; 
+    
+    setIsBuyingLabel(true); 
+    try { 
+        const res = await fetch('/api/packages/buy-label', { 
+            method: 'POST', 
+            headers: { 'Content-Type': 'application/json' }, 
+            body: JSON.stringify({ packageId: pkgId }) 
+        }); 
+        const data = await res.json(); 
+        
+        if (res.ok) { 
+            alert(`✅ Label comprado exitosamente: ${data.tracking}`); 
+            setSuccessData((prev: any) => ({ ...prev, labelUrl: data.label }));
+            if (data.label) {
+                window.open(data.label, '_blank');
+            }
+        } else { 
+            alert(`Error: ${data.error}`); 
+        } 
+    } catch (e) { 
+        alert("Error al conectar con EasyPost"); 
+    } finally { 
+        setIsBuyingLabel(false); 
+    } 
+  };
+
   const handleGenerateInvoice = () => {
     if (!successData || !successData.formData) return;
     
@@ -180,17 +210,26 @@ export default function PayAndGoClient() {
     const packageTotalWeightLbs = parseFloat(fd.weight);
     const totalInvoice = totalValue + parseFloat(fd.price);
 
+    const isSingleRow = fd.customsItems.length === 1;
+
     const itemsHtml = fd.customsItems.map((item: any) => {
-      const weightInLbs = item.weightUnit === 'oz' 
-        ? (parseFloat(item.weight) / 16).toFixed(2) 
-        : parseFloat(item.weight).toFixed(2);
+      let unitWeightInLbs: number;
+
+      if (isSingleRow) {
+          const qty = parseFloat(item.quantity) || 1;
+          unitWeightInLbs = packageTotalWeightLbs / qty;
+      } else {
+          unitWeightInLbs = item.weightUnit === 'oz' 
+            ? (parseFloat(item.weight) / 16) 
+            : parseFloat(item.weight);
+      }
 
       return `
         <tr>
           <td style="padding: 8px; border: 1px solid #ddd;">${item.quantity}</td>
           <td style="padding: 8px; border: 1px solid #ddd;">${item.originCountry}</td>
           <td style="padding: 8px; border: 1px solid #ddd;">${item.description}</td>
-          <td style="padding: 8px; border: 1px solid #ddd;">${weightInLbs} lbs</td>
+          <td style="padding: 8px; border: 1px solid #ddd;">${unitWeightInLbs.toFixed(2)} lbs</td>
           <td style="padding: 8px; border: 1px solid #ddd;">$${parseFloat(item.value).toFixed(2)}</td>
           <td style="padding: 8px; border: 1px solid #ddd;">$${(item.quantity * item.value).toFixed(2)}</td>
         </tr>
@@ -294,6 +333,9 @@ export default function PayAndGoClient() {
   };
 
   if (successData) {
+    const isGMC = successData.formData?.courier?.toUpperCase().includes('GASP') || 
+                  successData.formData?.courier?.toUpperCase().includes('MAKER');
+
     return (
       <div className="bg-white rounded-2xl p-10 text-center shadow-sm max-w-2xl mx-auto border-2 border-green-500 animate-in fade-in">
         <CheckCircle size={80} className="mx-auto text-green-500 mb-4" />
@@ -306,10 +348,22 @@ export default function PayAndGoClient() {
           <p><strong>Total Cobrado:</strong> ${successData.formData?.price?.toFixed(2)} ({successData.formData?.paymentMethod})</p>
         </div>
 
-        {!successData.labelUrl && (
-           <div className="mb-6 bg-red-50 text-red-600 border border-red-200 p-3 rounded-lg text-xs font-bold flex items-center justify-center gap-2">
-              <AlertTriangle size={16} /> 
-              No se pudo generar el Label automático en EasyPost (Posible error de saldo o dirección).
+        {!successData.labelUrl && !isGMC && (
+           <div className="mb-6 bg-red-50 text-red-600 border border-red-200 p-5 rounded-xl text-sm font-bold flex flex-col items-center justify-center gap-4 shadow-sm">
+              <div className="flex items-center gap-2 text-center">
+                 <AlertTriangle size={20} className="shrink-0" /> 
+                 No se pudo generar el Label automático en EasyPost (Posible error de saldo o dirección).
+              </div>
+              
+              <button 
+                  type="button"
+                  onClick={handleBuyLabel} 
+                  disabled={isBuyingLabel}
+                  className="bg-red-600 text-white px-6 py-3 rounded-lg font-black hover:bg-red-700 transition shadow-md flex items-center justify-center gap-2 w-full sm:w-auto active:scale-95 disabled:opacity-70"
+              >
+                  {isBuyingLabel ? <Loader2 className="animate-spin" size={20}/> : <Printer size={20}/>}
+                  {isBuyingLabel ? 'Procesando Compra...' : 'Comprar Label (API)'}
+              </button>
            </div>
         )}
 
@@ -323,7 +377,7 @@ export default function PayAndGoClient() {
             <button onClick={handleGenerateInvoice} className="bg-orange-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-orange-700 transition flex items-center justify-center gap-2 shadow-md">
               <FileText size={20}/> Descargar Invoice Aduanal
             </button>
-            <button onClick={() => { reset(); setSuccessData(null); setPhotoUrl(null); setRates([]); setSelectedRate(null); }} className="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-blue-700 transition flex items-center justify-center gap-2 shadow-md">
+            <button onClick={() => { reset(); setSuccessData(null); setPhotoUrl(null); setRates([]); setSelectedRate(null); setIsBuyingLabel(false); }} className="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-blue-700 transition flex items-center justify-center gap-2 shadow-md">
               <Plus size={20}/> Nuevo Drop & Go
             </button>
         </div>
@@ -350,7 +404,6 @@ export default function PayAndGoClient() {
             <div>
               <label className="text-xs font-bold text-gray-500 mb-1 block truncate">Teléfono</label>
               <div className="flex gap-2">
-                {/* 🔥 SELECTOR DINÁMICO DE CÓDIGO DE PAÍS 🔥 */}
                 <select defaultValue="+1" {...register("senderPhoneCode")} className="w-1/3 h-11 px-2 border border-gray-300 rounded-lg focus:border-blue-500 outline-none bg-white text-xs font-bold text-gray-700">
                   {sortedCountries.map((country) => (
                     <option key={`phone-${country.code}`} value={country.dial_code}>
@@ -454,8 +507,9 @@ export default function PayAndGoClient() {
             </div>
           </div>
 
+          {/* 🔥 FOTO OPCIONAL 🔥 */}
           <div>
-            <label className="text-xs font-bold text-gray-500 mb-2 block">Foto en Mostrador (Requerido)</label>
+            <label className="text-xs font-bold text-gray-500 mb-2 block">Foto en Mostrador (Opcional)</label>
             <label className={`relative w-full h-28 rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-2 cursor-pointer overflow-hidden transition-all ${photoUrl ? 'border-green-500 bg-green-50' : 'border-gray-300 bg-gray-50 hover:bg-gray-100'}`}>
                 {photoUrl ? (
                     <Image src={photoUrl} alt="Evidencia" fill className="object-cover opacity-80" />
@@ -504,20 +558,21 @@ export default function PayAndGoClient() {
                       <input {...register(`customsItems.${index}.description`, { required: true })} className="w-full h-9 px-2 border border-gray-300 rounded-md text-sm" placeholder="Ej: Cotton T-Shirt" />
                     </div>
                     
-                    <div className="grid grid-cols-3 gap-2 items-end">
-                      <div>
-                        <label className="text-[10px] font-bold text-gray-500 mb-1 block truncate">Cant. (Qty)</label>
+                    {/* 🔥 EL GRID CORREGIDO PARA DARLE ESPACIO AL PESO (25% - 25% - 50%) 🔥 */}
+                    <div className="grid grid-cols-4 gap-2 items-end">
+                      <div className="col-span-1">
+                        <label className="text-[10px] font-bold text-gray-500 mb-1 block truncate">Cant.</label>
                         <input type="number" {...register(`customsItems.${index}.quantity`, { required: true })} className="w-full h-9 px-2 border border-gray-300 rounded-md text-sm text-center outline-none focus:border-indigo-500" />
                       </div>
-                      <div>
-                        <label className="text-[10px] font-bold text-gray-500 mb-1 block truncate">Valor Unit. ($)</label>
+                      <div className="col-span-1">
+                        <label className="text-[10px] font-bold text-gray-500 mb-1 block truncate">Val($)</label>
                         <input type="number" step="0.01" {...register(`customsItems.${index}.value`, { required: true })} className="w-full h-9 px-2 border border-gray-300 rounded-md text-sm text-center outline-none focus:border-indigo-500" />
                       </div>
-                      <div>
+                      <div className="col-span-2">
                         <label className="text-[10px] font-bold text-gray-500 mb-1 block truncate">Peso Unit.</label>
                         <div className="flex">
-                          <input type="number" step="0.01" {...register(`customsItems.${index}.weight`, { required: true })} className="w-2/3 h-9 px-2 border-y border-l border-gray-300 rounded-l-md text-sm text-center outline-none focus:border-indigo-500" placeholder="0.0" />
-                          <select {...register(`customsItems.${index}.weightUnit`)} className="w-1/3 h-9 border border-gray-300 rounded-r-md bg-gray-50 text-xs font-bold text-gray-700 outline-none focus:border-indigo-500 cursor-pointer">
+                          <input type="number" step="0.01" {...register(`customsItems.${index}.weight`, { required: true })} className="w-full min-w-0 h-9 px-2 border-y border-l border-gray-300 rounded-l-md text-sm text-center outline-none focus:border-indigo-500" placeholder="0.0" />
+                          <select {...register(`customsItems.${index}.weightUnit`)} className="w-[50px] shrink-0 h-9 border border-gray-300 rounded-r-md bg-gray-200 text-[11px] uppercase font-black text-gray-700 outline-none focus:border-indigo-500 cursor-pointer appearance-none text-center hover:bg-gray-300 transition-colors">
                             <option value="oz">oz</option>
                             <option value="lbs">lbs</option>
                           </select>
@@ -611,7 +666,8 @@ export default function PayAndGoClient() {
                 </button>
             </div>
 
-            <button type="submit" disabled={isSubmitting || !selectedRate || !photoUrl} className="w-full bg-[#EAD8B1] text-[#222b3c] py-4 rounded-xl text-lg font-black hover:brightness-110 shadow-lg flex justify-center items-center gap-2 disabled:opacity-50 disabled:grayscale transition">
+            {/* 🔥 QUITÉ LA OBLIGACIÓN DE TENER LA FOTO PARA HABILITAR EL BOTÓN DE COBRAR 🔥 */}
+            <button type="submit" disabled={isSubmitting || !selectedRate} className="w-full bg-[#EAD8B1] text-[#222b3c] py-4 rounded-xl text-lg font-black hover:brightness-110 shadow-lg flex justify-center items-center gap-2 disabled:opacity-50 disabled:grayscale transition">
                 {isSubmitting ? <Loader2 className="animate-spin"/> : <Save size={24}/>} 
                 {isSubmitting ? 'Procesando...' : `COBRAR $${finalTotalAmount.toFixed(2)}`}
             </button>
