@@ -47,11 +47,10 @@ export default function EditAddressModal({ isOpen, onClose, onSave, currentData 
   const [zip, setZip] = useState('');
   const [country, setCountry] = useState('');
   
-  // 🔥 ESTADOS PARA EL TELÉFONO DIVIDIDO 🔥
-  const [phoneCode, setPhoneCode] = useState('+1');
+  // 🔥 CAMBIO CRÍTICO: Guardamos el CÓDIGO de país ('us', 'ca') en lugar del '+1'
+  const [phoneCountryCode, setPhoneCountryCode] = useState('us');
   const [phoneNumber, setPhoneNumber] = useState('');
 
-  // Lista maestra ordenada (useMemo previene que el modal se congele al escribir)
   const sortedCountries = useMemo(() => {
     return [...ALL_COUNTRIES].sort((a, b) => a.name.localeCompare(b.name));
   }, []);
@@ -62,18 +61,29 @@ export default function EditAddressModal({ isOpen, onClose, onSave, currentData 
         setAddress(currentData.address || '');
         setCountry(currentData.country ? currentData.country.toUpperCase() : 'US');
         
-        // 🔥 EXTRAER CÓDIGO Y NÚMERO DEL TELÉFONO ACTUAL 🔥
         const rawPhone = currentData.phone || '';
-        let extractedCode = '+1';
+        let extractedCountryCode = 'us';
         let extractedNumber = rawPhone;
 
-        const matchedCountry = sortedCountries.find(c => rawPhone.startsWith(c.dial_code));
+        // 🔥 LÓGICA DE DETECCIÓN INTELIGENTE
+        // Buscamos primero los dial_code más largos (Ej: +1-809 antes de +1)
+        const byLongestDial = [...sortedCountries].sort((a, b) => b.dial_code.length - a.dial_code.length);
+        const matchedCountry = byLongestDial.find(c => rawPhone.startsWith(c.dial_code));
+
         if (matchedCountry) {
-            extractedCode = matchedCountry.dial_code;
-            extractedNumber = rawPhone.replace(matchedCountry.dial_code, '').trim();
+            const addrCountry = currentData.country?.toLowerCase();
+            const addrCountryObj = sortedCountries.find(c => c.code.toLowerCase() === addrCountry);
+
+            // Si el país de la dirección comparte el dial_code con la coincidencia, le damos preferencia (Evita que US sea tomado por CA)
+            if (addrCountryObj && addrCountryObj.dial_code === matchedCountry.dial_code) {
+                extractedCountryCode = addrCountryObj.code;
+            } else {
+                extractedCountryCode = matchedCountry.code;
+            }
+            extractedNumber = rawPhone.substring(matchedCountry.dial_code.length).trim();
         }
         
-        setPhoneCode(extractedCode);
+        setPhoneCountryCode(extractedCountryCode);
         setPhoneNumber(extractedNumber);
 
         const fullString = currentData.cityZip || '';
@@ -103,8 +113,11 @@ export default function EditAddressModal({ isOpen, onClose, onSave, currentData 
     setIsLoading(true);
 
     const finalCityZip = `${city}, ${state} ${zip}`.trim().replace(/^, /, '').replace(/, $/, '');
-    // 🔥 UNIMOS EL PREFIJO CON EL NÚMERO ANTES DE GUARDAR 🔥
-    const finalPhone = `${phoneCode} ${phoneNumber}`.trim();
+    
+    // 🔥 TRADUCIMOS EL CÓDIGO (EJ: 'us') AL PREFIJO ('+1') AL GUARDAR
+    const selectedDialObj = sortedCountries.find(c => c.code === phoneCountryCode);
+    const actualDialCode = selectedDialObj ? selectedDialObj.dial_code : '+1';
+    const finalPhone = `${actualDialCode} ${phoneNumber}`.trim();
 
     try {
       await onSave({
@@ -296,19 +309,20 @@ export default function EditAddressModal({ isOpen, onClose, onSave, currentData 
                         </div>
                     </div>
 
-                    {/* 🔥 PHONE DIVIDIDO (DIAL CODE + NUMBER) 🔥 */}
+                    {/* PHONE */}
                     <div className="group">
                         <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 ml-1">
                             {t('labelPhone') || "Phone"}
                         </label>
                         <div className="flex gap-2">
+                            {/* 🔥 AHORA EL VALUE ES EL CÓDIGO (ej: 'us', 'pr') Y NO EL +1 🔥 */}
                             <select 
-                                value={phoneCode}
-                                onChange={(e) => setPhoneCode(e.target.value)}
+                                value={phoneCountryCode}
+                                onChange={(e) => setPhoneCountryCode(e.target.value)}
                                 className="w-[35%] px-3 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl text-gray-700 font-bold text-sm outline-none focus:bg-white focus:border-gmc-dorado-principal transition-all shadow-sm cursor-pointer"
                             >
                                 {sortedCountries.map((c) => (
-                                    <option key={`phone-${c.code}`} value={c.dial_code}>
+                                    <option key={`phone-${c.code}`} value={c.code}>
                                         {c.code.toUpperCase()} {c.dial_code}
                                     </option>
                                 ))}
