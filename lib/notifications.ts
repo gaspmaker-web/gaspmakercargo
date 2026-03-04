@@ -421,3 +421,36 @@ export const sendAdminPaymentAlert = async (clientName: string, amount: number, 
     });
   } catch (error) { console.error("Error alerta admin pago:", error); }
 };
+// 🔥 NUEVO: Función especial para Pay & Go (Mostrador - Adaptada para Clientes sin Contraseña)
+export const sendPayAndGoReceiptEmail = async (
+    email: string, name: string, tracking: string, destination: string, amount: number, method: string, lang: string = 'en'
+) => {
+  const t = getT(lang);
+  const title = lang === 'es' ? "¡Recibo de Envío en Mostrador! 📦" : "Store Shipment Receipt! 📦";
+  
+  const body = lang === 'es' 
+    ? "Tu paquete ha sido procesado exitosamente en nuestra sucursal. Conserva este recibo y tu número de tracking." 
+    : "Your package has been successfully processed at our store. Keep this receipt and your tracking number.";
+    
+  const trackInstructions = lang === 'es'
+    ? "Puedes rastrear este envío introduciendo tu número de tracking en la página oficial del transportista."
+    : "You can track this shipment by entering your tracking number on the official carrier's website.";
+
+  const html = baseTemplate(
+    title,
+    `<p>Hola <strong>${name}</strong>,</p>
+     <p>${body}</p>
+     <div class="info-box">
+        <div class="info-row"><span class="label">Tracking:</span><br><span class="value" style="color: #2563eb; font-size: 18px; font-family: monospace;">${tracking}</span></div>
+        <div class="info-row"><span class="label">Destino / Destination:</span><br><span class="value">${destination}</span></div>
+        <div class="info-row"><span class="label">Método / Method:</span><br><span class="value">${method}</span></div>
+        <div class="info-row" style="margin-top: 15px;"><span class="label">${t.total}:</span><br><span class="value" style="color: #059669; font-size: 18px;">$${amount.toFixed(2)} USD</span></div>
+     </div>
+     <p style="font-size: 14px; color: #4b5563;"><em>${trackInstructions}</em></p>
+     <p>${t.thanks}</p>`,
+    t.footer,
+    `${process.env.NEXT_PUBLIC_BASE_URL}`, // 👈 Lo mandamos a la web pública, NO al login
+    lang === 'es' ? "Visitar Web Principal" : "Visit Homepage"
+  );
+  try { return await resend.emails.send({ from: EMAIL_FROM, to: email, subject: `🧾 ${title}`, html }); } catch (e) { return { error: e }; }
+};
