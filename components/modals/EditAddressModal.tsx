@@ -47,7 +47,6 @@ export default function EditAddressModal({ isOpen, onClose, onSave, currentData 
   const [zip, setZip] = useState('');
   const [country, setCountry] = useState('');
   
-  // 🔥 CAMBIO CRÍTICO: Guardamos el CÓDIGO de país ('us', 'ca') en lugar del '+1'
   const [phoneCountryCode, setPhoneCountryCode] = useState('us');
   const [phoneNumber, setPhoneNumber] = useState('');
 
@@ -65,8 +64,6 @@ export default function EditAddressModal({ isOpen, onClose, onSave, currentData 
         let extractedCountryCode = 'us';
         let extractedNumber = rawPhone;
 
-        // 🔥 LÓGICA DE DETECCIÓN INTELIGENTE
-        // Buscamos primero los dial_code más largos (Ej: +1-809 antes de +1)
         const byLongestDial = [...sortedCountries].sort((a, b) => b.dial_code.length - a.dial_code.length);
         const matchedCountry = byLongestDial.find(c => rawPhone.startsWith(c.dial_code));
 
@@ -74,7 +71,6 @@ export default function EditAddressModal({ isOpen, onClose, onSave, currentData 
             const addrCountry = currentData.country?.toLowerCase();
             const addrCountryObj = sortedCountries.find(c => c.code.toLowerCase() === addrCountry);
 
-            // Si el país de la dirección comparte el dial_code con la coincidencia, le damos preferencia (Evita que US sea tomado por CA)
             if (addrCountryObj && addrCountryObj.dial_code === matchedCountry.dial_code) {
                 extractedCountryCode = addrCountryObj.code;
             } else {
@@ -114,7 +110,6 @@ export default function EditAddressModal({ isOpen, onClose, onSave, currentData 
 
     const finalCityZip = `${city}, ${state} ${zip}`.trim().replace(/^, /, '').replace(/, $/, '');
     
-    // 🔥 TRADUCIMOS EL CÓDIGO (EJ: 'us') AL PREFIJO ('+1') AL GUARDAR
     const selectedDialObj = sortedCountries.find(c => c.code === phoneCountryCode);
     const actualDialCode = selectedDialObj ? selectedDialObj.dial_code : '+1';
     const finalPhone = `${actualDialCode} ${phoneNumber}`.trim();
@@ -309,27 +304,34 @@ export default function EditAddressModal({ isOpen, onClose, onSave, currentData 
                         </div>
                     </div>
 
-                    {/* PHONE */}
+                    {/* 🔥 PHONE DIVIDIDO 100% RESPONSIVE 🔥 */}
                     <div className="group">
                         <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 ml-1">
                             {t('labelPhone') || "Phone"}
                         </label>
                         <div className="flex gap-2">
-                            {/* 🔥 AHORA EL VALUE ES EL CÓDIGO (ej: 'us', 'pr') Y NO EL +1 🔥 */}
-                            <select 
-                                value={phoneCountryCode}
-                                onChange={(e) => setPhoneCountryCode(e.target.value)}
-                                className="w-[35%] px-3 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl text-gray-700 font-bold text-sm outline-none focus:bg-white focus:border-gmc-dorado-principal transition-all shadow-sm cursor-pointer"
-                            >
-                                {sortedCountries.map((c) => (
-                                    <option key={`phone-${c.code}`} value={c.code}>
-                                        {c.code.toUpperCase()} {c.dial_code}
-                                    </option>
-                                ))}
-                            </select>
                             
-                            <div className="relative w-[65%]">
-                                <div className="absolute left-4 top-3.5 text-gray-300 group-focus-within:text-gmc-dorado-principal">
+                            {/* Selector de Prefijo (Fijo para que no se apriete en móviles) */}
+                            <div className="relative w-[120px] sm:w-[140px] shrink-0">
+                                <select 
+                                    value={phoneCountryCode}
+                                    onChange={(e) => setPhoneCountryCode(e.target.value)}
+                                    className="w-full pl-3 pr-7 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl text-gray-700 font-bold text-xs sm:text-sm outline-none focus:bg-white focus:border-gmc-dorado-principal focus:ring-4 focus:ring-gmc-dorado-principal/10 transition-all shadow-sm cursor-pointer appearance-none truncate"
+                                >
+                                    {sortedCountries.map((c) => (
+                                        <option key={`phone-${c.code}`} value={c.code}>
+                                            {c.code.toUpperCase()} {c.dial_code}
+                                        </option>
+                                    ))}
+                                </select>
+                                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                                    <svg width="10" height="6" viewBox="0 0 10 6" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                                </div>
+                            </div>
+                            
+                            {/* Input del Número (Ocupa el resto) */}
+                            <div className="relative flex-1">
+                                <div className="absolute left-4 top-3.5 text-gray-300 group-focus-within:text-gmc-dorado-principal transition-colors">
                                     <Phone size={18} />
                                 </div>
                                 <input
@@ -341,6 +343,7 @@ export default function EditAddressModal({ isOpen, onClose, onSave, currentData 
                                     className="w-full pl-11 pr-4 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl text-gray-700 font-medium outline-none focus:bg-white focus:border-gmc-dorado-principal focus:ring-4 focus:ring-gmc-dorado-principal/10 transition-all shadow-sm"
                                 />
                             </div>
+
                         </div>
                     </div>
                   </div>
