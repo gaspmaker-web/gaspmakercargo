@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, Fragment } from 'react';
+import React, { useState, useEffect, Fragment, useMemo } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { X, MapPin, Building2, Phone, Globe, Hash, User } from 'lucide-react';
 import { useTranslations } from 'next-intl'; 
@@ -37,7 +37,6 @@ interface EditAddressModalProps {
 
 export default function EditAddressModal({ isOpen, onClose, onSave, currentData }: EditAddressModalProps) {
   const t = useTranslations('EditAddressModal');
-  // 🔥 CONECTAMOS CON LAS TRADUCCIONES NUEVAS
   const tProfile = useTranslations('ProfilePage'); 
   const [isLoading, setIsLoading] = useState(false);
 
@@ -47,14 +46,35 @@ export default function EditAddressModal({ isOpen, onClose, onSave, currentData 
   const [state, setState] = useState('');
   const [zip, setZip] = useState('');
   const [country, setCountry] = useState('');
-  const [phone, setPhone] = useState('');
+  
+  // 🔥 ESTADOS PARA EL TELÉFONO DIVIDIDO 🔥
+  const [phoneCode, setPhoneCode] = useState('+1');
+  const [phoneNumber, setPhoneNumber] = useState('');
+
+  // Lista maestra ordenada (useMemo previene que el modal se congele al escribir)
+  const sortedCountries = useMemo(() => {
+    return [...ALL_COUNTRIES].sort((a, b) => a.name.localeCompare(b.name));
+  }, []);
 
   useEffect(() => {
     if (isOpen) {
         setFullName(currentData.fullName || ''); 
         setAddress(currentData.address || '');
         setCountry(currentData.country ? currentData.country.toUpperCase() : 'US');
-        setPhone(currentData.phone || '');
+        
+        // 🔥 EXTRAER CÓDIGO Y NÚMERO DEL TELÉFONO ACTUAL 🔥
+        const rawPhone = currentData.phone || '';
+        let extractedCode = '+1';
+        let extractedNumber = rawPhone;
+
+        const matchedCountry = sortedCountries.find(c => rawPhone.startsWith(c.dial_code));
+        if (matchedCountry) {
+            extractedCode = matchedCountry.dial_code;
+            extractedNumber = rawPhone.replace(matchedCountry.dial_code, '').trim();
+        }
+        
+        setPhoneCode(extractedCode);
+        setPhoneNumber(extractedNumber);
 
         const fullString = currentData.cityZip || '';
         
@@ -76,13 +96,15 @@ export default function EditAddressModal({ isOpen, onClose, onSave, currentData 
         setState(foundState);
         setCity(remainder);
     }
-  }, [isOpen, currentData]);
+  }, [isOpen, currentData, sortedCountries]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     const finalCityZip = `${city}, ${state} ${zip}`.trim().replace(/^, /, '').replace(/, $/, '');
+    // 🔥 UNIMOS EL PREFIJO CON EL NÚMERO ANTES DE GUARDAR 🔥
+    const finalPhone = `${phoneCode} ${phoneNumber}`.trim();
 
     try {
       await onSave({
@@ -90,7 +112,7 @@ export default function EditAddressModal({ isOpen, onClose, onSave, currentData 
         address,
         cityZip: finalCityZip,
         country,
-        phone
+        phone: finalPhone
       });
     } finally {
       setIsLoading(false);
@@ -133,7 +155,6 @@ export default function EditAddressModal({ isOpen, onClose, onSave, currentData 
                     <h3 className="text-2xl font-bold text-gmc-gris-oscuro font-garamond tracking-tight">
                         {t('title') || "Shipping Address"}
                     </h3>
-                    {/* 🔥 SUBTÍTULO TRADUCIDO */}
                     <p className="text-sm text-gray-400 mt-1">{tProfile('deliveryDetailsPrompt')}</p>
                   </div>
                   <button 
@@ -148,7 +169,6 @@ export default function EditAddressModal({ isOpen, onClose, onSave, currentData 
                   
                   {/* FULL NAME */}
                   <div className="group">
-                    {/* 🔥 LABEL DE NOMBRE TRADUCIDO */}
                     <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 ml-1">
                         {tProfile('fullNameRecipient')}
                     </label>
@@ -246,7 +266,7 @@ export default function EditAddressModal({ isOpen, onClose, onSave, currentData 
                   </div>
 
                   {/* COUNTRY & PHONE GRID */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-4">
                     {/* COUNTRY */}
                     <div className="group">
                         <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 ml-1">
@@ -264,7 +284,7 @@ export default function EditAddressModal({ isOpen, onClose, onSave, currentData 
                                 className="w-full pl-11 pr-8 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl text-gray-700 font-medium outline-none focus:bg-white focus:border-gmc-dorado-principal focus:ring-4 focus:ring-gmc-dorado-principal/10 transition-all shadow-sm appearance-none"
                             >
                                 <option value="">Select Country</option>
-                                {ALL_COUNTRIES.map((c) => (
+                                {sortedCountries.map((c) => (
                                     <option key={c.code} value={c.code.toUpperCase()}>
                                         {c.name}
                                     </option>
@@ -276,23 +296,37 @@ export default function EditAddressModal({ isOpen, onClose, onSave, currentData 
                         </div>
                     </div>
 
-                    {/* PHONE */}
+                    {/* 🔥 PHONE DIVIDIDO (DIAL CODE + NUMBER) 🔥 */}
                     <div className="group">
                         <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 ml-1">
                             {t('labelPhone') || "Phone"}
                         </label>
-                        <div className="relative">
-                            <div className="absolute left-4 top-3.5 text-gray-300 group-focus-within:text-gmc-dorado-principal">
-                                <Phone size={18} />
+                        <div className="flex gap-2">
+                            <select 
+                                value={phoneCode}
+                                onChange={(e) => setPhoneCode(e.target.value)}
+                                className="w-[35%] px-3 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl text-gray-700 font-bold text-sm outline-none focus:bg-white focus:border-gmc-dorado-principal transition-all shadow-sm cursor-pointer"
+                            >
+                                {sortedCountries.map((c) => (
+                                    <option key={`phone-${c.code}`} value={c.dial_code}>
+                                        {c.code.toUpperCase()} {c.dial_code}
+                                    </option>
+                                ))}
+                            </select>
+                            
+                            <div className="relative w-[65%]">
+                                <div className="absolute left-4 top-3.5 text-gray-300 group-focus-within:text-gmc-dorado-principal">
+                                    <Phone size={18} />
+                                </div>
+                                <input
+                                    type="tel"
+                                    required
+                                    value={phoneNumber}
+                                    onChange={(e) => setPhoneNumber(e.target.value.replace(/[^0-9 -]/g, ''))}
+                                    placeholder="555-0000"
+                                    className="w-full pl-11 pr-4 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl text-gray-700 font-medium outline-none focus:bg-white focus:border-gmc-dorado-principal focus:ring-4 focus:ring-gmc-dorado-principal/10 transition-all shadow-sm"
+                                />
                             </div>
-                            <input
-                                type="tel"
-                                required
-                                value={phone}
-                                onChange={(e) => setPhone(e.target.value)}
-                                placeholder="+1 786..."
-                                className="w-full pl-11 pr-4 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl text-gray-700 font-medium outline-none focus:bg-white focus:border-gmc-dorado-principal focus:ring-4 focus:ring-gmc-dorado-principal/10 transition-all shadow-sm"
-                            />
                         </div>
                     </div>
                   </div>

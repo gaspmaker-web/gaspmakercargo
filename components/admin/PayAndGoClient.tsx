@@ -27,7 +27,6 @@ const US_STATES = [
 ];
 
 export default function PayAndGoClient() {
-  // 🔥 CORRECCIÓN AQUÍ: Agregamos <any> para que TypeScript no bloquee el build en Vercel
   const { register, control, handleSubmit, watch, formState: { errors }, reset } = useForm<any>({
     defaultValues: {
       weightUnit: 'lbs',
@@ -60,6 +59,7 @@ export default function PayAndGoClient() {
   const watchState = watch('receiverState');
   const watchDeclaredValue = watch('declaredValue');
 
+  // Lista maestra ordenada alfabéticamente
   const sortedCountries = [...ALL_COUNTRIES].sort((a, b) => a.name.localeCompare(b.name));
 
   const basePrice = selectedRate ? selectedRate.price : 0;
@@ -350,16 +350,13 @@ export default function PayAndGoClient() {
             <div>
               <label className="text-xs font-bold text-gray-500 mb-1 block truncate">Teléfono</label>
               <div className="flex gap-2">
-                <select defaultValue="+1" {...register("senderPhoneCode")} className="w-1/3 h-11 px-2 border border-gray-300 rounded-lg focus:border-blue-500 outline-none bg-white text-sm">
-                  <option value="+1">🇺🇸 +1</option>
-                  <option value="+58">🇻🇪 +58</option>
-                  <option value="+1809">🇩🇴 +1 809</option>
-                  <option value="+1829">🇩🇴 +1 829</option>
-                  <option value="+1849">🇩🇴 +1 849</option>
-                  <option value="+52">🇲🇽 +52</option>
-                  <option value="+57">🇨🇴 +57</option>
-                  <option value="+507">🇵🇦 +507</option>
-                  <option value="+34">🇪🇸 +34</option>
+                {/* 🔥 SELECTOR DINÁMICO DE CÓDIGO DE PAÍS 🔥 */}
+                <select defaultValue="+1" {...register("senderPhoneCode")} className="w-1/3 h-11 px-2 border border-gray-300 rounded-lg focus:border-blue-500 outline-none bg-white text-xs font-bold text-gray-700">
+                  {sortedCountries.map((country) => (
+                    <option key={`phone-${country.code}`} value={country.dial_code}>
+                      {country.code.toUpperCase()} {country.dial_code}
+                    </option>
+                  ))}
                 </select>
                 <input type="tel" {...register("senderPhone", { required: true })} className="w-2/3 h-11 px-3 border border-gray-300 rounded-lg focus:border-blue-500 outline-none" placeholder="(555) 000-0000" />
               </div>
@@ -380,7 +377,7 @@ export default function PayAndGoClient() {
               <select {...register("receiverCountry", { required: true })} className="w-full h-11 px-3 border border-gray-300 rounded-lg focus:border-orange-500 outline-none font-bold">
                   <option value="" disabled>Seleccione un país</option>
                   {sortedCountries.map((country) => (
-                      <option key={country.code} value={country.code.toUpperCase()}>{country.name}</option>
+                      <option key={`dest-${country.code}`} value={country.code.toUpperCase()}>{country.name}</option>
                   ))}
               </select>
             </div>
@@ -532,7 +529,7 @@ export default function PayAndGoClient() {
                       <label className="text-[10px] font-bold text-gray-500 mb-1 block truncate">País de Fabricación</label>
                       <select {...register(`customsItems.${index}.originCountry`)} className="w-full h-9 px-2 border border-gray-300 rounded-md text-sm outline-none focus:border-indigo-500">
                           {sortedCountries.map((country) => (
-                              <option key={country.code} value={country.code.toUpperCase()}>{country.name}</option>
+                              <option key={`mfg-${index}-${country.code}`} value={country.code.toUpperCase()}>{country.name}</option>
                           ))}
                       </select>
                     </div>
