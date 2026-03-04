@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server';
+// 🔥 IMPORTAMOS TU SISTEMA NATIVO DE NOTIFICACIONES
+import { sendShipmentDispatchedEmail, sendNotification } from '@/lib/notifications';
 
 export const dynamic = 'force-dynamic';
 
@@ -137,6 +139,39 @@ export async function POST(req: Request) {
             courierService: `${boughtShipment.selected_rate.carrier} - ${boughtShipment.selected_rate.service}`
         }
     });
+
+    // ====================================================================
+    // 🔥 MAGIA DE NOTIFICACIONES (EMAIL + CAMPANITA) 🔥
+    // ====================================================================
+    try {
+        const trackingNumber = boughtShipment.tracker.tracking_code;
+        const finalCourier = boughtShipment.selected_rate.carrier;
+
+        if (pkg.user && pkg.user.email) {
+            // 1. Enviar correo al cliente avisando que el paquete fue despachado
+            await sendShipmentDispatchedEmail(
+                pkg.user.email,
+                pkg.user.name,
+                pkg.gmcTrackingNumber || pkg.id, // ID interno (GMC)
+                finalCourier, // Transportista (ej. FedEx, USPS)
+                trackingNumber, // Tracking oficial
+                (pkg.user as any).language || 'es'
+            );
+
+            // 2. Notificación interna en su campanita web
+            await sendNotification({
+                userId: pkg.user.id,
+                title: "¡Paquete Despachado! ✈️",
+                message: `Tu paquete ha sido despachado con ${finalCourier}. Tracking Oficial: ${trackingNumber}`,
+                type: "SUCCESS",
+                href: `/dashboard-cliente/rastreo/${pkg.gmcTrackingNumber || pkg.id}`
+            });
+            
+            console.log(`✉️ Email de Despacho (Tracking) enviado a: ${pkg.user.email}`);
+        }
+    } catch (notifError) {
+        console.error("⚠️ Error enviando notificación de despacho (el proceso continuará):", notifError);
+    }
 
     return NextResponse.json({ 
         success: true, 
