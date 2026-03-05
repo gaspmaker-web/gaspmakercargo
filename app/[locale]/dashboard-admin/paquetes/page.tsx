@@ -78,7 +78,17 @@ export default async function ActivePackagesPage({
         },
         include: {
           // 🔥 AQUÍ TAMBIÉN AGREGAMOS PHONE Y EMAIL PARA EL INVOICE DE CAJAS
-          user: { select: { id: true, name: true, suiteNo: true, countryCode: true, phone: true, email: true } }
+          user: { select: { id: true, name: true, suiteNo: true, countryCode: true, phone: true, email: true } },
+          // 🔥 LA MAGIA: Le decimos que nos traiga también los paquetes internos con sus aduanas
+          packages: { 
+              select: { 
+                  id: true, 
+                  gmcTrackingNumber: true,
+                  description: true, 
+                  declaredValue: true, 
+                  customsItems: true // Vital para extraer las camisas y blusas
+              } 
+          }
         },
         orderBy: { createdAt: 'desc' }
       });
@@ -104,7 +114,8 @@ export default async function ActivePackagesPage({
         status: ship.status,
         shippingLabelUrl: ship.shippingLabelUrl, 
         isProcessing: false,
-        isStorePickup: false 
+        isStorePickup: false,
+        packages: ship.packages // 🔥 Pasamos los paquetes internos a la pantalla
       }));
 
       // ✂️ AQUÍ FUE ELIMINADO EL PASO 3 (SOLICITUDES DE RETIRO / PICKUPS) ✂️

@@ -89,13 +89,11 @@ export default function PackageActions({ pkg, locale, onDeliverStore }: PackageA
   const handleGenerateInvoice = () => {
     const date = new Date().toLocaleDateString('en-US');
     
-    // Total del paquete
+    // Total del paquete o caja
     const totalWeightNum = parseFloat(pkg.weightLbs || 0);
     const weightLbs = totalWeightNum.toFixed(2);
     
-    const declaredValue = parseFloat(pkg.declaredValue || 0).toFixed(2);
     const shippingCost = parseFloat(pkg.shippingTotalPaid || pkg.shippingSubtotal || 0).toFixed(2);
-    const totalInvoice = (parseFloat(declaredValue) + parseFloat(shippingCost)).toFixed(2);
     
     let receiverName = pkg.user?.name || 'Cliente No Registrado';
     let receiverAddressBlock = 'Dirección no especificada';
@@ -116,50 +114,77 @@ export default function PackageActions({ pkg, locale, onDeliverStore }: PackageA
 
     const trackingForInvoice = pkg.finalTrackingNumber || pkg.carrierTrackingNumber || pkg.gmcTrackingNumber || pkg.gmcShipmentNumber || 'PENDIENTE';
 
-    let itemsHtml = '';
-    
-    if (pkg.customsItems && Array.isArray(pkg.customsItems) && pkg.customsItems.length > 0) {
-        // Sumamos la cantidad total de artículos para dividir el peso equitativamente
-        let totalQty = pkg.customsItems.reduce((acc: number, item: any) => acc + (parseInt(item.qty) || 1), 0);
-        const weightPerUnit = totalQty > 0 ? (totalWeightNum / totalQty) : 0;
+    // 🔥 LA LICUADORA: Extraemos todos los items, sea paquete individual o consolidación 🔥
+    let allItems: any[] = [];
+    let calculatedDeclaredValue = 0;
 
-        itemsHtml = pkg.customsItems.map((item: any) => {
-            const qty = parseInt(item.qty) || 1;
-            const desc = item.description || 'Item';
-            const unitValue = parseFloat(item.value || 0).toFixed(2);
-            const subtotal = (qty * parseFloat(unitValue)).toFixed(2);
-            
-            // Calculamos el peso correspondiente a esta fila (peso por unidad * cantidad)
-            const lineWeight = (weightPerUnit * qty).toFixed(2);
-            
-            return `
-              <tr>
-                <td style="text-align: center;">${qty}</td>
-                <td style="text-align: center;">US</td>
-                <td>${desc}</td>
-                <td style="text-align: center;">${lineWeight} lbs</td>
-                <td style="text-align: right;">$${unitValue}</td>
-                <td style="text-align: right;">$${subtotal}</td>
-              </tr>
-            `;
-        }).join('');
+    if (pkg.type === 'SHIPMENT' && pkg.packages && pkg.packages.length > 0) {
+        // Es una consolidación: Recorremos cada paquete interno (Hijos)
+        pkg.packages.forEach((childPkg: any) => {
+            if (childPkg.customsItems && Array.isArray(childPkg.customsItems) && childPkg.customsItems.length > 0) {
+                childPkg.customsItems.forEach((item: any) => {
+                    allItems.push(item);
+                    calculatedDeclaredValue += (parseFloat(item.value || 0) * (parseInt(item.qty) || 1));
+                });
+            } else {
+                allItems.push({
+                    qty: 1,
+                    description: childPkg.description || 'Personal Effects',
+                    value: childPkg.declaredValue || 0
+                });
+                calculatedDeclaredValue += parseFloat(childPkg.declaredValue || 0);
+            }
+        });
+    } else if (pkg.customsItems && Array.isArray(pkg.customsItems) && pkg.customsItems.length > 0) {
+        // Es un paquete individual con tabla de aduanas
+        allItems = pkg.customsItems;
+        allItems.forEach((item: any) => {
+            calculatedDeclaredValue += (parseFloat(item.value || 0) * (parseInt(item.qty) || 1));
+        });
     } else {
-        itemsHtml = `
+        // Es un paquete individual viejo (solo tiene texto y valor global)
+        allItems = [{
+            qty: 1,
+            description: pkg.description || 'Personal Effects / Artículos Varios',
+            value: pkg.declaredValue || 0
+        }];
+        calculatedDeclaredValue += parseFloat(pkg.declaredValue || 0);
+    }
+
+    // Cálculos Finales
+    const declaredValueStr = calculatedDeclaredValue.toFixed(2);
+    const totalInvoice = (calculatedDeclaredValue + parseFloat(shippingCost)).toFixed(2);
+
+    // Sumamos la cantidad total de artículos para dividir el peso equitativamente
+    let totalQty = allItems.reduce((acc: number, item: any) => acc + (parseInt(item.qty) || 1), 0);
+    const weightPerUnit = totalQty > 0 ? (totalWeightNum / totalQty) : 0;
+
+    // Generamos el HTML de las filas
+    let itemsHtml = allItems.map((item: any) => {
+        const qty = parseInt(item.qty) || 1;
+        const desc = item.description || 'Item';
+        const unitValue = parseFloat(item.value || 0).toFixed(2);
+        const subtotal = (qty * parseFloat(unitValue)).toFixed(2);
+        
+        // Calculamos el peso correspondiente a esta fila (peso por unidad * cantidad)
+        const lineWeight = (weightPerUnit * qty).toFixed(2);
+        
+        return `
           <tr>
-            <td style="text-align: center;">1</td>
+            <td style="text-align: center;">${qty}</td>
             <td style="text-align: center;">US</td>
-            <td>${pkg.description || 'Personal Effects / Artículos Varios'}</td>
-            <td style="text-align: center;">${weightLbs} lbs</td>
-            <td style="text-align: right;">$${declaredValue}</td>
-            <td style="text-align: right;">$${declaredValue}</td>
+            <td>${desc}</td>
+            <td style="text-align: center;">${lineWeight} lbs</td>
+            <td style="text-align: right;">$${unitValue}</td>
+            <td style="text-align: right;">$${subtotal}</td>
           </tr>
         `;
-    }
+    }).join('');
 
     const invoiceWindow = window.open('', '_blank');
     if (!invoiceWindow) return alert("Por favor, permite las ventanas emergentes (pop-ups).");
 
-    // 🔥 PLANTILLA HTML ACTUALIZADA CON DATOS DE CONTACTO COMPLETOS 🔥
+    // 🔥 PLANTILLA HTML ACTUALIZADA CON DATOS DE CONTACTO Y CÁLCULOS DINÁMICOS 🔥
     invoiceWindow.document.write(`
       <html>
         <head>
@@ -232,7 +257,7 @@ export default function PackageActions({ pkg, locale, onDeliverStore }: PackageA
           <div class="summary">
             <table>
               <tr><th>Total Gross Weight:</th><td>${weightLbs} lbs</td></tr>
-              <tr><th>Total Declared Value (USD):</th><td>$${declaredValue}</td></tr>
+              <tr><th>Total Declared Value (USD):</th><td>$${declaredValueStr}</td></tr>
               <tr><th>Freight & Processing:</th><td>$${shippingCost}</td></tr>
               <tr><th style="font-size: 16px; color: #000; padding-top: 10px;">Total Invoice Amount:</th><td style="font-size: 16px; color: #000; padding-top: 10px;">$${totalInvoice}</td></tr>
             </table>
