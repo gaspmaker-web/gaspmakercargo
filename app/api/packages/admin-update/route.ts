@@ -21,7 +21,7 @@ export async function POST(req: Request) {
 
     const body = await req.json();
     
-    // 👇 AQUÍ AGREGAMOS 'declaredValue' A LA LISTA DE VARIABLES
+    // 👇 AQUÍ EXTRAEMOS LA TABLA DE ADUANAS A LA LISTA DE VARIABLES
     const { 
         packageId, 
         weight, 
@@ -32,7 +32,8 @@ export async function POST(req: Request) {
         description, 
         status, 
         invoiceUrl, 
-        declaredValue // 🔥 NUEVO CAMPO
+        declaredValue,
+        customsItems // 🔥 NUEVO CAMPO: Tabla detallada de aduanas
     } = body;
 
     if (!packageId) {
@@ -49,11 +50,14 @@ export async function POST(req: Request) {
             widthIn: width ? parseFloat(width) : undefined,
             heightIn: height ? parseFloat(height) : undefined,
             
-            // 🔥 NUEVO: Guardamos el Valor Declarado (Float)
+            // 🔥 Guardamos el Valor Declarado Total (Float)
             declaredValue: declaredValue ? parseFloat(declaredValue) : undefined,
             
+            // 🔥 GUARDAMOS LA TABLA DE ADUANAS (JSON)
+            customsItems: customsItems !== undefined ? customsItems : undefined,
+            
             // Campos de texto importantes
-            description: description || undefined, // Actualizamos notas/descripción
+            description: description || undefined, // Actualizamos notas/descripción en texto
             photoUrlMiami: photoUrl || undefined,  // Actualizamos la foto del paquete
             
             // 👇 GUARDAMOS LA FACTURA (Si se subió alguna)

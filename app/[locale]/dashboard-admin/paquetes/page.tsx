@@ -41,7 +41,8 @@ export default async function ActivePackagesPage({
           } : {})
         },
         include: {
-          user: { select: { id: true, name: true, suiteNo: true, countryCode: true } },
+          // 🔥 AQUÍ AGREGAMOS PHONE Y EMAIL PARA EL INVOICE ADUANAL
+          user: { select: { id: true, name: true, suiteNo: true, countryCode: true, phone: true, email: true } },
           consolidatedShipment: { 
             select: { 
                 totalAmount: true,
@@ -76,7 +77,8 @@ export default async function ActivePackagesPage({
           } : {})
         },
         include: {
-          user: { select: { id: true, name: true, suiteNo: true, countryCode: true } }
+          // 🔥 AQUÍ TAMBIÉN AGREGAMOS PHONE Y EMAIL PARA EL INVOICE DE CAJAS
+          user: { select: { id: true, name: true, suiteNo: true, countryCode: true, phone: true, email: true } }
         },
         orderBy: { createdAt: 'desc' }
       });

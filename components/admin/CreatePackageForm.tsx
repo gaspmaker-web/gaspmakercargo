@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { Camera, Search, CheckCircle, X, ScanBarcode, Printer, Tag, DollarSign, User, Save, Scale, Ruler, FileText } from 'lucide-react';
+import { Camera, Search, CheckCircle, X, ScanBarcode, Printer, Tag, DollarSign, User, Save, Scale, Ruler, FileText, Plus, Trash2, Globe } from 'lucide-react';
 import Image from 'next/image';
 import BarcodeScannerModal from '@/components/BarcodeScannerModal';
 
@@ -23,7 +23,7 @@ export default function CreatePackageForm() {
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   
-  // 🔥 NUEVOS: Estados para el Invoice
+  // Estados para el Invoice
   const [invoiceUrl, setInvoiceUrl] = useState<string | null>(null);
   const [isUploadingInvoice, setIsUploadingInvoice] = useState(false);
 
@@ -33,6 +33,42 @@ export default function CreatePackageForm() {
   const [createdPackage, setCreatedPackage] = useState<any | null>(null);
 
   const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm();
+
+  // ========================================================================
+  // 🔥 NUEVO: ESTADO PARA LA TABLA DE ADUANAS (DHL/FEDEX)
+  // ========================================================================
+  const [customsItems, setCustomsItems] = useState([
+      { qty: 1, description: '', value: '' }
+  ]);
+
+  const addCustomsItem = () => {
+      setCustomsItems([...customsItems, { qty: 1, description: '', value: '' }]);
+  };
+
+  const removeCustomsItem = (index: number) => {
+      if (customsItems.length > 1) {
+          const newItems = customsItems.filter((_, i) => i !== index);
+          setCustomsItems(newItems);
+          recalculateTotalValue(newItems);
+      }
+  };
+
+  const updateCustomsItem = (index: number, field: string, val: any) => {
+      const newItems = [...customsItems];
+      newItems[index] = { ...newItems[index], [field]: val };
+      setCustomsItems(newItems);
+      
+      // Auto-calcular el Valor Declarado Total si cambian montos o cantidades
+      if (field === 'value' || field === 'qty') {
+          recalculateTotalValue(newItems);
+      }
+  };
+
+  const recalculateTotalValue = (items: any[]) => {
+      const total = items.reduce((acc, item) => acc + (Number(item.qty) * Number(item.value || 0)), 0);
+      setValue('declaredValue', total.toFixed(2));
+  };
+  // ========================================================================
 
   // --- FUNCIÓN IMPRIMIR ---
   const openPrintWindow = (format: '4x6' | '30334') => {
@@ -117,7 +153,6 @@ export default function CreatePackageForm() {
     }
   };
 
-  // 🔥 NUEVA: Función para subir el Invoice a Cloudinary
   const handleInvoiceUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -154,20 +189,31 @@ export default function CreatePackageForm() {
       return;
     }
 
+    // Validación de la tabla de aduanas
+    const isValidCustoms = customsItems.every(item => item.description.trim() !== '' && Number(item.value) >= 0);
+    if (!isValidCustoms) {
+        alert("⚠️ Por favor completa correctamente la descripción y valor de todos los artículos de aduana.");
+        return;
+    }
+
     setLoading(true);
     setCreatedPackage(null);
+
+    // Creamos una descripción de texto combinada (Para mantener compatibilidad con el resto del sistema)
+    const combinedDescription = customsItems.map(item => `${item.qty}x ${item.description}`).join(', ');
 
     try {
       const payload = {
         carrierTrackingNumber: data.trackingNumber.toUpperCase(), 
-        description: data.description,
+        description: combinedDescription, // Texto plano (Compatibilidad)
+        customsItems: customsItems,       // 🔥 JSON DETALLADO PARA BASE DE DATOS
         weightLbs: parseFloat(data.weight),
         lengthIn: parseFloat(data.length || 0),
         widthIn: parseFloat(data.width || 0),
         heightIn: parseFloat(data.height || 0),
         userId: foundUser.id,
         photoUrlMiami: photoUrl,
-        invoiceUrl: invoiceUrl, // 🔥 ENVIAMOS EL INVOICE AL BACKEND
+        invoiceUrl: invoiceUrl, 
         countryCode: 'US',
         declaredValue: parseFloat(data.declaredValue) || 0
       };
@@ -197,7 +243,8 @@ export default function CreatePackageForm() {
       // Reseteamos todo al terminar
       reset();
       setPhotoUrl(null);
-      setInvoiceUrl(null); // 🔥 Limpiamos el Invoice
+      setInvoiceUrl(null); 
+      setCustomsItems([{ qty: 1, description: '', value: '' }]); // Limpiamos tabla aduanas
       window.scrollTo({ top: 0, behavior: 'smooth' });
 
     } catch (error: any) {
@@ -328,7 +375,7 @@ export default function CreatePackageForm() {
                 {errors.trackingNumber && <span className="text-red-500 text-xs font-bold">⚠️ Tracking requerido</span>}
             </div>
 
-            {/* PESO Y VALOR */}
+            {/* PESO Y VALOR TOTAL */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
                     <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 block">
@@ -348,7 +395,7 @@ export default function CreatePackageForm() {
 
                 <div>
                     <label className="text-xs font-bold text-blue-600 uppercase tracking-wider mb-1 block">
-                        Valor Declarado ($)
+                        Valor Declarado Total ($)
                     </label>
                     <div className="relative">
                         <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-500" size={18} />
@@ -375,16 +422,67 @@ export default function CreatePackageForm() {
                 </div>
             </details>
 
-            {/* DESCRIPCIÓN */}
-            <div>
-                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 block">
-                    Descripción
-                </label>
-                <input 
-                    {...register("description", { required: true })}
-                    placeholder="Ej: Ropa, Zapatos..." 
-                    className="w-full h-12 px-4 bg-gray-50 border border-gray-200 rounded-xl focus:border-blue-500 text-base"
-                />
+            {/* 🔥 NUEVO: TABLA DE DECLARACIÓN DE ADUANAS 🔥 */}
+            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                <div className="flex justify-between items-center mb-3">
+                    <label className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
+                        <Globe size={16} className="text-blue-500" /> Declaración Comercial (Aduanas)
+                    </label>
+                </div>
+                
+                {/* Cabeceras de la tabla */}
+                <div className="flex gap-2 text-[10px] font-bold text-slate-500 uppercase mb-2 px-1">
+                    <div className="w-16 text-center">Cant.</div>
+                    <div className="flex-1">Descripción Detallada (Inglés)</div>
+                    <div className="w-24 text-center">V. Unitario</div>
+                    <div className="w-8"></div>
+                </div>
+
+                <div className="space-y-2">
+                    {customsItems.map((item, index) => (
+                        <div key={index} className="flex gap-2 items-start animate-fadeIn">
+                            <input 
+                                type="number" min="1" 
+                                value={item.qty} 
+                                onChange={e => updateCustomsItem(index, 'qty', e.target.value)} 
+                                className="w-16 h-10 border border-slate-300 rounded-lg text-center font-bold text-sm focus:border-blue-500" 
+                                placeholder="1" 
+                            />
+                            <input 
+                                type="text" 
+                                value={item.description} 
+                                onChange={e => updateCustomsItem(index, 'description', e.target.value)} 
+                                className="flex-1 h-10 px-3 border border-slate-300 rounded-lg text-sm focus:border-blue-500" 
+                                placeholder="Ej: Men's Cotton T-Shirts" 
+                            />
+                            <div className="relative w-24">
+                                <DollarSign className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
+                                <input 
+                                    type="number" step="0.01" 
+                                    value={item.value} 
+                                    onChange={e => updateCustomsItem(index, 'value', e.target.value)} 
+                                    className="w-full h-10 pl-6 pr-2 border border-slate-300 rounded-lg font-mono text-sm focus:border-blue-500" 
+                                    placeholder="0.00" 
+                                />
+                            </div>
+                            <button 
+                                type="button" 
+                                onClick={() => removeCustomsItem(index)} 
+                                className="h-10 w-8 flex items-center justify-center text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            >
+                                <Trash2 size={18} />
+                            </button>
+                        </div>
+                    ))}
+                </div>
+
+                <button 
+                    type="button" 
+                    onClick={addCustomsItem} 
+                    className="mt-3 text-sm font-bold text-blue-600 flex items-center gap-1 hover:text-blue-800 transition-colors"
+                >
+                    <Plus size={16} /> Agregar Artículo
+                </button>
             </div>
 
             {/* 🔥 GRID PARA FOTOS (EVIDENCIA E INVOICE) 🔥 */}

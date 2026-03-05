@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { 
   MoreHorizontal, Edit, Truck, X, Save, Loader2, Printer, 
-  Package, User, Box, Ruler, MapPin, CheckCircle, Barcode 
+  Package, User, Box, Ruler, MapPin, CheckCircle, Barcode, FileText 
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -81,6 +81,178 @@ export default function PackageActions({ pkg, locale, onDeliverStore }: PackageA
 
       const url = `/print/label?${params.toString()}`; 
       window.open(url, '_blank');
+  };
+
+  // ========================================================================
+  // 📄 GENERAR COMMERCIAL INVOICE AUTOMÁTICO (CON ITEMS ADUANALES, PESO Y CONTACTO)
+  // ========================================================================
+  const handleGenerateInvoice = () => {
+    const date = new Date().toLocaleDateString('en-US');
+    
+    // Total del paquete
+    const totalWeightNum = parseFloat(pkg.weightLbs || 0);
+    const weightLbs = totalWeightNum.toFixed(2);
+    
+    const declaredValue = parseFloat(pkg.declaredValue || 0).toFixed(2);
+    const shippingCost = parseFloat(pkg.shippingTotalPaid || pkg.shippingSubtotal || 0).toFixed(2);
+    const totalInvoice = (parseFloat(declaredValue) + parseFloat(shippingCost)).toFixed(2);
+    
+    let receiverName = pkg.user?.name || 'Cliente No Registrado';
+    let receiverAddressBlock = 'Dirección no especificada';
+    
+    // Info de contacto del usuario
+    const userPhone = pkg.user?.phone || 'No Provisto / Not Provided';
+    const userEmail = pkg.user?.email || 'N/A';
+    
+    if (pkg.shippingAddress) {
+        const parts = pkg.shippingAddress.split('|');
+        if (parts.length > 1) {
+            receiverName = parts[0].trim();
+            receiverAddressBlock = parts[1].trim();
+        } else {
+            receiverAddressBlock = pkg.shippingAddress;
+        }
+    }
+
+    const trackingForInvoice = pkg.finalTrackingNumber || pkg.carrierTrackingNumber || pkg.gmcTrackingNumber || pkg.gmcShipmentNumber || 'PENDIENTE';
+
+    let itemsHtml = '';
+    
+    if (pkg.customsItems && Array.isArray(pkg.customsItems) && pkg.customsItems.length > 0) {
+        // Sumamos la cantidad total de artículos para dividir el peso equitativamente
+        let totalQty = pkg.customsItems.reduce((acc: number, item: any) => acc + (parseInt(item.qty) || 1), 0);
+        const weightPerUnit = totalQty > 0 ? (totalWeightNum / totalQty) : 0;
+
+        itemsHtml = pkg.customsItems.map((item: any) => {
+            const qty = parseInt(item.qty) || 1;
+            const desc = item.description || 'Item';
+            const unitValue = parseFloat(item.value || 0).toFixed(2);
+            const subtotal = (qty * parseFloat(unitValue)).toFixed(2);
+            
+            // Calculamos el peso correspondiente a esta fila (peso por unidad * cantidad)
+            const lineWeight = (weightPerUnit * qty).toFixed(2);
+            
+            return `
+              <tr>
+                <td style="text-align: center;">${qty}</td>
+                <td style="text-align: center;">US</td>
+                <td>${desc}</td>
+                <td style="text-align: center;">${lineWeight} lbs</td>
+                <td style="text-align: right;">$${unitValue}</td>
+                <td style="text-align: right;">$${subtotal}</td>
+              </tr>
+            `;
+        }).join('');
+    } else {
+        itemsHtml = `
+          <tr>
+            <td style="text-align: center;">1</td>
+            <td style="text-align: center;">US</td>
+            <td>${pkg.description || 'Personal Effects / Artículos Varios'}</td>
+            <td style="text-align: center;">${weightLbs} lbs</td>
+            <td style="text-align: right;">$${declaredValue}</td>
+            <td style="text-align: right;">$${declaredValue}</td>
+          </tr>
+        `;
+    }
+
+    const invoiceWindow = window.open('', '_blank');
+    if (!invoiceWindow) return alert("Por favor, permite las ventanas emergentes (pop-ups).");
+
+    // 🔥 PLANTILLA HTML ACTUALIZADA CON DATOS DE CONTACTO COMPLETOS 🔥
+    invoiceWindow.document.write(`
+      <html>
+        <head>
+          <title>Commercial Invoice - ${trackingForInvoice}</title>
+          <style>
+            body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 40px; color: #333; line-height: 1.5; }
+            h1 { text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; text-transform: uppercase; letter-spacing: 2px; }
+            .flex-container { display: flex; justify-content: space-between; margin-bottom: 30px; margin-top: 30px; }
+            .box { width: 45%; border: 1px solid #ccc; padding: 15px; border-radius: 4px; background: #fafafa; }
+            .box h3 { margin-top: 0; color: #555; border-bottom: 1px solid #ddd; padding-bottom: 5px; font-size: 14px; text-transform: uppercase; }
+            .box p { margin: 4px 0; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 13px; }
+            th { background-color: #f4f4f4; padding: 10px; border: 1px solid #ccc; text-align: left; }
+            td { padding: 8px; border: 1px solid #ddd; }
+            .summary { width: 50%; float: right; margin-top: 30px; }
+            .summary table th { background: transparent; text-align: right; border: none; padding-right: 15px; }
+            .summary table td { text-align: right; font-weight: bold; border: none; }
+            .footer { clear: both; padding-top: 60px; font-size: 12px; color: #666; text-align: justify; }
+            .signature-line { border-bottom: 1px solid #333; width: 300px; margin-top: 40px; display: inline-block; }
+          </style>
+        </head>
+        <body>
+          <h1>Commercial Invoice</h1>
+          
+          <table style="width: 100%; border: none; margin-top: 0;">
+            <tr>
+              <td style="border: none; padding: 0;"><strong>Invoice Date:</strong> ${date}</td>
+              <td style="border: none; padding: 0; text-align: right;"><strong>Carrier:</strong> ${pkg.selectedCourier || 'N/A'}</td>
+            </tr>
+            <tr>
+              <td style="border: none; padding: 0;"><strong>Type:</strong> ${pkg.isConsolidated ? 'Consolidado' : 'Paquete Individual'}</td>
+              <td style="border: none; padding: 0; text-align: right;"><strong>Tracking Number:</strong> ${trackingForInvoice}</td>
+            </tr>
+          </table>
+
+          <div class="flex-container">
+            <div class="box">
+              <h3>Sender / Exporter:</h3>
+              <p><strong>${pkg.user?.name || 'Cliente'}</strong></p>
+              <p>Suite: ${pkg.user?.suiteNo || 'N/A'}</p>
+              <p>Phone: ${userPhone}</p>
+              <p>Email: ${userEmail}</p>
+              <p style="margin-top: 8px;">Miami, FL 33142<br/>United States</p>
+            </div>
+            <div class="box">
+              <h3>Recipient / Importer:</h3>
+              <p><strong>${receiverName}</strong></p>
+              <p>${receiverAddressBlock.replace(/,/g, '<br/>')}</p>
+              <p style="margin-top: 8px;"><strong>Phone:</strong> ${userPhone}</p>
+              <p><strong>Email:</strong> ${userEmail}</p>
+            </div>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th style="text-align: center;">Qty</th>
+                <th style="text-align: center;">Origin</th>
+                <th>Description of Contents</th>
+                <th style="text-align: center;">Weight</th>
+                <th style="text-align: right;">Unit Value</th>
+                <th style="text-align: right;">Subtotal</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${itemsHtml}
+            </tbody>
+          </table>
+
+          <div class="summary">
+            <table>
+              <tr><th>Total Gross Weight:</th><td>${weightLbs} lbs</td></tr>
+              <tr><th>Total Declared Value (USD):</th><td>$${declaredValue}</td></tr>
+              <tr><th>Freight & Processing:</th><td>$${shippingCost}</td></tr>
+              <tr><th style="font-size: 16px; color: #000; padding-top: 10px;">Total Invoice Amount:</th><td style="font-size: 16px; color: #000; padding-top: 10px;">$${totalInvoice}</td></tr>
+            </table>
+          </div>
+
+          <div class="footer">
+            <p>I / We hereby certify that the information on this invoice is true and correct and that the contents of this shipment are as stated above. These commodities, technology, or software were exported from the United States in accordance with the Export Administration Regulations. Diversion contrary to U.S. law is prohibited.</p>
+            <div style="margin-top: 50px;">
+              <span class="signature-line"></span><br/>
+              <strong>Signature / Name:</strong> ${pkg.user?.name || 'Authorized Agent'}
+            </div>
+          </div>
+        </body>
+      </html>
+    `);
+    
+    invoiceWindow.document.close();
+    invoiceWindow.focus();
+    setTimeout(() => { invoiceWindow.print(); }, 500);
+    setIsMenuOpen(false);
   };
 
   // --- LÓGICA DE CONSOLIDACIÓN (ADMIN) ---
@@ -214,7 +386,12 @@ export default function PackageActions({ pkg, locale, onDeliverStore }: PackageA
               <Printer size={16} className="text-gray-400" /> Imprimir Etiqueta
             </button>
 
-            <Link href={`/${locale}/dashboard-admin/clientes/${pkg.user?.id}`} className="w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center gap-3 text-gray-700">
+            {/* 🔥 3. NUEVO: GENERAR INVOICE ADUANAL 🔥 */}
+            <button onClick={handleGenerateInvoice} className="w-full text-left px-4 py-3 hover:bg-orange-50 text-orange-700 flex items-center gap-3 font-medium transition-colors border-t border-gray-100">
+              <FileText size={16} /> Descargar Invoice
+            </button>
+
+            <Link href={`/${locale}/dashboard-admin/clientes/${pkg.user?.id}`} className="w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center gap-3 text-gray-700 border-t border-gray-100">
                <User size={16} className="text-gray-400" /> Ver Perfil Cliente
             </Link>
 

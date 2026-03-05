@@ -31,10 +31,10 @@ export async function POST(req: Request) {
       widthIn, 
       heightIn, 
       photoUrlMiami,
-      // 🔥 NUEVO CAMPO: Recibimos el valor declarado
       declaredValue,
-      // 🔥 NUEVO CAMPO: Recibimos el invoice
-      invoiceUrl 
+      invoiceUrl,
+      // 🔥 NUEVO CAMPO: Recibimos la tabla de aduanas
+      customsItems 
     } = body;
 
     // Validaciones
@@ -71,6 +71,9 @@ export async function POST(req: Request) {
 
           // 🔥 GUARDAMOS EL VALOR (Si el admin lo ingresó, actualizamos la pre-alerta)
           declaredValue: declaredValue ? parseFloat(declaredValue) : existingPackage.declaredValue,
+
+          // 🔥 GUARDAMOS LA TABLA DE ADUANAS
+          customsItems: customsItems || existingPackage.customsItems,
 
           // NO tocamos 'description', así se mantiene lo que subió el cliente
           // NO tocamos 'userId', respetamos al dueño original de la pre-alerta
@@ -132,8 +135,9 @@ export async function POST(req: Request) {
           status: 'RECIBIDO_MIAMI',
           photoUrlMiami: photoUrlMiami || null,
           
-          // 🔥 GUARDAMOS EL INVOICE (Enviado por el Admin)
+          // 🔥 GUARDAMOS EL INVOICE Y TABLA DE ADUANAS
           invoiceUrl: invoiceUrl || null,
+          customsItems: customsItems || null,
           
           // 🔥 GUARDAMOS EL VALOR DECLARADO (Default 0)
           declaredValue: declaredValue ? parseFloat(declaredValue) : 0
