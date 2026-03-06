@@ -76,7 +76,8 @@ export default auth((req: any) => {
       const isAllowedPath = 
         pathname.includes('/paquetes') || 
         pathname.includes('/crear-envio') || 
-        pathname.includes('/consolidaciones');
+        pathname.includes('/consolidaciones') ||
+        pathname.includes('/pay-and-go'); // 🔥 AQUÍ LE ABRIMOS LA PUERTA AL WAREHOUSE 🔥
 
       // Si NO está en una ruta permitida (ej: intenta ver el dashboard de gráficas)
       if (!isAllowedPath) {

@@ -2,6 +2,9 @@ import { auth } from '@/auth';
 import { redirect } from 'next/navigation';
 import PayAndGoClient from '@/components/admin/PayAndGoClient';
 
+// 🔥 VACUNA MÁGICA: Obliga a Next.js a verificar el rol en tiempo real, sin usar memoria caché
+export const dynamic = 'force-dynamic';
+
 export default async function PayAndGoPage() {
   const session = await auth();
 
