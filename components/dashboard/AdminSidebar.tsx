@@ -15,8 +15,8 @@ import {
   LogOut,
   Menu,
   X,
-  Bell, // 🔥 1. AGREGAMOS EL ÍCONO DE LA CAMPANITA
-  Zap   // 🔥 NUEVO: Ícono de relámpago para Pay & Go
+  Bell, 
+  Zap   
 } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 
@@ -28,23 +28,23 @@ export default function AdminSidebar() {
   
   // Estados de Notificaciones
   const [pendingConsolidations, setPendingConsolidations] = useState(false);
-  // 🔥 2. NUEVO ESTADO: Contador de paquetes recién pagados
   const [paidPackagesCount, setPaidPackagesCount] = useState(0);
 
   const userRole = (session?.user as any)?.role || '';
 
-  // Efecto Maestro: Revisa si hay trabajo o pagos pendientes (Polling cada 60s)
+  // 🔥 MAGIA DE RUTAS: Extraemos el idioma actual de la URL (ej: 'es' o 'en')
+  const currentLocale = pathname.split('/')[1] || 'es';
+
+  // Efecto Maestro: Revisa si hay trabajo o pagos pendientes
   useEffect(() => {
     const checkPendingWork = async () => {
         try {
-            // A. Revisar Consolidaciones
             const resConsolidations = await fetch('/api/admin/consolidations/pending-count', { cache: 'no-store' }); 
             if (resConsolidations.ok) {
                 const data = await resConsolidations.json();
                 setPendingConsolidations(data.count > 0);
             }
 
-            // 🔥 B. NUEVO: Revisar Paquetes Pagados (Requiere que crees esta API)
             const resPaid = await fetch('/api/admin/packages/paid-count', { cache: 'no-store' });
             if (resPaid.ok) {
                 const dataPaid = await resPaid.json();
@@ -60,16 +60,16 @@ export default function AdminSidebar() {
     return () => clearInterval(interval);
   }, []);
 
-  // 🔥 AQUÍ AGREGAMOS PAY & GO AL MENÚ 🔥
+  // 🔥 CORRECCIÓN CRÍTICA: Ahora los links saben en qué idioma están operando 🔥
   const menuItems = [
-    { name: "Dashboard", href: "/dashboard-admin", icon: LayoutDashboard, roles: ["ADMIN"] },
-    { name: "Paquetes", href: "/dashboard-admin/paquetes", icon: Package, roles: ["ADMIN", "WAREHOUSE"] },
-    { name: "Crear Envío", href: "/dashboard-admin/crear-envio", icon: Truck, roles: ["ADMIN", "WAREHOUSE"] },
-    { name: "Pay & Go", href: "/dashboard-admin/pay-and-go", icon: Zap, roles: ["ADMIN", "WAREHOUSE"] }, // <-- AQUÍ ESTÁ
-    { name: "Consolidaciones", href: "/dashboard-admin/consolidaciones", icon: Layers, roles: ["ADMIN", "WAREHOUSE"] },
-    { name: "Clientes", href: "/dashboard-admin/clientes", icon: Users, roles: ["ADMIN"] },
-    { name: "Finanzas", href: "/dashboard-admin/finanzas", icon: DollarSign, roles: ["ADMIN"] },
-    { name: "Configuración", href: "/dashboard-admin/configuracion", icon: Settings, roles: ["ADMIN"] }
+    { name: "Dashboard", href: `/${currentLocale}/dashboard-admin`, icon: LayoutDashboard, roles: ["ADMIN"] },
+    { name: "Paquetes", href: `/${currentLocale}/dashboard-admin/paquetes`, icon: Package, roles: ["ADMIN", "WAREHOUSE"] },
+    { name: "Crear Envío", href: `/${currentLocale}/dashboard-admin/crear-envio`, icon: Truck, roles: ["ADMIN", "WAREHOUSE"] },
+    { name: "Pay & Go", href: `/${currentLocale}/dashboard-admin/pay-and-go`, icon: Zap, roles: ["ADMIN", "WAREHOUSE"] }, 
+    { name: "Consolidaciones", href: `/${currentLocale}/dashboard-admin/consolidaciones`, icon: Layers, roles: ["ADMIN", "WAREHOUSE"] },
+    { name: "Clientes", href: `/${currentLocale}/dashboard-admin/clientes`, icon: Users, roles: ["ADMIN"] },
+    { name: "Finanzas", href: `/${currentLocale}/dashboard-admin/finanzas`, icon: DollarSign, roles: ["ADMIN"] },
+    { name: "Configuración", href: `/${currentLocale}/dashboard-admin/configuracion`, icon: Settings, roles: ["ADMIN"] }
   ];
 
   const allowedLinks = menuItems.filter(item => item.roles.includes(userRole));
@@ -103,9 +103,9 @@ export default function AdminSidebar() {
         {/* Header con Campanita */}
         <div className="p-6 border-b border-gray-100 flex flex-col items-center relative">
             
-            {/* 🔥 3. CAMPANITA DE NOTIFICACIONES */}
+            {/* 🔥 CORREGIDO: Link de la campanita ahora incluye el idioma */}
             <Link 
-                href="/dashboard-admin/paquetes?filter=pagados" 
+                href={`/${currentLocale}/dashboard-admin/paquetes?filter=pagados`} 
                 className="absolute top-6 left-4 text-gray-400 hover:text-gmc-dorado-principal transition-colors"
                 title="Ver paquetes pagados"
             >
@@ -135,9 +135,10 @@ export default function AdminSidebar() {
         {/* Navegación */}
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
             {allowedLinks.map((item) => {
+            // 🔥 Como el href ahora tiene el idioma, este isActive funcionará a la perfección
             const isActive = pathname === item.href;
             
-            // 🔥 Lógica combinada de Alertas
+            // Lógica combinada de Alertas
             const showRedDotConsolidations = item.name === "Consolidaciones" && pendingConsolidations;
             const showRedDotPackages = item.name === "Paquetes" && paidPackagesCount > 0;
             const showRedDot = showRedDotConsolidations || showRedDotPackages;
