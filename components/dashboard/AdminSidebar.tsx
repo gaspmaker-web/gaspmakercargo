@@ -32,8 +32,11 @@ export default function AdminSidebar() {
 
   const userRole = (session?.user as any)?.role || '';
 
-  // 🔥 MAGIA DE RUTAS: Extraemos el idioma actual de la URL (ej: 'es' o 'en')
-  const currentLocale = pathname.split('/')[1] || 'es';
+  // 🔥 SOLUCIÓN DEL 404: Filtro de seguridad para el idioma 🔥
+  const segment = pathname.split('/')[1];
+  const validLocales = ['es', 'en', 'fr', 'pt'];
+  // Si la primera parte de la URL es un idioma válido, lo usa. Si es otra cosa (ej. 'dashboard-admin'), fuerza 'es'.
+  const currentLocale = validLocales.includes(segment) ? segment : 'es';
 
   // Efecto Maestro: Revisa si hay trabajo o pagos pendientes
   useEffect(() => {
@@ -60,7 +63,7 @@ export default function AdminSidebar() {
     return () => clearInterval(interval);
   }, []);
 
-  // 🔥 CORRECCIÓN CRÍTICA: Ahora los links saben en qué idioma están operando 🔥
+  // 🔥 Ahora los links usan el idioma verificado, garantizando rutas limpias 🔥
   const menuItems = [
     { name: "Dashboard", href: `/${currentLocale}/dashboard-admin`, icon: LayoutDashboard, roles: ["ADMIN"] },
     { name: "Paquetes", href: `/${currentLocale}/dashboard-admin/paquetes`, icon: Package, roles: ["ADMIN", "WAREHOUSE"] },
@@ -103,7 +106,6 @@ export default function AdminSidebar() {
         {/* Header con Campanita */}
         <div className="p-6 border-b border-gray-100 flex flex-col items-center relative">
             
-            {/* 🔥 CORREGIDO: Link de la campanita ahora incluye el idioma */}
             <Link 
                 href={`/${currentLocale}/dashboard-admin/paquetes?filter=pagados`} 
                 className="absolute top-6 left-4 text-gray-400 hover:text-gmc-dorado-principal transition-colors"
@@ -135,7 +137,6 @@ export default function AdminSidebar() {
         {/* Navegación */}
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
             {allowedLinks.map((item) => {
-            // 🔥 Como el href ahora tiene el idioma, este isActive funcionará a la perfección
             const isActive = pathname === item.href;
             
             // Lógica combinada de Alertas

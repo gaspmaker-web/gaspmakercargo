@@ -8,7 +8,6 @@ const ADMIN_EMAIL = 'info@gaspmakercargo.com';
 // =============================================================================
 // 🌍 DICCIONARIO DE TRADUCCIONES (EN, ES, FR, PT)
 // =============================================================================
-// 🔥 CAMBIO CLAVE: Agregamos 'export' para usarlo en otras APIs
 export const TRANSLATIONS: any = {
   en: {
     footer: "This is an automated message, please do not reply.",
@@ -45,7 +44,6 @@ export const TRANSLATIONS: any = {
     idInternal: "Internal ID",
     idRequest: "Request ID",
     status: "Status",
-    // Textos para notificaciones de campana
     notifPkgNewTitle: "New Package in Miami",
     notifPkgNewBody: "We have received a package (Tracking: {TRACKING}).",
     notifPreAlertTitle: "Pre-Alert Received",
@@ -86,7 +84,6 @@ export const TRANSLATIONS: any = {
     idInternal: "ID Interno",
     idRequest: "ID Solicitud",
     status: "Estado",
-    // Textos para notificaciones de campana
     notifPkgNewTitle: "Nuevo Paquete en Miami",
     notifPkgNewBody: "Hemos recibido un paquete (Tracking: {TRACKING}).",
     notifPreAlertTitle: "Pre-Alerta Recibida",
@@ -127,7 +124,6 @@ export const TRANSLATIONS: any = {
     idInternal: "ID Interne",
     idRequest: "ID Demande",
     status: "Statut",
-    // Textos para notificaciones de campana
     notifPkgNewTitle: "Nouveau Colis à Miami",
     notifPkgNewBody: "Nous avons reçu un colis (Suivi: {TRACKING}).",
     notifPreAlertTitle: "Pré-alerte Reçue",
@@ -168,7 +164,6 @@ export const TRANSLATIONS: any = {
     idInternal: "ID Interno",
     idRequest: "ID Solicitação",
     status: "Estado",
-    // Textos para notificaciones de campana
     notifPkgNewTitle: "Novo Pacote em Miami",
     notifPkgNewBody: "Recebemos um pacote (Rastreio: {TRACKING}).",
     notifPreAlertTitle: "Pré-alerta Recebido",
@@ -176,11 +171,9 @@ export const TRANSLATIONS: any = {
   }
 };
 
-// 🔥 FUNCIÓN HELPER: Selección de Idioma (Default: Inglés)
-// También la exportamos por si acaso
 export const getT = (lang: string = 'en') => {
     const code = lang ? lang.split('-')[0].toLowerCase() : 'en'; 
-    return TRANSLATIONS[code] || TRANSLATIONS['en']; // Si no existe, usa 'en'
+    return TRANSLATIONS[code] || TRANSLATIONS['en']; 
 };
 
 // =============================================================================
@@ -258,7 +251,7 @@ const baseTemplate = (title: string, bodyContent: string, footerText: string, ct
 
 export const sendPaymentReceiptEmail = async (
     email: string, name: string, serviceType: string, amount: number, orderId: string, details?: string, 
-    lang: string = 'en' // 👈 Default: Inglés
+    lang: string = 'en'
 ) => {
   const t = getT(lang);
   const html = baseTemplate(
@@ -273,7 +266,7 @@ export const sendPaymentReceiptEmail = async (
      </div>
      <p>${t.thanks}</p>`,
     t.footer,
-    `${process.env.NEXT_PUBLIC_BASE_URL}/dashboard-cliente/historial-solicitudes`, t.btnText
+    `${process.env.NEXT_PUBLIC_BASE_URL}/${lang}/dashboard-cliente`, t.btnText // 🔥 CORREGIDO
   );
   try { return await resend.emails.send({ from: EMAIL_FROM, to: email, subject: `🧾 ${t.paymentTitle}`, html }); } catch (e) { return { error: e }; }
 };
@@ -291,7 +284,7 @@ export const sendPackageReceivedEmail = async (email: string, name: string, trac
      </div>
      <p>${t.pkgAction}</p>`,
     t.footer,
-    `${process.env.NEXT_PUBLIC_BASE_URL}/dashboard-cliente`, t.btnText
+    `${process.env.NEXT_PUBLIC_BASE_URL}/${lang}/dashboard-cliente`, t.btnText // 🔥 CORREGIDO
   );
   try { return await resend.emails.send({ from: EMAIL_FROM, to: email, subject: `📦 ${t.pkgReceivedTitle}`, html }); } catch (e) { return { error: e }; }
 };
@@ -308,7 +301,7 @@ export const sendShippedEmail = async (email: string, name: string, trackingGMC:
        <div class="info-row"><span class="label">${t.status}:</span><br><span class="value">${t.statusTransit}</span></div>
      </div>`,
     t.footer,
-    `${process.env.NEXT_PUBLIC_BASE_URL}/dashboard-cliente/rastreo/${trackingGMC}`, t.btnText
+    `${process.env.NEXT_PUBLIC_BASE_URL}/${lang}/dashboard-cliente`, t.btnText // 🔥 CORREGIDO
   );
   try { return await resend.emails.send({ from: EMAIL_FROM, to: email, subject: `✈️ ${t.shippedTitle}`, html }); } catch (e) { return { error: e }; }
 };
@@ -326,7 +319,7 @@ export const sendConsolidationRequestEmail = async (email: string, name: string,
      </div>
      <p>${t.consolidationNote}</p>`,
     t.footer,
-    `${process.env.NEXT_PUBLIC_BASE_URL}/dashboard-cliente`, t.btnText
+    `${process.env.NEXT_PUBLIC_BASE_URL}/${lang}/dashboard-cliente`, t.btnText // 🔥 CORREGIDO
   );
   try { return await resend.emails.send({ from: EMAIL_FROM, to: email, subject: `🔄 ${t.consolidationTitle}`, html }); } catch (e) { return { error: e }; }
 };
@@ -346,7 +339,7 @@ export const sendShipmentDispatchedEmail = async (
      </div>
      <p>${t.trackNote}</p>`,
     t.footer,
-    `${process.env.NEXT_PUBLIC_BASE_URL}/dashboard-cliente/en-transito`, t.btnText
+    `${process.env.NEXT_PUBLIC_BASE_URL}/${lang}/dashboard-cliente`, t.btnText // 🔥 CORREGIDO
   );
   try { return await resend.emails.send({ from: EMAIL_FROM, to: email, subject: `✈️ ${t.dispatchedTitle}`, html }); } catch (e) { return { error: e }; }
 };
@@ -360,7 +353,7 @@ export const sendPackageDeliveredEmail = async (email: string, tracking: string,
        <div class="info-row"><span class="label">${t.status}:</span><br><span class="value" style="color:green;">${t.statusDelivered}</span></div>
      </div>`,
     t.footer,
-    `${process.env.NEXT_PUBLIC_BASE_URL}/dashboard-cliente/en-destino`, t.btnText
+    `${process.env.NEXT_PUBLIC_BASE_URL}/${lang}/dashboard-cliente`, t.btnText // 🔥 CORREGIDO
   );
   try { return await resend.emails.send({ from: EMAIL_FROM, to: email, subject: `📬 ${t.deliveredTitle}`, html }); } catch (e) { return { error: e }; }
 };
@@ -370,7 +363,6 @@ export const sendPickupReadyEmail = async (email: string, tracking: string) => {
     return true;
 };
 
-// COMPATIBILIDAD (Fallback simple)
 export const sendPackageDispatchedEmail = async (email: string, text: string) => {
     return await resend.emails.send({ from: EMAIL_FROM, to: email, subject: 'Update Gasp Maker Cargo', html: `<p>${text}</p>` });
 };
@@ -394,7 +386,7 @@ export const sendAdminConsolidationAlert = async (clientName: string, count: num
          </div>
          <p>Por favor, procede a re-empacar y pesar.</p>`,
         "Admin Notification",
-        "https://gaspmakercargo.com/admin/consolidaciones", "Ir al Panel Admin"
+        `${process.env.NEXT_PUBLIC_BASE_URL}/es/dashboard-admin/consolidaciones`, "Ir al Panel Admin" // 🔥 CORREGIDO (ADMIN)
       )
     });
   } catch (error) { console.error("Error alerta admin consolidación:", error); }
@@ -416,12 +408,12 @@ export const sendAdminPaymentAlert = async (clientName: string, amount: number, 
          </div>
          <p>Acción requerida: Verificar y procesar el servicio (Driver, Salida o Entrega).</p>`,
         "Admin Notification",
-        "https://gaspmakercargo.com/admin/pagos", "Gestionar Orden"
+        `${process.env.NEXT_PUBLIC_BASE_URL}/es/dashboard-admin/paquetes`, "Gestionar Orden" // 🔥 CORREGIDO (ADMIN)
       )
     });
   } catch (error) { console.error("Error alerta admin pago:", error); }
 };
-// 🔥 NUEVO: Función especial para Pay & Go (Mostrador - Adaptada para Clientes sin Contraseña)
+
 export const sendPayAndGoReceiptEmail = async (
     email: string, name: string, tracking: string, destination: string, amount: number, method: string, lang: string = 'en'
 ) => {
@@ -449,7 +441,7 @@ export const sendPayAndGoReceiptEmail = async (
      <p style="font-size: 14px; color: #4b5563;"><em>${trackInstructions}</em></p>
      <p>${t.thanks}</p>`,
     t.footer,
-    `${process.env.NEXT_PUBLIC_BASE_URL}`, // 👈 Lo mandamos a la web pública, NO al login
+    `${process.env.NEXT_PUBLIC_BASE_URL}/${lang}`, // 👈 Va a la Home en su idioma
     lang === 'es' ? "Visitar Web Principal" : "Visit Homepage"
   );
   try { return await resend.emails.send({ from: EMAIL_FROM, to: email, subject: `🧾 ${title}`, html }); } catch (e) { return { error: e }; }
