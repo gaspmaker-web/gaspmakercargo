@@ -8,7 +8,7 @@ export default function TawkLoader() {
   const pathname = usePathname();
   const [cookiesAccepted, setCookiesAccepted] = useState(false);
   
-  // Lista de páginas permitidas (Whitelist) - TAL CUAL TU CÓDIGO
+  // Lista de páginas permitidas (Whitelist)
   const allowedPages = [
       '/', 
       '/en', '/es', '/fr', '/pt',
@@ -20,7 +20,6 @@ export default function TawkLoader() {
       ? pathname.slice(0, -1) 
       : pathname;
 
-  // Calculamos si debemos mostrarlo ANTES de renderizar nada
   const isAllowedPage = allowedPages.includes(currentPath);
 
   // 1. CHEQUEO DE COOKIES
@@ -35,40 +34,17 @@ export default function TawkLoader() {
     return () => window.removeEventListener('cookie_consent_updated', checkConsent);
   }, []);
 
-  // 2. 🔥 FIX PARA ANDROID Y WINDOWS (Z-INDEX)
-  // ESTE ES EL ÚNICO BLOQUE NUEVO NECESARIO PARA QUE SE VEA BIEN
-  useEffect(() => {
-    // Solo ejecutamos si es página permitida y hay cookies aceptadas
-    if (!isAllowedPage || !cookiesAccepted) return;
+  // 🔥 ELIMINAMOS EL HACK DEL "setInterval" PARA SEGUIR LAS MEJORES PRÁCTICAS DE REACT 🔥
 
-    const interval = setInterval(() => {
-        const tawkIframes = document.querySelectorAll('iframe[title*="chat"]');
-        tawkIframes.forEach((iframe) => {
-            if (iframe) {
-                // @ts-ignore
-                iframe.style.setProperty("z-index", "2147483647", "important");
-                // @ts-ignore
-                iframe.style.setProperty("position", "fixed", "important");
-            }
-        });
-    }, 2000);
-
-    return () => clearInterval(interval);
-  }, [isAllowedPage, cookiesAccepted]);
-
-  // 3. LIMPIEZA DE "RESIDUOS" AL NAVEGAR 🧹
+  // 2. LIMPIEZA DE "RESIDUOS" AL NAVEGAR 🧹
   useEffect(() => {
     if (!isAllowedPage && typeof window !== 'undefined' && (window as any).Tawk_API) {
-        // Si entramos a zona prohibida, forzamos ocultar inmediatamente
         try { (window as any).Tawk_API.hideWidget(); } catch (e) {}
     } else if (isAllowedPage && cookiesAccepted && typeof window !== 'undefined' && (window as any).Tawk_API) {
-        // Si volvimos a zona permitida, asegurar que se vea
         try { (window as any).Tawk_API.showWidget(); } catch (e) {}
     }
   }, [pathname, isAllowedPage, cookiesAccepted]);
 
-  // 🛑 REGLA DE ORO: Si no hay cookies O no es página permitida,
-  // devolvemos NULL. Así el script NO se carga al refrescar la página.
   if (!cookiesAccepted || !isAllowedPage) {
       return null;
   }
@@ -78,14 +54,29 @@ export default function TawkLoader() {
       id="tawk-widget" 
       strategy="lazyOnload"
       onLoad={() => {
-          // Doble seguridad al terminar de cargar
           if ((window as any).Tawk_API) {
               try { (window as any).Tawk_API.showWidget(); } catch (e) {}
           }
       }}
     >
       {`
-        var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+        var Tawk_API=Tawk_API||{};
+        
+        // 🔥 MODO PROFESIONAL: Usamos la API oficial para separar la burbuja del footer
+        // y le damos un z-index general sin romper la estructura interna de Tawk.
+        Tawk_API.customStyle = {
+            visibility: {
+                desktop: {
+                    yOffset: 50 // Sube 50px solo en computadora
+                },
+                mobile: {
+                    yOffset: 0 // Lo deja normal en celular
+                }
+            },
+            zIndex: 2147483640 // Reemplaza el fix de Android/Windows de forma nativa
+        };
+
+        var Tawk_LoadStart=new Date();
         (function(){
         var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
         s1.async=true;
