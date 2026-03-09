@@ -21,6 +21,9 @@
     font-family: var(--font-montserrat), sans-serif;
     /* Aplicamos el fondo negro semi-transparente para la calculadora */
     background-color: var(--gasp-maker-dark-gray); 
+    
+    /* 🔥 NUEVA REGLA: Números perfectamente alineados y proporcionales en toda la web */
+    font-variant-numeric: tabular-nums lining-nums;
   }
   
   h1, h2, h3, h4, h5, h6 {
