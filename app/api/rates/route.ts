@@ -289,11 +289,15 @@ export async function POST(req: Request) {
     // ==========================================
     const gmcLogo = '/gaspmakercargoproject.png';
 
+    // 🔥 RUTA DE GRENADA DESACTIVADA TEMPORALMENTE
+    /*
     if(targetCountryCode === 'GD') {
         // Usa el mayor entre peso real y volumen
         const gdPrice = calculateRate_GD(chargeableWeight);
         rawRates.push({ id: 'GMC-GD', carrier: 'Gasp Maker Cargo', service: 'Grenada Direct', price: gdPrice, days: '4-5 days', logo: gmcLogo });
     }
+    */
+
     if (targetCountryCode === 'BB') {
         rawRates.push({ id: 'GMC-BB', carrier: 'Gasp Maker Cargo', service: 'Barbados Direct', price: calculateRate_BB(chargeableWeight), days: '4-5 days', logo: gmcLogo });
     }
