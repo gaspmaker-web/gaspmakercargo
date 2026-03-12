@@ -42,7 +42,6 @@ export default function PackageActions({ pkg, locale, onDeliverStore }: PackageA
   // 🔥 LÓGICA DE VISIBILIDAD DE BOTONES
   // ========================================================================
   
-  // Obtenemos el tracking sea paquete o consolidación
   const trackingString = pkg.gmcTrackingNumber || pkg.gmcShipmentNumber || '';
 
   const isPreAlert = pkg.status === 'PRE_ALERTA';
@@ -52,7 +51,6 @@ export default function PackageActions({ pkg, locale, onDeliverStore }: PackageA
   const isGaspMaker = pkg.selectedCourier?.toUpperCase().includes('GASP') || 
                       pkg.selectedCourier?.toUpperCase().includes('MAKER');
 
-  // 🔥 REGLA INVENCIBLE: Si dice PICKUP, muestra el botón de mostrador
   const isStorePickup = pkg.status === 'PENDIENTE_RETIRO' || 
                         pkg.selectedCourier === 'CLIENTE_RETIRO' || 
                         pkg.isStorePickup === true ||
@@ -84,12 +82,11 @@ export default function PackageActions({ pkg, locale, onDeliverStore }: PackageA
   };
 
   // ========================================================================
-  // 📄 GENERAR COMMERCIAL INVOICE AUTOMÁTICO (CON ITEMS ADUANALES, PESO Y CONTACTO)
+  // 📄 GENERAR COMMERCIAL INVOICE AUTOMÁTICO
   // ========================================================================
   const handleGenerateInvoice = () => {
     const date = new Date().toLocaleDateString('en-US');
     
-    // Total del paquete o caja
     const totalWeightNum = parseFloat(pkg.weightLbs || 0);
     const weightLbs = totalWeightNum.toFixed(2);
     
@@ -98,7 +95,6 @@ export default function PackageActions({ pkg, locale, onDeliverStore }: PackageA
     let receiverName = pkg.user?.name || 'Cliente No Registrado';
     let receiverAddressBlock = 'Dirección no especificada';
     
-    // Info de contacto del usuario
     const userPhone = pkg.user?.phone || 'No Provisto / Not Provided';
     const userEmail = pkg.user?.email || 'N/A';
     
@@ -114,12 +110,24 @@ export default function PackageActions({ pkg, locale, onDeliverStore }: PackageA
 
     const trackingForInvoice = pkg.finalTrackingNumber || pkg.carrierTrackingNumber || pkg.gmcTrackingNumber || pkg.gmcShipmentNumber || 'PENDIENTE';
 
-    // 🔥 LA LICUADORA: Extraemos todos los items, sea paquete individual o consolidación 🔥
+    // 🔥 NUEVO: CÁLCULO DE DIMENSIONES Y PESO VOLUMÉTRICO 🔥
+    const len = parseFloat(pkg.lengthIn || 0);
+    const wid = parseFloat(pkg.widthIn || 0);
+    const hgt = parseFloat(pkg.heightIn || 0);
+    
+    let dimsHtml = '';
+    if (len > 0 && wid > 0 && hgt > 0) {
+        const volWeight = ((len * wid * hgt) / 139).toFixed(2);
+        dimsHtml = `
+          <tr><th>Dimensions:</th><td style="color: #555; font-weight: normal;">${len} x ${wid} x ${hgt} in</td></tr>
+          <tr><th>Volumetric Wgt:</th><td style="color: #555; font-weight: normal;">${volWeight} lbs</td></tr>
+        `;
+    }
+
     let allItems: any[] = [];
     let calculatedDeclaredValue = 0;
 
     if (pkg.type === 'SHIPMENT' && pkg.packages && pkg.packages.length > 0) {
-        // Es una consolidación: Recorremos cada paquete interno (Hijos)
         pkg.packages.forEach((childPkg: any) => {
             if (childPkg.customsItems && Array.isArray(childPkg.customsItems) && childPkg.customsItems.length > 0) {
                 childPkg.customsItems.forEach((item: any) => {
@@ -136,13 +144,11 @@ export default function PackageActions({ pkg, locale, onDeliverStore }: PackageA
             }
         });
     } else if (pkg.customsItems && Array.isArray(pkg.customsItems) && pkg.customsItems.length > 0) {
-        // Es un paquete individual con tabla de aduanas
         allItems = pkg.customsItems;
         allItems.forEach((item: any) => {
             calculatedDeclaredValue += (parseFloat(item.value || 0) * (parseInt(item.qty) || 1));
         });
     } else {
-        // Es un paquete individual viejo (solo tiene texto y valor global)
         allItems = [{
             qty: 1,
             description: pkg.description || 'Personal Effects / Artículos Varios',
@@ -151,22 +157,17 @@ export default function PackageActions({ pkg, locale, onDeliverStore }: PackageA
         calculatedDeclaredValue += parseFloat(pkg.declaredValue || 0);
     }
 
-    // Cálculos Finales
     const declaredValueStr = calculatedDeclaredValue.toFixed(2);
     const totalInvoice = (calculatedDeclaredValue + parseFloat(shippingCost)).toFixed(2);
 
-    // Sumamos la cantidad total de artículos para dividir el peso equitativamente
     let totalQty = allItems.reduce((acc: number, item: any) => acc + (parseInt(item.qty) || 1), 0);
     const weightPerUnit = totalQty > 0 ? (totalWeightNum / totalQty) : 0;
 
-    // Generamos el HTML de las filas
     let itemsHtml = allItems.map((item: any) => {
         const qty = parseInt(item.qty) || 1;
         const desc = item.description || 'Item';
         const unitValue = parseFloat(item.value || 0).toFixed(2);
         const subtotal = (qty * parseFloat(unitValue)).toFixed(2);
-        
-        // Calculamos el peso correspondiente a esta fila (peso por unidad * cantidad)
         const lineWeight = (weightPerUnit * qty).toFixed(2);
         
         return `
@@ -184,7 +185,6 @@ export default function PackageActions({ pkg, locale, onDeliverStore }: PackageA
     const invoiceWindow = window.open('', '_blank');
     if (!invoiceWindow) return alert("Por favor, permite las ventanas emergentes (pop-ups).");
 
-    // 🔥 PLANTILLA HTML ACTUALIZADA CON DATOS DE CONTACTO Y CÁLCULOS DINÁMICOS 🔥
     invoiceWindow.document.write(`
       <html>
         <head>
@@ -257,6 +257,7 @@ export default function PackageActions({ pkg, locale, onDeliverStore }: PackageA
           <div class="summary">
             <table>
               <tr><th>Total Gross Weight:</th><td>${weightLbs} lbs</td></tr>
+              ${dimsHtml}
               <tr><th>Total Declared Value (USD):</th><td>$${declaredValueStr}</td></tr>
               <tr><th>Freight & Processing:</th><td>$${shippingCost}</td></tr>
               <tr><th style="font-size: 16px; color: #000; padding-top: 10px;">Total Invoice Amount:</th><td style="font-size: 16px; color: #000; padding-top: 10px;">$${totalInvoice}</td></tr>
@@ -280,7 +281,6 @@ export default function PackageActions({ pkg, locale, onDeliverStore }: PackageA
     setIsMenuOpen(false);
   };
 
-  // --- LÓGICA DE CONSOLIDACIÓN (ADMIN) ---
   const handleConsolidate = async () => {
       if (!finalWeight || !dims.length || !dims.width || !dims.height) {
           return alert("Por favor ingresa el Peso y las 3 Medidas (Largo, Ancho, Alto).");
@@ -316,7 +316,6 @@ export default function PackageActions({ pkg, locale, onDeliverStore }: PackageA
       }
   };
 
-  // --- LÓGICA DE DESPACHO (GMC) ---
   React.useEffect(() => { 
       if (showDispatchModal && isGaspMaker && !trackingNumber) { 
           const randomNum = Math.floor(100000 + Math.random() * 900000); 
@@ -347,7 +346,6 @@ export default function PackageActions({ pkg, locale, onDeliverStore }: PackageA
       } 
   };
 
-  // 🔥 AQUÍ ESTÁ LA CORRECCIÓN MÁGICA DE EASYPOST
   const handleBuyLabel = async () => { 
       if (!confirm(`¿Comprar Label?`)) return; 
       setIsSaving(true); 
@@ -360,11 +358,7 @@ export default function PackageActions({ pkg, locale, onDeliverStore }: PackageA
           
           if (res.ok) { 
               alert(`✅ Label comprado exitosamente: ${data.tracking}`); 
-              
-              if (data.label) {
-                  window.open(data.label, '_blank');
-              }
-              
+              if (data.label) window.open(data.label, '_blank');
               router.refresh(); 
           } 
           else { alert(`Error: ${data.error}`); } 
@@ -372,7 +366,6 @@ export default function PackageActions({ pkg, locale, onDeliverStore }: PackageA
       finally { setIsSaving(false); } 
   };
 
-  // --- COMPONENTE REUTILIZABLE: BOTONES DE IMPRESIÓN ---
   const PrintButtons = () => (
       <div className="flex gap-3 mt-4 animate-in fade-in zoom-in-95">
           <button 
