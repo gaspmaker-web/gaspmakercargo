@@ -204,7 +204,7 @@ export async function sendNotification({
 }
 
 // =============================================================================
-// 📧 PARTE 2: PLANTILLA HTML BASE (ADAPTABLE)
+// 📧 PARTE 2: PLANTILLA HTML BASE (ADAPTABLE Y BLINDADA)
 // =============================================================================
 
 const baseTemplate = (title: string, bodyContent: string, footerText: string, ctaLink?: string, ctaText?: string) => `
@@ -222,7 +222,6 @@ const baseTemplate = (title: string, bodyContent: string, footerText: string, ct
     .info-row { margin-bottom: 8px; font-size: 14px; }
     .label { font-weight: bold; color: #6b7280; text-transform: uppercase; font-size: 11px; }
     .value { color: #111827; font-weight: 600; font-size: 15px; }
-    .btn { display: inline-block; background-color: #D97706; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold; margin-top: 20px; text-align: center; }
     .footer { background-color: #f3f4f6; padding: 20px; text-align: center; font-size: 12px; color: #9ca3af; border-top: 1px solid #e5e7eb; }
   </style>
 </head>
@@ -234,7 +233,15 @@ const baseTemplate = (title: string, bodyContent: string, footerText: string, ct
     <div class="content">
       <h1 class="h1">${title}</h1>
       ${bodyContent}
-      ${ctaLink ? `<div style="text-align: center;"><a href="${ctaLink}" class="btn">${ctaText}</a></div>` : ''}
+      
+      ${ctaLink ? `
+      <div style="text-align: center; margin-top: 30px; margin-bottom: 10px;">
+        <a href="${ctaLink}" style="display: inline-block; background-color: #D97706; color: #ffffff; padding: 14px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; font-family: 'Helvetica', 'Arial', sans-serif; font-size: 16px;">
+          ${ctaText}
+        </a>
+      </div>
+      ` : ''}
+
     </div>
     <div class="footer">
       <p>Gasp Maker LLC • 1861 NW 22nd St, Miami, FL 33142</p>
@@ -254,6 +261,10 @@ export const sendPaymentReceiptEmail = async (
     lang: string = 'en'
 ) => {
   const t = getT(lang);
+  
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.gaspmakercargo.com';
+  const loginUrl = `${baseUrl}/login-cliente`;
+
   const html = baseTemplate(
     t.paymentTitle,
     `<p>Hola <strong>${name}</strong>,</p>
@@ -266,13 +277,24 @@ export const sendPaymentReceiptEmail = async (
      </div>
      <p>${t.thanks}</p>`,
     t.footer,
-    `${process.env.NEXT_PUBLIC_BASE_URL}/${lang}/dashboard-cliente`, t.btnText // 🔥 CORREGIDO
+    loginUrl,
+    t.btnText
   );
-  try { return await resend.emails.send({ from: EMAIL_FROM, to: email, subject: `🧾 ${t.paymentTitle}`, html }); } catch (e) { return { error: e }; }
+  
+  try { 
+      console.log("🚀 [Resend] Intentando enviar recibo de pago a:", email);
+      const result = await resend.emails.send({ from: EMAIL_FROM, to: email, subject: `🧾 ${t.paymentTitle}`, html }); 
+      console.log("✅ [Resend] Éxito:", result);
+      return result;
+  } catch (e) { 
+      console.error("❌ [Resend] Error fatal enviando correo:", e);
+      return { error: e }; 
+  }
 };
 
 export const sendPackageReceivedEmail = async (email: string, name: string, tracking: string, weight: number, lang: string = 'en') => {
   const t = getT(lang);
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.gaspmakercargo.com';
   const html = baseTemplate(
     t.pkgReceivedTitle,
     `<p>Hola <strong>${name}</strong>,</p>
@@ -284,13 +306,14 @@ export const sendPackageReceivedEmail = async (email: string, name: string, trac
      </div>
      <p>${t.pkgAction}</p>`,
     t.footer,
-    `${process.env.NEXT_PUBLIC_BASE_URL}/${lang}/dashboard-cliente`, t.btnText // 🔥 CORREGIDO
+    `${baseUrl}/${lang}/dashboard-cliente`, t.btnText 
   );
   try { return await resend.emails.send({ from: EMAIL_FROM, to: email, subject: `📦 ${t.pkgReceivedTitle}`, html }); } catch (e) { return { error: e }; }
 };
 
 export const sendShippedEmail = async (email: string, name: string, trackingGMC: string, carrier: string, lang: string = 'en') => {
   const t = getT(lang);
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.gaspmakercargo.com';
   const html = baseTemplate(
     t.shippedTitle,
     `<p>Hola <strong>${name}</strong>,</p>
@@ -301,13 +324,14 @@ export const sendShippedEmail = async (email: string, name: string, trackingGMC:
        <div class="info-row"><span class="label">${t.status}:</span><br><span class="value">${t.statusTransit}</span></div>
      </div>`,
     t.footer,
-    `${process.env.NEXT_PUBLIC_BASE_URL}/${lang}/dashboard-cliente`, t.btnText // 🔥 CORREGIDO
+    `${baseUrl}/${lang}/dashboard-cliente`, t.btnText 
   );
   try { return await resend.emails.send({ from: EMAIL_FROM, to: email, subject: `✈️ ${t.shippedTitle}`, html }); } catch (e) { return { error: e }; }
 };
 
 export const sendConsolidationRequestEmail = async (email: string, name: string, packageCount: number, trackingId: string, lang: string = 'en') => {
   const t = getT(lang);
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.gaspmakercargo.com';
   const html = baseTemplate(
     t.consolidationTitle,
     `<p>Hola <strong>${name}</strong>,</p>
@@ -319,7 +343,7 @@ export const sendConsolidationRequestEmail = async (email: string, name: string,
      </div>
      <p>${t.consolidationNote}</p>`,
     t.footer,
-    `${process.env.NEXT_PUBLIC_BASE_URL}/${lang}/dashboard-cliente`, t.btnText // 🔥 CORREGIDO
+    `${baseUrl}/${lang}/dashboard-cliente`, t.btnText 
   );
   try { return await resend.emails.send({ from: EMAIL_FROM, to: email, subject: `🔄 ${t.consolidationTitle}`, html }); } catch (e) { return { error: e }; }
 };
@@ -328,6 +352,7 @@ export const sendShipmentDispatchedEmail = async (
     email: string, name: string, gmcId: string, courier: string, tracking: string, lang: string = 'en'
 ) => {
   const t = getT(lang);
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.gaspmakercargo.com';
   const html = baseTemplate(
     t.dispatchedTitle,
     `<p>Hola <strong>${name}</strong>,</p>
@@ -339,13 +364,14 @@ export const sendShipmentDispatchedEmail = async (
      </div>
      <p>${t.trackNote}</p>`,
     t.footer,
-    `${process.env.NEXT_PUBLIC_BASE_URL}/${lang}/dashboard-cliente`, t.btnText // 🔥 CORREGIDO
+    `${baseUrl}/${lang}/dashboard-cliente`, t.btnText 
   );
   try { return await resend.emails.send({ from: EMAIL_FROM, to: email, subject: `✈️ ${t.dispatchedTitle}`, html }); } catch (e) { return { error: e }; }
 };
 
 export const sendPackageDeliveredEmail = async (email: string, tracking: string, lang: string = 'en') => {
   const t = getT(lang);
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.gaspmakercargo.com';
   const html = baseTemplate(
     t.deliveredTitle,
     `<p>${t.deliveredBody} <strong>${tracking}</strong>.</p>
@@ -353,7 +379,7 @@ export const sendPackageDeliveredEmail = async (email: string, tracking: string,
        <div class="info-row"><span class="label">${t.status}:</span><br><span class="value" style="color:green;">${t.statusDelivered}</span></div>
      </div>`,
     t.footer,
-    `${process.env.NEXT_PUBLIC_BASE_URL}/${lang}/dashboard-cliente`, t.btnText // 🔥 CORREGIDO
+    `${baseUrl}/${lang}/dashboard-cliente`, t.btnText 
   );
   try { return await resend.emails.send({ from: EMAIL_FROM, to: email, subject: `📬 ${t.deliveredTitle}`, html }); } catch (e) { return { error: e }; }
 };
@@ -373,6 +399,7 @@ export const sendPackageDispatchedEmail = async (email: string, text: string) =>
 
 export const sendAdminConsolidationAlert = async (clientName: string, count: number, trackingId: string) => {
   try {
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.gaspmakercargo.com';
     await resend.emails.send({
       from: EMAIL_FROM,
       to: ADMIN_EMAIL,
@@ -386,7 +413,7 @@ export const sendAdminConsolidationAlert = async (clientName: string, count: num
          </div>
          <p>Por favor, procede a re-empacar y pesar.</p>`,
         "Admin Notification",
-        `${process.env.NEXT_PUBLIC_BASE_URL}/es/dashboard-admin/consolidaciones`, "Ir al Panel Admin" // 🔥 CORREGIDO (ADMIN)
+        `${baseUrl}/es/dashboard-admin/consolidaciones`, "Ir al Panel Admin"
       )
     });
   } catch (error) { console.error("Error alerta admin consolidación:", error); }
@@ -394,6 +421,7 @@ export const sendAdminConsolidationAlert = async (clientName: string, count: num
 
 export const sendAdminPaymentAlert = async (clientName: string, amount: number, serviceType: string, orderId: string) => {
   try {
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.gaspmakercargo.com';
     await resend.emails.send({
       from: EMAIL_FROM,
       to: ADMIN_EMAIL,
@@ -408,7 +436,7 @@ export const sendAdminPaymentAlert = async (clientName: string, amount: number, 
          </div>
          <p>Acción requerida: Verificar y procesar el servicio (Driver, Salida o Entrega).</p>`,
         "Admin Notification",
-        `${process.env.NEXT_PUBLIC_BASE_URL}/es/dashboard-admin/paquetes`, "Gestionar Orden" // 🔥 CORREGIDO (ADMIN)
+        `${baseUrl}/es/dashboard-admin/paquetes`, "Gestionar Orden"
       )
     });
   } catch (error) { console.error("Error alerta admin pago:", error); }
@@ -418,10 +446,11 @@ export const sendPayAndGoReceiptEmail = async (
     email: string, name: string, tracking: string, destination: string, amount: number, method: string, lang: string = 'en'
 ) => {
   const t = getT(lang);
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.gaspmakercargo.com';
   const title = lang === 'es' ? "¡Recibo de Envío en Mostrador! 📦" : "Store Shipment Receipt! 📦";
   
   const body = lang === 'es' 
-    ? "Tu paquete ha sido procesado exitosamente en nuestra sucursal. Conserva este recibo y tu número de tracking." 
+    ? "Tu paquete ha sido procesado exitosamente en nossa sucursal. Conserva este recibo y tu número de tracking." 
     : "Your package has been successfully processed at our store. Keep this receipt and your tracking number.";
     
   const trackInstructions = lang === 'es'
@@ -441,7 +470,7 @@ export const sendPayAndGoReceiptEmail = async (
      <p style="font-size: 14px; color: #4b5563;"><em>${trackInstructions}</em></p>
      <p>${t.thanks}</p>`,
     t.footer,
-    `${process.env.NEXT_PUBLIC_BASE_URL}/${lang}`, // 👈 Va a la Home en su idioma
+    `${baseUrl}/${lang}`, 
     lang === 'es' ? "Visitar Web Principal" : "Visit Homepage"
   );
   try { return await resend.emails.send({ from: EMAIL_FROM, to: email, subject: `🧾 ${title}`, html }); } catch (e) { return { error: e }; }

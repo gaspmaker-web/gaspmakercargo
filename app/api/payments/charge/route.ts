@@ -81,6 +81,9 @@ export async function POST(req: Request) {
     const t = getT(userLang);
 
     // A. Email al Cliente
+    // 🔥 APAGADO: Silenciamos este correo técnico para que el cliente solo reciba 
+    // el correo profesional desde shipments/create/route.ts y no haya duplicados.
+    /*
     await sendPaymentReceiptEmail(
         user.email!,
         user.name || 'Cliente',
@@ -90,8 +93,9 @@ export async function POST(req: Request) {
         description || 'Pago procesado correctamente',
         userLang
     );
+    */
 
-    // B. Alerta al Admin
+    // B. Alerta al Admin (A ti sí te llega para control interno)
     await sendAdminPaymentAlert(
         user.name || 'Cliente Desconocido',
         totalToCharge,
@@ -99,7 +103,7 @@ export async function POST(req: Request) {
         paymentIntent.id
     );
 
-    // C. Notificación en Dashboard
+    // C. Notificación en Dashboard (Campanita del cliente)
     await sendNotification({
         userId: user.id,
         title: t.paymentTitle,
