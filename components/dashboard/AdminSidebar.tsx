@@ -16,7 +16,8 @@ import {
   Menu,
   X,
   Bell, 
-  Zap   
+  Zap,
+  AlertCircle // Añadido icono para pre-alertas
 } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 
@@ -29,41 +30,50 @@ export default function AdminSidebar() {
   // Estados de Notificaciones
   const [pendingConsolidations, setPendingConsolidations] = useState(false);
   const [paidPackagesCount, setPaidPackagesCount] = useState(0);
+  const [preAlertsCount, setPreAlertsCount] = useState(0); // 🔥 NUEVO ESTADO PARA PRE-ALERTAS
 
   const userRole = (session?.user as any)?.role || '';
 
-  // 🔥 SOLUCIÓN DEL 404: Filtro de seguridad para el idioma 🔥
+  // Filtro de seguridad para el idioma
   const segment = pathname.split('/')[1];
   const validLocales = ['es', 'en', 'fr', 'pt'];
-  // Si la primera parte de la URL es un idioma válido, lo usa. Si es otra cosa (ej. 'dashboard-admin'), fuerza 'es'.
   const currentLocale = validLocales.includes(segment) ? segment : 'es';
 
   // Efecto Maestro: Revisa si hay trabajo o pagos pendientes
   useEffect(() => {
     const checkPendingWork = async () => {
         try {
+            // 1. Consolidaciones
             const resConsolidations = await fetch('/api/admin/consolidations/pending-count', { cache: 'no-store' }); 
             if (resConsolidations.ok) {
                 const data = await resConsolidations.json();
                 setPendingConsolidations(data.count > 0);
             }
 
+            // 2. Paquetes Pagados (Salidas)
             const resPaid = await fetch('/api/admin/packages/paid-count', { cache: 'no-store' });
             if (resPaid.ok) {
                 const dataPaid = await resPaid.json();
                 setPaidPackagesCount(dataPaid.count || 0);
             }
+
+            // 🔥 3. NUEVO: Pre-Alertas Entrantes
+            const resPreAlerts = await fetch('/api/admin/packages/prealerts-count', { cache: 'no-store' });
+            if (resPreAlerts.ok) {
+                const dataPreAlerts = await resPreAlerts.json();
+                setPreAlertsCount(dataPreAlerts.count || 0);
+            }
+
         } catch (error) {
             console.error("Error verificando notificaciones", error);
         }
     };
 
     checkPendingWork();
-    const interval = setInterval(checkPendingWork, 60000);
+    const interval = setInterval(checkPendingWork, 60000); // Revisa cada 60 seg
     return () => clearInterval(interval);
   }, []);
 
-  // 🔥 Ahora los links usan el idioma verificado, garantizando rutas limpias 🔥
   const menuItems = [
     { name: "Dashboard", href: `/${currentLocale}/dashboard-admin`, icon: LayoutDashboard, roles: ["ADMIN"] },
     { name: "Paquetes", href: `/${currentLocale}/dashboard-admin/paquetes`, icon: Package, roles: ["ADMIN", "WAREHOUSE"] },
@@ -103,32 +113,54 @@ export default function AdminSidebar() {
         md:translate-x-0 md:shadow-none
       `}>
         
-        {/* Header con Campanita */}
-        <div className="p-6 border-b border-gray-100 flex flex-col items-center relative">
+        {/* Header con Campanitas */}
+        <div className="p-6 pt-14 border-b border-gray-100 flex flex-col items-center relative">
             
-            <Link 
-                href={`/${currentLocale}/dashboard-admin/paquetes?filter=pagados`} 
-                className="absolute top-6 left-4 text-gray-400 hover:text-gmc-dorado-principal transition-colors"
-                title="Ver paquetes pagados"
-            >
-                <Bell size={22} />
-                {paidPackagesCount > 0 && (
-                    <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white shadow-sm ring-2 ring-white">
-                        {paidPackagesCount > 99 ? '99+' : paidPackagesCount}
-                    </span>
-                )}
-            </Link>
+            {/* GRUPO DE ALERTAS (Centradas en la parte superior) */}
+            <div className="absolute top-4 left-0 w-full flex justify-center items-center gap-6">
+                
+                {/* CAMPANITA 1: PAGADOS (SALIDAS) - Roja */}
+                <Link 
+                    href={`/${currentLocale}/dashboard-admin/paquetes?filter=pagados`} 
+                    className="relative p-1.5 bg-red-50 rounded-full text-red-400 hover:text-red-600 hover:bg-red-100 transition-all shadow-sm border border-red-100"
+                    title="Ver paquetes pagados listos para envío"
+                >
+                    <Bell size={20} />
+                    {paidPackagesCount > 0 && (
+                        <span className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-md ring-2 ring-white">
+                            {paidPackagesCount > 99 ? '99+' : paidPackagesCount}
+                        </span>
+                    )}
+                </Link>
 
+                {/* CAMPANITA 2: PRE-ALERTAS (ENTRADAS) - Morada */}
+                <Link 
+                    href={`/${currentLocale}/dashboard-admin/paquetes?filter=prealertas`} 
+                    className="relative p-1.5 bg-purple-50 rounded-full text-purple-500 hover:text-purple-700 hover:bg-purple-100 transition-all shadow-sm border border-purple-100"
+                    title="Ver pre-alertas en camino a bodega"
+                >
+                    <AlertCircle size={20} />
+                    {preAlertsCount > 0 && (
+                        <span className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-purple-600 text-[10px] font-bold text-white shadow-md ring-2 ring-white animate-pulse">
+                            {preAlertsCount > 99 ? '99+' : preAlertsCount}
+                        </span>
+                    )}
+                </Link>
+
+            </div>
+
+            {/* Botón de cerrar en móvil */}
             <button 
                 onClick={() => setIsOpen(false)}
-                className="md:hidden absolute top-4 right-4 text-gray-400 hover:text-red-500"
+                className="md:hidden absolute top-4 right-4 text-gray-400 hover:text-red-500 bg-gray-50 p-1.5 rounded-full"
             >
                 <X size={20} />
             </button>
 
+            {/* Logo y Rol */}
             <h2 className="text-2xl font-bold text-gmc-gris-oscuro font-garamond mt-2">GaspMaker</h2>
-            <span className={`text-[10px] font-bold px-2 py-1 rounded mt-2 uppercase tracking-widest ${
-                userRole === 'ADMIN' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'
+            <span className={`text-[10px] font-bold px-3 py-1 rounded-full mt-2 uppercase tracking-widest shadow-sm ${
+                userRole === 'ADMIN' ? 'bg-purple-100 text-purple-700 border border-purple-200' : 'bg-blue-100 text-blue-700 border border-blue-200'
             }`}>
                 {userRole === 'WAREHOUSE' ? 'BODEGA' : 'ADMINISTRADOR'}
             </span>
@@ -141,7 +173,7 @@ export default function AdminSidebar() {
             
             // Lógica combinada de Alertas
             const showRedDotConsolidations = item.name === "Consolidaciones" && pendingConsolidations;
-            const showRedDotPackages = item.name === "Paquetes" && paidPackagesCount > 0;
+            const showRedDotPackages = item.name === "Paquetes" && (paidPackagesCount > 0 || preAlertsCount > 0); // La alerta de Paquetes brilla por pagados o por prealertas
             const showRedDot = showRedDotConsolidations || showRedDotPackages;
 
             return (
@@ -157,11 +189,11 @@ export default function AdminSidebar() {
                     <item.icon size={18} />
                     <span>{item.name}</span>
 
-                    {/* ALERTA VISUAL (PUNTO ROJO) */}
+                    {/* ALERTA VISUAL (PUNTO ROJO/MORADO) */}
                     {showRedDot && (
-                        <span className="ml-auto relative flex h-3 w-3">
-                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                          <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                        <span className={`ml-auto relative flex h-3 w-3`}>
+                          <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${preAlertsCount > 0 && paidPackagesCount === 0 ? 'bg-purple-400' : 'bg-red-400'}`}></span>
+                          <span className={`relative inline-flex rounded-full h-3 w-3 ${preAlertsCount > 0 && paidPackagesCount === 0 ? 'bg-purple-600' : 'bg-red-500'}`}></span>
                         </span>
                     )}
                 </Link>

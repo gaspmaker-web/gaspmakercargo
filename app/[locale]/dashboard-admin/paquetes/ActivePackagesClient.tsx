@@ -28,8 +28,9 @@ export default function ActivePackagesClient({ allItems, currentLocale }: Packag
   const [staffName, setStaffName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // LÓGICA DEL FILTRO DE LA CAMPANITA
+  // 🔥 LÓGICA DEL FILTRO (AHORA INCLUYE PRE-ALERTAS)
   const displayItems = allItems.filter((pkg: any) => {
+      // Filtro 1: Pagados pendientes de despacho
       if (filterParam === 'pagados') {
           const isConsolidatedBox = pkg.type === 'SHIPMENT';
           if (isConsolidatedBox) {
@@ -38,6 +39,12 @@ export default function ActivePackagesClient({ allItems, currentLocale }: Packag
               return pkg.stripePaymentId && !pkg.finalTrackingNumber && pkg.status !== 'ENVIADO' && pkg.status !== 'ENTREGADO' && pkg.status !== 'RECIBIDO_EN_TIENDA';
           }
       }
+      
+      // Filtro 2: Pre-alertas (paquetes entrantes)
+      if (filterParam === 'prealertas') {
+          return pkg.status === 'PRE_ALERTA' || pkg.status === 'PRE_ALERTADO';
+      }
+
       return true;
   });
 
@@ -103,6 +110,10 @@ export default function ActivePackagesClient({ allItems, currentLocale }: Packag
             </div>
         </div>
 
+        {/* =========================================
+            BANNERS DE FILTROS ACTIVOS 
+            ========================================= */}
+        {/* BANNER 1: PAGADOS */}
         {filterParam === 'pagados' && (
             <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl flex justify-between items-center shadow-sm animate-in fade-in slide-in-from-top-4">
                 <div className="flex items-center gap-3 font-bold text-sm">
@@ -115,6 +126,25 @@ export default function ActivePackagesClient({ allItems, currentLocale }: Packag
                 <button 
                     onClick={() => router.push(`/${currentLocale}/dashboard-admin/paquetes`)}
                     className="flex items-center gap-1 text-red-500 hover:text-red-800 bg-red-100 hover:bg-red-200 px-3 py-1.5 rounded-lg transition-colors text-xs font-bold"
+                >
+                    <X size={14} /> Quitar Filtro
+                </button>
+            </div>
+        )}
+
+        {/* 🔥 BANNER 2: PRE-ALERTAS 🔥 */}
+        {filterParam === 'prealertas' && (
+            <div className="mb-6 bg-purple-50 border border-purple-200 text-purple-700 px-4 py-3 rounded-xl flex justify-between items-center shadow-sm animate-in fade-in slide-in-from-top-4">
+                <div className="flex items-center gap-3 font-bold text-sm">
+                    <span className="relative flex h-3 w-3">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-3 w-3 bg-purple-600"></span>
+                    </span>
+                    Mostrando únicamente pre-alertas entrantes esperando recepción ({displayItems.length})
+                </div>
+                <button 
+                    onClick={() => router.push(`/${currentLocale}/dashboard-admin/paquetes`)}
+                    className="flex items-center gap-1 text-purple-600 hover:text-purple-800 bg-purple-100 hover:bg-purple-200 px-3 py-1.5 rounded-lg transition-colors text-xs font-bold"
                 >
                     <X size={14} /> Quitar Filtro
                 </button>
@@ -139,7 +169,11 @@ export default function ActivePackagesClient({ allItems, currentLocale }: Packag
                         {displayItems.length === 0 ? (
                              <tr>
                                 <td colSpan={7} className="p-10 text-center text-gray-400">
-                                    {filterParam === 'pagados' ? 'No hay paquetes pagados pendientes.' : 'No hay paquetes activos.'}
+                                    {filterParam === 'pagados' 
+                                        ? 'No hay paquetes pagados pendientes.' 
+                                        : filterParam === 'prealertas' 
+                                        ? 'No hay pre-alertas pendientes de recepción.' 
+                                        : 'No hay paquetes activos.'}
                                 </td>
                              </tr>
                         ) : (
@@ -150,7 +184,7 @@ export default function ActivePackagesClient({ allItems, currentLocale }: Packag
                                 const idToUse = pkg.consolidatedShipmentId ? pkg.consolidatedShipmentId : pkg.id;
                                 const shortId = idToUse ? idToUse.substring(0, 8).toUpperCase() : 'N/A';
                                 
-                                const isPreAlert = pkg.status === 'PRE_ALERTA';
+                                const isPreAlert = pkg.status === 'PRE_ALERTA' || pkg.status === 'PRE_ALERTADO';
                                 const isProcessing = pkg.status === 'EN_PROCESAMIENTO';
                                 const isStorePickup = !isConsolidatedBox && (pkg.status === 'PENDIENTE_RETIRO' || pkg.selectedCourier === 'CLIENTE_RETIRO');
 
@@ -169,7 +203,7 @@ export default function ActivePackagesClient({ allItems, currentLocale }: Packag
                                 }
 
                                 return (
-                                <tr key={pkg.id} className={`transition-colors ${isConsolidatedBox ? 'bg-purple-50/30' : isProcessing ? 'bg-orange-50' : isReadyToShip ? 'bg-green-50/60' : 'hover:bg-blue-50/30'}`}>
+                                <tr key={pkg.id} className={`transition-colors ${isConsolidatedBox ? 'bg-purple-50/30' : isProcessing ? 'bg-orange-50' : isReadyToShip ? 'bg-green-50/60' : isPreAlert ? 'bg-yellow-50/20' : 'hover:bg-blue-50/30'}`}>
                                     
                                     <td className="p-4">
                                         <Link 
@@ -242,6 +276,12 @@ export default function ActivePackagesClient({ allItems, currentLocale }: Packag
                                                      RETIRARÁ EN PERSONA
                                                  </span>
                                             </div>
+                                        ) : isPreAlert ? (
+                                            <div className="text-center opacity-70">
+                                                <div className="text-[10px] font-bold text-purple-600 bg-purple-50 px-2 py-0.5 rounded border border-purple-100 uppercase inline-flex items-center gap-1">
+                                                    <Truck size={12} /> EN TRÁNSITO
+                                                </div>
+                                            </div>
                                         ) : isProcessing ? (
                                             <div className="text-center">
                                                 <div className="text-sm font-bold text-orange-600 flex items-center justify-center gap-1 animate-pulse">
@@ -284,7 +324,7 @@ export default function ActivePackagesClient({ allItems, currentLocale }: Packag
                                                 <Box size={10}/> CONSOLIDADO
                                             </span>
                                         ) : isPreAlert ? (
-                                            <span className="text-[10px] font-bold px-2 py-1 rounded-full border bg-yellow-100 text-yellow-800 border-yellow-200 animate-pulse flex items-center justify-center gap-1">
+                                            <span className="text-[10px] font-bold px-2 py-1 rounded-full border bg-purple-100 text-purple-800 border-purple-200 animate-pulse flex items-center justify-center gap-1 shadow-sm">
                                                 <AlertCircle size={10}/> PRE ALERTA
                                             </span>
                                         ) : isProcessing ? (
