@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import type { User } from 'next-auth';
 import type { Package, ConsolidatedShipment } from '@prisma/client';
 import AddressCard from '@/components/AddressCard';
+import VirtualMailboxCard from '@/components/VirtualMailboxCard'; 
 import Link from 'next/link'; 
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
@@ -31,6 +32,7 @@ const KpiCard = ({ value, label, isAlert }: { value: string | number, label: str
     </div>
 );
 
+// 🔥 NUEVAS VARIABLES AÑADIDAS A LA INTERFAZ
 interface ClientDashboardProps {
   user: User & { address?: string; suiteNo?: string; cityZip?: string; country?: string; phone?: string; };
   packages: PackageWithFees[]; 
@@ -39,6 +41,8 @@ interface ClientDashboardProps {
   pendingBillsRaw?: (ConsolidatedShipment & { packages: Package[] })[];
   inTransitCount?: number;
   enDestinoCount?: number;
+  hasMailbox?: boolean;
+  needsKycUpload?: boolean;
 }
 
 // 🔥 CONSTANTE DE HORARIOS
@@ -67,7 +71,9 @@ export default function ClientDashboard({
     pendingBillsCount = 0, 
     pendingBillsRaw = [],
     inTransitCount = 0,
-    enDestinoCount = 0
+    enDestinoCount = 0,
+    hasMailbox = false,     
+    needsKycUpload = false  
 }: ClientDashboardProps) {
     
   // 1. Hook de Traducciones
@@ -100,7 +106,6 @@ export default function ClientDashboard({
 
   // --- LÓGICA DE SELECCIÓN ---
   const togglePackage = (id: string, isBlocked?: boolean) => {
-      // 🛑 BLOQUEO
       if (isBlocked) {
           alert(t('alertBlocked')); 
           return;
@@ -113,8 +118,12 @@ export default function ClientDashboard({
       }
   };
 
+  // 🔥 CALCULOS CENTRALIZADOS PARA LAS VALIDACIONES DE PESO
+  const selectedPackagesData = packages.filter(p => selectedPkgs.includes(p.id));
+  const totalSelectedWeight = selectedPackagesData.reduce((acc, p) => acc + (Number(p.weightLbs) || 0), 0);
+
   // =========================================================================
-  // 🚚 ACCIÓN 1: CONSOLIDAR (VALIDACIÓN Y APERTURA DE MODAL)
+  // 🚚 ACCIÓN 1: CONSOLIDAR (VALIDACIÓN DE PESO Y APERTURA DE MODAL)
   // =========================================================================
   const handleConsolidateClick = () => {
       if (selectedPkgs.length === 0) return;
@@ -124,15 +133,20 @@ export default function ClientDashboard({
           return;
       }
 
-      if (selectedPkgs.length > 7) {
-          alert(t('alertConsolidateLimit', { count: selectedPkgs.length })); 
+      // 🔥 REGLA DE NEGOCIO: LÍMITE INCREMENTADO A 15 PAQUETES
+      if (selectedPkgs.length > 15) {
+          alert(t('alertConsolidateLimit', { count: selectedPkgs.length }) || `El límite máximo es de 15 paquetes. Tienes ${selectedPkgs.length} seleccionados.`); 
+          return;
+      }
+
+      // 🔥 REGLA DE NEGOCIO: LÍMITE DE 150 LBS DE AEROLÍNEA (UPS/FEDEX)
+      if (totalSelectedWeight > 150) {
+          alert(`⚠️ Has alcanzado el límite de peso internacional por caja (150 lbs).\n\nTu selección actual pesa ${totalSelectedWeight.toFixed(2)} lbs.\nPor favor, deselecciona algunos paquetes para poder continuar.`);
           return;
       }
 
       // Validación de facturas
-      const packagesWithoutInvoice = packages.filter(p => 
-          selectedPkgs.includes(p.id) && !p.invoiceUrl
-      );
+      const packagesWithoutInvoice = selectedPackagesData.filter(p => !p.invoiceUrl);
 
       if (packagesWithoutInvoice.length > 0) {
           const names = packagesWithoutInvoice.map(p => p.carrierTrackingNumber || p.gmcTrackingNumber).join('\n- ');
@@ -157,7 +171,6 @@ export default function ClientDashboard({
           });
 
           if (res.ok) {
-              // Sin alerta, solo cerrar y refrescar
               setIsConsolidateModalOpen(false);
               setSelectedPkgs([]);
               router.refresh();
@@ -216,7 +229,6 @@ export default function ClientDashboard({
           });
 
           if (res.ok) {
-              // ❌ ALERTA ELIMINADA: Cierre limpio
               setIsPickupModalOpen(false);
               setSelectedPkgs([]);
               setPickupDate("");
@@ -234,7 +246,6 @@ export default function ClientDashboard({
       }
   };
 
-  const selectedPackagesData = packages.filter(p => selectedPkgs.includes(p.id));
   const totalStorageFee = selectedPackagesData.reduce((acc, p) => acc + (p.storageFee || 0), 0);
   const totalHandlingFee = selectedPackagesData.reduce((acc, p) => acc + (p.pickupHandlingFee || 0), 0);
   const grandTotalPickup = totalStorageFee + totalHandlingFee;
@@ -248,7 +259,7 @@ export default function ClientDashboard({
     <div className="bg-gray-100 min-h-screen p-3 sm:p-6 lg:p-8 font-montserrat pb-32 relative">
       <div className="max-w-7xl mx-auto">
         
-        {/* Header */}
+       {/* Header */}
        <div className="mb-6 md:mb-8 mt-2 hidden sm:flex justify-between items-end">
             <div>
                 <h1 className="text-2xl md:text-3xl font-bold text-gasp-maker-dark-gray font-garamond">
@@ -256,17 +267,27 @@ export default function ClientDashboard({
                 </h1>
             </div>
             {selectedPkgs.length > 0 && (
-                <div className="bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-bold animate-in fade-in">
-                    {selectedPkgs.length} {t('selectedCount')}
+                <div className="bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-bold animate-in fade-in flex items-center gap-2">
+                    {selectedPkgs.length} {t('selectedCount')} 
+                    <span className="bg-blue-800 px-1.5 py-0.5 rounded text-[10px]">{totalSelectedWeight.toFixed(1)} lbs</span>
                 </div>
             )}
         </div>
 
-        {/* 🔥 ADDRESS CARD CON MARGEN SUPERIOR PARA MÓVILES */}
-        <div className="mt-6 sm:mt-0 mb-8">
-            <AddressCard recipient={(user as any).name || 'Cliente'} suiteNo={(user as any).suiteNo || 'GMC-PENDING'} />
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6 mt-6 sm:mt-0 mb-8">
+            <div className="lg:col-span-8 xl:col-span-9 flex">
+                <div className="w-full h-full">
+                    <AddressCard recipient={(user as any).name || 'Cliente'} suiteNo={(user as any).suiteNo || 'GMC-PENDING'} />
+                </div>
+            </div>
+            
+            <div className="lg:col-span-4 xl:col-span-3 flex">
+                <div className="w-full h-full">
+                    <VirtualMailboxCard hasMailbox={hasMailbox} needsKycUpload={needsKycUpload} />
+                </div>
+            </div>
         </div>
-
+        
         {/* MENÚ DE ACCIONES */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-6 mb-8">
             <Link href="/dashboard-cliente/pre-alerta" className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all group flex flex-col justify-between h-full">
@@ -288,8 +309,6 @@ export default function ClientDashboard({
           
           <div className="lg:col-span-2 space-y-4">
              <div className="flex justify-between items-center px-1 cursor-pointer select-none" onClick={() => setIsExpanded(!isExpanded)}>
-                
-                {/* 🔥 MEJORA DE UX: Título + Solo Flecha */}
                 <div className="flex items-center gap-3">
                     <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
                         <Box className="text-gmc-dorado-principal" size={20}/> {t('packagesInWarehouse')}
@@ -302,7 +321,6 @@ export default function ClientDashboard({
                 </div>
 
                 <div className="flex items-center gap-3">
-                    {/* Indicador móvil: Solo Flecha */}
                     {displayPackages.length > 1 && (
                         <span className="md:hidden text-blue-500 font-bold flex items-center animate-pulse">
                             <ArrowRight size={18} />
@@ -312,7 +330,6 @@ export default function ClientDashboard({
                         {isExpanded ? <ChevronUp size={20}/> : <ChevronDown size={20}/>}
                     </div>
                 </div>
-
             </div>
 
             {isExpanded && (
@@ -343,7 +360,6 @@ export default function ClientDashboard({
                                         cursor-pointer group
                                     `}
                                 >
-                                    {/* CABECERA TARJETA */}
                                     <div className={`p-4 border-b border-gray-50 flex justify-between items-start ${isSelected ? 'bg-blue-50/50' : 'bg-gray-50/50'} ${isBlocked ? '!bg-red-50/50' : ''}`}>
                                         <div className="flex items-center gap-3">
                                             {isBlocked ? (
@@ -384,7 +400,6 @@ export default function ClientDashboard({
                                             </div>
                                         </div>
                                         
-                                        {/* INFO EXTRA DE COSTOS */}
                                         {(pkg.storageFee || 0) > 0 && (
                                             <div className="bg-red-50 px-3 py-2 rounded text-xs text-red-600 font-bold flex justify-between items-center border border-red-100">
                                                 <span className="flex items-center gap-1"><AlertTriangle size={12}/> {t('storageFee')} ({pkg.daysInWarehouse} {t('days')})</span>
@@ -392,7 +407,6 @@ export default function ClientDashboard({
                                             </div>
                                         )}
 
-                                        {/* BOTÓN DE ACCIÓN */}
                                         <button 
                                             onClick={(e) => handlePackageAction(e, pkg)}
                                             className={`
@@ -416,14 +430,12 @@ export default function ClientDashboard({
                                 </div>
                             );
                         })}
-                        {/* 🔥 Espacio final para que el scroll termine suave y no pegado al borde */}
                         <div className="min-w-[5vw] shrink-0"></div>
                     </div>
                 )
             )}
           </div>
           
-          {/* COLUMNA DERECHA */}
           <div className="space-y-4 md:space-y-5 flex flex-col h-full">
             {hasPendingAction ? (
                 <Link href="/dashboard-cliente/pagar-facturas" className="group relative w-full bg-gradient-to-br from-red-600 to-orange-500 rounded-2xl p-4 md:p-5 text-white shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 overflow-hidden block">
@@ -448,7 +460,6 @@ export default function ClientDashboard({
                 </div>
             )}
             
-            {/* KPI Cards */}
             <div className="grid grid-cols-2 gap-3 shrink-0">
               <Link href="/dashboard-cliente/en-transito" className="block group">
                  <div className="bg-white p-4 rounded-xl shadow-md border border-gray-100 flex flex-col justify-center items-center hover:border-blue-300 hover:shadow-lg transition-all h-full">
@@ -464,7 +475,6 @@ export default function ClientDashboard({
               </Link>
             </div>
             
-            {/* Referral Banner */}
             <Link href="/dashboard-cliente/referidos" className="block bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-4 rounded-xl shadow-md group relative overflow-hidden hover:shadow-xl transition-all mt-auto">
               <div className="relative z-10 flex justify-between items-center gap-4">
                 <div className="flex-1 min-w-0"><p className="font-bold text-sm flex items-center gap-2 mb-0.5 leading-tight"><Gift size={18} className="text-yellow-300 animate-bounce shrink-0" /> <span className="truncate">{t('referralTitle')}</span></p><p className="text-indigo-100 text-xs leading-tight truncate">{t('referralDesc')}</p></div>
@@ -474,30 +484,36 @@ export default function ClientDashboard({
           </div>
         </div>
 
-        {/* ===================================================================
+       {/* ===================================================================
            BOTÓN FLOTANTE (BARRA DE ACCIÓN)
            =================================================================== */}
         {selectedPkgs.length > 0 && (
-            <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-gasp-maker-dark-gray text-white px-4 py-2 rounded-full shadow-2xl flex items-center gap-2 sm:gap-4 z-50 animate-in slide-in-from-bottom-6 border border-gray-700 w-[95%] sm:w-auto max-w-md justify-between sm:justify-center">
+            <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-gasp-maker-dark-gray text-white p-2 sm:px-5 sm:py-2.5 rounded-full shadow-2xl flex items-center gap-3 sm:gap-5 z-50 animate-in slide-in-from-bottom-6 border border-gray-700 w-[95%] sm:w-auto max-w-fit justify-between">
                 
-                <span className="text-xs sm:text-sm font-bold whitespace-nowrap pl-2">{selectedPkgs.length} {t('selectedCount')}</span>
-                <div className="h-4 w-px bg-gray-600 hidden sm:block"></div>
+                <div className="flex flex-col sm:flex-row sm:items-center pl-2 sm:pl-1">
+                    <span className="text-xs sm:text-sm font-bold whitespace-nowrap">
+                        {selectedPkgs.length} {t('selectedCount')}
+                    </span>
+                    <span className="text-[10px] sm:text-xs text-gmc-dorado-principal font-bold sm:ml-2 whitespace-nowrap">
+                        ({totalSelectedWeight.toFixed(1)} lbs)
+                    </span>
+                </div>
                 
-                <div className="flex items-center gap-2">
-                    {/* BOTÓN RECOGER */}
+                <div className="h-5 w-px bg-gray-600 hidden sm:block"></div>
+                
+                <div className="flex items-center gap-2 pr-1">
                     <button 
                         onClick={handleOpenPickupModal}
                         disabled={isConsolidating}
-                        className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 rounded-full text-xs font-bold transition-colors flex items-center gap-2"
+                        className="bg-gray-700 hover:bg-gray-600 text-white px-3 sm:px-4 py-2 rounded-full text-[10px] sm:text-xs font-bold transition-colors flex items-center gap-1.5 whitespace-nowrap"
                     >
                        <MapPin size={14}/> {t('btnPickup')}
                     </button>
 
-                    {/* 🔥 BOTÓN CONSOLIDAR (DISPARADOR DEL MODAL) */}
                     <button 
                         onClick={handleConsolidateClick}
                         disabled={isConsolidating}
-                        className="bg-gmc-dorado-principal hover:bg-yellow-500 text-black px-3 py-1.5 rounded-full text-xs font-bold transition-colors flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                        className="bg-gmc-dorado-principal hover:bg-yellow-500 text-black px-3 sm:px-4 py-2 rounded-full text-[10px] sm:text-xs font-bold transition-colors flex items-center gap-1.5 disabled:opacity-70 disabled:cursor-not-allowed whitespace-nowrap"
                     >
                         {isConsolidating ? <Loader2 className="animate-spin" size={14} /> : <Box size={14} />}
                         {isConsolidating ? '...' : t('btnConsolidate')}
@@ -507,13 +523,12 @@ export default function ClientDashboard({
         )}
 
         {/* ===================================================================
-           MODAL DE CONSOLIDACIÓN (NUEVO)
+           MODAL DE CONSOLIDACIÓN
            =================================================================== */}
         {isConsolidateModalOpen && (
             <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in">
                 <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
                     
-                    {/* Encabezado */}
                     <div className="bg-gray-50 p-4 border-b border-gray-100 flex justify-between items-center">
                         <h3 className="font-bold text-gray-800 flex items-center gap-2">
                             <Box className="text-gmc-dorado-principal" size={20}/>
@@ -532,14 +547,16 @@ export default function ClientDashboard({
                             <h3 className="text-lg font-bold text-gray-800 mb-2">
                                 {t('confirmConsolidate', { count: selectedPkgs.length })}
                             </h3>
-                            <p className="text-sm text-gray-500 leading-relaxed">
-                                {t.rich('custom_text', {
-                                    strong: (chunks) => <strong>{chunks}</strong>
-                                }) || "Al consolidar, agruparemos tus paquetes en un solo envío para que ahorres en costos de transporte."}
+                            <p className="text-sm font-bold text-blue-600 mb-2">
+                                {t('estimatedWeight', { weight: totalSelectedWeight.toFixed(2) })}
+                            </p>
+                           <p className="text-sm text-gray-500 leading-relaxed">
+                              {t.rich('custom_text', {
+                               strong: (chunks) => <strong className="text-gray-800">{chunks}</strong>
+                               })}
                             </p>
                         </div>
 
-                        {/* Pequeña lista de items seleccionados (Visual) */}
                         <div className="bg-gray-50 rounded-xl p-3 border border-gray-100 max-h-40 overflow-y-auto mb-2">
                             <p className="text-xs font-bold text-gray-400 uppercase mb-2 pl-1">Paquetes seleccionados:</p>
                             <ul className="space-y-2">
@@ -554,7 +571,6 @@ export default function ClientDashboard({
                         </div>
                     </div>
 
-                    {/* Footer */}
                     <div className="p-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3">
                         <button 
                             onClick={() => setIsConsolidateModalOpen(false)}
@@ -576,13 +592,12 @@ export default function ClientDashboard({
         )}
 
         {/* ===================================================================
-           MODAL DE PICKUP (AGENDADOR)
+           MODAL DE PICKUP
            =================================================================== */}
         {isPickupModalOpen && (
             <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in">
                 <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
                     
-                    {/* Encabezado */}
                     <div className="bg-gray-50 p-4 border-b border-gray-100 flex justify-between items-center">
                         <h3 className="font-bold text-gray-800 flex items-center gap-2">
                             <Truck className="text-gmc-dorado-principal" size={20}/>
@@ -598,7 +613,6 @@ export default function ClientDashboard({
                             {t('modalPickupDesc')}
                         </p>
 
-                        {/* Resumen de Costos */}
                         <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 mb-6 space-y-2">
                             <div className="flex justify-between text-sm text-gray-600">
                                 <span>{t('feeStorage')}</span>
@@ -614,11 +628,9 @@ export default function ClientDashboard({
                             </div>
                         </div>
 
-                        {/* Formulario */}
                         <div className="space-y-4">
                             <div>
                                 <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('labelDate')}</label>
-                                {/* 🔥 INPUT DE FECHA MEJORADO */}
                                 <div className="relative">
                                     <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={20}/>
                                     <input 
@@ -631,7 +643,6 @@ export default function ClientDashboard({
                                 </div>
                             </div>
                             
-                            {/* 🔥 SELECTOR DE HORA MODERNO */}
                             <div>
                                 <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('labelTime')}</label>
                                 <div className="relative">
@@ -659,7 +670,6 @@ export default function ClientDashboard({
                         </div>
                     </div>
 
-                    {/* Footer */}
                     <div className="p-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3">
                         <button 
                             onClick={() => setIsPickupModalOpen(false)}
