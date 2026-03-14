@@ -283,7 +283,7 @@ export default function ClientDashboard({
             
             <div className="lg:col-span-4 xl:col-span-3 flex">
                 <div className="w-full h-full">
-                    <VirtualMailboxCard hasMailbox={hasMailbox} needsKycUpload={needsKycUpload} />
+                    {/* <VirtualMailboxCard hasMailbox={hasMailbox} needsKycUpload={needsKycUpload} /> */}
                 </div>
             </div>
         </div>
