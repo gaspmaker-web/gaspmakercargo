@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import type { User } from 'next-auth';
 import type { Package, ConsolidatedShipment } from '@prisma/client';
 import AddressCard from '@/components/AddressCard';
-import VirtualMailboxCard from '@/components/VirtualMailboxCard'; 
+// import VirtualMailboxCard from '@/components/VirtualMailboxCard'; 
 import Link from 'next/link'; 
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
