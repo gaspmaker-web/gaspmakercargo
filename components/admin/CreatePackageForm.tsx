@@ -35,7 +35,7 @@ export default function CreatePackageForm() {
   const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm();
 
   // ========================================================================
-  // 🔥 NUEVO: ESTADO PARA LA TABLA DE ADUANAS (DHL/FEDEX)
+  // 🔥 ESTADO PARA LA TABLA DE ADUANAS (DHL/FEDEX)
   // ========================================================================
   const [customsItems, setCustomsItems] = useState([
       { qty: 1, description: '', value: '' }
@@ -267,7 +267,7 @@ export default function CreatePackageForm() {
         }}
       />
 
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 max-w-4xl mx-auto overflow-hidden">
+      <div className="bg-white md:rounded-2xl shadow-sm md:border border-gray-100 max-w-4xl mx-auto overflow-x-hidden w-full">
         
         {/* --- SECCIÓN ÉXITO / IMPRESIÓN --- */}
         {createdPackage && (
@@ -308,36 +308,36 @@ export default function CreatePackageForm() {
                 <label className="text-xs font-bold text-blue-800 uppercase tracking-wider flex items-center gap-2">
                     <Search size={14} /> 1. Asignar Cliente
                 </label>
-                <div className="flex gap-2 h-14">
+                <div className="flex gap-2 h-14 w-full">
                     <input 
                         id="userSearch"
                         type="text" 
-                        placeholder="Suite (GMC-123) o Nombre" 
-                        className="flex-1 px-4 rounded-xl border-2 border-blue-200 focus:border-blue-500 outline-none text-lg font-medium shadow-sm"
+                        placeholder="Suite o Nombre" 
+                        className="flex-1 w-full px-4 rounded-xl border-2 border-blue-200 focus:border-blue-500 outline-none text-base md:text-lg font-medium shadow-sm"
                         onKeyDown={(e) => e.key === 'Enter' && handleSearchUser(e)}
                     />
                     <button 
                         type="button"
                         onClick={(e) => handleSearchUser(e)}
                         disabled={searchingUser}
-                        className="bg-blue-600 text-white px-6 rounded-xl font-bold hover:bg-blue-700 transition-colors shadow-md"
+                        className="bg-blue-600 text-white px-5 md:px-6 rounded-xl font-bold hover:bg-blue-700 transition-colors shadow-md flex-shrink-0"
                     >
                         {searchingUser ? '...' : <Search size={24}/>}
                     </button>
                 </div>
              </div>
           ) : (
-             <div className="relative bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-center gap-4 shadow-sm">
-                <div className="bg-blue-100 p-3 rounded-full text-blue-700">
+             <div className="relative bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-center gap-4 shadow-sm w-full">
+                <div className="bg-blue-100 p-3 rounded-full text-blue-700 flex-shrink-0">
                     <User size={24} />
                 </div>
                 <div className="flex-1 min-w-0">
-                    <p className="font-bold text-gray-900 text-lg truncate">{foundUser.name}</p>
+                    <p className="font-bold text-gray-900 text-base md:text-lg truncate">{foundUser.name}</p>
                     <p className="text-sm text-blue-700 font-mono font-bold">{foundUser.suiteNo}</p>
                 </div>
                 <button 
                     onClick={() => { setFoundUser(null); setCreatedPackage(null); }} 
-                    className="p-2 bg-white rounded-full text-gray-400 hover:text-red-500 shadow-sm border border-gray-100"
+                    className="p-2 bg-white rounded-full text-gray-400 hover:text-red-500 shadow-sm border border-gray-100 flex-shrink-0"
                 >
                     <X size={20} />
                 </button>
@@ -348,25 +348,25 @@ export default function CreatePackageForm() {
         <div className="h-px bg-gray-100 w-full"></div>
 
         {/* --- 2. FORMULARIO PRINCIPAL --- */}
-        <form onSubmit={handleSubmit(onSubmit)} className="p-4 md:p-6 space-y-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="p-4 md:p-6 space-y-6 w-full overflow-hidden">
             
             {/* TRACKING + SCANNER */}
-            <div className="space-y-2">
+            <div className="space-y-2 w-full">
                 <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
                     2. Tracking Number
                 </label>
-                <div className="flex gap-3 h-14">
-                    <div className="relative flex-1">
+                <div className="flex gap-2 h-14 w-full">
+                    <div className="relative flex-1 min-w-0">
                         <input 
                             {...register("trackingNumber", { required: true })}
                             placeholder="1Z99..." 
-                            className="w-full h-full pl-4 pr-4 bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-gmc-dorado-principal focus:ring-0 text-lg font-mono uppercase font-bold"
+                            className="w-full h-full pl-3 pr-2 md:pl-4 bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-gmc-dorado-principal focus:ring-0 text-base md:text-lg font-mono uppercase font-bold"
                         />
                     </div>
                     <button 
                         type="button"
                         onClick={() => setIsScannerOpen(true)}
-                        className="bg-slate-800 text-white px-5 rounded-xl hover:bg-black transition-colors flex items-center justify-center gap-2 font-bold shadow-lg active:scale-95"
+                        className="bg-slate-800 text-white px-4 md:px-5 rounded-xl hover:bg-black transition-colors flex items-center justify-center gap-2 font-bold shadow-lg active:scale-95 flex-shrink-0"
                     >
                         <ScanBarcode size={24} className="text-gmc-dorado-principal" />
                         <span className="hidden sm:inline">ESCANEAR</span>
@@ -376,99 +376,99 @@ export default function CreatePackageForm() {
             </div>
 
             {/* PESO Y VALOR TOTAL */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 w-full">
+                <div className="w-full">
                     <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 block">
                         3. Peso (Lbs)
                     </label>
-                    <div className="relative">
+                    <div className="relative w-full">
                         <Scale className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                         <input 
                             type="number" 
                             step="0.01"
                             {...register("weight", { required: true })}
                             placeholder="0.00"
-                            className="w-full h-12 pl-10 pr-4 bg-gray-50 border border-gray-200 rounded-xl focus:border-blue-500 text-xl font-bold font-mono text-gray-800"
+                            className="w-full h-12 pl-10 pr-4 bg-gray-50 border border-gray-200 rounded-xl focus:border-blue-500 text-base md:text-xl font-bold font-mono text-gray-800"
                         />
                     </div>
                 </div>
 
-                <div>
+                <div className="w-full">
                     <label className="text-xs font-bold text-blue-600 uppercase tracking-wider mb-1 block">
                         Valor Declarado Total ($)
                     </label>
-                    <div className="relative">
+                    <div className="relative w-full">
                         <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-500" size={18} />
                         <input 
                             type="number" 
                             step="0.01"
                             {...register("declaredValue")}
                             placeholder="0.00"
-                            className="w-full h-12 pl-10 pr-4 bg-blue-50 border border-blue-200 rounded-xl focus:border-blue-500 text-lg font-bold text-blue-900"
+                            className="w-full h-12 pl-10 pr-4 bg-blue-50 border border-blue-200 rounded-xl focus:border-blue-500 text-base md:text-lg font-bold text-blue-900"
                         />
                     </div>
                 </div>
             </div>
 
             {/* 🔥 DIMENSIONES 🔥 */}
-            <details className="group bg-gray-50 rounded-xl border border-gray-200 overflow-hidden">
+            <details className="group bg-gray-50 rounded-xl border border-gray-200 overflow-hidden w-full">
                 <summary className="cursor-pointer p-3 font-bold text-xs text-gray-500 uppercase hover:bg-gray-100 flex items-center gap-2 select-none">
                     <Ruler size={14} /> Opciones Avanzadas (Dimensiones)
                 </summary>
-                <div className="p-3 grid grid-cols-3 gap-3 animate-fadeIn">
-                    <input type="number" placeholder="Largo" {...register("length")} className="w-full p-2 border border-gray-300 rounded-lg text-center"/>
-                    <input type="number" placeholder="Ancho" {...register("width")} className="w-full p-2 border border-gray-300 rounded-lg text-center"/>
-                    <input type="number" placeholder="Alto" {...register("height")} className="w-full p-2 border border-gray-300 rounded-lg text-center"/>
+                <div className="p-3 grid grid-cols-3 gap-2 animate-fadeIn w-full">
+                    <input type="number" placeholder="L" {...register("length")} className="w-full p-2 border border-gray-300 rounded-lg text-center text-base h-11"/>
+                    <input type="number" placeholder="W" {...register("width")} className="w-full p-2 border border-gray-300 rounded-lg text-center text-base h-11"/>
+                    <input type="number" placeholder="H" {...register("height")} className="w-full p-2 border border-gray-300 rounded-lg text-center text-base h-11"/>
                 </div>
             </details>
 
-            {/* 🔥 NUEVO: TABLA DE DECLARACIÓN DE ADUANAS 🔥 */}
-            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+            {/* 🔥 TABLA DE ADUANAS BLINDADA CONTRA ZOOM IOS 🔥 */}
+            <div className="bg-slate-50 p-3 md:p-4 rounded-xl border border-slate-200 w-full overflow-hidden">
                 <div className="flex justify-between items-center mb-3">
                     <label className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
-                        <Globe size={16} className="text-blue-500" /> Declaración Comercial (Aduanas)
+                        <Globe size={16} className="text-blue-500" /> Declaración (Aduanas)
                     </label>
                 </div>
                 
-                {/* Cabeceras de la tabla */}
-                <div className="flex gap-2 text-[10px] font-bold text-slate-500 uppercase mb-2 px-1">
-                    <div className="w-16 text-center">Cant.</div>
-                    <div className="flex-1">Descripción Detallada (Inglés)</div>
-                    <div className="w-24 text-center">V. Unitario</div>
-                    <div className="w-8"></div>
+                {/* Cabeceras adaptadas */}
+                <div className="flex gap-2 text-[10px] font-bold text-slate-500 uppercase mb-2 px-1 w-full">
+                    <div className="w-12 text-center shrink-0">Cant</div>
+                    <div className="flex-1 min-w-0">Descripción</div>
+                    <div className="w-20 text-center shrink-0">Valor</div>
+                    <div className="w-8 shrink-0"></div>
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-2 w-full">
                     {customsItems.map((item, index) => (
-                        <div key={index} className="flex gap-2 items-start animate-fadeIn">
+                        <div key={index} className="flex gap-2 items-start animate-fadeIn w-full">
                             <input 
                                 type="number" min="1" 
                                 value={item.qty} 
                                 onChange={e => updateCustomsItem(index, 'qty', e.target.value)} 
-                                className="w-16 h-10 border border-slate-300 rounded-lg text-center font-bold text-sm focus:border-blue-500" 
+                                className="w-12 shrink-0 h-11 border border-slate-300 rounded-lg text-center font-bold text-base focus:border-blue-500 p-0" 
                                 placeholder="1" 
                             />
                             <input 
                                 type="text" 
                                 value={item.description} 
                                 onChange={e => updateCustomsItem(index, 'description', e.target.value)} 
-                                className="flex-1 h-10 px-3 border border-slate-300 rounded-lg text-sm focus:border-blue-500" 
-                                placeholder="Ej: Men's Cotton T-Shirts" 
+                                className="flex-1 min-w-0 h-11 px-2 border border-slate-300 rounded-lg text-base focus:border-blue-500" 
+                                placeholder="Ej: T-Shirts" 
                             />
-                            <div className="relative w-24">
-                                <DollarSign className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
+                            <div className="relative w-20 shrink-0">
+                                <DollarSign className="absolute left-1 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
                                 <input 
                                     type="number" step="0.01" 
                                     value={item.value} 
                                     onChange={e => updateCustomsItem(index, 'value', e.target.value)} 
-                                    className="w-full h-10 pl-6 pr-2 border border-slate-300 rounded-lg font-mono text-sm focus:border-blue-500" 
-                                    placeholder="0.00" 
+                                    className="w-full h-11 pl-5 pr-1 border border-slate-300 rounded-lg font-mono text-base focus:border-blue-500" 
+                                    placeholder="0" 
                                 />
                             </div>
                             <button 
                                 type="button" 
                                 onClick={() => removeCustomsItem(index)} 
-                                className="h-10 w-8 flex items-center justify-center text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                className="h-11 w-8 shrink-0 flex items-center justify-center text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                             >
                                 <Trash2 size={18} />
                             </button>
@@ -479,21 +479,21 @@ export default function CreatePackageForm() {
                 <button 
                     type="button" 
                     onClick={addCustomsItem} 
-                    className="mt-3 text-sm font-bold text-blue-600 flex items-center gap-1 hover:text-blue-800 transition-colors"
+                    className="mt-3 text-sm font-bold text-blue-600 flex items-center gap-1 hover:text-blue-800 transition-colors py-2"
                 >
                     <Plus size={16} /> Agregar Artículo
                 </button>
             </div>
 
-            {/* 🔥 GRID PARA FOTOS (EVIDENCIA E INVOICE) 🔥 */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {/* 🔥 GRID PARA FOTOS 🔥 */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 w-full">
                 {/* 1. FOTO EVIDENCIA */}
-                <div>
+                <div className="w-full">
                     <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">
                         4. Foto del Paquete
                     </label>
                     
-                    <div className="relative">
+                    <div className="relative w-full">
                         <label className={`
                             relative w-full h-32 rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-2 transition-all cursor-pointer active:scale-[0.99] overflow-hidden
                             ${photoUrl ? 'border-green-500 bg-green-50' : 'border-gray-300 bg-gray-50 hover:bg-gray-100'}
@@ -541,13 +541,13 @@ export default function CreatePackageForm() {
                     </div>
                 </div>
 
-                {/* 2. FOTO INVOICE (OPCIONAL) */}
-                <div>
+                {/* 2. FOTO INVOICE */}
+                <div className="w-full">
                     <label className="text-xs font-bold text-blue-600 uppercase tracking-wider mb-2 block flex items-center gap-1">
                         <FileText size={14}/> 5. Factura / Invoice <span className="text-gray-400 normal-case font-medium">(Opcional)</span>
                     </label>
                     
-                    <div className="relative">
+                    <div className="relative w-full">
                         <label className={`
                             relative w-full h-32 rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-2 transition-all cursor-pointer active:scale-[0.99] overflow-hidden
                             ${invoiceUrl ? 'border-blue-500 bg-blue-50' : 'border-blue-200 bg-blue-50/50 hover:bg-blue-50'}
@@ -602,7 +602,7 @@ export default function CreatePackageForm() {
             </div>
 
             {/* BOTÓN SUBMIT */}
-            <div className="pt-4 pb-2">
+            <div className="pt-4 pb-8 md:pb-2 w-full">
                 <button 
                     type="submit" 
                     disabled={loading || !foundUser}
