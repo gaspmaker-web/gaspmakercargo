@@ -201,7 +201,10 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                                      bill.description?.toLowerCase().includes('consolid') ||
                                      (bill.packages && bill.packages.length > 1);
               
-              const dynamicHandling = isConsolidated ? 10.00 : 0.00;
+              // 🔥 NUEVA LÓGICA DE PRECIOS: $0.60 por cada paquete dentro de la consolidación
+              const pkgCount = (bill.packages && bill.packages.length > 0) ? bill.packages.length : 1;
+              const dynamicHandling = isConsolidated ? (pkgCount * 0.60) : 0.00;
+              
               handlingSubtotal += dynamicHandling;
 
               const val = Number(bill.declaredValue) || 0;
@@ -313,7 +316,10 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
              const isConsolidated = bill?.serviceType === 'CONSOLIDATION' || 
                                     bill?.description?.toLowerCase().includes('consolid') ||
                                     (bill?.packages && bill?.packages.length > 1);
-             const dynamicHandling = isConsolidated ? 10.00 : 0.00;
+             
+             // 🔥 NUEVA LÓGICA DE PRECIOS PARA EL BACKEND
+             const pkgCount = (bill?.packages && bill?.packages.length > 0) ? bill.packages.length : 1;
+             const dynamicHandling = isConsolidated ? (pkgCount * 0.60) : 0.00;
 
              const val = Number(bill?.declaredValue) || 0;
              const ins = val > 100 ? val * 0.03 : 0;
@@ -323,7 +329,7 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                  itemServicePrice = rate.price;
              } else {
                  const totalFromServer = bill?.totalAmount || 0;
-                 itemServicePrice = Math.max(0, totalFromServer - (bill.handlingFee || 0) - ins);
+                 itemServicePrice = Math.max(0, totalFromServer - (bill?.handlingFee || 0) - ins);
              }
 
              return {
@@ -429,7 +435,10 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                                     const isConsolidated = bill.serviceType === 'CONSOLIDATION' || 
                                                            bill.description?.toLowerCase().includes('consolid') ||
                                                            (bill.packages && bill.packages.length > 1);
-                                    const effectiveHandling = isConsolidated ? 10.00 : 0.00;
+                                    
+                                    // 🔥 NUEVA LÓGICA DE PRECIOS PARA LA VISTA
+                                    const pkgCount = (bill.packages && bill.packages.length > 0) ? bill.packages.length : 1;
+                                    const effectiveHandling = isConsolidated ? (pkgCount * 0.60) : 0.00;
 
                                     const val = Number(bill.declaredValue) || 0;
                                     const ins = val > 100 ? val * 0.03 : 0;
@@ -465,7 +474,8 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                                                                     📦 {bill.packages.length} {t('packages')}
                                                                 </span>
                                                             )}
-                                                            {effectiveHandling > 0 && <span className="text-[10px] bg-yellow-50 text-yellow-700 px-2 py-1 rounded font-bold border border-yellow-100">Fee $10</span>}
+                                                            {/* 🔥 BADGE DINÁMICO */}
+                                                            {effectiveHandling > 0 && <span className="text-[10px] bg-yellow-50 text-yellow-700 px-2 py-1 rounded font-bold border border-yellow-100">Fee ${effectiveHandling.toFixed(2)}</span>}
                                                         </div>
                                                     </div>
                                                 </div>
@@ -553,7 +563,6 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                                                             )
                                                         )}
                                                         
-                                                        {/* 🔥 AQUÍ ESTÁ LA CORRECCIÓN DE LOS $0.00 HARDCODED */}
                                                         {isPickup && !selectedRate && (
                                                             <div className="flex justify-between items-center p-3 bg-green-50 border border-green-200 rounded-xl">
                                                                 <span className="flex items-center gap-2 text-green-700 font-bold text-sm"><Box size={14}/> {t('pickupInStore') || "Pickup en Tienda"}</span>
@@ -685,112 +694,112 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                         )}
                     </div>
                 </div>
-            </div>
-        )}
 
-        {/* --- BARRA MÓVIL PREMIUM --- */}
-        {bills.length > 0 && totals.count > 0 && (
-            <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50">
-                <div className="absolute bottom-full left-0 right-0 h-8 bg-gradient-to-t from-gray-200/40 to-transparent pointer-events-none" />
-                
-                <div className="bg-[#222b3c] rounded-t-3xl shadow-[0_-5px_25px_rgba(0,0,0,0.2)] p-5 animate-slideUp text-white">
-                    <div className="flex justify-between items-center gap-4">
-                        <div onClick={() => setShowMobileSummary(!showMobileSummary)} className="flex flex-col cursor-pointer">
-                            <span className="text-[10px] text-[#EAD8B1] font-bold uppercase tracking-widest flex items-center gap-2 mb-1">
-                                {tPickup('sumTotal')} ({totals.count}) {showMobileSummary ? <ChevronDown size={14}/> : <ChevronUp size={14}/>}
-                            </span>
-                            <div className="text-3xl font-garamond font-bold leading-none text-white">${totals.total.toFixed(2)}</div>
-                        </div>
+                {/* --- BARRA MÓVIL PREMIUM --- */}
+                {bills.length > 0 && totals.count > 0 && (
+                    <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50">
+                        <div className="absolute bottom-full left-0 right-0 h-8 bg-gradient-to-t from-gray-200/40 to-transparent pointer-events-none" />
                         
-                        <button 
-                            onClick={handlePay} 
-                            disabled={isProcessing} 
-                            className="bg-[#EAD8B1] text-[#222b3c] py-3.5 px-8 rounded-xl text-base font-bold shadow-lg active:scale-95 transition-transform flex items-center gap-2 disabled:opacity-50"
-                        >
-                            {isProcessing ? <Loader2 className="animate-spin" size={18}/> : <DollarSign size={18}/>} {tPickup('btnPay')}
-                        </button>
-                    </div>
+                        <div className="bg-[#222b3c] rounded-t-3xl shadow-[0_-5px_25px_rgba(0,0,0,0.2)] p-5 animate-slideUp text-white">
+                            <div className="flex justify-between items-center gap-4">
+                                <div onClick={() => setShowMobileSummary(!showMobileSummary)} className="flex flex-col cursor-pointer">
+                                    <span className="text-[10px] text-[#EAD8B1] font-bold uppercase tracking-widest flex items-center gap-2 mb-1">
+                                        {tPickup('sumTotal')} ({totals.count}) {showMobileSummary ? <ChevronDown size={14}/> : <ChevronUp size={14}/>}
+                                    </span>
+                                    <div className="text-3xl font-garamond font-bold leading-none text-white">${totals.total.toFixed(2)}</div>
+                                </div>
+                                
+                                <button 
+                                    onClick={handlePay} 
+                                    disabled={isProcessing} 
+                                    className="bg-[#EAD8B1] text-[#222b3c] py-3.5 px-8 rounded-xl text-base font-bold shadow-lg active:scale-95 transition-transform flex items-center gap-2 disabled:opacity-50"
+                                >
+                                    {isProcessing ? <Loader2 className="animate-spin" size={18}/> : <DollarSign size={18}/>} {tPickup('btnPay')}
+                                </button>
+                            </div>
 
-                    {showMobileSummary && (
-                        <div className="mt-5 pt-5 border-t border-gray-600 space-y-3 text-sm animate-fadeIn max-h-[60vh] overflow-y-auto">
-                            
-                            {/* SELECTOR DE DIRECCIONES EN MÓVIL */}
-                            <div className="pb-3 border-b border-gray-600 mb-3">
-                                <label className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase mb-2">
-                                    <MapPin size={14} className="text-gmc-dorado-principal" /> Destino de Envío
-                                </label>
-                                {allAddresses.length > 0 ? (
-                                    <div className="relative bg-gray-700 rounded-lg border border-gray-600">
-                                        <select 
-                                            value={selectedAddressId} 
-                                            onChange={handleAddressChange}
-                                            className="w-full p-2.5 pr-8 bg-transparent text-white text-sm font-bold outline-none appearance-none"
-                                        >
-                                            {allAddresses.map((addr) => (
-                                                <option key={addr.id} value={addr.id} className="text-black">
-                                                    {addr.fullName} - {addr.country} {addr.isDefault ? '(DEF)' : ''}
-                                                </option>
-                                            ))}
-                                        </select>
-                                        <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                            {showMobileSummary && (
+                                <div className="mt-5 pt-5 border-t border-gray-600 space-y-3 text-sm animate-fadeIn max-h-[60vh] overflow-y-auto">
+                                    
+                                    {/* SELECTOR DE DIRECCIONES EN MÓVIL */}
+                                    <div className="pb-3 border-b border-gray-600 mb-3">
+                                        <label className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase mb-2">
+                                            <MapPin size={14} className="text-gmc-dorado-principal" /> Destino de Envío
+                                        </label>
+                                        {allAddresses.length > 0 ? (
+                                            <div className="relative bg-gray-700 rounded-lg border border-gray-600">
+                                                <select 
+                                                    value={selectedAddressId} 
+                                                    onChange={handleAddressChange}
+                                                    className="w-full p-2.5 pr-8 bg-transparent text-white text-sm font-bold outline-none appearance-none"
+                                                >
+                                                    {allAddresses.map((addr) => (
+                                                        <option key={addr.id} value={addr.id} className="text-black">
+                                                            {addr.fullName} - {addr.country} {addr.isDefault ? '(DEF)' : ''}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                                <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                                            </div>
+                                        ) : (
+                                            <span className="text-xs text-yellow-400">Sin dirección. Ve a Configuración.</span>
+                                        )}
                                     </div>
-                                ) : (
-                                    <span className="text-xs text-yellow-400">Sin dirección. Ve a Configuración.</span>
-                                )}
-                            </div>
 
-                            <div className="flex justify-between text-gray-300">
-                                <span>Freight Cost</span>
-                                <span>${totals.serviceSubtotal.toFixed(2)}</span>
-                            </div>
-                            
-                            {totals.handlingSubtotal > 0 && (
-                                <div className="flex justify-between text-[#EAD8B1]"><span>Consolidation Fee</span><span>+${totals.handlingSubtotal.toFixed(2)}</span></div>
-                            )}
+                                    <div className="flex justify-between text-gray-300">
+                                        <span>Freight Cost</span>
+                                        <span>${totals.serviceSubtotal.toFixed(2)}</span>
+                                    </div>
+                                    
+                                    {totals.handlingSubtotal > 0 && (
+                                        <div className="flex justify-between text-[#EAD8B1]"><span>Consolidation Fee</span><span>+${totals.handlingSubtotal.toFixed(2)}</span></div>
+                                    )}
 
-                            {totals.insuranceSubtotal > 0 && (
-                                <div className="flex justify-between text-blue-300"><span>+ Insurance (3%)</span><span>+${totals.insuranceSubtotal.toFixed(2)}</span></div>
-                            )}
-                            
-                            <div className="flex justify-between text-gray-500 text-xs"><span>Processing Fee</span><span>+${totals.fee.toFixed(2)}</span></div>
+                                    {totals.insuranceSubtotal > 0 && (
+                                        <div className="flex justify-between text-blue-300"><span>+ Insurance (3%)</span><span>+${totals.insuranceSubtotal.toFixed(2)}</span></div>
+                                    )}
+                                    
+                                    <div className="flex justify-between text-gray-500 text-xs"><span>Processing Fee</span><span>+${totals.fee.toFixed(2)}</span></div>
 
-                            {discount > 0 && (
-                                <div className="flex justify-between text-green-400 font-bold">
-                                    <span>Discount</span>
-                                    <span>-${discount.toFixed(2)}</span>
-                                </div>
-                            )}
-
-                            <div className="pt-3">
-                                <div className="flex gap-2">
-                                    <input type="text" placeholder="Promo Code" value={couponCode} onChange={(e) => setCouponCode(e.target.value.toUpperCase())} disabled={discount > 0} className="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-base text-white focus:outline-none focus:border-[#EAD8B1]" />
-                                    <button onClick={handleApplyCoupon} className="bg-gray-600 text-white px-3 rounded-lg text-xs hover:bg-gray-500">Apply</button>
-                                </div>
-                                {couponMsg.text && <p className={`text-[10px] mt-1 ${couponMsg.type === "error" ? "text-red-400" : "text-green-400"}`}>{couponMsg.type === "error" ? <AlertCircle size={10} /> : <CheckCircle size={10} />}{couponMsg.text}</p>}
-                            </div>
-
-                            <div className="pt-3 border-t border-gray-600 pb-4">
-                                <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Tarjeta Seleccionada</label>
-                                {cards.length > 0 ? (
-                                    <div className="space-y-2">
-                                        <div className="relative bg-gray-700 rounded-lg border border-gray-600">
-                                            <select value={selectedCardId} onChange={(e) => setSelectedCardId(e.target.value)} className="w-full p-2.5 bg-transparent text-white text-sm font-bold outline-none">
-                                                {cards.map((c: any) => <option key={c.id} value={c.id} className="text-black">•••• {c.last4} ({c.brand})</option>)}
-                                            </select>
+                                    {discount > 0 && (
+                                        <div className="flex justify-between text-green-400 font-bold">
+                                            <span>Discount</span>
+                                            <span>-${discount.toFixed(2)}</span>
                                         </div>
-                                        <button onClick={handleAddCardRedirect} className="text-xs text-[#EAD8B1] font-bold flex items-center gap-1 hover:underline">
-                                            <ExternalLink size={12}/> Gestionar en Configuración
-                                        </button>
+                                    )}
+
+                                    <div className="pt-3">
+                                        <div className="flex gap-2">
+                                            <input type="text" placeholder="Promo Code" value={couponCode} onChange={(e) => setCouponCode(e.target.value.toUpperCase())} disabled={discount > 0} className="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-base text-white focus:outline-none focus:border-[#EAD8B1]" />
+                                            <button onClick={handleApplyCoupon} className="bg-gray-600 text-white px-3 rounded-lg text-xs hover:bg-gray-500">Apply</button>
+                                        </div>
+                                        {couponMsg.text && <p className={`text-[10px] mt-1 ${couponMsg.type === "error" ? "text-red-400" : "text-green-400"}`}>{couponMsg.type === "error" ? <AlertCircle size={10} /> : <CheckCircle size={10} />}{couponMsg.text}</p>}
                                     </div>
-                                ) : (
-                                    <button onClick={handleAddCardRedirect} className="w-full py-2 bg-gray-700 text-white font-bold rounded-lg border border-gray-600 flex items-center justify-center gap-2">
-                                        <Plus size={14}/> Ir a Agregar Tarjeta
-                                    </button>
-                                )}
-                            </div>
+
+                                    <div className="pt-3 border-t border-gray-600 pb-4">
+                                        <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Tarjeta Seleccionada</label>
+                                        {cards.length > 0 ? (
+                                            <div className="space-y-2">
+                                                <div className="relative bg-gray-700 rounded-lg border border-gray-600">
+                                                    <select value={selectedCardId} onChange={(e) => setSelectedCardId(e.target.value)} className="w-full p-2.5 bg-transparent text-white text-sm font-bold outline-none">
+                                                        {cards.map((c: any) => <option key={c.id} value={c.id} className="text-black">•••• {c.last4} ({c.brand})</option>)}
+                                                    </select>
+                                                </div>
+                                                <button onClick={handleAddCardRedirect} className="text-xs text-[#EAD8B1] font-bold flex items-center gap-1 hover:underline">
+                                                    <ExternalLink size={12}/> Gestionar en Configuración
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <button onClick={handleAddCardRedirect} className="w-full py-2 bg-gray-700 text-white font-bold rounded-lg border border-gray-600 flex items-center justify-center gap-2">
+                                                <Plus size={14}/> Ir a Agregar Tarjeta
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
                         </div>
-                    )}
-                </div>
+                    </div>
+                )}
             </div>
         )}
     </div>
