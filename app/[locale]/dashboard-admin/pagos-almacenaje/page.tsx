@@ -37,7 +37,7 @@ export default async function StorageFeesPage({ params, searchParams }: { params
   } : {};
 
   const storagePayments = await prisma.pickupRequest.findMany({
-    where: { ...baseWhereClause, ...(query ? searchWhereClause : {}) } as any,
+    where: { ...baseWhereClause, ...(query ? searchWhereClause : {}) } as any, // ✅ VACUNA TYPESCRIPT 1
     orderBy: { createdAt: 'desc' },
     include: {
       user: {
@@ -69,7 +69,7 @@ export default async function StorageFeesPage({ params, searchParams }: { params
         { status: { notIn: ['ENTREGADO', 'DELIVERED', 'COMPLETADO', 'ENVIADO', 'SHIPPED'] } },
         ...(query ? [searchWhereClausePackage] : [])
       ]
-    },
+    } as any, // ✅ VACUNA TYPESCRIPT 2 (Esto arregla el error de Vercel)
     orderBy: { createdAt: 'asc' }, // Los más viejos primero
     include: { user: { select: { name: true, email: true, suiteNo: true } } }
   });
