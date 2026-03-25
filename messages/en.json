@@ -335,7 +335,7 @@
     "securePayment": "Payments processed securely",
     "select": "Select",
     "selected": "Selected",
-    "errorAddress": "Missing shipping address in your profile.",
+    "errorAddress": "Missing shipping address in your settings.",
     "configureAddress": "Configure Address",
     "pickupInStore": "Store Pickup"
   },

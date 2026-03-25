@@ -335,7 +335,7 @@
     "securePayment": "Pagos procesados de forma segura",
     "select": "Seleccionar",
     "selected": "Seleccionado",
-    "errorAddress": "Falta dirección de envío en tu perfil.",
+    "errorAddress": "Falta dirección de envío en tu configuración.",
     "configureAddress": "Configurar Dirección",
     "pickupInStore": "Pickup en Tienda"
   },

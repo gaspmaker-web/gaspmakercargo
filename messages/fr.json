@@ -335,7 +335,7 @@
     "securePayment": "Paiements traités en toute sécurité",
     "select": "Sélectionner",
     "selected": "Sélectionné",
-    "errorAddress": "Adresse d'expédition manquante dans votre profil.",
+    "errorAddress": "Adresse de livraison manquante dans vos paramètres.",
     "configureAddress": "Configurer l'Adresse",
     "pickupInStore": "Retrait en Magasin"
   },

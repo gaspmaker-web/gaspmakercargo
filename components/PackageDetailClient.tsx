@@ -570,7 +570,13 @@ export default function PackageDetailClient({
                         </div>
                       </div>
                     ) : (
-                      <div className="text-orange-600 text-sm font-bold">⚠️ {tBills("errorAddress")}</div>
+                      <button 
+                        onClick={() => router.push(`/${locale}/account-settings`)}
+                        className="text-orange-600 text-sm font-bold text-left hover:text-orange-700 hover:underline flex items-start gap-1.5 transition-all cursor-pointer active:scale-95"
+                      >
+                        <span>⚠️</span>
+                        <span>{tBills("errorAddress")}</span>
+                      </button>
                     )}
                   </div>
                 </div>
