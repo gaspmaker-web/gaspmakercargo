@@ -196,7 +196,7 @@
     "confirmPickup": "Confirma o agendamento e a cobrança na sua conta?",
     "successPickup": "✅ Agendamento realizado com sucesso.\nUma ordem de pagamento pendente foi gerada."
   },
-  "Notifications": {
+"Notifications": {
     "title": "Notificações",
     "markRead": "Marcar lidas",
     "emptyTitle": "Sem notificações",
@@ -207,8 +207,20 @@
     "msgLocalDelivery": "Sua Entrega Local foi concluída com sucesso.",
     "titlePickup": "Pacote Recolhido",
     "msgDriver": "O motorista já está com seu envio e a caminho do destino.",
-    "msgWarehousePickup": "Sua Retirada no Armazém foi concluída com sucesso."
-  },
+    "msgWarehousePickup": "Sua Retirada no Armazém foi concluída com sucesso.",
+    "newMailTitle": "Nova correspondência recebida!",
+    "newMailDesc": "Acabamos de receber um novo envelope na sua Suíte. Peso registado: {weight} oz.",
+    "additionalApprovedTitle": "👥 Pessoa Adicional Aprovada",
+    "additionalApprovedDesc": "Os documentos da sua pessoa adicional foram verificados. Ela já pode receber correio oficialmente no seu PMB #{suite}.",
+    "paymentSuccessTitle": "Pagamento Bem-sucedido! ✅",
+    "paymentSuccessDesc": "Processamos o seu pagamento com sucesso. Aqui está o seu recibo de transação: ${amount}",
+    "mailboxApprovedTitle": "🎉 Caixa de Correio Aprovada e Ativa!",
+    "mailboxApprovedDesc": "Os seus documentos foram verificados. O seu número oficial é PMB #{suite}. Já pode começar a receber pacotes e correspondência!",
+    "mailboxRejectedTitle": "⚠️ Ação necessária na sua Caixa de Correio",
+    "mailboxRejectedDesc": "Os seus documentos não passaram na verificação. Motivo: {reason}. Por favor, volte a enviá-los.",
+    "additionalRejectedTitle": "⚠️ Documentos de Adicional Rejeitados",
+    "additionalRejectedDesc": "Os documentos da sua pessoa adicional ({name}) foram rejeitados. Motivo: {reason}."
+},
   "AddressCard": {
     "title": "Seu Endereço em Miami (Locker)",
     "recipient": "Destinatário",
@@ -278,6 +290,8 @@
     "invoiceRequired": "Necessária para envio",
     "uploadText": "Envie o recibo para agilizar o processo aduaneiro em",
     "uploadBtn": "Enviar Fatura",
+    "awaitingVerification": "Aguardando verificação...",
+    "warehouseMustConfirm": "O armazém deve confirmar o valor.",
     "replaceBtn": "Substituir Fatura",
     "fileUploaded": "Arquivo enviado",
     "pdfDocument": "Documento PDF",
@@ -364,6 +378,7 @@
     "storageRatesTitle": "TAXAS DE ARMAZENAGEM",
     "storageRatesText": "Desfrute de 30 dias grátis. A partir do dia 31, a taxa é de $2.25 USD por pé cúbico (ft³) por mês.",
     "inventoryTitle": "SEU ESTOQUE EM MIAMI",
+    "emptyPackages": "Você não tem pacotes disponíveis para retirada.",
     "statusReady": "Pronto para Retirada",
     "paid": "Pago",
     "handlingRatesTitle": "Taxas de Manuseio (In-Out):",
@@ -519,7 +534,7 @@
     "statOnTime": "98%",
     "labelOnTime": "ENTREGAS NO PRAZO"
   },
- "FAQPage": {
+"FAQPage": {
     "title": "Perguntas Frequentes",
     "subtitle": "Tudo o que você precisa saber sobre seus envios.",
     "hero_badge": "Centro de Ajuda",
@@ -541,10 +556,17 @@
     "cat6": "Alfândega",
     "q6": "Quem paga os impostos alfandegários?",
     "a6": "Geralmente, são de responsabilidade do destinatário, a menos que o serviço DDP seja escolhido. Cada país tem seus próprios limites de isenção.",
+    "cat7": "Caixa Postal Virtual",
+    "q7": "Por quanto tempo posso deixar minhas cartas físicas na caixa postal?",
+    "a7": "Oferecemos armazenamento físico gratuito dependendo do seu plano: 30 dias (Digital Basic) ou 60 dias (Premium Cargo). Se um envelope ultrapassar esse limite, realizamos automaticamente uma Destruição Segura (Secure Shredding) para proteger sua privacidade sem custo adicional.",
+    "q8": "As digitalizações em PDF são sempre gratuitas no plano Premium?",
+    "a8": "Sim! O plano Premium inclui uma Política de Uso Justo com até 30 aberturas e digitalizações em PDF gratuitas por mês. A partir do 31º envelope no mesmo mês, é cobrada uma taxa de $1,50 por digitalização. Seu contador é zerado no dia 1º de cada mês!",
+    "q9": "O que vocês fazem com as cartas que peço para destruir ou que expiram?",
+    "a9": "A segurança das suas informações é nossa prioridade. Não jogamos sua correspondência no lixo comum. Todo documento passa por um processo de Destruição Segura em nossas instalações, garantindo que ninguém tenha acesso aos seus dados pessoais ou bancários.",
     "footerbox_title": "Não encontra o que procura?",
     "footerbox_text": "As regulamentações mudam frequentemente. Se tiver dúvidas específicas, entre em contato.",
     "footerbox_btn": "Contatar Suporte"
-  },
+},
   "Testimonials": {
     "title": "O que nossos clientes dizem",
     "subtitle": "Milhares de pessoas confiam em nós para suas importações.",
@@ -641,6 +663,7 @@
     "noCards": "Você não tem cartões salvos. Adicione um no seu perfil.",
     "goToAddCard": "Ir para Adicionar Cartão",
     "payBtn": "Pagar",
+    "processingFeeIncluded": "Inclui taxa de processamento",
     "processing": "Processando Pagamento...",
     "alertSelectMethod": "Por favor, selecione um método de pagamento.",
     "alertSuccess": "✅ Pagamento bem-sucedido! O pacote foi liberado.",
@@ -851,7 +874,7 @@
     "receivedTitle": "Recebido no Armazém",
     "receivedDesc": "Inserido no sistema"
   },
-  "MailboxSetup": {
+"MailboxSetup": {
     "backButton": "Voltar",
     "title": "Ative sua Caixa Postal Virtual",
     "subtitle": "Obtenha um endereço físico real em Miami para receber suas cartas e documentos importantes.",
@@ -866,7 +889,9 @@
       "feature4Price": "$1.50 por envelope",
       "feature5": "Trituração segura: ",
       "feature5Price": "$0.50 por envelope",
-      "button": "Selecionar Básico"
+      "feature6": "Armazenamento de correspondência por até 30 dias",
+      "button": "Selecionar Básico",
+      "legalDisclaimer": "* O serviço de Caixa Postal Virtual está sujeito às nossas políticas de armazenamento físico e à nossa Política de Uso Justo para digitalizações de cortesia. Ao se inscrever, você concorda com nossos "
     },
     "premiumPlan": {
       "badge": "Recomendado",
@@ -879,7 +904,17 @@
       "feature5": "Armazenamento de cartas por até 60 dias",
       "button": "Selecionar Premium"
     },
-    "footerTrust": "Cumprimos com as regulamentações do Serviço Postal dos EUA (USPS)."
+    "footerTrust": "Cumprimos com as regulamentações do Serviço Postal dos EUA (USPS).",
+    "monthText": "mês",
+    "savedCardsLabel": "MÉTODO DE PAGAMENTO",
+    "payBtn": "Pagar",
+    "processing": "Processando...",
+    "noCardsMessage": "Você não tem cartões salvos para realizar o pagamento.",
+    "goToAddCard": "Ir para Adicionar Cartão",
+    "encryptedByStripe": "Pagamento criptografado pela Stripe",
+    "selectPaymentMethodError": "Por favor, selecione um método de pagamento.",
+    "paymentError": "Erro ao processar o pagamento.",
+    "unexpectedError": "Ocorreu um erro inesperado."
   },
   "VirtualMailboxCard": {
     "badgeNew": "Novo Serviço",
@@ -895,8 +930,32 @@
     "currentPlan": "Plano atual:",
     "planBasic": "Digital Básico",
     "planPremium": "Premium Cargo",
-    "btnInbox": "Ir para Inbox"
-  },
+    "btnInbox": "Ir para Inbox",
+    "upgradeTitle": "Faça Upgrade para Premium Cargo!",
+    "upgradeDesc": "Desbloqueie digitalizações grátis e adicione até 5 pessoas.",
+    "upgradeBtn": "Fazer Upgrade ($14.99)",
+    "processing": "Processando...",
+    "upgradeConfirm": "Deseja mudar para o plano Premium Cargo por $14.99/mês? Seu faturamento será ajustado automaticamente.",
+    "upgradeSuccess": "Parabéns! Seu plano foi atualizado para Premium Cargo. Agora você pode adicionar até 5 pessoas.",
+    "upgradeError": "Houve um problema ao processar a alteração.",
+    "connError": "Erro de conexão.",
+    "rejectedTitle": "Documentos Rejeitados",
+    "rejectedDesc": "Seus documentos foram rejeitados. Por favor, corrija e reenvie as informações.",
+    "btnFixDocs": "Corrigir Documentos",
+    "inReviewTitle": "Documentos em Análise",
+    "inReviewDesc": "Recebemos seus documentos legais. Nossa equipe está verificando e avisaremos em breve.",
+    "availableSpaces": "Vagas disponíveis:",
+    "of": "de",
+    "enterMailbox": "Entrar na Caixa de Correio",
+    "addFamilyMember": "Adicionar familiar / parceiro",
+    "upToDate": "Atualizado",
+    "currentPlan": "Plano:",
+    "btnInbox": "Ir para a Caixa de Entrada",
+    "upgradeBtn": "Atualizar para Premium",
+    "familyMembers": "Familiares",
+    "addBtn": "+ Adicionar",
+    "limitReached": "Limite atingido"
+    },
 "KycSetup": {
     "paymentSuccessTitle": "Assinatura Ativada!",
     "paymentSuccessDesc": "O seu pagamento foi processado com sucesso. Falta apenas um passo legal para atribuirmos o número da sua suíte.",
@@ -915,7 +974,7 @@
     "lblId2": "Identidade 2 (Com Endereço)",
     "btnSubmit": "Enviar Documentos para Revisão",
     "processing": "A enviar documentos com segurança...",
-    "btnDoLater": "Guardar e fazer mais tarde",
+    "btnDoLater": "Fazer mais tarde",
     "alertMissingDocs": "Por favor, selecione os 3 documentos legais obrigatórios.",
     "alertSuccess": "Documentos enviados com sucesso! Entrarão agora em revisão legal.",
     "primaryAccountHolder": "1. Titular Principal da Conta",
@@ -926,7 +985,12 @@
     "maxPersonsAlert": "Você pode adicionar no máximo 5 pessoas adicionais.",
     "missingDataAlert": "Faltam dados ou documentos para a pessoa:",
     "noName": "Sem nome",
-    "step3Desc": "Envie seus documentos autenticados. Você pode adicionar familiares ou parceiros de negócios à sua conta (Máx. 5 adicionais)."
+    "step3Desc": "Envie seus documentos autenticados. Você pode adicionar familiares ou parceiros de negócios à sua conta (Máx. 5 adicionais).",
+    "rejectedDocsTitle": "Documentos Rejeitados",
+    "rejectedDocsDesc": "Por favor, faça o upload dos seus arquivos corrigidos aqui para uma nova revisão.",
+    "maxPersonsLimitReached": "Você atingiu o limite de familiares permitidos no seu plano atual.",
+    "primaryAccountHolder": "1. Titular Principal da Conta",
+    "primaryDocsInReview": "Seus documentos principais já estão salvos em nosso sistema e estão em análise."
   },
   "Buzon": {
     "actionRequiredTitle": "Ação Necessária! A sua caixa de correio está inativa",
@@ -939,17 +1003,45 @@
     "inReviewTitle": "Documentos em Revisão Legal",
     "inReviewDesc": "Recebemos os seus documentos legais. A nossa equipa está a verificá-los. Iremos notificá-lo e atribuir o seu número de Suíte nas próximas 24-48 horas úteis.",
     "titleActive": "A Sua Caixa de Correio Virtual",
+    "virtualMailbox": "A Sua Caixa de Correio Virtual",
     "statusPending": "Estado: Pendente de Ativação",
     "statusActive": "Caixa de Correio Ativa e Pronta",
+    "activeReady": "Ativa e Pronta",
     "yourAddress": "O Seu Endereço em Miami",
     "namePlaceholder": "O Seu Nome",
     "pendingSuite": "O endereço será mostrado<br/>quando o seu KYC for aprovado.",
     "receivedEnvelopes": "Envelopes Recebidos",
     "emptyInboxTitle": "A sua caixa de correio está vazia",
     "emptyInboxDesc": "Quando recebermos correspondência em seu nome no nosso armazém, ela aparecerá aqui com uma fotografia exterior.",
-    "btnScan": "Solicitar Digitalização ($1.50)",
-    "btnShred": "Triturar ($0.50)"
-  },
+    "btnScan": "Solicitar Digitalização",
+    "btnShred": "Triturar",
+    "expiresIn": "Expira em",
+    "days": "dias",
+    "damaged": "Danificado",
+    "expiredStatus": "Destruição pendente",
+    "authorizedPersons": "PESSOAS AUTORIZADAS",
+    "activeStatus": "ATIVO",
+    "viewDocument": "Ver Documento",
+    "moveToCargo": "Mover para Carga",
+    "destroy": "Destruir",
+    "envelopeDestroyed": "Envelope Destruído",
+    "confirmScan": "Deseja solicitar a abertura e digitalização deste envelope?",
+    "confirmShred": "⚠️ ATENÇÃO: Tem certeza de que deseja TRITURAR E DESTRUIR este envelope permanentemente? Esta ação não pode ser desfeita.",
+    "confirmCargo": "📦 Deseja mover este envelope físico para os seus PACOTES? Assim você pode enviá-lo ao seu país sozinho ou consolidado.",
+    "alertError": "Ocorreu um erro ao processar sua solicitação.",
+    "alertConnection": "Erro de conexão com o servidor.",
+    "scanInProgress": "Digitalização em andamento...",
+    "shredInProgress": "Trituração na fila...",
+    "cargoInProgress": "Movendo para Carga...",
+    "movedToCargoStatus": "Enviado para Pacotes",
+    "titleScan": "Solicitar Digitalização (Abrir Envelope)",
+    "titleCargo": "Converter em Pacote",
+    "titleShred": "Triturar e Descartar",
+    "documentViewerTitle": "Visualizador de Documentos",
+    "btnDownload": "Baixar",
+    "openNewTab": "Abrir em nova aba",
+    "btnClose": "Fechar"
+},
   "KycFix": {
   "title": "Corrigir Documentos",
   "updating": "Atualizando verificação de:",
@@ -966,5 +1058,20 @@
   "alertSuccess": "Documentos enviados para revisão com sucesso.",
   "alertError": "Erro ao enviar documentos.",
   "alertConnection": "Erro de conexão."
+},
+"MailboxPolicy": {
+    "title": "Políticas e Funcionamento do Caixa Postal Virtual",
+    "subtitle": "Transparência total. Saiba como operamos para garantir um serviço rápido, seguro e eficiente.",
+    "storageTitle": "1. Tempos de Armazenamento e Limpeza",
+    "storageDesc": "Para manter nossos cofres seguros e seu painel organizado, a correspondência física tem um limite de armazenamento em nosso depósito:",
+    "storageBasic": "Plano Digital Básico: Armazenamento por até 30 dias.",
+    "storagePremium": "Plano Premium Cargo: Armazenamento por até 60 dias.",
+    "storageAction": "Após esse período, o envelope expirará e nossa equipe realizará uma Purga Administrativa (Destruição Segura) para proteger suas informações, sem custo adicional.",
+    "fairUseTitle": "2. Política de Uso Justo (Digitalizações em PDF)",
+    "fairUseDesc": "O Plano Premium Cargo foi desenvolvido para oferecer total comodidade com digitalizações gratuitas, sujeitas a uma política de uso justo para proteger a capacidade operacional de nossa equipe:",
+    "fairUseLimit": "Limite de Cortesia: Até 30 aberturas e digitalizações de documentos para PDF totalmente GRATUITAS por mês civil.",
+    "fairUseExtra": "A partir da 31ª solicitação no mesmo mês, será aplicada a tarifa padrão de $1,50 por digitalização adicional. Seu contador é zerado no dia 1º do mês seguinte.",
+    "shredTitle": "3. Privacidade e Destruição Segura",
+    "shredDesc": "Qualquer carta que você solicitar a destruição (ou que atinja sua data de validade) é processada usando Destruição Segura de Corte Cruzado. Não jogamos documentos no lixo; nós os destruímos para garantir que ninguém tenha acesso às suas informações bancárias ou pessoais."
 }
 }

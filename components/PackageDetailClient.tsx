@@ -123,15 +123,22 @@ export default function PackageDetailClient({
   const declaredValue = Number(pkg.declaredValue) || 0;
   const insuranceCost = declaredValue > 100 ? declaredValue * 0.03 : 0;
 
-  const warehousePhoto = pkg.photoUrlMiami && pkg.photoUrlMiami.startsWith("http") ? pkg.photoUrlMiami : null;
+  // 🔥 SOLUCIÓN: Buscamos la foto en 'photoUrlMiami' (para cajas) o en 'receiptUrl' (para sobres del buzón)
+  const warehousePhoto = (pkg.photoUrlMiami && pkg.photoUrlMiami.startsWith("http")) ? pkg.photoUrlMiami : 
+                         (pkg.receiptUrl && pkg.receiptUrl.startsWith("http")) ? pkg.receiptUrl : null;
+
   const isReadyToShip = pkg.status === "RECIBIDO_MIAMI" || pkg.status === "EN_ALMACEN";
+  
+  // 🔥 IDENTIFICAR SI ES DOCUMENTO PARA OMITIR FACTURA Y VALOR
+  const isDocument = pkg.courier === 'Buzón Virtual' || (pkg.carrierTrackingNumber || '').startsWith('DOC-') || (pkg.gmcTrackingNumber || '').startsWith('GMC-DOC-');
   
   // 🔥 MEJORADA: Validación robusta para saber si hay invoice (acepta PDF o imagen)
   const hasInvoice = !!invoiceUrl && (invoiceUrl.startsWith("http") || invoiceUrl.startsWith("https"));
+  const invoiceSatisfied = hasInvoice || isDocument; // 🔥 Los documentos no requieren factura
   
   const isOverdue = Number(pkg.storageDebt) > 0;
   const isDelivered = pkg.status === "ENTREGADO";
-  const isAdminVerifiedValue = declaredValue > 0;
+  const isAdminVerifiedValue = declaredValue > 0 || isDocument; // 🔥 Los documentos no requieren valor declarado (son $0 y saltan la alerta de aduana)
 
   // 🔥 EFECTO PARA SELECCIONAR LA DIRECCIÓN DEFAULT INICIAL
   useEffect(() => {
@@ -191,7 +198,7 @@ export default function PackageDetailClient({
   };
 
   const handleQuote = async () => {
-    if (!hasInvoice) { alert("⚠️ " + t("invoiceRequired")); return; }
+    if (!invoiceSatisfied) { alert("⚠️ " + t("invoiceRequired")); return; }
     if (!currentHasAddress) { alert("⚠️ " + tBills("errorAddress")); return; }
     if (!isAdminVerifiedValue) { alert("⚠️ Esperando validación del valor por el Admin."); return; }
 
@@ -495,14 +502,16 @@ export default function PackageDetailClient({
               </div>
             </div>
 
-            {/* 🔥 TARJETA DE FACTURA CONECTADA CORRECTAMENTE 🔥 */}
+            {/* 🔥 TARJETA DE FACTURA CONECTADA Y EXCEPCIÓN DE DOCUMENTOS 🔥 */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
-                <div className={`p-3 rounded-full ${hasInvoice ? "bg-blue-50 text-blue-600" : "bg-orange-50 text-orange-400"}`}>
-                  {hasInvoice ? <CheckCircle size={24} /> : <AlertCircle size={24} />}
+                <div className={`p-3 rounded-full ${invoiceSatisfied ? "bg-blue-50 text-blue-600" : "bg-orange-50 text-orange-400"}`}>
+                  {invoiceSatisfied ? <CheckCircle size={24} /> : <AlertCircle size={24} />}
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-gray-700">{hasInvoice ? t("fileUploaded") : t("noInvoice")}</p>
+                  <p className="text-sm font-bold text-gray-700">
+                    {isDocument ? "Documento (Factura No Requerida)" : (hasInvoice ? t("fileUploaded") : t("noInvoice"))}
+                  </p>
                   {hasInvoice && (
                     <a href={invoiceUrl!} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-500 underline font-medium hover:text-blue-700 flex items-center gap-1 mt-1">
                       <ExternalLink size={12}/> {t("viewFile")}
@@ -510,10 +519,13 @@ export default function PackageDetailClient({
                   )}
                 </div>
               </div>
-              <label className="cursor-pointer bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-xs font-bold hover:bg-gray-50 flex items-center gap-2 transition-colors active:scale-95 shadow-sm">
-                {isUploading ? <Loader2 className="animate-spin" size={14} /> : <Upload size={14} />} {hasInvoice ? t("replaceBtn") : t("uploadBtn")}
-                <input type="file" accept="image/*,application/pdf" className="hidden" onChange={handleInvoiceUpload} disabled={isUploading} />
-              </label>
+              {/* Ocultamos el botón de subir si es un documento para no confundir al usuario */}
+              {!isDocument && (
+                  <label className="cursor-pointer bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-xs font-bold hover:bg-gray-50 flex items-center gap-2 transition-colors active:scale-95 shadow-sm">
+                    {isUploading ? <Loader2 className="animate-spin" size={14} /> : <Upload size={14} />} {hasInvoice ? t("replaceBtn") : t("uploadBtn")}
+                    <input type="file" accept="image/*,application/pdf" className="hidden" onChange={handleInvoiceUpload} disabled={isUploading} />
+                  </label>
+              )}
             </div>
 
             <div className="bg-white border border-blue-200 rounded-xl overflow-hidden shadow-sm">
@@ -523,7 +535,7 @@ export default function PackageDetailClient({
                   <div className="w-full">
                     <p className="text-[10px] font-bold text-blue-400 uppercase tracking-wide mb-1">{t("quotingFor")}:</p>
                     
-                    {/* 🔥 NUEVO: SELECTOR DE DIRECCIONES NIVEL AMAZON */}
+                    {/* 🔥 SELECTOR DE DIRECCIONES NIVEL AMAZON */}
                     {allAddresses.length > 0 ? (
                       <div className="mt-1 relative max-w-sm">
                           <select 
@@ -572,8 +584,8 @@ export default function PackageDetailClient({
                         <div className="bg-yellow-50 text-yellow-800 px-6 py-3 rounded-xl text-sm font-bold border border-yellow-200 flex items-center gap-3 w-full sm:w-auto animate-pulse mt-4 sm:mt-0">
                             <Clock size={18} className="text-yellow-600" />
                             <div className="flex flex-col">
-                                <span>Esperando verificación...</span>
-                                <span className="text-[10px] font-normal opacity-80">El almacén debe confirmar el valor.</span>
+                               <span>{t('awaitingVerification')}</span>
+                               <span className="text-[10px] font-normal opacity-80">{t('warehouseMustConfirm')}</span>
                             </div>
                         </div>
                     ) : (

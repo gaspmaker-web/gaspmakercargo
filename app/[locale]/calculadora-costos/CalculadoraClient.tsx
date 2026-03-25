@@ -139,15 +139,14 @@ export default function CalculadoraClient() {
         }
     };
 
-    // 🔥 CÁLCULO DEL DESGLOSE
+    // 🔥 CÁLCULO DEL DESGLOSE CORREGIDO 🔥
     const calculateTotal = (basePrice: number, carrier: string = '') => {
         const val = Number(value) || 0;
         // Seguro: 3% del valor si es mayor a $100
         const insurance = val > 100 ? val * 0.03 : 0;
         
-        // REGLA: Si es GMC/GASP, handling es 0. Si no, 10.
-        const isGMC = carrier.toUpperCase().includes('GASP') || carrier.toUpperCase().includes('GMC');
-        const handling = isGMC ? 0 : 10.00;
+        // REGLA: Eliminamos el Fee de $10 permanentemente. Ahora es siempre 0.
+        const handling = 0;
 
         return {
             total: basePrice + insurance + handling,
@@ -346,9 +345,7 @@ export default function CalculadoraClient() {
                                                 {details.insurance > 0 && (
                                                     <span className="text-blue-600">+ Ins: ${details.insurance.toFixed(2)}</span>
                                                 )}
-                                                {details.handling > 0 && (
-                                                    <span className="text-gray-400 whitespace-nowrap">+ Fee: ${details.handling.toFixed(2)}</span>
-                                                )}
+                                                {/* 🔥 AQUÍ ELIMINAMOS EL TEXTO DEL FEE 🔥 */}
                                             </div>
                                         </div>
 
