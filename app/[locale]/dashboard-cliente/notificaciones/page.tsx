@@ -84,14 +84,38 @@ export default function NotificationsPage() {
     }).format(date);
   };
 
+  // 🔥 NUEVA LÓGICA DE TRADUCCIÓN ENTERPRISE
   const getTranslatedText = (text: string) => {
     if (!text) return "";
+    
+    // 1. Intentar parsear como JSON (Para las nuevas notificaciones con variables dinámicas)
+    try {
+      const parsed = JSON.parse(text);
+      if (parsed && parsed.key) {
+        // @ts-ignore - Le pasamos el objeto entero (que incluye 'weight', 'suite', etc.) como variables para el texto
+        return t.has(parsed.key) ? t(parsed.key, parsed) : text;
+      }
+    } catch (e) {
+      // Si falla, no es JSON, continuamos con la lógica normal
+    }
+
     const cleanText = text.trim();
+
+    // 2. Si el backend mandó la clave pura (ej. "newMailTitle" en notif.title)
+    // @ts-ignore
+    if (t.has(cleanText)) {
+      // @ts-ignore
+      return t(cleanText);
+    }
+
+    // 3. Lógica antigua (Prefijos)
     if (cleanText.startsWith('Notifications.')) {
         const key = cleanText.replace('Notifications.', '');
         // @ts-ignore
         return t.has(key) ? t(key) : text;
     }
+
+    // 4. Lógica antigua (Mapa heredado)
     const legacyMap: Record<string, string> = {
         "¡Chofer Asignado!": "titlePickup",
         "Paquete Recogido": "titlePickup",
@@ -106,10 +130,12 @@ export default function NotificationsPage() {
         "Package Picked Up": "titlePickup",
         "The driver has your shipment and is on the way to the destination.": "msgDriver"
     };
+    
     if (legacyMap[cleanText]) {
          // @ts-ignore
          return t.has(legacyMap[cleanText]) ? t(legacyMap[cleanText]) : text;
     }
+    
     return text;
   };
 
@@ -132,15 +158,8 @@ export default function NotificationsPage() {
         <div className="max-w-2xl mx-auto w-full px-5 h-20 flex items-center justify-between">
             
             <div className="flex items-center gap-4">
-                {/* 🔥 FLECHA TECNOLÓGICA (Círculo Glass con Borde) */}
-                <button 
-                  onClick={() => router.back()}
-                  className="w-10 h-10 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center text-gray-700 hover:bg-gray-50 hover:scale-105 hover:shadow-md transition-all active:scale-95 group"
-                >
-                  <ArrowLeft size={20} className="group-hover:-translate-x-0.5 transition-transform" />
-                </button>
-
-                {/* 🔥 TÍTULO MODERNO (Con Icono Estilizado como en Historial) */}
+                {/* 🔥 FLECHA DE RETROCESO ELIMINADA PARA NO CHOCAR CON EL HEADER 🔥 */}
+                
                 <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shadow-sm">
                         <Bell size={20} />
@@ -155,7 +174,6 @@ export default function NotificationsPage() {
                 </div>
             </div>
             
-            {/* Acciones Rápidas */}
             <div className="flex gap-2">
                 {uniqueNotifications.length > 0 && uniqueNotifications.some(n => !n.isRead) && (
                     <button 
