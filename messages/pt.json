@@ -1,4 +1,8 @@
-{
+{ "Header": {
+    "dashboard": "Meu Dashboard",
+    "settings": "Configurações",
+    "logout": "Sair"
+  },
   "Navigation": {
     "howItWorks": "Como funciona?",
     "services": "Serviços",

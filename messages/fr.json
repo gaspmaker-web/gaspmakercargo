@@ -1,4 +1,8 @@
-{
+{ "Header": {
+    "dashboard": "Mon Tableau de Bord",
+    "settings": "Paramètres",
+    "logout": "Se Déconnecter"
+  },
   "Navigation": {
     "howItWorks": "Comment ça marche ?",
     "services": "Services",

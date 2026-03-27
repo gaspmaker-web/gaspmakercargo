@@ -4,11 +4,13 @@ import { useSession, signOut } from "next-auth/react";
 import React, { useState, useEffect, useRef } from "react";
 import Link from 'next/link';
 import { LogOut, Settings, User, LayoutDashboard, Package, Layers } from 'lucide-react'; 
+import { useTranslations } from 'next-intl'; // 🔥 Importamos el traductor
 
 export default function ProfileButton() {
   const { data: session, status } = useSession();
   const [isOpen, setIsOpen] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
+  const t = useTranslations('Header'); // 🔥 Inicializamos el traductor con la clave "Header"
 
   // Manejador de clics fuera del componente
   useEffect(() => {
@@ -113,7 +115,7 @@ export default function ProfileButton() {
                     className="flex items-center px-5 py-3 text-sm text-gray-700 hover:bg-yellow-50 hover:text-yellow-700 transition-colors"
                 >
                     <User size={18} className="mr-3 text-gray-400" />
-                    Mi Dashboard
+                    {t('dashboard')} {/* 🔥 TRADUCCIÓN APLICADA AQUÍ */}
                 </Link>
             )}
 
@@ -124,7 +126,7 @@ export default function ProfileButton() {
                 className="flex items-center px-5 py-3 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
             >
                 <Settings size={18} className="mr-3 text-gray-400" />
-                Configuración
+                {t('settings')} {/* 🔥 TRADUCCIÓN APLICADA AQUÍ */}
             </Link>
 
             <div className="border-t border-gray-100 my-1"></div>
@@ -137,7 +139,7 @@ export default function ProfileButton() {
                 className="w-full flex items-center px-5 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors text-left"
             >
                 <LogOut size={18} className="mr-3" />
-                Cerrar Sesión
+                {t('logout')} {/* 🔥 TRADUCCIÓN APLICADA AQUÍ */}
             </button>
           </div>
         </div>
