@@ -88,34 +88,28 @@ export default function NotificationsPage() {
   const getTranslatedText = (text: string) => {
     if (!text) return "";
     
-    // 1. Intentar parsear como JSON (Para las nuevas notificaciones con variables dinámicas)
     try {
       const parsed = JSON.parse(text);
       if (parsed && parsed.key) {
-        // @ts-ignore - Le pasamos el objeto entero (que incluye 'weight', 'suite', etc.) como variables para el texto
+        // @ts-ignore
         return t.has(parsed.key) ? t(parsed.key, parsed) : text;
       }
-    } catch (e) {
-      // Si falla, no es JSON, continuamos con la lógica normal
-    }
+    } catch (e) {}
 
     const cleanText = text.trim();
 
-    // 2. Si el backend mandó la clave pura (ej. "newMailTitle" en notif.title)
     // @ts-ignore
     if (t.has(cleanText)) {
       // @ts-ignore
       return t(cleanText);
     }
 
-    // 3. Lógica antigua (Prefijos)
     if (cleanText.startsWith('Notifications.')) {
         const key = cleanText.replace('Notifications.', '');
         // @ts-ignore
         return t.has(key) ? t(key) : text;
     }
 
-    // 4. Lógica antigua (Mapa heredado)
     const legacyMap: Record<string, string> = {
         "¡Chofer Asignado!": "titlePickup",
         "Paquete Recogido": "titlePickup",
@@ -151,55 +145,54 @@ export default function NotificationsPage() {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50 font-montserrat pb-20">
+    // 🔥 PT-24 baja el contenido para que el Header (y su flecha) se vean perfectos arriba
+    <div className="min-h-screen bg-gray-50 font-montserrat pb-20 pt-24 lg:pt-10">
       
-      {/* 1. ENCABEZADO PREMIUM (White Header with Glass Arrow) */}
-      <div className="bg-white sticky top-0 z-50 shadow-sm/50 border-b border-gray-100">
-        <div className="max-w-2xl mx-auto w-full px-5 h-20 flex items-center justify-between">
-            
-            <div className="flex items-center gap-4">
-                {/* 🔥 FLECHA DE RETROCESO ELIMINADA PARA NO CHOCAR CON EL HEADER 🔥 */}
-                
-                <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shadow-sm">
-                        <Bell size={20} />
-                    </div>
-                    <div>
-                        <h1 className="text-xl font-bold text-gmc-gris-oscuro font-garamond leading-none">
-                            {/* @ts-ignore */}
-                            {t.has('title') ? t('title') : "Notifications"}
-                        </h1>
-                        <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wider mt-1">Updates & Alerts</p>
-                    </div>
-                </div>
-            </div>
-            
-            <div className="flex gap-2">
-                {uniqueNotifications.length > 0 && uniqueNotifications.some(n => !n.isRead) && (
-                    <button 
-                        onClick={markAllAsRead}
-                        className="w-9 h-9 rounded-full bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center hover:bg-blue-100 hover:scale-105 transition-all shadow-sm"
-                        title={/* @ts-ignore */ t.has('markRead') ? t('markRead') : "Mark as read"}
-                    >
-                        <CheckCircle size={18}/>
-                    </button>
-                )}
-                
-                {uniqueNotifications.length > 0 && (
-                    <button 
-                        onClick={handleDeleteAll}
-                        disabled={isDeletingAll}
-                        className="w-9 h-9 rounded-full bg-red-50 text-red-600 border border-red-100 flex items-center justify-center hover:bg-red-100 hover:scale-105 transition-all shadow-sm disabled:opacity-50"
-                        title={/* @ts-ignore */ t.has('vaciar') ? t('vaciar') : "Clear all"}
-                    >
-                        {isDeletingAll ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={18}/>}
-                    </button>
-                )}
-            </div>
-        </div>
+      {/* 1. ENCABEZADO CENTRADO (Sin bg-white ni sticky para no tapar) */}
+      <div className="max-w-2xl mx-auto w-full px-5 flex items-start justify-between mb-8">
+          
+          {/* Espaciador invisible izquierdo para mantener el centro exacto */}
+          <div className="w-[88px] hidden sm:block"></div>
+          
+          <div className="flex flex-col items-center gap-2 flex-1">
+              <div className="w-14 h-14 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center shadow-sm border border-purple-100/50">
+                  <Bell size={28} />
+              </div>
+              <div className="text-center mt-2">
+                  <h1 className="text-2xl md:text-3xl font-bold text-gmc-gris-oscuro font-garamond leading-none mb-1">
+                      {/* @ts-ignore */}
+                      {t.has('title') ? t('title') : "Notifications"}
+                  </h1>
+                  <p className="text-xs text-gray-400 font-bold uppercase tracking-widest">Updates & Alerts</p>
+              </div>
+          </div>
+          
+          {/* Botones a la derecha */}
+          <div className="flex gap-2 w-[88px] justify-end">
+              {uniqueNotifications.length > 0 && uniqueNotifications.some(n => !n.isRead) && (
+                  <button 
+                      onClick={markAllAsRead}
+                      className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center hover:bg-blue-100 hover:scale-105 transition-all shadow-sm"
+                      title={/* @ts-ignore */ t.has('markRead') ? t('markRead') : "Mark as read"}
+                  >
+                      <CheckCircle size={20}/>
+                  </button>
+              )}
+              
+              {uniqueNotifications.length > 0 && (
+                  <button 
+                      onClick={handleDeleteAll}
+                      disabled={isDeletingAll}
+                      className="w-10 h-10 rounded-full bg-red-50 text-red-600 border border-red-100 flex items-center justify-center hover:bg-red-100 hover:scale-105 transition-all shadow-sm disabled:opacity-50"
+                      title={/* @ts-ignore */ t.has('vaciar') ? t('vaciar') : "Clear all"}
+                  >
+                      {isDeletingAll ? <Loader2 size={18} className="animate-spin" /> : <Trash2 size={20}/>}
+                  </button>
+              )}
+          </div>
       </div>
 
-      <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
+      <div className="max-w-2xl mx-auto px-4 space-y-4">
         {loading ? (
             <div className="flex flex-col items-center py-20"><Loader2 className="animate-spin text-gray-300" size={40}/></div>
         ) : uniqueNotifications.length === 0 ? (
