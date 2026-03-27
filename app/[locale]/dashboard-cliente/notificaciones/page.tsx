@@ -144,40 +144,33 @@ export default function NotificationsPage() {
   });
 
   return (
+    // 🔥 Se eliminó el pt-[72px] para que suba hasta el tope y se fusione con el Header
     <div className="min-h-screen bg-gray-50 font-montserrat pb-20">
       
-      {/* 1. ENCABEZADO DISEÑO EXACTO A LA IMAGEN */}
-      <div className="bg-white sticky top-0 z-50 shadow-sm/50 border-b border-gray-100">
-        <div className="max-w-2xl mx-auto w-full px-5 h-[80px] flex items-center justify-between relative">
+      {/* 1. ENCABEZADO: Al subir hasta arriba, el Header y su flecha quedan flotando encima */}
+      <div className="bg-white shadow-sm/50 border-b border-gray-100 relative z-30">
+        
+        {/* Usamos pt-4 para que la campana y botones se alineen horizontalmente con el mt-4 de la flecha */}
+        <div className="max-w-2xl mx-auto w-full px-4 sm:px-5 pt-4 pb-6 flex items-start justify-between relative min-h-[120px]">
             
-            {/* IZQUIERDA: Flecha de retroceso */}
-            <div className="flex-1 flex justify-start z-10">
-                <button 
-                  onClick={() => router.back()}
-                  className="w-10 h-10 rounded-full bg-white text-gray-800 hover:bg-gray-100 transition-colors flex items-center justify-center -ml-2"
-                >
-                  <ArrowLeft size={24} strokeWidth={2}/>
-                </button>
-            </div>
+            {/* IZQUIERDA: Vacío (La flecha del Header ocupará este espacio visualmente) */}
+            <div className="flex-1 pointer-events-none"></div>
 
-            {/* CENTRO: Textos (Posición absoluta para centrado perfecto) */}
-            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center justify-center w-full pointer-events-none">
-                <h1 className="text-[22px] font-bold text-gmc-gris-oscuro font-garamond leading-none">
+            {/* CENTRO: Campana y Textos (top-4 asegura que la campana esté al nivel exacto de la flecha) */}
+            <div className="absolute left-1/2 top-4 -translate-x-1/2 flex flex-col items-center justify-center w-[200px] pointer-events-none">
+                <div className="w-10 h-10 rounded-full bg-purple-50 text-purple-600 border border-purple-100 flex items-center justify-center shadow-sm mb-2">
+                    <Bell size={18} strokeWidth={2.5} />
+                </div>
+                
+                <h1 className="text-[20px] sm:text-[22px] font-bold text-gmc-gris-oscuro font-garamond leading-none text-center">
                     {/* @ts-ignore */}
                     {t.has('title') ? t('title') : "Notifications"}
                 </h1>
-                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">Updates & Alerts</p>
+                <p className="text-[9px] sm:text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1.5 text-center">Updates & Alerts</p>
             </div>
             
-            {/* DERECHA: Los 3 Botones circulares */}
-            <div className="flex-1 flex gap-2 justify-end items-center z-10">
-                
-                {/* 1. Campana Morada */}
-                <div className="w-10 h-10 rounded-full bg-purple-50 text-purple-600 border border-purple-100 flex items-center justify-center shadow-sm">
-                    <Bell size={18} strokeWidth={2.5} />
-                </div>
-
-                {/* 2. Check Azul */}
+            {/* DERECHA: Botones (Al tener el pt-4 en el padre, se alinean perfecto con la flecha) */}
+            <div className="flex-1 flex gap-2 justify-end items-start z-10">
                 {uniqueNotifications.length > 0 && uniqueNotifications.some(n => !n.isRead) && (
                     <button 
                         onClick={markAllAsRead}
@@ -188,7 +181,6 @@ export default function NotificationsPage() {
                     </button>
                 )}
                 
-                {/* 3. Basurero Rojo */}
                 {uniqueNotifications.length > 0 && (
                     <button 
                         onClick={handleDeleteAll}
@@ -203,7 +195,8 @@ export default function NotificationsPage() {
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
+      {/* 2. LISTA DE NOTIFICACIONES */}
+      <div className="max-w-2xl mx-auto px-4 py-6 space-y-4 relative z-30">
         {loading ? (
             <div className="flex flex-col items-center py-20"><Loader2 className="animate-spin text-gray-300" size={40}/></div>
         ) : uniqueNotifications.length === 0 ? (
