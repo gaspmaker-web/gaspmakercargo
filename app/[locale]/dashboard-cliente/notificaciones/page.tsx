@@ -84,7 +84,6 @@ export default function NotificationsPage() {
     }).format(date);
   };
 
-  // 🔥 NUEVA LÓGICA DE TRADUCCIÓN ENTERPRISE
   const getTranslatedText = (text: string) => {
     if (!text) return "";
     
@@ -145,54 +144,66 @@ export default function NotificationsPage() {
   });
 
   return (
-    // 🔥 PT-24 baja el contenido para que el Header (y su flecha) se vean perfectos arriba
-    <div className="min-h-screen bg-gray-50 font-montserrat pb-20 pt-24 lg:pt-10">
+    <div className="min-h-screen bg-gray-50 font-montserrat pb-20">
       
-      {/* 1. ENCABEZADO CENTRADO (Sin bg-white ni sticky para no tapar) */}
-      <div className="max-w-2xl mx-auto w-full px-5 flex items-start justify-between mb-8">
-          
-          {/* Espaciador invisible izquierdo para mantener el centro exacto */}
-          <div className="w-[88px] hidden sm:block"></div>
-          
-          <div className="flex flex-col items-center gap-2 flex-1">
-              <div className="w-14 h-14 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center shadow-sm border border-purple-100/50">
-                  <Bell size={28} />
-              </div>
-              <div className="text-center mt-2">
-                  <h1 className="text-2xl md:text-3xl font-bold text-gmc-gris-oscuro font-garamond leading-none mb-1">
-                      {/* @ts-ignore */}
-                      {t.has('title') ? t('title') : "Notifications"}
-                  </h1>
-                  <p className="text-xs text-gray-400 font-bold uppercase tracking-widest">Updates & Alerts</p>
-              </div>
-          </div>
-          
-          {/* Botones a la derecha */}
-          <div className="flex gap-2 w-[88px] justify-end">
-              {uniqueNotifications.length > 0 && uniqueNotifications.some(n => !n.isRead) && (
-                  <button 
-                      onClick={markAllAsRead}
-                      className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center hover:bg-blue-100 hover:scale-105 transition-all shadow-sm"
-                      title={/* @ts-ignore */ t.has('markRead') ? t('markRead') : "Mark as read"}
-                  >
-                      <CheckCircle size={20}/>
-                  </button>
-              )}
-              
-              {uniqueNotifications.length > 0 && (
-                  <button 
-                      onClick={handleDeleteAll}
-                      disabled={isDeletingAll}
-                      className="w-10 h-10 rounded-full bg-red-50 text-red-600 border border-red-100 flex items-center justify-center hover:bg-red-100 hover:scale-105 transition-all shadow-sm disabled:opacity-50"
-                      title={/* @ts-ignore */ t.has('vaciar') ? t('vaciar') : "Clear all"}
-                  >
-                      {isDeletingAll ? <Loader2 size={18} className="animate-spin" /> : <Trash2 size={20}/>}
-                  </button>
-              )}
-          </div>
+      {/* 1. ENCABEZADO DISEÑO EXACTO A LA IMAGEN */}
+      <div className="bg-white sticky top-0 z-50 shadow-sm/50 border-b border-gray-100">
+        <div className="max-w-2xl mx-auto w-full px-5 h-[80px] flex items-center justify-between relative">
+            
+            {/* IZQUIERDA: Flecha de retroceso */}
+            <div className="flex-1 flex justify-start z-10">
+                <button 
+                  onClick={() => router.back()}
+                  className="w-10 h-10 rounded-full bg-white text-gray-800 hover:bg-gray-100 transition-colors flex items-center justify-center -ml-2"
+                >
+                  <ArrowLeft size={24} strokeWidth={2}/>
+                </button>
+            </div>
+
+            {/* CENTRO: Textos (Posición absoluta para centrado perfecto) */}
+            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center justify-center w-full pointer-events-none">
+                <h1 className="text-[22px] font-bold text-gmc-gris-oscuro font-garamond leading-none">
+                    {/* @ts-ignore */}
+                    {t.has('title') ? t('title') : "Notifications"}
+                </h1>
+                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">Updates & Alerts</p>
+            </div>
+            
+            {/* DERECHA: Los 3 Botones circulares */}
+            <div className="flex-1 flex gap-2 justify-end items-center z-10">
+                
+                {/* 1. Campana Morada */}
+                <div className="w-10 h-10 rounded-full bg-purple-50 text-purple-600 border border-purple-100 flex items-center justify-center shadow-sm">
+                    <Bell size={18} strokeWidth={2.5} />
+                </div>
+
+                {/* 2. Check Azul */}
+                {uniqueNotifications.length > 0 && uniqueNotifications.some(n => !n.isRead) && (
+                    <button 
+                        onClick={markAllAsRead}
+                        className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center hover:bg-blue-100 hover:scale-105 transition-all shadow-sm"
+                        title={/* @ts-ignore */ t.has('markRead') ? t('markRead') : "Mark as read"}
+                    >
+                        <CheckCircle size={18} strokeWidth={2.5}/>
+                    </button>
+                )}
+                
+                {/* 3. Basurero Rojo */}
+                {uniqueNotifications.length > 0 && (
+                    <button 
+                        onClick={handleDeleteAll}
+                        disabled={isDeletingAll}
+                        className="w-10 h-10 rounded-full bg-red-50 text-red-600 border border-red-100 flex items-center justify-center hover:bg-red-100 hover:scale-105 transition-all shadow-sm disabled:opacity-50"
+                        title={/* @ts-ignore */ t.has('vaciar') ? t('vaciar') : "Clear all"}
+                    >
+                        {isDeletingAll ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={18} strokeWidth={2.5}/>}
+                    </button>
+                )}
+            </div>
+        </div>
       </div>
 
-      <div className="max-w-2xl mx-auto px-4 space-y-4">
+      <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
         {loading ? (
             <div className="flex flex-col items-center py-20"><Loader2 className="animate-spin text-gray-300" size={40}/></div>
         ) : uniqueNotifications.length === 0 ? (
