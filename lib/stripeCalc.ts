@@ -1,16 +1,16 @@
 /**
  * LÓGICA FINANCIERA GASP MAKER CARGO
  * Objetivo: Asegurar que el monto neto recibido cubra los fees de Stripe Internacionales.
- * Estándar calculado: ~7.27% de recargo sobre la base de $100.
+ * Estándar calculado: 4.4% + $0.30 USD por transacción (Tarjetas internacionales sin conversión de moneda).
  */
 
 export const calculateTotalWithFees = (amountNet: number) => {
-  // Configuración de Stripe (Escenario conservador para tarjetas internacionales)
-  const STRIPE_PERCENTAGE = 0.065; // 6.5% (Cubre 2.9% base + 1.5% intl + 1% conversión + margen seguridad)
-  const STRIPE_FIXED_FEE = 0.30;   // $0.30 USD por transacción
+  // Configuración de Stripe exacta basada en facturas reales (Trinidad, Barbados)
+  const STRIPE_PERCENTAGE = 0.044; // 4.4% (Cubre 2.9% base + 1.5% tarjeta internacional)
+  const STRIPE_FIXED_FEE = 0.30;   // $0.30 USD por transacción fija
 
-  // Fórmula Inversa: (Monto + Fijo) / (1 - %)
-  // Esto asegura que si quieres $100, cobres exactamente lo necesario para que te queden $100.
+  // Fórmula Inversa: (Monto Neto) / (1 - Porcentaje) + Fijo
+  // Matemáticamente, esto asegura que después de que Stripe descuente su tajada, a ti te quede el `amountNet` exacto.
   const amountToCharge = (amountNet + STRIPE_FIXED_FEE) / (1 - STRIPE_PERCENTAGE);
 
   // Redondear a 2 decimales

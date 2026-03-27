@@ -27,7 +27,8 @@ export async function POST(req: Request) {
         billDetails, 
         selectedCourier, 
         courierService,
-        shippingAddress // 🔥 NUEVO: Recibimos la dirección desde el frontend
+        shippingAddress, // 🔥 NUEVO: Recibimos la dirección desde el frontend
+        planName         // 🔥 AHORA SÍ RECIBIMOS EL NOMBRE DEL PLAN PARA SUPABASE
     } = await req.json();
 
     if (!amountNet || !paymentMethodId) {
@@ -47,9 +48,13 @@ export async function POST(req: Request) {
         return NextResponse.json({ message: "Tarjeta no encontrada" }, { status: 404 });
     }
 
-    // --- CÁLCULO GENERAL ---
+    // --- CÁLCULO GENERAL AJUSTADO AL 4.4% + $0.30 ---
     const totalToCharge = Number(amountNet); 
-    const impliedSubtotal = totalToCharge / 1.0727; 
+    const STRIPE_PERCENTAGE = 0.044; // 4.4%
+    const STRIPE_FIXED_FEE = 0.30;
+    
+    // Despeje matemático para sacar el Subtotal real del Total Cobrado:
+    const impliedSubtotal = (totalToCharge * (1 - STRIPE_PERCENTAGE)) - STRIPE_FIXED_FEE;
     const feeAmount = totalToCharge - impliedSubtotal;
     const amountInCents = Math.round(totalToCharge * 100);
 
@@ -79,21 +84,6 @@ export async function POST(req: Request) {
     // =========================================================================
     const userLang = (user as any).language || 'en';
     const t = getT(userLang);
-
-    // A. Email al Cliente
-    // 🔥 APAGADO: Silenciamos este correo técnico para que el cliente solo reciba 
-    // el correo profesional desde shipments/create/route.ts y no haya duplicados.
-    /*
-    await sendPaymentReceiptEmail(
-        user.email!,
-        user.name || 'Cliente',
-        serviceType || 'Servicio Logístico',
-        totalToCharge,
-        paymentIntent.id,
-        description || 'Pago procesado correctamente',
-        userLang
-    );
-    */
 
     // B. Alerta al Admin (A ti sí te llega para control interno)
     await sendAdminPaymentAlert(
@@ -133,9 +123,9 @@ export async function POST(req: Request) {
             const isPickup = currentShipment?.serviceType === 'STORAGE_FEE';
             const nextStatus = isPickup ? 'LISTO_PARA_RETIRO' : 'LISTO_PARA_ENVIO';
 
-            // 2. Calcular montos
-            const rawSubtotal = Number(detail.amount); 
-            const rawTotal = rawSubtotal * 1.0727;     
+            // 2. Calcular montos con el nuevo fee de 4.4%
+            const rawTotal = Number(detail.amount); 
+            const rawSubtotal = (rawTotal * (1 - STRIPE_PERCENTAGE)) - STRIPE_FIXED_FEE;
             const rawFee = rawTotal - rawSubtotal;     
 
             const cleanSubtotal = Number(rawSubtotal.toFixed(2));
@@ -236,6 +226,50 @@ export async function POST(req: Request) {
             }
         });
     }
+
+    // =========================================================================
+    // 🔥 NUEVO CASO D: Mailbox Setup / Suscripción
+    // ⚠️ COMENTADO TEMPORALMENTE: Las tablas no existen en Producción aún.
+    // =========================================================================
+    if (serviceType === 'MailboxSubscription') {
+        /*
+        // Calculamos la fecha de vencimiento (1 mes a partir de hoy)
+        const nextMonth = new Date();
+        nextMonth.setMonth(nextMonth.getMonth() + 1);
+
+        // 1. CREAR O ACTUALIZAR LA SUSCRIPCIÓN (Upsert)
+        await prisma.mailboxSubscription.upsert({
+            where: { 
+                userId: user.id 
+            },
+            update: {
+                planType: planName || 'Plan General',
+                currentPeriodEnd: nextMonth,
+                // Nota: No cambiamos el 'status' aquí si ya estaba ACTIVE, 
+                // para no quitarle el acceso si solo está renovando.
+            },
+            create: {
+                userId: user.id,
+                planType: planName || 'Plan General',
+                status: 'PENDING_USPS', // Estado inicial por defecto en tu schema
+                currentPeriodEnd: nextMonth,
+            }
+        });
+
+        // 2. REGISTRAR LA TRANSACCIÓN FINANCIERA (El recibo)
+        await prisma.mailboxTransaction.create({
+            data: {
+                userId: user.id,
+                amount: Number(totalToCharge.toFixed(2)),
+                description: description || `Suscripción a Buzón: ${planName}`,
+                status: 'COMPLETED',
+                stripePaymentId: paymentIntent.id
+            }
+        });
+        */
+       console.log("Suscripción procesada en Stripe. Guardado en BD desactivado hasta pase a Prod.");
+    }
+    // =========================================================================
 
     return NextResponse.json({ 
         success: true, 
