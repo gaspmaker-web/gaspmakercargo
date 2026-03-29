@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { 
     Truck, MapPin, Warehouse, CreditCard, Info, Loader2, Package, Check, 
-    ChevronDown, ChevronUp, Calendar, Phone, Weight, Building2, AlertTriangle, XCircle 
+    ChevronDown, ChevronUp, Calendar, Phone, Weight, Building2, AlertTriangle, XCircle, Clock
 } from 'lucide-react';
 import { useJsApiLoader, Autocomplete } from '@react-google-maps/api';
 import { getProcessingFee } from '@/lib/stripeCalc';
@@ -69,8 +69,10 @@ export default function SolicitarPickupPage() {
   const [showMobileSummary, setShowMobileSummary] = useState(false);
 
   const [addressError, setAddressError] = useState<string | null>(null);
-  const [dropOffError, setDropOffError] = useState<string | null>(null); // 🔥 Nuevo estado para error de Dropoff
+  const [dropOffError, setDropOffError] = useState<string | null>(null);
+  const [timeError, setTimeError] = useState<string | null>(null);
   const [isAddressValid, setIsAddressValid] = useState(false);
+  const [isTimeValid, setIsTimeValid] = useState(false); 
 
   const [quote, setQuote] = useState({ 
       total: 0, subtotal: 0, processingFee: 0, baseFare: 0, distanceSurcharge: 0, distanceMiles: 0, appliedStrategy: 'WEIGHT' 
@@ -113,7 +115,8 @@ export default function SolicitarPickupPage() {
   const handleServiceSelect = (type: string) => {
       setServiceType(type);
       setAddressError(null);
-      setDropOffError(null); // Limpiar error de dropoff al cambiar
+      setDropOffError(null);
+      setTimeError(null);
       setQuote(prev => ({ ...prev, distanceMiles: 0, distanceSurcharge: 0 }));
       setTimeout(() => {
           window.scrollTo({ top: 150, behavior: 'smooth' });
@@ -131,39 +134,30 @@ export default function SolicitarPickupPage() {
              subtotal = 0; 
         } else {
             let tp = 0;
-            // A. Calcular Precio Peso
             if (formData.weightTier === 'w_heavy') {
                 const weight = formData.exactWeight > 0 ? formData.exactWeight : 0;
-                // 🔥 Regla Mayorista: > 1999 lbs -> $0.35, sino $0.55
                 const rate = weight > 1999 ? HEAVY_RATE_BULK : HEAVY_RATE_STD;
                 tp = weight * rate;
             } else {
                 tp = WEIGHT_TIERS.find(t => t.id === formData.weightTier)?.price || 0;
             }
 
-            // B. Calcular Base Fare y Milla
             let baseFare = 0;
             let mileRate = MILE_RATE_STD;
 
             if (formData.volumeTier === 'v_250') {
-                // 🔥 LÓGICA CAMIÓN: Base $250.
-                // NO se suma el precio "small/medium/large". SOLO se suma si es "Heavy Load".
-                mileRate = MILE_RATE_TRUCK; // Milla a $2.50
-                
+                mileRate = MILE_RATE_TRUCK;
                 if (formData.weightTier === 'w_heavy') {
                     baseFare = FULL_FREIGHT_BASE + tp;
                 } else {
-                    baseFare = FULL_FREIGHT_BASE; // $250 fijos si no es carga pesada
+                    baseFare = FULL_FREIGHT_BASE;
                 }
-
             } else {
-                // Lógica Estándar (Auto/SUV)
                 const tv = VOLUME_TIERS.find(v => v.id === formData.volumeTier)?.price || 0;
                 baseFare = Math.max(tp, tv);
                 mileRate = MILE_RATE_STD;
             }
 
-            // C. Recargo Distancia
             if (quote.distanceMiles > BASE_MILES) {
                 distanceSurcharge = (quote.distanceMiles - BASE_MILES) * mileRate;
             }
@@ -227,7 +221,6 @@ export default function SolicitarPickupPage() {
           return;
       }
 
-      // 🔥 VALIDACIÓN DE ZONA PARA DROPOFF
       let county = '';
       if (place.address_components) {
           const countyComp = place.address_components.find(c => c.types.includes('administrative_area_level_2'));
@@ -236,18 +229,17 @@ export default function SolicitarPickupPage() {
       const isAllowed = ALLOWED_COUNTIES.some(allowed => county === allowed);
       if (!isAllowed) {
           setDropOffError(`❌ Solo entregamos en Miami-Dade y Broward. (Zona: ${county || 'Desconocida'})`);
-          setFormData(prev => ({ ...prev, dropOffAddress: '' })); // Borrar dirección inválida
+          setFormData(prev => ({ ...prev, dropOffAddress: '' }));
           return;
       }
 
-      setDropOffError(null); // Dirección válida
+      setDropOffError(null);
       const newDropoff = place.formatted_address!;
       setFormData(prev => ({ ...prev, dropOffAddress: newDropoff }));
       
       calculateComplexRoute(formData.originAddress, newDropoff);
   };
 
-  // 🔥 NUEVO: Recalcular ruta si el usuario cambia el volumen (para quitar o poner el retorno)
   useEffect(() => {
       if (serviceType === 'DELIVERY' && formData.originAddress && formData.dropOffAddress) {
           calculateComplexRoute(formData.originAddress, formData.dropOffAddress);
@@ -284,7 +276,6 @@ export default function SolicitarPickupPage() {
             const leg1 = await getLeg(GMC_WAREHOUSE_ADDRESS, origin); 
             const leg2 = await getLeg(origin, destination);           
             
-            // 🔥 LÓGICA DE EXCEPCIÓN PARA LOW VOLUME (v_30)
             if (formData.volumeTier === 'v_30') {
                 totalMiles = leg1 + leg2;
             } else {
@@ -303,6 +294,40 @@ export default function SolicitarPickupPage() {
       setQuote(prev => ({ ...prev, distanceMiles: 0 }));
   };
 
+  const validateTimeWindow = (dateTimeString: string) => {
+    if (!dateTimeString) {
+      setIsTimeValid(false);
+      setTimeError(null);
+      return;
+    }
+
+    const selectedDate = new Date(dateTimeString);
+    const now = new Date();
+
+    if (selectedDate < now) {
+      setIsTimeValid(false);
+      setTimeError(t.has('timeErrorPast') ? t('timeErrorPast') : "Please select a future date and time.");
+      return;
+    }
+
+    const hours = selectedDate.getHours();
+    
+    if (hours >= 9 && hours < 16) {
+      setIsTimeValid(true);
+      setTimeError(null);
+    } else {
+      setIsTimeValid(false);
+      setTimeError(t.has('timeErrorWindow') ? t('timeErrorWindow') : "Our pickup window is between 9:00 AM and 4:00 PM.");
+    }
+  };
+
+  const handleDateTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setFormData({...formData, pickupDate: val});
+    validateTimeWindow(val);
+  };
+
+
   const handlePaymentAndSubmit = async () => {
     if (serviceType !== 'PICKUP_WAREHOUSE') {
         if (!isAddressValid || !formData.originAddress) { 
@@ -311,11 +336,10 @@ export default function SolicitarPickupPage() {
         if (serviceType === 'DELIVERY' && !formData.dropOffAddress) {
             alert("⚠️ Faltan dirección de entrega."); return;
         }
-        if (!formData.pickupDate) { alert("Completa los campos."); return; }
+        if (!formData.pickupDate || !isTimeValid) { alert("Completa los campos correctamente, respetando el horario."); return; }
 
-        // 🔥 LOGICA UX MEJORADA: Si no hay tarjeta, abrimos el menú en lugar de bloquear
         if (!selectedCardId) { 
-            setShowMobileSummary(true); // Desplegar menú
+            setShowMobileSummary(true); 
             if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(50);
             return; 
         }
@@ -448,7 +472,6 @@ export default function SolicitarPickupPage() {
                     
                     {serviceType === 'PICKUP_WAREHOUSE' ? (
                         <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm border border-gray-200">
-                            {/* ... (Contenido de Inventario sin cambios) ... */}
                             <div className="flex justify-between items-center mb-4 border-b pb-2">
                                 <h3 className="font-bold text-gmc-gris-oscuro text-sm uppercase">{t('inventoryTitle')}</h3>
                                 <div className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded font-bold">{t('statusReady')}</div>
@@ -457,7 +480,7 @@ export default function SolicitarPickupPage() {
                             {inventoryLoading ? <div className="text-center py-4"><Loader2 className="animate-spin mx-auto"/></div> : inventory.length === 0 ? (
                                 <div className="text-center py-8 bg-gray-50 rounded text-gray-500">
                                     <Package className="mx-auto mb-2 text-gray-300" size={32}/>
-                                    <p className="font-bold text-sm">No tienes paquetes disponibles para recoger.</p>
+                                   <p className="font-bold text-sm">{t('emptyPackages')}</p>
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -543,7 +566,6 @@ export default function SolicitarPickupPage() {
                                                 className={`w-full p-3 border rounded-lg text-base ${dropOffError ? 'border-red-500 bg-red-50 text-red-900' : 'border-gray-200'}`} 
                                             />
                                         </Autocomplete>
-                                        {/* 🔥 MOSTRAR ERROR DE DROPOFF */}
                                         {dropOffError && (
                                             <div className="mt-2 flex items-center gap-2 text-red-600 bg-red-50 p-2 rounded-lg text-xs font-bold animate-in fade-in">
                                                 <AlertTriangle size={16} />
@@ -585,9 +607,10 @@ export default function SolicitarPickupPage() {
                                     <div className="mb-4 animate-in fade-in slide-in-from-top-2 duration-300">
                                         <div className="relative">
                                             <Weight className="absolute left-3 top-1/2 -translate-y-1/2 text-gmc-dorado-principal" size={18} />
+                                            {/* 🔥 TRADUCCIÓN APLICADA AQUÍ: exactWeightPlaceholder */}
                                             <input 
                                                 type="number" 
-                                                placeholder="Peso exacto (Lbs)" 
+                                                placeholder={t.has('exactWeightPlaceholder') ? t('exactWeightPlaceholder') : "Exact weight (Lbs)"} 
                                                 className="w-full p-3 pl-10 border border-yellow-200 rounded-xl bg-yellow-50 text-base font-bold placeholder-yellow-600/50 focus:ring-2 focus:ring-yellow-400 focus:outline-none" 
                                                 onChange={e => setFormData({...formData, exactWeight: parseFloat(e.target.value)})} 
                                             />
@@ -597,24 +620,34 @@ export default function SolicitarPickupPage() {
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                     <div className="relative">
-                                        <label className="absolute -top-2 left-3 bg-white px-1 text-[10px] font-bold text-gray-400 z-10">Fecha de Recogida</label>
+                                        <label className="absolute -top-2 left-3 bg-white px-1 text-[10px] font-bold text-gray-400 z-10">
+                                            {t.has('pickupDateLabel') ? t('pickupDateLabel') : "Pickup Window (9am-4pm)"}
+                                        </label>
                                         <div className="relative">
                                             <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={18} />
                                             <input 
-                                                type="date" 
-                                                className="w-full p-3 pl-10 border border-gray-200 rounded-xl text-base bg-white appearance-none focus:ring-2 focus:ring-gmc-dorado-principal focus:border-transparent min-h-[46px]" 
-                                                onChange={e => setFormData({...formData, pickupDate: e.target.value})} 
+                                                type="datetime-local" 
+                                                className={`w-full p-3 pl-10 border rounded-xl text-base bg-white appearance-none focus:ring-2 focus:ring-gmc-dorado-principal min-h-[46px] ${timeError ? 'border-red-500 bg-red-50' : 'border-gray-200 focus:border-transparent'}`}
+                                                onChange={handleDateTimeChange} 
                                             />
                                         </div>
+                                        {timeError && (
+                                            <div className="mt-1 flex items-center gap-1 text-red-500 text-[10px] font-bold">
+                                                <Clock size={12} />
+                                                <span>{timeError}</span>
+                                            </div>
+                                        )}
                                     </div>
 
                                     <div className="relative">
-                                         <label className="absolute -top-2 left-3 bg-white px-1 text-[10px] font-bold text-gray-400 z-10">Contacto</label>
+                                         <label className="absolute -top-2 left-3 bg-white px-1 text-[10px] font-bold text-gray-400 z-10">
+                                             {t.has('contactLabel') ? t('contactLabel') : "Contact"}
+                                         </label>
                                          <div className="relative">
                                             <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={18} />
                                             <input 
                                                 type="tel" 
-                                                placeholder="Teléfono" 
+                                                placeholder={t.has('phonePlaceholder') ? t('phonePlaceholder') : "Phone number"} 
                                                 className="w-full p-3 pl-10 border border-gray-200 rounded-xl text-base bg-white focus:ring-2 focus:ring-gmc-dorado-principal focus:border-transparent min-h-[46px]" 
                                                 onChange={e => setFormData({...formData, contactPhone: e.target.value})} 
                                             />
@@ -622,7 +655,11 @@ export default function SolicitarPickupPage() {
                                     </div>
                                 </div>
                                 
-                                <textarea className="w-full p-3 border border-gray-200 rounded-xl text-base h-24 resize-none focus:ring-2 focus:ring-gmc-dorado-principal focus:border-transparent" placeholder="Descripción de los artículos..." onChange={e => setFormData({...formData, description: e.target.value})}></textarea>
+                                <textarea 
+                                    className="w-full p-3 border border-gray-200 rounded-xl text-base h-24 resize-none focus:ring-2 focus:ring-gmc-dorado-principal focus:border-transparent" 
+                                    placeholder={t.has('descPlaceholder') ? t('descPlaceholder') : "Description of items..."} 
+                                    onChange={e => setFormData({...formData, description: e.target.value})}
+                                ></textarea>
                             </div>
                         </>
                     )}
@@ -655,7 +692,7 @@ export default function SolicitarPickupPage() {
                                     </div>
                                 ) : <Link href="/account-settings" className="block text-center text-xs p-2 bg-gray-700 rounded text-white">+ Agregar Tarjeta</Link>}
                             </div>
-                            <button onClick={handlePaymentAndSubmit} disabled={isLoading || quote.total === 0 || !isAddressValid} className="w-full py-3 bg-gmc-dorado-principal text-gmc-gris-oscuro font-bold rounded-xl flex justify-center items-center gap-2 hover:bg-white transition-colors disabled:opacity-50">
+                            <button onClick={handlePaymentAndSubmit} disabled={isLoading || quote.total === 0 || !isAddressValid || !isTimeValid} className="w-full py-3 bg-gmc-dorado-principal text-gmc-gris-oscuro font-bold rounded-xl flex justify-center items-center gap-2 hover:bg-white transition-colors disabled:opacity-50">
                                 {isLoading ? <Loader2 className="animate-spin"/> : <CreditCard size={18}/>} {t('btnPay')}
                             </button>
                         </div>
@@ -676,10 +713,9 @@ export default function SolicitarPickupPage() {
                             <div className="text-3xl font-garamond font-bold leading-none text-white">${quote.total.toFixed(2)}</div>
                         </div>
 
-                        {/* 🔥 BOTÓN DESBLOQUEADO - Se eliminó '!selectedCardId' del disabled */}
                         <button 
                             onClick={handlePaymentAndSubmit} 
-                            disabled={isLoading || quote.total === 0 || !isAddressValid} 
+                            disabled={isLoading || quote.total === 0 || !isAddressValid || !isTimeValid} 
                             className="bg-[#EAD8B1] text-[#222b3c] px-8 py-3.5 rounded-xl font-bold text-base shadow-lg active:scale-95 transition-transform flex items-center gap-2 disabled:opacity-50 disabled:shadow-none"
                         >
                             {isLoading ? <Loader2 className="animate-spin" size={20}/> : <CreditCard size={20}/>} 
