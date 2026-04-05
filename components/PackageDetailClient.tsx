@@ -111,6 +111,10 @@ export default function PackageDetailClient({
   const [couponMsg, setCouponMsg] = useState({ type: "", text: "" });
   const [validatingCoupon, setValidatingCoupon] = useState(false);
 
+  // 🔥 BILLETERA / REFERIDOS 🔥
+  const walletBalance = userProfile?.walletBalance || 0;
+  const [useWallet, setUseWallet] = useState(false);
+
   // Fees
   const isGMCSelected =
     selectedRate?.carrier?.toUpperCase().includes("GASP") ||
@@ -171,14 +175,25 @@ export default function PackageDetailClient({
     }
   }, [cards.length]);
 
+  // 🔥 AUTO-APLICAR BONO DE BIENVENIDA AL AMIGO INVITADO
   useEffect(() => {
-    if (discount > 0 && selectedRate) {
-      if (selectedRate.price < 100) {
+    if (selectedRate) {
+      const isEligibleForWelcomeBonus = userProfile?.referredBy && !userProfile?.referralRewardPaid;
+      
+      // Calculamos el costo base antes de aplicar descuentos para ver si supera la meta
+      const tempBaseAmount = selectedRate.price + handlingFee + insuranceCost;
+
+      if (isEligibleForWelcomeBonus && tempBaseAmount >= 100) {
+        // ¡Premio Automático!
+        setDiscount(25.0);
+        setCouponMsg({ type: "success", text: `${t("welcomeBonus")} (-$25.00)` });
+      } else {
+        // Si no califica, quitamos el descuento
         setDiscount(0);
-        setCouponMsg({ type: "error", text: "Discount removed: Shipment value is under $100." });
+        setCouponMsg({ type: "", text: "" });
       }
     }
-  }, [selectedRate, discount]);
+  }, [selectedRate, userProfile, handlingFee, insuranceCost]);
 
   // 🔥 HELPER: OBTIENE LOS DATOS COMPLETOS DE LA DIRECCIÓN SELECCIONADA
   const currentAddress = allAddresses.find((a) => a.id === selectedAddressId);
@@ -206,6 +221,7 @@ export default function PackageDetailClient({
     setRates([]);
     setDiscount(0);
     setCouponMsg({ type: "", text: "" });
+    setUseWallet(false); // Resetear billetera por seguridad
 
     try {
       const res = await fetch("/api/rates", {
@@ -254,6 +270,7 @@ export default function PackageDetailClient({
     }
   };
 
+  // 🔥 MANEJO DE CUPÓN BLINDADO (Seguridad de Referidos)
   const handleApplyCoupon = async () => {
     if (!couponCode.trim()) return;
     if (!selectedRate) { setCouponMsg({ type: "error", text: "Select a shipping method first." }); return; }
@@ -262,6 +279,7 @@ export default function PackageDetailClient({
     setCouponMsg({ type: "", text: "" });
     setDiscount(0);
 
+    // 1. Validar que el envío supere los $100
     if (selectedRate.price < 100) {
       setTimeout(() => {
         setCouponMsg({ type: "error", text: "Give $25, Get $25: Valid only on shipments over $100 USD." });
@@ -270,9 +288,22 @@ export default function PackageDetailClient({
       return;
     }
 
+    // 2. Seguridad: Extraer código ingresado y código real en BD
+    const cleanInput = couponCode.trim().toUpperCase();
+    const actualReferrer = userProfile?.referredBy ? userProfile.referredBy.trim().toUpperCase() : null;
+    const isBonusUsed = userProfile?.referralRewardPaid === true;
+
     setTimeout(() => {
-      setDiscount(25.0);
-      setCouponMsg({ type: "success", text: "Referral Credit applied! (-$25.00)" });
+      // 3. Validar si el código es correcto y no ha sido usado
+      if (cleanInput === actualReferrer && !isBonusUsed) {
+        setDiscount(25.0);
+        setCouponMsg({ type: "success", text: "Welcome Bonus applied! 🎁 (-$25.00)" });
+      } else if (cleanInput === actualReferrer && isBonusUsed) {
+        setCouponMsg({ type: "error", text: "This welcome bonus has already been used." });
+      } else {
+        setCouponMsg({ type: "error", text: "Invalid promo code." });
+      }
+      
       setValidatingCoupon(false);
     }, 800);
   };
@@ -288,10 +319,11 @@ export default function PackageDetailClient({
 
     setIsPaying(true);
 
-    const servicePrice = selectedRate.price;
+   const servicePrice = selectedRate.price;
     const baseAmount = servicePrice + handlingFee + insuranceCost;
     const fee = getProcessingFee ? getProcessingFee(baseAmount) : baseAmount * 0.0727;
-    const total = Math.max(0, baseAmount + fee - discount);
+    // Utilizamos el cálculo ya procesado con billetera
+    const total = finalTotalAmount;
 
     // 👇 1. CREAMOS LA DIRECCIÓN (Esto faltaba en tu código)
     const formattedAddress = `${currentDestination.name} | ${currentDestination.address}, ${currentDestination.cityZip}, ${currentDestination.countryCode || currentDestination.countryName} | Tel: ${currentDestination.phone || 'N/A'}`;
@@ -301,16 +333,16 @@ export default function PackageDetailClient({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          amountNet: total,
+          amountNet: total, // Este es el monto final que Stripe cobrará (ej. $85)
           paymentMethodId: selectedCardId,
           serviceType: "SINGLE_SHIPMENT",
           description: `Envío ${pkg.gmcTrackingNumber} via ${selectedRate.carrier}`,
           packageIds: [pkg.id],
-          discountApplied: discount,
-          // 👇 3. ENVIAMOS LA DIRECCIÓN A LA BASE DE DATOS (Vital)
-          shippingAddress: formattedAddress 
+          discountApplied: discount, // 🔥 VITAL: Le decimos al backend de cuánto fue el descuento
+          shippingAddress: formattedAddress,
+          walletDiscount: useWallet ? appliedWalletAmount : 0 
         }),
-      });
+      });;
 
       const payData = await payRes.json();
       if (!payRes.ok) throw new Error(payData.message || "Error al procesar el cobro.");
@@ -376,7 +408,16 @@ export default function PackageDetailClient({
   const servicePrice = selectedRate ? selectedRate.price : 0; 
   const baseAmount = servicePrice + handlingFee + insuranceCost;
   const processingFee = selectedRate ? (getProcessingFee ? getProcessingFee(baseAmount) : baseAmount * 0.0727) : 0;
-  const totalAmount = Math.max(0, servicePrice + processingFee + handlingFee + insuranceCost - discount);
+  
+  let finalTotalAmount = Math.max(0, servicePrice + processingFee + handlingFee + insuranceCost - discount);
+  let appliedWalletAmount = 0;
+
+  // 🔥 LÓGICA DE BILLETERA (Mínimo $0.50 Stripe)
+  if (useWallet && walletBalance > 0) {
+      appliedWalletAmount = Math.min(walletBalance, finalTotalAmount - 0.50);
+      if (appliedWalletAmount < 0) appliedWalletAmount = 0;
+      finalTotalAmount = finalTotalAmount - appliedWalletAmount;
+  }
 
   if (isDelivered) {
     return (
@@ -642,7 +683,7 @@ export default function PackageDetailClient({
                 <>
                   <div className="space-y-4 border-b border-gray-600 pb-6 mb-6">
                     <div className="flex justify-between text-sm">
-                      <span>Freight Cost ({cleanCarrierName(selectedRate.carrier)})</span>
+                      <span>{t("freightCost")} ({cleanCarrierName(selectedRate.carrier)})</span>
                       <span>${servicePrice.toFixed(2)}</span>
                     </div>
 
@@ -655,44 +696,80 @@ export default function PackageDetailClient({
 
                     {handlingFee > 0 ? (
                       <div className="flex justify-between text-sm" style={{ color: "#EAD8B1" }}>
-                        <span>Fee: Handling (GMC)</span>
+                        <span>{t("feeHandling")}</span>
                         <span>+${handlingFee.toFixed(2)}</span>
                       </div>
                     ) : (
                       <div className="flex justify-between text-sm text-green-400">
-                        <span>Fee: Handling (GMC)</span>
-                        <span>FREE</span>
+                        <span>{t("feeHandling")}</span>
+                        <span>{t("free")}</span>
                       </div>
                     )}
 
                     <div className="flex justify-between text-sm text-gray-400">
-                        <span>Processing Fee</span>
+                        <span>{t("processingFee")}</span>
                         <span>+${processingFee.toFixed(2)}</span>
                     </div>
 
                     {discount > 0 && (
                       <div className="flex justify-between text-sm text-green-400 font-bold bg-green-900/30 p-2 rounded">
-                        <span className="flex items-center gap-1"><Tag size={12} /> Discount</span>
+                        <span className="flex items-center gap-1"><Tag size={12} /> {t("discount")}</span>
                         <span>-${discount.toFixed(2)}</span>
                       </div>
                     )}
 
-                    <div className="pt-2">
-                      <div className="flex gap-2">
-                        <input type="text" placeholder="Promo Code" value={couponCode} onChange={(e) => setCouponCode(e.target.value.toUpperCase())} disabled={discount > 0} className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-xs text-white placeholder-gray-400 focus:outline-none focus:border-[#EAD8B1]" />
-                        {discount > 0 ? (
-                          <button onClick={() => { setDiscount(0); setCouponCode(""); setCouponMsg({ type: "", text: "" }); }} className="bg-red-500/20 text-red-400 p-2 rounded-lg hover:bg-red-500/40"><XCircle size={16} /></button>
-                        ) : (
-                          <button onClick={handleApplyCoupon} disabled={validatingCoupon || !couponCode} className="bg-[#EAD8B1] text-[#222b3c] px-3 py-2 rounded-lg text-xs font-bold hover:brightness-110 disabled:opacity-50">{validatingCoupon ? <Loader2 className="animate-spin" size={14} /> : "Apply"}</button>
-                        )}
-                      </div>
-                      {couponMsg.text && <p className={`text-[10px] mt-2 font-bold flex items-center gap-1 ${couponMsg.type === "error" ? "text-red-400" : "text-green-400"}`}>{couponMsg.type === "error" ? <AlertCircle size={10} /> : <CheckCircle size={10} />}{couponMsg.text}</p>}
+                    <div className="pt-2 border-t border-gray-600 mt-2">
+                      {discount > 0 ? (
+                        <div className="bg-green-900/30 border border-green-500/30 p-3 rounded-lg flex items-center justify-between mt-3">
+                           <p className="text-xs font-bold text-green-400 flex items-center gap-2">
+                             <CheckCircle size={14} /> {couponMsg.text || "Promo Applied!"}
+                           </p>
+                        </div>
+                      ) : (
+                        <div className="mt-3">
+                          <div className="flex gap-2">
+                            <input type="text" placeholder="Promo Code (Optional)" value={couponCode} onChange={(e) => setCouponCode(e.target.value.toUpperCase())} className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-xs text-white placeholder-gray-400 focus:outline-none focus:border-[#EAD8B1]" />
+                            <button onClick={handleApplyCoupon} disabled={validatingCoupon || !couponCode} className="bg-[#EAD8B1] text-[#222b3c] px-3 py-2 rounded-lg text-xs font-bold hover:brightness-110 disabled:opacity-50">{validatingCoupon ? <Loader2 className="animate-spin" size={14} /> : "Apply"}</button>
+                          </div>
+                          {couponMsg.text && couponMsg.type === "error" && <p className="text-[10px] mt-2 font-bold flex items-center gap-1 text-red-400"><AlertCircle size={10} />{couponMsg.text}</p>}
+                        </div>
+                      )}
                     </div>
                   </div>
 
+               {/* 🔥 CAJITA DORADA BILLETERA (DESKTOP) 🔥 */}
+                  {walletBalance > 0 && (
+                      <div className="mt-4 p-3 bg-gradient-to-r from-yellow-500/10 to-yellow-600/20 border border-yellow-500/30 rounded-xl mb-6">
+                          <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                  <div className="bg-yellow-500/20 p-1.5 rounded-lg text-yellow-400">
+                                      <DollarSign size={16} />
+                                  </div>
+                                  <div>
+                                      {/* 👇 Título traducido usando tBills */}
+                                      <p className="text-xs font-bold text-yellow-400 uppercase tracking-wide">{tBills('walletTitle')}</p>
+                                      {/* 👇 Subtítulo traducido usando tBills */}
+                                      <p className="text-[10px] text-yellow-400/80">{tBills('walletBalance')}: ${walletBalance.toFixed(2)}</p>
+                                  </div>
+                              </div>
+                              <label className="relative inline-flex items-center cursor-pointer">
+                                  <input type="checkbox" className="sr-only peer" checked={useWallet} onChange={() => setUseWallet(!useWallet)} />
+                                  <div className="w-9 h-5 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-yellow-500"></div>
+                              </label>
+                          </div>
+                          {useWallet && appliedWalletAmount > 0 && (
+                              <div className="mt-2 pt-2 border-t border-yellow-500/20 flex justify-between text-xs font-bold text-yellow-400">
+                                  {/* 👇 Tercera frase traducida usando tBills (con texto por defecto por si acaso) */}
+                                  <span>{tBills('walletApplied') || "Saldo a aplicar"}:</span>
+                                  <span>-${appliedWalletAmount.toFixed(2)}</span>
+                              </div>
+                          )}
+                      </div>
+                  )}
+
                   <div className="flex justify-between items-center mb-8">
                     <span className="text-xl font-bold">{tPickup("sumTotal")}</span>
-                    <span className="text-3xl font-bold" style={{ color: "#EAD8B1" }}>${totalAmount.toFixed(2)}</span>
+                   <span className="text-3xl font-bold" style={{ color: "#EAD8B1" }}>${finalTotalAmount.toFixed(2)}</span>
                   </div>
 
                   <div className="mb-6">
@@ -734,7 +811,7 @@ export default function PackageDetailClient({
                   <span className="text-[10px] text-[#EAD8B1] font-bold uppercase tracking-widest flex items-center gap-2 mb-1">
                     {tPickup("sumTotal")} {showMobileDetails ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
                   </span>
-                  <div className="text-3xl font-garamond font-bold leading-none text-white">${totalAmount.toFixed(2)}</div>
+                  <div className="text-3xl font-garamond font-bold leading-none text-white">${finalTotalAmount.toFixed(2)}</div>
                 </div>
                 <button onClick={handlePay} disabled={isPaying} className="bg-[#EAD8B1] text-[#222b3c] py-3.5 px-8 rounded-xl text-base font-bold shadow-lg active:scale-95 transition-transform flex items-center gap-2">
                   {isPaying ? <Loader2 className="animate-spin" /> : <CreditCard size={18} />} {tPickup("btnPay")}
@@ -744,48 +821,88 @@ export default function PackageDetailClient({
               {showMobileDetails && (
                 <div className="mt-5 pt-5 border-t border-gray-600 space-y-3 text-sm animate-fadeIn max-h-[60vh] overflow-y-auto">
                   <div className="flex justify-between text-gray-300">
-                    <span>Freight Cost</span>
+                    <span>{t("freightCost")}</span>
                     <span>${servicePrice.toFixed(2)}</span>
                   </div>
 
                   {insuranceCost > 0 && (
                     <div className="flex justify-between text-blue-300">
-                      <span>+ Insurance (3%)</span>
+                      <span className="flex items-center gap-1"><ShieldCheck size={14} /> + Ins (3%)</span>
                       <span>+${insuranceCost.toFixed(2)}</span>
                     </div>
                   )}
 
                   {handlingFee > 0 ? (
                     <div className="flex justify-between text-[#EAD8B1]">
-                      <span>Fee: Handling</span>
+                      <span>{t("feeHandling")}</span>
                       <span>+${handlingFee.toFixed(2)}</span>
                     </div>
                   ) : (
                     <div className="flex justify-between text-green-400">
-                      <span>Fee: Handling (GMC)</span>
-                      <span>FREE</span>
+                      <span>{t("feeHandling")}</span>
+                      <span>{t("free")}</span>
                     </div>
                   )}
 
                   <div className="flex justify-between text-gray-400">
-                      <span>Processing Fee</span>
+                      <span>{t("processingFee")}</span>
                       <span>+${processingFee.toFixed(2)}</span>
                   </div>
 
                   {discount > 0 && (
                     <div className="flex justify-between text-green-400 font-bold">
-                      <span>Discount</span>
+                      <span>{t("discount")}</span>
                       <span>-${discount.toFixed(2)}</span>
                     </div>
                   )}
 
-                  <div className="pt-3">
-                    <div className="flex gap-2">
-                      <input type="text" placeholder="Promo Code" value={couponCode} onChange={(e) => setCouponCode(e.target.value.toUpperCase())} disabled={discount > 0} className="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-base text-white focus:outline-none focus:border-[#EAD8B1]" />
-                      <button onClick={handleApplyCoupon} className="bg-gray-600 text-white px-3 rounded-lg text-xs hover:bg-gray-500">Apply</button>
-                    </div>
-                    {couponMsg.text && <p className={`text-[10px] mt-1 ${couponMsg.type === "error" ? "text-red-400" : "text-green-400"}`}>{couponMsg.type === "error" ? <AlertCircle size={10} /> : <CheckCircle size={10} />}{couponMsg.text}</p>}
+                  <div className="pt-3 border-t border-gray-600">
+                    {discount > 0 ? (
+                      <div className="bg-green-900/30 border border-green-500/30 p-3 rounded-lg flex items-center justify-between">
+                         <p className="text-sm font-bold text-green-400 flex items-center gap-2">
+                           <CheckCircle size={16} /> {couponMsg.text || "Promo Applied!"}
+                         </p>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="flex gap-2">
+                          <input type="text" placeholder="Promo Code (Optional)" value={couponCode} onChange={(e) => setCouponCode(e.target.value.toUpperCase())} className="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-base text-white focus:outline-none focus:border-[#EAD8B1]" />
+                          <button onClick={handleApplyCoupon} disabled={validatingCoupon || !couponCode} className="bg-gray-600 text-white px-3 rounded-lg text-xs hover:bg-gray-500 font-bold disabled:opacity-50">{validatingCoupon ? <Loader2 className="animate-spin" size={14} /> : "Apply"}</button>
+                        </div>
+                        {couponMsg.text && couponMsg.type === "error" && <p className="text-[10px] mt-2 font-bold flex items-center gap-1 text-red-400"><AlertCircle size={10} />{couponMsg.text}</p>}
+                      </>
+                    )}
                   </div>
+
+                  {/* 🔥 CAJITA DORADA BILLETERA (MÓVIL) 🔥 */}
+                  {walletBalance > 0 && (
+                      <div className="mt-3 p-3 bg-gradient-to-r from-yellow-500/10 to-yellow-600/20 border border-yellow-500/30 rounded-xl mb-3">
+                          <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                  <div className="bg-yellow-500/20 p-1.5 rounded-lg text-yellow-400">
+                                      <DollarSign size={14} />
+                                  </div>
+                                  <div>
+                                      {/* 👇 Título traducido usando tBills */}
+                                      <p className="text-xs font-bold text-yellow-400 uppercase tracking-wide">{tBills('walletTitle')}</p>
+                                      {/* 👇 Subtítulo traducido usando tBills */}
+                                      <p className="text-[10px] text-yellow-400/80">{tBills('walletBalance')}: ${walletBalance.toFixed(2)}</p>
+                                  </div>
+                              </div>
+                              <label className="relative inline-flex items-center cursor-pointer">
+                                  <input type="checkbox" className="sr-only peer" checked={useWallet} onChange={() => setUseWallet(!useWallet)} />
+                                  <div className="w-9 h-5 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-yellow-500"></div>
+                              </label>
+                          </div>
+                          {useWallet && appliedWalletAmount > 0 && (
+                              <div className="mt-2 pt-2 border-t border-yellow-500/20 flex justify-between text-xs font-bold text-yellow-400">
+                                  {/* 👇 Tercera frase traducida usando tBills (con texto por defecto por si acaso) */}
+                                  <span>{tBills('walletApplied') || "Aplicado"}:</span>
+                                  <span>-${appliedWalletAmount.toFixed(2)}</span>
+                              </div>
+                          )}
+                      </div>
+                  )}
 
                   <div className="pt-4 border-t border-gray-600 pb-4">
                     <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Tarjeta Seleccionada</label>

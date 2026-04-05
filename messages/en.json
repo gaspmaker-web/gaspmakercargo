@@ -11,7 +11,8 @@
     "faq": "FAQ's",
     "testimonials": "Testimonials",
     "locations": "Locations",
-    "access": "Login"
+    "access": "Login",
+    "termsOfService": "Terms of Service"
   },
   "HomePage": {
     "Hero": {
@@ -21,6 +22,19 @@
       "subtitle": "We simplify global logistics with efficient, secure, and punctual solutions. Because your peace of mind is our priority.",
       "cta_primary": "Open Free Locker",
       "cta_secondary": "Calculate Shipping"
+    },
+
+  "Features": {
+    "title": "More than just a locker",
+    "subtitle": "Logistics solutions designed to facilitate your purchases and boost your business.",
+    "consolidationTitle": "Consolidation",
+    "consolidationDesc": "Combine up to 15 packages in a single box. Save on international shipping by consolidating your purchases.",
+    "shopperTitle": "Personal Shopper",
+    "shopperDesc": "We buy for you on Amazon, Target, and Home Depot. Ideal if you don't have a US credit card.",
+    "mailboxTitle": "Virtual Mailbox",
+    "mailboxDesc": "Manage your physical mail digitally. Receive, scan, or destroy your letters online.",
+    "commercialTitle": "Commercial Cargo",
+    "commercialDesc": "Air and ocean freight management for importers and businesses. Pallet movement and heavy cargo."
     },
       "RecommendedStores": {
       "title": "Shop in the US, receive in your country",
@@ -89,7 +103,7 @@
     "lockerDesc": "Your physical US address to receive purchases from Amazon, eBay, Shein, and more.",
     "consolidationTitle": "Package Consolidation",
     "consolidationDesc": "Shop at multiple stores, wait for all to arrive, and ship them in one box to save money.",
-    "consolidationNote": "Combine up to 7 multiple packages to save on costs.",
+    "consolidationNote": "Combine up to 15 multiple packages to save on costs.",
     "pickupTitle": "Pickup & Delivery",
     "pickupDesc": "Local transport service in Miami and door-to-door delivery in your country.",
     "corporateTitle": "Commercial Cargo",
@@ -134,6 +148,7 @@
     "activeShipments": "Active Shipments",
     "noPackages": "You have no active packages at the moment.",
     "preAlertBtn": "Pre-Alert Package",
+    "personalShopperDesc": "We shop for you in the USA",
     "payBillsBtn": "Pay Bills",
     "inTransit": "In Transit",
     "readyForDelivery": "Ready for Delivery",
@@ -198,9 +213,10 @@
     "alertWeekend": "⚠️ The warehouse is closed on weekends.\nPlease select Monday to Friday.",
     "alertBusinessHours": "⚠️ Business hours: 9:00 AM to 4:00 PM.",
     "confirmPickup": "Do you confirm the appointment and charge to your account?",
-    "successPickup": "✅ Appointment scheduled successfully.\nA pending payment order has been generated."
+    "successPickup": "✅ Appointment scheduled successfully.\nA pending payment order has been generated.",
+    "physicalDocument": "Physical Document (Forwarded from Mailbox)"
   },
-  "Notifications": {
+"Notifications": {
     "title": "Notifications",
     "markRead": "Mark as read",
     "emptyTitle": "No notifications",
@@ -223,8 +239,11 @@
     "mailboxRejectedTitle": "⚠️ Action required on your Mailbox",
     "mailboxRejectedDesc": "Your documents did not pass verification. Reason: {reason}. Please re-upload them.",
     "additionalRejectedTitle": "⚠️ Additional Person Documents Rejected",
-    "additionalRejectedDesc": "The documents for your additional person ({name}) were rejected. Reason: {reason}."
-},
+    "additionalRejectedDesc": "The documents for your additional person ({name}) were rejected. Reason: {reason}.",
+    "vaciar": "Clear all",
+    "shopperQuoteTitle": "🛍️ Quote Ready",
+    "shopperQuoteMsg": "Your order has been quoted. Go to the 'My Quotes' tab to check the total and pay."
+  },
   "AddressCard": {
     "title": "Your Miami Address (Locker)",
     "recipient": "Recipient",
@@ -301,6 +320,12 @@
     "pdfDocument": "PDF Document",
     "viewFile": "View file",
     "noInvoice": "No Invoice",
+    "freightCost": "Freight Cost",
+    "feeHandling": "Fee: Handling (GMC)",
+    "free": "FREE",
+    "processingFee": "Processing Fee",
+    "discount": "Discount",
+    "welcomeBonus": "Welcome Bonus Auto-Applied! 🎁",
     "shippingOptions": "Shipping Options",
     "viewRatesBtn": "View Available Rates",
     "calculating": "Calculating...",
@@ -341,7 +366,14 @@
     "selected": "Selected",
     "errorAddress": "Missing shipping address in your settings.",
     "configureAddress": "Configure Address",
-    "pickupInStore": "Store Pickup"
+    "pickupInStore": "Store Pickup",
+    "freightCost": "Freight Cost",
+    "consolidationFee": "Consolidation Fee",
+    "processingFee": "Processing Fee",
+    "discount": "Discount",
+    "welcomeBonusApplied": "Welcome Bonus Auto-Applied! 🎁",
+    "walletTitle": "REWARDS WALLET",
+    "walletBalance": "Available balance"
   },
   "PreAlertPage": {
     "title": "Pre-Alert Package",
@@ -1027,7 +1059,33 @@
     "documentViewerTitle": "Document Viewer",
     "btnDownload": "Download",
     "openNewTab": "Open in new tab",
-    "btnClose": "Close"
+    "btnClose": "Close",
+    "pickupBtnDesktop": "Pick Up in Person (Free)",
+    "pickupBtnMobile": "Pick Up (Free)",
+    "pickupModalTitle": "Schedule Pick Up",
+    "pickupFreeNotice": "The physical document delivery service is 100% free. You will be picking up {count} document(s).",
+    "pickupDateLabel": "Pick Up Date",
+    "pickupTimeLabel": "Approximate Time",
+    "pickupTimePlaceholder": "Select a time",
+    "pickupCancel": "Cancel",
+    "pickupConfirm": "Confirm Appointment",
+    "pickupProcessing": "Processing...",
+    "pickupAlertSelect": "Please select a date and time.",
+    "pickupAlertSuccess": "Pick up scheduled successfully! We look forward to seeing you at the office.",
+    "pickupAlertError": "There was an error processing your request.",
+    "pickupScheduled": "Pickup Scheduled",
+    "deliveredPhysical": "Picked Up at Office",
+    "selectDocuments": "Select documents:",
+    "selectAll": "Select all",
+    "unselectAll": "Unselect all",
+    "unknownSender": "Unknown Sender",
+    "officeHours": "Office Hours: Monday to Friday, 9:00 AM - 4:00 PM",
+    "errorNoSelection": "You must select at least one document.",
+    "errorWeekend": "The office is closed on weekends. Please choose a weekday.",
+    "errorTime": "Pickup hours are from 9:00 AM to 4:00 PM.",
+    "upgradeBannerTitle": "Upgrade to Premium Cargo!",
+    "upgradeBannerDesc": "Unlock free scans and add up to 5 people/businesses.",
+    "upgradeBannerBtn": "Upgrade Now"
 },
   "KycFix": {
   "title": "Fix Documents",
@@ -1060,5 +1118,42 @@
     "fairUseExtra": "Starting from the 31st request in the same month, the standard rate of $1.50 per additional scan will apply. Your counter resets to zero on the 1st of the following month.",
     "shredTitle": "3. Privacy & Secure Shredding",
     "shredDesc": "Any letter you request to destroy (or that reaches its expiration date) is processed using Cross-Cut Secure Shredding. We do not throw documents in the trash; we destroy them to ensure no one accesses your personal or bank information."
-}
+},
+"Shopper": {
+    "title": "Buy for Me (Personal Shopper)",
+    "subtitle": "Paste the link from Amazon, Target, Home Depot or any US store. We buy it and ship it to your country.",
+    "urlLabel": "Product Link (URL) *",
+    "urlPlaceholder": "https://www.amazon.com/...",
+    "priceLabel": "Store Price ($) *",
+    "qtyLabel": "Quantity",
+    "detailsLabel": "Details (Size, Color, Model)",
+    "detailsPlaceholder": "E.g. Size M, Dark Red...",
+    "addBtn": "+ Add to my shopping list",
+    "cartTitle": "Your Order List",
+    "emptyCart": "Your list is empty.",
+    "emptyCartSub": "Paste a link to start.",
+    "item": "Item",
+    "subtotal": "Estimated Subtotal",
+    "shippingNote": "US Shipping and Taxes",
+    "shippingCalc": "Calculated in quote",
+    "quoteBtn": "Request Exact Quote",
+    "quoteDisclaimer": "You won't be charged until we confirm the store's internal shipping costs.",
+    "tabNew": "New Purchase",
+    "tabQuotes": "My Quotes",
+    "statusPending": "Under Review",
+    "statusQuoted": "Ready to Pay",
+    "statusPaid": "Paid",
+    "payNow": "Pay with Card",
+    "financialSummary": "Financial Summary",
+    "itemsCost": "Items Cost",
+    "usTaxes": "US Taxes",
+    "domesticShipping": "US Domestic Shipping",
+    "gmcFee": "Shopper Service (GMC)",
+    "cardFee": "Card Processing Fee",
+    "totalToPay": "Total to Pay",
+    "noOrders": "You don't have any previous requests yet.",
+    "reviewingLinks": "We are reviewing your links. You will soon see the exact cost here to proceed with the payment.",
+    "loadingQuotes": "Loading quotes...",
+    "calculating": "Calculating..."
+  }
 }

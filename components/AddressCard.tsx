@@ -49,11 +49,11 @@ const CopyButton = ({ text }: { text: string }) => {
 // 🔥 MEJORA RESPONSIVA: Adaptado para no romperse en móviles
 const AddressRow = ({ label, value, isHighlighted = false }: { label: string, value: string, isHighlighted?: boolean }) => (
   <div className={`flex flex-col sm:flex-row sm:items-center py-2.5 sm:py-2 border-b border-gray-50 last:border-0 ${isHighlighted ? 'bg-blue-50/50 -mx-4 sm:-mx-6 px-4 sm:px-6 border-blue-100' : ''}`}>
-    <span className="text-xs sm:text-sm font-medium text-gray-500 sm:w-32 md:w-40 flex-shrink-0 mb-1 sm:mb-0">
+    <span className="text-xs sm:text-sm font-medium text-gray-500 sm:w-32 md:w-36 lg:w-32 flex-shrink-0 mb-1 sm:mb-0">
       {label}:
     </span>
-    <div className="flex items-center justify-between flex-grow w-full sm:w-auto">
-        <span className={`font-bold truncate mr-2 ${isHighlighted ? 'text-blue-800 text-lg' : 'text-gmc-gris-oscuro text-sm sm:text-base'}`}>
+    <div className="flex items-center justify-between flex-grow w-full sm:w-auto overflow-hidden">
+        <span className={`font-bold truncate mr-2 ${isHighlighted ? 'text-blue-800 text-base sm:text-lg' : 'text-gmc-gris-oscuro text-sm sm:text-base'}`}>
           {value}
         </span>
         <CopyButton text={value} />
@@ -70,22 +70,23 @@ export default function AddressCard({ recipient, suiteNo }: AddressCardProps) {
   const MIAMI_COUNTRY = "United States";
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
+    // 🔥 GRID DE 12 COLUMNAS INTERNO PARA DISTRIBUCIÓN PERFECTA
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6 items-stretch h-full">
       
       {/* =========================================
-          1. TARJETA DE DIRECCIÓN (Optimizada para Móvil) 
+          1. TARJETA DE DIRECCIÓN (Estrecha: 5 de 12 columnas) 
           ========================================= */}
-      <div className="lg:col-span-2 bg-white p-4 sm:p-6 rounded-xl shadow-lg border border-gray-100 flex flex-col justify-center overflow-hidden">
-        <div className="flex items-center gap-3 mb-4 pb-2 border-b border-gray-100">
+      <div className="lg:col-span-5 bg-white p-4 sm:p-5 rounded-xl shadow-md border border-gray-100 flex flex-col justify-center overflow-hidden h-full">
+        <div className="flex items-center gap-3 mb-3 pb-2 border-b border-gray-100">
           <div className="bg-blue-50 p-2 rounded-full text-blue-600 flex-shrink-0">
               <MapPin size={20} />
           </div>
-          <h3 className="text-base sm:text-lg font-bold text-gmc-gris-oscuro font-garamond truncate">
+          <h3 className="text-sm sm:text-base font-bold text-gmc-gris-oscuro font-garamond truncate">
             {t('title')}
           </h3>
         </div>
         
-        <div className="flex flex-col gap-1 w-full">
+        <div className="flex flex-col w-full flex-1 justify-center">
           <AddressRow label={t('recipient')} value={recipient} />
           <AddressRow label={t('address')} value={MIAMI_ADDRESS} />
           <AddressRow label={t('suite')} value={suiteNo || "PENDING"} isHighlighted={true} />
@@ -96,11 +97,11 @@ export default function AddressCard({ recipient, suiteNo }: AddressCardProps) {
       </div>
 
       {/* =========================================
-          2. CARRUSEL DE AFILIADOS 
+          2. CARRUSEL DE AFILIADOS (Ancha: 7 de 12 columnas) 
           ========================================= */}
-      <div className="lg:col-span-1 bg-white rounded-xl shadow-lg border border-gray-100 flex flex-col overflow-hidden relative">
+      <div className="lg:col-span-7 bg-white rounded-xl shadow-md border border-gray-100 flex flex-col overflow-hidden relative h-full">
         {/* Encabezado */}
-        <div className="p-4 sm:p-5 border-b border-gray-50 bg-gradient-to-br from-blue-50/50 to-white">
+        <div className="p-3 sm:p-4 border-b border-gray-50 bg-gradient-to-br from-blue-50/50 to-white shrink-0">
           <h3 className="text-sm sm:text-base font-bold text-gray-800 flex items-center gap-2">
             <ShoppingCart size={16} className="text-gmc-dorado-principal flex-shrink-0"/>
             {t('affiliateTitle')}
@@ -111,7 +112,7 @@ export default function AddressCard({ recipient, suiteNo }: AddressCardProps) {
         </div>
 
         {/* Contenedor del Carrusel (Deslizable) */}
-        <div className="pt-4 px-4 flex-1 flex flex-col justify-center bg-gray-50/30">
+        <div className="pt-4 px-2 sm:px-4 flex-1 flex flex-col justify-center bg-gray-50/30">
           <div className="flex overflow-x-auto gap-3 sm:gap-4 snap-x snap-mandatory pb-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
             {AFFILIATE_STORES.map((store) => (
               <a
@@ -119,19 +120,20 @@ export default function AddressCard({ recipient, suiteNo }: AddressCardProps) {
                 href={store.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="min-w-[100px] sm:min-w-[120px] snap-center bg-white border border-gray-200 rounded-2xl p-3 sm:p-4 flex flex-col items-center justify-center gap-2 sm:gap-3 hover:border-blue-400 hover:shadow-md transition-all group"
+                className="min-w-[90px] sm:min-w-[110px] snap-center bg-white border border-gray-200 rounded-2xl p-3 flex flex-col items-center justify-center gap-2 hover:border-blue-400 hover:shadow-md transition-all group"
               >
                 {/* Círculo con el color de la marca y la primera letra */}
                 <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-white shadow-sm ${store.bg}`}>
                   <span className="font-bold text-lg sm:text-xl">{store.name.charAt(0)}</span>
                 </div>
                 
-                <div className="text-center w-full">
-                  <p className="font-bold text-gray-800 text-xs sm:text-sm group-hover:text-blue-600 transition-colors truncate">
+                <div className="text-center w-full mt-1">
+                  <p className="font-bold text-gray-800 text-xs group-hover:text-blue-600 transition-colors truncate">
                     {store.name}
                   </p>
-                  <span className="text-[9px] sm:text-[10px] text-gray-400 font-bold uppercase flex items-center justify-center gap-1 mt-1 group-hover:text-blue-500 whitespace-nowrap">
-                    {t('buyNow')} <ExternalLink size={10} />
+                  <span className="text-[9px] text-gray-400 font-bold uppercase flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1 mt-1 group-hover:text-blue-500 w-full px-1 leading-tight text-center break-words">
+                  <span className="line-clamp-2">{t('buyNow')}</span> 
+                  <ExternalLink size={10} className="shrink-0" />
                   </span>
                 </div>
               </a>

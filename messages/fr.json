@@ -11,7 +11,8 @@
     "faq": "FAQ",
     "testimonials": "Témoignages",
     "locations": "Emplacements",
-    "access": "Accès"
+    "access": "Accès",
+    "termsOfService": "Conditions de Service"
   },
   "HomePage": {
     "Hero": {
@@ -21,6 +22,18 @@
       "subtitle": "Nous simplifions la logistique mondiale avec des solutions efficaces et sûres. Votre tranquillité est notre priorité.",
       "cta_primary": "Ouvrir un Casier Gratuit",
       "cta_secondary": "Calculer l'Envoi"
+    },
+  "Features": {
+    "title": "Plus qu'un simple casier",
+    "subtitle": "Des solutions logistiques conçues pour faciliter vos achats et stimuler votre entreprise.",
+    "consolidationTitle": "Consolidation",
+    "consolidationDesc": "Combinez jusqu'à 15 colis dans une seule boîte. Économisez sur le fret international en consolidant vos achats.",
+    "shopperTitle": "Personal Shopper",
+    "shopperDesc": "Nous achetons pour vous sur Amazon, Target et Home Depot. Idéal si vous n'avez pas de carte américaine.",
+    "mailboxTitle": "Boîte aux Lettres Virtuelle",
+    "mailboxDesc": "Gérez votre courrier physique numériquement. Recevez, numérisez ou détruisez vos lettres en ligne.",
+    "commercialTitle": "Fret Commercial",
+    "commercialDesc": "Gestion du fret aérien et maritime pour les importateurs et les entreprises. Mouvement de palettes et fret lourd."
     },
       "RecommendedStores": {
       "title": "Achetez aux États-Unis, recevez dans votre pays",
@@ -89,7 +102,7 @@
     "lockerDesc": "Votre adresse physique aux USA pour recevoir vos achats Amazon, eBay, Shein, etc.",
     "consolidationTitle": "Consolidation de Colis",
     "consolidationDesc": "Achetez dans plusieurs magasins, attendez tout, et expédiez en une seule boîte pour économiser.",
-    "consolidationNote": "Combinez jusqu'à 7 colis multiples pour économiser sur les coûts.",
+    "consolidationNote": "Combinez jusqu'à 15 colis multiples pour économiser sur les coûts.",
     "pickupTitle": "Ramassage et Livraison",
     "pickupDesc": "Service de transport local à Miami et livraison porte-à-porte dans votre pays.",
     "corporateTitle": "Fret Commercial",
@@ -134,6 +147,7 @@
     "activeShipments": "Expéditions Actives",
     "noPackages": "Vous n'avez aucun colis actif pour le moment.",
     "preAlertBtn": "Pré-Alerter un Colis",
+    "personalShopperDesc": "Nous achetons pour vous aux USA",
     "payBillsBtn": "Payer les Factures",
     "inTransit": "En Transit",
     "readyForDelivery": "Prêt pour la Livraison",
@@ -198,7 +212,8 @@
     "alertWeekend": "⚠️ L'entrepôt est fermé le week-end.\nVeuillez sélectionner du lundi au vendredi.",
     "alertBusinessHours": "⚠️ Heures d'ouverture : 9h00 à 16h00.",
     "confirmPickup": "Confirmez-vous le rendez-vous et le débit sur votre compte ?",
-    "successPickup": "✅ Rendez-vous planifié avec succès.\nUn ordre de paiement en attente a été généré."
+    "successPickup": "✅ Rendez-vous planifié avec succès.\nUn ordre de paiement en attente a été généré.",
+    "physicalDocument": "Document Physique (Envoyé depuis la Boîte Postale)"
   },
   "Notifications": {
     "title": "Notifications",
@@ -223,8 +238,11 @@
     "mailboxRejectedTitle": "⚠️ Action requise pour votre Boîte aux Lettres",
     "mailboxRejectedDesc": "Vos documents n'ont pas passé la vérification. Motif : {reason}. Veuillez les télécharger à nouveau.",
     "additionalRejectedTitle": "⚠️ Documents d'une Personne Supplémentaire Rejetés",
-    "additionalRejectedDesc": "Les documents de votre personne supplémentaire ({name}) ont été rejetés. Motif : {reason}."
-},
+    "additionalRejectedDesc": "Les documents de votre personne supplémentaire ({name}) ont été rejetés. Motif : {reason}.",
+    "vaciar": "Tout effacer",
+    "shopperQuoteTitle": "🛍️ Devis Prêt",
+    "shopperQuoteMsg": "Votre commande a été devisée. Allez dans l'onglet 'Mes Devis' pour vérifier le total et payer."
+  },
   "AddressCard": {
     "title": "Votre Adresse à Miami (Casier)",
     "recipient": "Destinataire",
@@ -301,6 +319,12 @@
     "pdfDocument": "Document PDF",
     "viewFile": "Voir le fichier",
     "noInvoice": "Pas de Facture",
+    "freightCost": "Frais de Transport",
+    "feeHandling": "Frais : Manutention (GMC)",
+    "free": "GRATUIT",
+    "processingFee": "Frais de Traitement",
+    "discount": "Réduction",
+    "welcomeBonus": "Bonus de Bienvenue Automatique ! 🎁",
     "shippingOptions": "Options d'Expédition",
     "viewRatesBtn": "Voir les Tarifs Disponibles",
     "calculating": "Calcul...",
@@ -341,7 +365,14 @@
     "selected": "Sélectionné",
     "errorAddress": "Adresse de livraison manquante dans vos paramètres.",
     "configureAddress": "Configurer l'Adresse",
-    "pickupInStore": "Retrait en Magasin"
+    "pickupInStore": "Retrait en Magasin",
+    "freightCost": "Frais de Transport",
+    "consolidationFee": "Frais de Consolidation",
+    "processingFee": "Frais de Traitement",
+    "discount": "Réduction",
+    "welcomeBonusApplied": "Bonus de Bienvenue Automatique ! 🎁",
+    "walletTitle": "PORTEFEUILLE DE RÉCOMPENSES",
+    "walletBalance": "Solde disponible"
   },
   "PreAlertPage": {
     "title": "Pré-Alerter un Colis",
@@ -1030,7 +1061,33 @@
     "documentViewerTitle": "Visionneuse de Documents",
     "btnDownload": "Télécharger",
     "openNewTab": "Ouvrir dans un nouvel onglet",
-    "btnClose": "Fermer"
+    "btnClose": "Fermer",
+    "pickupBtnDesktop": "Retrait en Personne (Gratuit)",
+    "pickupBtnMobile": "Retrait (Gratuit)",
+    "pickupModalTitle": "Planifier le Retrait",
+    "pickupFreeNotice": "Le service de remise physique des documents est 100% gratuit. Vous récupérerez {count} document(s).",
+    "pickupDateLabel": "Date de Retrait",
+    "pickupTimeLabel": "Heure Approximative",
+    "pickupTimePlaceholder": "Sélectionnez une heure",
+    "pickupCancel": "Annuler",
+    "pickupConfirm": "Confirmer le Rendez-vous",
+    "pickupProcessing": "Traitement...",
+    "pickupAlertSelect": "Veuillez sélectionner une date et une heure.",
+    "pickupAlertSuccess": "Retrait planifié avec succès ! Nous vous attendons au bureau.",
+    "pickupAlertError": "Une erreur s'est produite lors du traitement de votre demande.",
+    "pickupScheduled": "Retrait Planifié",
+    "deliveredPhysical": "Récupéré au Bureau",
+    "selectDocuments": "Sélectionnez les documents :",
+    "selectAll": "Tout sélectionner",
+    "unselectAll": "Tout désélectionner",
+    "unknownSender": "Expéditeur Inconnu",
+    "officeHours": "Heures d'ouverture : Du lundi au vendredi, de 9h00 à 16h00",
+    "errorNoSelection": "Vous devez sélectionner au moins un document.",
+    "errorWeekend": "Le bureau est fermé le week-end. Veuillez choisir un jour de semaine.",
+    "errorTime": "Les heures de retrait sont de 9h00 à 16h00.",
+    "upgradeBannerTitle": "Passez à Premium Cargo !",
+    "upgradeBannerDesc": "Débloquez des numérisations gratuites et ajoutez jusqu'à 5 personnes/entreprises.",
+    "upgradeBannerBtn": "Mettre à niveau"
 },
   "KycFix": {
   "title": "Corriger les Documents",
@@ -1063,5 +1120,42 @@
     "fairUseExtra": "À partir de la 31ème demande au cours du même mois, le tarif standard de 1,50 $ par numérisation supplémentaire s'appliquera. Votre compteur est remis à zéro le 1er du mois suivant.",
     "shredTitle": "3. Confidentialité et Destruction Sécurisée",
     "shredDesc": "Toute lettre dont vous demandez la destruction (ou qui atteint sa date d'expiration) est traitée par Destruction Sécurisée à Coupe Croisée. Nous ne jetons pas les documents à la poubelle ; nous les détruisons pour garantir que personne n'ait accès à vos informations bancaires ou personnelles."
-}
+},
+"Shopper": {
+    "title": "Achetez pour Moi (Personal Shopper)",
+    "subtitle": "Collez le lien d'Amazon, Target, Home Depot ou de tout magasin américain. Nous l'achetons et l'expédions dans votre pays.",
+    "urlLabel": "Lien du Produit (URL) *",
+    "urlPlaceholder": "https://www.amazon.com/...",
+    "priceLabel": "Prix en magasin ($) *",
+    "qtyLabel": "Quantité",
+    "detailsLabel": "Détails (Taille, Couleur, Modèle)",
+    "detailsPlaceholder": "Ex. Taille M, Rouge foncé...",
+    "addBtn": "+ Ajouter à ma liste d'achats",
+    "cartTitle": "Votre Liste de Commandes",
+    "emptyCart": "Votre liste est vide.",
+    "emptyCartSub": "Collez un lien pour commencer.",
+    "item": "Article",
+    "subtotal": "Sous-total estimé",
+    "shippingNote": "Expédition US et Taxes",
+    "shippingCalc": "Calculé dans le devis",
+    "quoteBtn": "Demander un Devis Exact",
+    "quoteDisclaimer": "Vous ne serez pas facturé tant que nous n'aurons pas confirmé les frais d'expédition internes du magasin.",
+    "tabNew": "Nouvel Achat",
+    "tabQuotes": "Mes Devis",
+    "statusPending": "En Cours d'Examen",
+    "statusQuoted": "Prêt à Payer",
+    "statusPaid": "Payé",
+    "payNow": "Payer par Carte",
+    "financialSummary": "Résumé Financier",
+    "itemsCost": "Coût des Articles",
+    "usTaxes": "Taxes US",
+    "domesticShipping": "Livraison Interne US",
+    "gmcFee": "Service Shopper (GMC)",
+    "cardFee": "Frais de Carte",
+    "totalToPay": "Total à Payer",
+    "noOrders": "Vous n'avez pas encore de demandes précédentes.",
+    "reviewingLinks": "Nous examinons vos liens. Vous verrez bientôt le coût exact ici pour pouvoir procéder au paiement.",
+    "loadingQuotes": "Chargement des devis...",
+    "calculating": "Calcul en cours..."
+  }
 }

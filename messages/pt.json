@@ -11,7 +11,8 @@
     "faq": "FAQ",
     "testimonials": "Depoimentos",
     "locations": "Localizações",
-    "access": "Entrar"
+    "access": "Entrar",
+    "termsOfService": "Termos de Serviço"
   },
   "HomePage": {
     "Hero": {
@@ -21,6 +22,18 @@
       "subtitle": "Simplificamos a logística global com soluções eficientes e seguras. Sua tranquilidade é nossa prioridade.",
       "cta_primary": "Abrir Cacifo Grátis",
       "cta_secondary": "Calcular Envio"
+    },
+  "Features": {
+    "title": "Mais do que um simples armário",
+    "subtitle": "Soluções logísticas projetadas para facilitar suas compras e impulsionar o seu negócio.",
+    "consolidationTitle": "Consolidação",
+    "consolidationDesc": "Combine até 15 pacotes em uma única caixa. Economize no frete internacional consolidando suas compras.",
+    "shopperTitle": "Personal Shopper",
+    "shopperDesc": "Compramos para você na Amazon, Target e Home Depot. Ideal se você não tem cartão dos EUA.",
+    "mailboxTitle": "Caixa Postal Virtual",
+    "mailboxDesc": "Gerencie sua correspondência física digitalmente. Receba, escaneie ou destrua suas cartas online.",
+    "commercialTitle": "Carga Comercial",
+    "commercialDesc": "Gestão de frete aéreo e marítimo para importadores e empresas. Movimento de paletes e carga pesada."
     },
       "RecommendedStores": {
       "title": "Compre nos EUA, receba no seu país",
@@ -89,7 +102,7 @@
     "lockerDesc": "Seu endereço físico nos EUA para receber compras da Amazon, eBay, Shein e mais.",
     "consolidationTitle": "Consolidação de Pacotes",
     "consolidationDesc": "Compre em várias lojas, espere que todos cheguem e envie-os em uma única caixa para economizar.",
-    "consolidationNote": "Combine até 7 pacotes múltiplos para economizar nos custos.",
+    "consolidationNote": "Combine até 15 pacotes múltiplos para economizar nos custos.",
     "pickupTitle": "Coleta e Entrega",
     "pickupDesc": "Serviço de transporte local em Miami e entrega porta a porta no seu país.",
     "corporateTitle": "Carga Comercial",
@@ -134,6 +147,7 @@
     "activeShipments": "Envios Ativos",
     "noPackages": "Você não tem pacotes ativos no momento.",
     "preAlertBtn": "Pré-Alertar Pacote",
+    "personalShopperDesc": "Compramos para você nos EUA",
     "payBillsBtn": "Pagar Contas",
     "inTransit": "Em Trânsito",
     "readyForDelivery": "Pronto para Entrega",
@@ -198,7 +212,8 @@
     "alertWeekend": "⚠️ O armazém está fechado nos fins de semana.\nPor favor, selecione de Segunda a Sexta.",
     "alertBusinessHours": "⚠️ Horário de atendimento: 09:00 às 16:00.",
     "confirmPickup": "Confirma o agendamento e a cobrança na sua conta?",
-    "successPickup": "✅ Agendamento realizado com sucesso.\nUma ordem de pagamento pendente foi gerada."
+    "successPickup": "✅ Agendamento realizado com sucesso.\nUma ordem de pagamento pendente foi gerada.",
+    "physicalDocument": "Documento Físico (Enviado da Caixa Postal)"
   },
 "Notifications": {
     "title": "Notificações",
@@ -223,8 +238,11 @@
     "mailboxRejectedTitle": "⚠️ Ação necessária na sua Caixa de Correio",
     "mailboxRejectedDesc": "Os seus documentos não passaram na verificação. Motivo: {reason}. Por favor, volte a enviá-los.",
     "additionalRejectedTitle": "⚠️ Documentos de Adicional Rejeitados",
-    "additionalRejectedDesc": "Os documentos da sua pessoa adicional ({name}) foram rejeitados. Motivo: {reason}."
-},
+    "additionalRejectedDesc": "Os documentos da sua pessoa adicional ({name}) foram rejeitados. Motivo: {reason}.",
+    "vaciar": "Excluir todas",
+    "shopperQuoteTitle": "🛍️ Cotação Pronta",
+    "shopperQuoteMsg": "Seu pedido foi cotado. Vá para a aba 'Minhas Cotações' para ver o total e pagar."
+  },
   "AddressCard": {
     "title": "Seu Endereço em Miami (Locker)",
     "recipient": "Destinatário",
@@ -301,6 +319,12 @@
     "pdfDocument": "Documento PDF",
     "viewFile": "Ver arquivo",
     "noInvoice": "Sem Fatura",
+    "freightCost": "Custo de Frete",
+    "feeHandling": "Taxa: Manuseio (GMC)",
+    "free": "GRÁTIS",
+    "processingFee": "Taxa de Processamento",
+    "discount": "Desconto",
+    "welcomeBonus": "Bônus de Boas-vindas Automático! 🎁",
     "shippingOptions": "Opções de Envio",
     "viewRatesBtn": "Ver Tarifas Disponíveis",
     "calculating": "Calculando...",
@@ -341,7 +365,14 @@
     "selected": "Selecionado",
     "errorAddress": "Endereço de entrega ausente nas suas configurações.",
     "configureAddress": "Configurar Endereço",
-    "pickupInStore": "Retirada na Loja"
+    "pickupInStore": "Retirada na Loja",
+    "freightCost": "Custo de Frete",
+    "consolidationFee": "Taxa de Consolidação",
+    "processingFee": "Taxa de Processamento",
+    "discount": "Desconto",
+    "welcomeBonusApplied": "Bônus de Boas-vindas Automático! 🎁",
+    "walletTitle": "CARTEIRA DE RECOMPENSAS",
+    "walletBalance": "Saldo disponível"
   },
   "PreAlertPage": {
     "title": "Pré-Alertar Pacote",
@@ -1051,7 +1082,33 @@
     "documentViewerTitle": "Visualizador de Documentos",
     "btnDownload": "Baixar",
     "openNewTab": "Abrir em nova aba",
-    "btnClose": "Fechar"
+    "btnClose": "Fechar",
+    "pickupBtnDesktop": "Retirar Pessoalmente (Grátis)",
+    "pickupBtnMobile": "Retirar (Grátis)",
+    "pickupModalTitle": "Agendar Retirada",
+    "pickupFreeNotice": "O serviço de entrega física de documentos é 100% gratuito. Você vai retirar {count} documento(s).",
+    "pickupDateLabel": "Data de Retirada",
+    "pickupTimeLabel": "Horário Aproximado",
+    "pickupTimePlaceholder": "Selecione um horário",
+    "pickupCancel": "Cancelar",
+    "pickupConfirm": "Confirmar Agendamento",
+    "pickupProcessing": "Processando...",
+    "pickupAlertSelect": "Por favor, selecione data e hora.",
+    "pickupAlertSuccess": "Retirada agendada com sucesso! Esperamos você no escritório.",
+    "pickupAlertError": "Ocorreu um erro ao processar sua solicitação.",
+    "pickupScheduled": "Retirada Agendada",
+    "deliveredPhysical": "Retirado no Escritório",
+    "selectDocuments": "Selecione os documentos:",
+    "selectAll": "Marcar todos",
+    "unselectAll": "Desmarcar todos",
+    "unknownSender": "Remetente Desconhecido",
+    "officeHours": "Horário de Funcionamento: Segunda a Sexta, 9:00 AM - 4:00 PM",
+    "errorNoSelection": "Você deve selecionar pelo menos um documento.",
+    "errorWeekend": "O escritório está fechado nos finais de semana. Por favor, escolha um dia útil.",
+    "errorTime": "O horário de retirada é das 9:00 AM às 4:00 PM.",
+    "upgradeBannerTitle": "Atualize para Premium Cargo!",
+    "upgradeBannerDesc": "Desbloqueie digitalizações gratuitas e adicione até 5 pessoas/empresas.",
+    "upgradeBannerBtn": "Fazer Upgrade"
 },
   "KycFix": {
   "title": "Corrigir Documentos",
@@ -1084,5 +1141,42 @@
     "fairUseExtra": "A partir da 31ª solicitação no mesmo mês, será aplicada a tarifa padrão de $1,50 por digitalização adicional. Seu contador é zerado no dia 1º do mês seguinte.",
     "shredTitle": "3. Privacidade e Destruição Segura",
     "shredDesc": "Qualquer carta que você solicitar a destruição (ou que atinja sua data de validade) é processada usando Destruição Segura de Corte Cruzado. Não jogamos documentos no lixo; nós os destruímos para garantir que ninguém tenha acesso às suas informações bancárias ou pessoais."
-}
+},
+"Shopper": {
+    "title": "Compre para Mim (Personal Shopper)",
+    "subtitle": "Cole o link da Amazon, Target, Home Depot ou de qualquer loja dos EUA. Nós compramos e enviamos para o seu país.",
+    "urlLabel": "Link do Produto (URL) *",
+    "urlPlaceholder": "https://www.amazon.com/...",
+    "priceLabel": "Preço na loja ($) *",
+    "qtyLabel": "Quantidade",
+    "detailsLabel": "Detalhes (Tamanho, Cor, Modelo)",
+    "detailsPlaceholder": "Ex. Tamanho M, Vermelho escuro...",
+    "addBtn": "+ Adicionar à minha lista de compras",
+    "cartTitle": "Sua Lista de Pedidos",
+    "emptyCart": "Sua lista está vazia.",
+    "emptyCartSub": "Cole um link para começar.",
+    "item": "Item",
+    "subtotal": "Subtotal estimado",
+    "shippingNote": "Frete EUA e Impostos",
+    "shippingCalc": "Calculado na cotação",
+    "quoteBtn": "Solicitar Cotação Exata",
+    "quoteDisclaimer": "Você não será cobrado até confirmarmos os custos de frete interno da loja.",
+    "tabNew": "Nova Compra",
+    "tabQuotes": "Minhas Cotações",
+    "statusPending": "Em Análise",
+    "statusQuoted": "Pronto para Pagar",
+    "statusPaid": "Pago",
+    "payNow": "Pagar com Cartão",
+    "financialSummary": "Resumo Financeiro",
+    "itemsCost": "Custo dos Itens",
+    "usTaxes": "Impostos EUA",
+    "domesticShipping": "Frete Interno EUA",
+    "gmcFee": "Serviço Shopper (GMC)",
+    "cardFee": "Taxa do Cartão",
+    "totalToPay": "Total a Pagar",
+    "noOrders": "Você ainda não tem solicitações anteriores.",
+    "reviewingLinks": "Estamos analisando seus links. Em breve você verá o custo exato aqui para poder pagar.",
+    "loadingQuotes": "Carregando cotações...",
+    "calculating": "Calculando..."
+  }
 }

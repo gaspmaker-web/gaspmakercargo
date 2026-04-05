@@ -62,6 +62,7 @@ interface PendingBillsClientProps {
 }
 
 export default function PendingBillsClient({ bills: initialBills, locale, userProfile, allAddresses = [] }: PendingBillsClientProps) {
+  // ✅ Declaraciones correctas, sin duplicados
   const t = useTranslations('PendingBills');
   const tPickup = useTranslations('Pickup'); 
   const tPackage = useTranslations('PackageDetail'); 
@@ -95,6 +96,10 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
   const [discount, setDiscount] = useState(0);
   const [couponMsg, setCouponMsg] = useState({ type: "", text: "" });
   const [validatingCoupon, setValidatingCoupon] = useState(false);
+
+  // 🔥 BILLETERA / REFERIDOS 🔥
+  const walletBalance = userProfile?.walletBalance || 0;
+  const [useWallet, setUseWallet] = useState(false);
 
   // EFECTO: Seleccionar dirección DEFAULT al cargar
   useEffect(() => {
@@ -135,17 +140,13 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
   // MANEJADOR DE CAMBIO DE DIRECCIÓN
   const handleAddressChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
       setSelectedAddressId(e.target.value);
-      // Por seguridad, borramos las tarifas si el cliente cambia de país/dirección
       setRatesMap({});
       setSelectedRateMap({});
-      
-      // Desmarcamos las facturas (quitamos el check)
       setSelectedBillIds([]); 
-      
-      // Reiniciamos los cupones
       setDiscount(0);
       setCouponCode("");
       setCouponMsg({ type: "", text: "" });
+      setUseWallet(false);
   };
 
   // 2. OBTENER TARIFAS (Cotizar)
@@ -201,11 +202,31 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                                      bill.description?.toLowerCase().includes('consolid') ||
                                      (bill.packages && bill.packages.length > 1);
               
-              // 🔥 NUEVA LÓGICA DE PRECIOS: $0.60 por cada paquete dentro de la consolidación
-              const pkgCount = (bill.packages && bill.packages.length > 0) ? bill.packages.length : 1;
-              const dynamicHandling = isConsolidated ? (pkgCount * 0.60) : 0.00;
+              // 🔥 NUEVA LÓGICA: Excluir documentos de la cuenta para cobrar consolidación
+              let billHandlingFee = 0;
               
-              handlingSubtotal += dynamicHandling;
+              if (isConsolidated) {
+                  if (!bill.packages || bill.packages.length === 0) {
+                      billHandlingFee = 1 * 0.60; 
+                  } else {
+                      let chargeablePackagesCount = 0;
+                      
+                      bill.packages.forEach((pkg: any) => {
+                          const isDocument = pkg.courier === 'Buzón Virtual' || 
+                                             (pkg.carrierTrackingNumber || '').startsWith('DOC-') || 
+                                             (pkg.gmcTrackingNumber || '').startsWith('GMC-DOC-') ||
+                                             pkg.description === "Documento Físico (Enviado desde Buzón)";
+                          
+                          if (!isDocument) {
+                              chargeablePackagesCount++;
+                          }
+                      });
+                      
+                      billHandlingFee = chargeablePackagesCount * 0.60;
+                  }
+              }
+              
+              handlingSubtotal += billHandlingFee;
 
               const val = Number(bill.declaredValue) || 0;
               const ins = val > 100 ? val * 0.03 : 0;
@@ -226,24 +247,49 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
           }
       });
 
-      const taxableAmount = serviceSubtotal + handlingSubtotal + insuranceSubtotal;
+     const taxableAmount = serviceSubtotal + handlingSubtotal + insuranceSubtotal;
       const fee = getProcessingFee(taxableAmount);
       
-      const total = Math.max(0, taxableAmount + fee - discount);
+      let finalTotal = Math.max(0, taxableAmount + fee - discount);
+      let appliedWallet = 0;
+
+      if (useWallet && walletBalance > 0) {
+          appliedWallet = Math.min(walletBalance, finalTotal - 0.50);
+          if (appliedWallet < 0) appliedWallet = 0;
+          finalTotal = finalTotal - appliedWallet;
+      }
       
       return { 
           serviceSubtotal, 
           handlingSubtotal, 
           insuranceSubtotal, 
           fee, 
-          total, 
+          total: finalTotal, 
+          appliedWallet,
           count 
       };
   };
 
   const totals = calculateTotals();
 
-  // MANEJO DE CUPÓN
+  // 🔥 AUTO-APLICAR BONO DE BIENVENIDA (VERSIÓN BLINDADA)
+  useEffect(() => {
+      const isEligibleForWelcomeBonus = userProfile?.referredBy && !userProfile?.referralRewardPaid;
+
+      // Evaluamos el costo BASE real (Envío + Handling + Seguro) ANTES de procesar la tarjeta
+      const tempBaseTotal = totals.serviceSubtotal + totals.handlingSubtotal + totals.insuranceSubtotal;
+
+      if (isEligibleForWelcomeBonus && tempBaseTotal >= 100) {
+          setDiscount(25.0);
+          // Usamos la traducción del bono, y si no carga, un texto por defecto
+          setCouponMsg({ type: "success", text: `${t('welcomeBonusApplied') || 'Welcome Bonus Auto-Applied! 🎁'} (-$25.00)` });
+      } else {
+          setDiscount(0);
+          setCouponMsg({ type: "", text: "" });
+      }
+  }, [totals.serviceSubtotal, totals.handlingSubtotal, totals.insuranceSubtotal, userProfile?.referredBy, userProfile?.referralRewardPaid, t]);
+  
+ // MANEJO DE CUPÓN MANUAL
   const handleApplyCoupon = async () => {
     if (!couponCode.trim()) return;
     if (totals.count === 0) { setCouponMsg({ type: "error", text: "Select items first." }); return; }
@@ -252,9 +298,11 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
     setCouponMsg({ type: "", text: "" });
     setDiscount(0);
 
-    if (totals.serviceSubtotal < 100) {
+    const tempBaseTotal = totals.serviceSubtotal + totals.handlingSubtotal + totals.insuranceSubtotal;
+
+    if (tempBaseTotal < 100) {
       setTimeout(() => {
-        setCouponMsg({ type: "error", text: "Give $25, Get $25: Valid only on shipments over $100 USD." });
+        setCouponMsg({ type: "error", text: "Valid only on shipments over $100 USD." });
         setValidatingCoupon(false);
       }, 600);
       return;
@@ -313,14 +361,25 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
              const bill = bills.find(b => b.id === id);
              const rate = selectedRateMap[id];
              
-             const isConsolidated = bill?.serviceType === 'CONSOLIDATION' || 
+           const isConsolidated = bill?.serviceType === 'CONSOLIDATION' || 
                                     bill?.description?.toLowerCase().includes('consolid') ||
                                     (bill?.packages && bill?.packages.length > 1);
              
-             // 🔥 NUEVA LÓGICA DE PRECIOS PARA EL BACKEND
-             const pkgCount = (bill?.packages && bill?.packages.length > 0) ? bill.packages.length : 1;
-             const dynamicHandling = isConsolidated ? (pkgCount * 0.60) : 0.00;
-
+             // 🔥 REPLICA LÓGICA DE EXCLUSIÓN PARA EL SERVIDOR DE PAGOS
+             let dynamicHandling = 0;
+             if (isConsolidated && bill?.packages) {
+                 let chargeablePackagesCount = 0;
+                 bill.packages.forEach((pkg: any) => {
+                     const isDocument = pkg.courier === 'Buzón Virtual' || 
+                                        (pkg.carrierTrackingNumber || '').startsWith('DOC-') || 
+                                        (pkg.gmcTrackingNumber || '').startsWith('GMC-DOC-') ||
+                                        pkg.description === "Documento Físico (Enviado desde Buzón)";
+                     if (!isDocument) chargeablePackagesCount++;
+                 });
+                 dynamicHandling = chargeablePackagesCount * 0.60;
+             } else if (isConsolidated) {
+                 dynamicHandling = 0.60;
+             }
              const val = Number(bill?.declaredValue) || 0;
              const ins = val > 100 ? val * 0.03 : 0;
              
@@ -360,7 +419,8 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                   selectedCourier: selectedCourier,  
                   courierService: courierService,
                   discountApplied: discount,
-                  shippingAddress: finalShippingAddress     
+                  shippingAddress: finalShippingAddress,
+                  walletDiscount: useWallet ? totals.appliedWallet : 0
               })
           });
           
@@ -396,7 +456,6 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
   return (
     <div className="max-w-5xl mx-auto space-y-6 animate-fadeIn pb-40 lg:pb-10 font-montserrat">
         
-        {/* HEADER */}
         <div className="flex justify-center items-center py-6">
             <h1 className="text-2xl font-bold text-gmc-gris-oscuro font-garamond flex items-center gap-2">
                 <FileText className="text-gmc-dorado-principal"/> {t('title')}
@@ -413,7 +472,6 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
         ) : (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 
-                {/* LISTA DE FACTURAS */}
                 <div className="lg:col-span-2 space-y-4">
                     <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
                         
@@ -432,13 +490,28 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                                     const rates = ratesMap[bill.id];
                                     const selectedRate = selectedRateMap[bill.id];
                                     
-                                    const isConsolidated = bill.serviceType === 'CONSOLIDATION' || 
-                                                           bill.description?.toLowerCase().includes('consolid') ||
-                                                           (bill.packages && bill.packages.length > 1);
-                                    
-                                    // 🔥 NUEVA LÓGICA DE PRECIOS PARA LA VISTA
-                                    const pkgCount = (bill.packages && bill.packages.length > 0) ? bill.packages.length : 1;
-                                    const effectiveHandling = isConsolidated ? (pkgCount * 0.60) : 0.00;
+                                   const isConsolidated = bill.serviceType === 'CONSOLIDATION' || 
+                       bill.description?.toLowerCase().includes('consolid') ||
+                       (bill.packages && bill.packages.length > 1);
+
+// 🔥 NUEVA LÓGICA VISUAL PARA LA ETIQUETA DE LA TARJETA
+    let effectiveHandling = 0;
+     if (isConsolidated) {
+    if (!bill.packages || bill.packages.length === 0) {
+        effectiveHandling = 1 * 0.60;
+    } else {
+        let chargeableCount = 0;
+        bill.packages.forEach((pkg: any) => {
+            const isDocument = pkg.courier === 'Buzón Virtual' || 
+                               (pkg.carrierTrackingNumber || '').toUpperCase().includes('DOC-') || 
+                               (pkg.gmcTrackingNumber || '').toUpperCase().includes('GMC-DOC-') ||
+                               (pkg.description && pkg.description.toLowerCase().includes('documento f'));
+            
+            if (!isDocument) chargeableCount++;
+        });
+        effectiveHandling = chargeableCount * 0.60;
+    }
+   }
 
                                     const val = Number(bill.declaredValue) || 0;
                                     const ins = val > 100 ? val * 0.03 : 0;
@@ -474,7 +547,6 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                                                                     📦 {bill.packages.length} {t('packages')}
                                                                 </span>
                                                             )}
-                                                            {/* 🔥 BADGE DINÁMICO */}
                                                             {effectiveHandling > 0 && <span className="text-[10px] bg-yellow-50 text-yellow-700 px-2 py-1 rounded font-bold border border-yellow-100">Fee ${effectiveHandling.toFixed(2)}</span>}
                                                         </div>
                                                     </div>
@@ -520,11 +592,11 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                                                                 
                                                                 <div className="border-t border-gray-100 pt-2 mt-2 space-y-1">
                                                                     <div className="flex justify-between text-xs text-gray-500">
-                                                                        <span>Freight Cost</span><span>${selectedRate.price.toFixed(2)}</span>
+                                                                        <span>{t('freightCost')}</span><span>${selectedRate.price.toFixed(2)}</span>
                                                                     </div>
                                                                     {effectiveHandling > 0 && (
                                                                         <div className="flex justify-between text-xs text-yellow-600">
-                                                                            <span>Consolidation Fee</span><span>+${effectiveHandling.toFixed(2)}</span>
+                                                                            <span>{t('consolidationFee')}</span><span>+${effectiveHandling.toFixed(2)}</span>
                                                                         </div>
                                                                     )}
                                                                     {ins > 0 && (
@@ -585,7 +657,6 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                     <div ref={paymentSectionRef} className="bg-gmc-gris-oscuro text-white p-6 rounded-2xl shadow-xl sticky top-6">
                         <h3 className="font-bold text-gmc-dorado-principal text-lg mb-4 border-b border-gray-600 pb-2">{tPickup('summaryTitle')}</h3>
                         
-                        {/* SELECTOR DE DIRECCIONES (NIVEL AMAZON) */}
                         <div className="mb-6 bg-gray-800 p-4 rounded-xl border border-gray-700">
                             <label className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase mb-3">
                                 <MapPin size={16} className="text-gmc-dorado-principal" /> Destino de Envío
@@ -620,14 +691,16 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                         ) : (
                             <div className="animate-fadeIn">
                                 <div className="space-y-3 text-sm mb-6">
+                                    {/* ✅ DESPUÉS (PC) */}
                                     <div className="flex justify-between">
-                                        <span className="text-gray-300">Freight Cost</span>
+                                        <span className="text-gray-300">{t('freightCost')}</span>
                                         <span className="font-bold">${totals.serviceSubtotal.toFixed(2)}</span>
                                     </div>
                                     
+                                    {/* ✅ DESPUÉS (PC) */}
                                     {totals.handlingSubtotal > 0 && (
                                         <div className="flex justify-between text-yellow-400">
-                                            <span>Consolidation Fee</span>
+                                            <span>{t('consolidationFee')}</span>
                                             <span className="font-bold">+${totals.handlingSubtotal.toFixed(2)}</span>
                                         </div>
                                     )}
@@ -639,29 +712,69 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                                         </div>
                                     )}
 
+                                    {/* ✅ DESPUÉS (PC) */}
                                     <div className="flex justify-between text-gray-400 text-xs">
-                                        <span className="flex items-center gap-1"><Info size={12}/> Processing Fee</span>
+                                        <span className="flex items-center gap-1"><Info size={12}/> {t('processingFee')}</span>
                                         <span>+${totals.fee.toFixed(2)}</span>
                                     </div>
 
+                                    {/* ✅ DESPUÉS (PC) */}
                                     {discount > 0 && (
                                         <div className="flex justify-between text-green-400 font-bold bg-green-900/30 p-2 rounded">
-                                            <span className="flex items-center gap-1"><Tag size={12} /> Discount</span>
+                                            <span className="flex items-center gap-1"><Tag size={12} /> {t('discount')}</span>
                                             <span>-${discount.toFixed(2)}</span>
                                         </div>
                                     )}
 
-                                    <div className="pt-2 border-t border-gray-600">
-                                        <div className="flex gap-2">
-                                            <input type="text" placeholder="Promo Code" value={couponCode} onChange={(e) => setCouponCode(e.target.value.toUpperCase())} disabled={discount > 0} className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-xs text-white placeholder-gray-400 focus:outline-none focus:border-[#EAD8B1]" />
-                                            {discount > 0 ? (
-                                                <button onClick={() => { setDiscount(0); setCouponCode(""); setCouponMsg({ type: "", text: "" }); }} className="bg-red-500/20 text-red-400 p-2 rounded-lg hover:bg-red-500/40"><XCircle size={16} /></button>
-                                            ) : (
-                                                <button onClick={handleApplyCoupon} disabled={validatingCoupon || !couponCode} className="bg-[#EAD8B1] text-[#222b3c] px-3 py-2 rounded-lg text-xs font-bold hover:brightness-110 disabled:opacity-50">{validatingCoupon ? <Loader2 className="animate-spin" size={14} /> : "Apply"}</button>
+                                    <div className="pt-2 border-t border-gray-600 mt-2">
+                                        {discount > 0 ? (
+                                    <div className="bg-green-900/30 border border-green-500/30 p-3 rounded-lg flex items-center justify-between mt-3">
+                                    <p className="text-xs font-bold text-green-400 flex items-center gap-2">
+                                    <CheckCircle size={14} /> {couponMsg.text || "Promo Applied!"}
+                                       </p>
+                                    </div>
+                                         ) : (
+                                    <div className="mt-3">
+                                    <div className="flex gap-2">
+                                    <input type="text" placeholder="Promo Code (Optional)" value={couponCode} onChange={(e) => setCouponCode(e.target.value.toUpperCase())} className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-xs text-white placeholder-gray-400 focus:outline-none focus:border-[#EAD8B1]" />
+                                    <button onClick={handleApplyCoupon} disabled={validatingCoupon || !couponCode} className="bg-[#EAD8B1] text-[#222b3c] px-3 py-2 rounded-lg text-xs font-bold hover:brightness-110 disabled:opacity-50">
+                                       {validatingCoupon ? <Loader2 className="animate-spin" size={14} /> : "Apply"}
+                                    </button>
+                                    </div>
+                                        {couponMsg.text && couponMsg.type === "error" && <p className="text-[10px] mt-2 font-bold flex items-center gap-1 text-red-400"><AlertCircle size={10} />{couponMsg.text}</p>}
+                                    </div>
+                                          )}
+                                    </div>
+
+                                {/* 🔥 CAJITA DORADA BILLETERA (DESKTOP) 🔥 */}
+                                    {walletBalance > 0 && (
+                                        <div className="mt-4 p-3 bg-gradient-to-r from-yellow-500/10 to-yellow-600/20 border border-yellow-500/30 rounded-xl">
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="bg-yellow-500/20 p-1.5 rounded-lg text-yellow-400">
+                                                        <DollarSign size={16} />
+                                                    </div>
+                                                    <div>
+                                                        {/* 👇 Título traducido */}
+                                                        <p className="text-xs font-bold text-yellow-400 uppercase tracking-wide">{t('walletTitle')}</p>
+                                                        {/* 👇 Subtítulo traducido */}
+                                                        <p className="text-[10px] text-yellow-400/80">{t('walletBalance')}: ${walletBalance.toFixed(2)}</p>
+                                                    </div>
+                                                </div>
+                                                <label className="relative inline-flex items-center cursor-pointer">
+                                                    <input type="checkbox" className="sr-only peer" checked={useWallet} onChange={() => setUseWallet(!useWallet)} />
+                                                    <div className="w-9 h-5 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-yellow-500"></div>
+                                                </label>
+                                            </div>
+                                            {useWallet && totals.appliedWallet > 0 && (
+                                                <div className="mt-2 pt-2 border-t border-yellow-500/20 flex justify-between text-xs font-bold text-yellow-400">
+                                                    {/* 👇 Tercera frase traducida (con texto por defecto por si acaso) */}
+                                                    <span>{t('walletApplied') || "Saldo a aplicar"}:</span>
+                                                    <span>-${totals.appliedWallet.toFixed(2)}</span>
+                                                </div>
                                             )}
                                         </div>
-                                        {couponMsg.text && <p className={`text-[10px] mt-2 font-bold flex items-center gap-1 ${couponMsg.type === "error" ? "text-red-400" : "text-green-400"}`}>{couponMsg.type === "error" ? <AlertCircle size={10} /> : <CheckCircle size={10} />}{couponMsg.text}</p>}
-                                    </div>
+                                    )}
 
                                     <div className="flex justify-between text-xl font-bold pt-2 border-t border-gray-600 text-gmc-dorado-principal">
                                         <span>{tPickup('sumTotal')}</span>
@@ -721,7 +834,6 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                             {showMobileSummary && (
                                 <div className="mt-5 pt-5 border-t border-gray-600 space-y-3 text-sm animate-fadeIn max-h-[60vh] overflow-y-auto">
                                     
-                                    {/* SELECTOR DE DIRECCIONES EN MÓVIL */}
                                     <div className="pb-3 border-b border-gray-600 mb-3">
                                         <label className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase mb-2">
                                             <MapPin size={14} className="text-gmc-dorado-principal" /> Destino de Envío
@@ -746,35 +858,87 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                                         )}
                                     </div>
 
+                                    {/* ✅ DESPUÉS (MÓVIL) */}
                                     <div className="flex justify-between text-gray-300">
-                                        <span>Freight Cost</span>
+                                        <span>{t('freightCost')}</span>
                                         <span>${totals.serviceSubtotal.toFixed(2)}</span>
                                     </div>
                                     
+                                    {/* ✅ DESPUÉS (MÓVIL) */}
                                     {totals.handlingSubtotal > 0 && (
-                                        <div className="flex justify-between text-[#EAD8B1]"><span>Consolidation Fee</span><span>+${totals.handlingSubtotal.toFixed(2)}</span></div>
+                                        <div className="flex justify-between text-[#EAD8B1]">
+                                            <span>{t('consolidationFee')}</span>
+                                            <span>+${totals.handlingSubtotal.toFixed(2)}</span>
+                                        </div>
                                     )}
 
                                     {totals.insuranceSubtotal > 0 && (
                                         <div className="flex justify-between text-blue-300"><span>+ Insurance (3%)</span><span>+${totals.insuranceSubtotal.toFixed(2)}</span></div>
                                     )}
                                     
-                                    <div className="flex justify-between text-gray-500 text-xs"><span>Processing Fee</span><span>+${totals.fee.toFixed(2)}</span></div>
+                                    {/* ✅ DESPUÉS (MÓVIL) */}
+                                    <div className="flex justify-between text-gray-500 text-xs">
+                                        <span>{t('processingFee')}</span>
+                                        <span>+${totals.fee.toFixed(2)}</span>
+                                    </div>
 
+                                    {/* ✅ DESPUÉS (MÓVIL) */}
                                     {discount > 0 && (
                                         <div className="flex justify-between text-green-400 font-bold">
-                                            <span>Discount</span>
+                                            <span>{t('discount')}</span>
                                             <span>-${discount.toFixed(2)}</span>
                                         </div>
                                     )}
 
-                                    <div className="pt-3">
-                                        <div className="flex gap-2">
-                                            <input type="text" placeholder="Promo Code" value={couponCode} onChange={(e) => setCouponCode(e.target.value.toUpperCase())} disabled={discount > 0} className="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-base text-white focus:outline-none focus:border-[#EAD8B1]" />
-                                            <button onClick={handleApplyCoupon} className="bg-gray-600 text-white px-3 rounded-lg text-xs hover:bg-gray-500">Apply</button>
-                                        </div>
-                                        {couponMsg.text && <p className={`text-[10px] mt-1 ${couponMsg.type === "error" ? "text-red-400" : "text-green-400"}`}>{couponMsg.type === "error" ? <AlertCircle size={10} /> : <CheckCircle size={10} />}{couponMsg.text}</p>}
+                                    <div className="pt-3 border-t border-gray-600 mt-2">
+                                     {discount > 0 ? (
+                                    <div className="bg-green-900/30 border border-green-500/30 p-3 rounded-lg flex items-center justify-between">
+                                    <p className="text-sm font-bold text-green-400 flex items-center gap-2">
+                                    <CheckCircle size={16} /> {couponMsg.text || "Promo Applied!"}
+                                    </p>
                                     </div>
+                                      ) : (
+                                    <>
+                                    <div className="flex gap-2">
+                                    <input type="text" placeholder="Promo Code (Optional)" value={couponCode} onChange={(e) => setCouponCode(e.target.value.toUpperCase())} className="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-base text-white focus:outline-none focus:border-[#EAD8B1]" />
+                                    <button onClick={handleApplyCoupon} disabled={validatingCoupon || !couponCode} className="bg-[#EAD8B1] text-[#222b3c] px-3 py-2 rounded-lg text-xs font-bold hover:brightness-110 disabled:opacity-50">
+                                       {validatingCoupon ? <Loader2 className="animate-spin" size={14} /> : "Apply"}
+                                     </button>
+                                   </div>
+                                       {couponMsg.text && couponMsg.type === "error" && <p className="text-[10px] mt-2 font-bold flex items-center gap-1 text-red-400"><AlertCircle size={10} />{couponMsg.text}</p>}
+                                   </>
+                                       )}
+                                   </div>
+                                    
+                                   {/* 🔥 CAJITA DORADA BILLETERA (MÓVIL) 🔥 */}
+                                    {walletBalance > 0 && (
+                                        <div className="mt-3 p-3 bg-gradient-to-r from-yellow-500/10 to-yellow-600/20 border border-yellow-500/30 rounded-xl mb-3">
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="bg-yellow-500/20 p-1.5 rounded-lg text-yellow-400">
+                                                        <DollarSign size={14} />
+                                                    </div>
+                                                    <div>
+                                                        {/* 👇 Título traducido */}
+                                                        <p className="text-xs font-bold text-yellow-400 uppercase tracking-wide">{t('walletTitle')}</p>
+                                                        {/* 👇 Subtítulo traducido */}
+                                                        <p className="text-[10px] text-yellow-400/80">{t('walletBalance')}: ${walletBalance.toFixed(2)}</p>
+                                                    </div>
+                                                </div>
+                                                <label className="relative inline-flex items-center cursor-pointer">
+                                                    <input type="checkbox" className="sr-only peer" checked={useWallet} onChange={() => setUseWallet(!useWallet)} />
+                                                    <div className="w-9 h-5 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-yellow-500"></div>
+                                                </label>
+                                            </div>
+                                            {useWallet && totals.appliedWallet > 0 && (
+                                                <div className="mt-2 pt-2 border-t border-yellow-500/20 flex justify-between text-xs font-bold text-yellow-400">
+                                                    {/* 👇 Tercera frase traducida (con 'Aplicado' como texto de respaldo) */}
+                                                    <span>{t('walletApplied') || "Aplicado"}:</span>
+                                                    <span>-${totals.appliedWallet.toFixed(2)}</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
 
                                     <div className="pt-3 border-t border-gray-600 pb-4">
                                         <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Tarjeta Seleccionada</label>

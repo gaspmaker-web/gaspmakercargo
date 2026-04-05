@@ -16,8 +16,9 @@ export async function POST(req: Request) {
     const resend = new Resend(process.env.RESEND_API_KEY);
 
     const body = await req.json();
-    // Ya no esperamos day/month/year por separado, sino dateOfBirth directo
-    const { email, password, name, countryCode, phone, dateOfBirth } = body;
+    
+    // 🔥 AÑADIMOS 'referredBy' para recibir el código del amigo que lo invitó
+    const { email, password, name, countryCode, phone, dateOfBirth, referredBy } = body;
 
     if (!email || !password || !name) {
       return NextResponse.json({ message: "Faltan datos obligatorios" }, { status: 400 });
@@ -39,18 +40,20 @@ export async function POST(req: Request) {
       data: {
         email,
         name,
-        // 🔥 CORRECCIÓN CRÍTICA: Ahora guardamos en 'password', no en 'password_hash'
+        // CORRECCIÓN CRÍTICA: Ahora guardamos en 'password', no en 'password_hash'
         password: hashedPassword,
         suiteNo,
         role: "CLIENTE",
         countryCode: country,
         phone,
-        dateOfBirth: finalDate
+        dateOfBirth: finalDate,
+        // 🔥 GUARDAMOS EL CÓDIGO DEL PROMOTOR EN LA BASE DE DATOS
+        referredBy: referredBy || null
       },
     });
 
     // =========================================================================
-    // 🔥 NUEVO: ENVIAR EMAIL DE BIENVENIDA AL CLIENTE (MULTILINGÜE)
+    // ENVIAR EMAIL DE BIENVENIDA AL CLIENTE (MULTILINGÜE)
     // =========================================================================
     try {
       const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.gaspmakercargo.com';

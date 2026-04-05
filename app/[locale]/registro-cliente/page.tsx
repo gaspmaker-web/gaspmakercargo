@@ -6,27 +6,33 @@ import RegisterClient from '@/components/auth/RegisterClient';
 // y falle si la base de datos no está disponible en el momento del build.
 export const dynamic = 'force-dynamic';
 
-export default async function RegisterPage({ params }: { params: { locale: string } }) {
+export default async function RegisterPage({ 
+  params,
+  searchParams // 🔥 1. Agregamos esto para poder leer la URL (?ref=...)
+}: { 
+  params: { locale: string };
+  searchParams: { [key: string]: string | string[] | undefined };
+}) {
   // 1. Verificamos si hay sesión activa
   const session = await auth();
 
   // 2. 🛡️ BLOQUEO DE SEGURIDAD:
-  // Si el usuario YA está logueado, lo expulsamos al dashboard correspondiente.
   if (session?.user) {
-    // A. Si es admin o warehouse -> Dashboard Admin (Panel unificado)
     if (session.user.role === 'ADMIN' || session.user.role === 'WAREHOUSE') {
         redirect(`/${params.locale}/dashboard-admin`);
     } 
-    // B. 🔥 AGREGADO: Si es Chofer -> Dashboard Driver (Su panel exclusivo)
     else if (session.user.role === 'DRIVER') {
         redirect(`/${params.locale}/dashboard-driver`);
     }
-    // C. Si es cliente normal -> Dashboard Cliente
     else {
         redirect(`/${params.locale}/dashboard-cliente`);
     }
   }
 
-  // 3. Si NO hay sesión, mostramos el formulario de registro
-  return <RegisterClient />;
+  // 🔥 3. CAPTURAMOS EL CÓDIGO DE REFERIDO (Si existe en la URL)
+  // Si la URL es /registro-cliente?ref=GERARDO123, esto guarda "GERARDO123"
+  const referralCode = typeof searchParams.ref === 'string' ? searchParams.ref : undefined;
+
+  // 🔥 4. Le pasamos el código al componente visual para que lo guarde en secreto
+  return <RegisterClient initialReferralCode={referralCode} />;
 }

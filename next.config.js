@@ -28,6 +28,12 @@ const nextConfig = {
         port: '',
         pathname: '**',
       },
+      {
+        protocol: 'https',
+        hostname: 'hwx8ivsyavlc8sq9.public.blob.vercel-storage.com', // 🔥 AGREGADO: Para las fotos de los sobres en Vercel Blob
+        port: '',
+        pathname: '**',
+      },
     ],
   },
   // -----------------------------------------------

@@ -4,15 +4,16 @@ import React, { useState } from 'react';
 import type { User } from 'next-auth';
 import type { Package, ConsolidatedShipment } from '@prisma/client';
 import AddressCard from '@/components/AddressCard';
-// import VirtualMailboxCard from '@/components/VirtualMailboxCard'; 
+import VirtualMailboxCard from '@/components/VirtualMailboxCard';
 import Link from 'next/link'; 
 import { useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl'; // 🔥 Agregué useLocale para las rutas dinámicas
 import { 
     Gift, ArrowRight, Truck, FileText, Package as PackageIcon, 
     CreditCard, CheckCircle, AlertCircle, ChevronRight, 
     UploadCloud, Box, Scale, Calendar, Loader2, ChevronDown, ChevronUp, FileCheck,
-    MapPin, Clock, DollarSign, X, Lock, AlertTriangle 
+    MapPin, Clock, DollarSign, X, Lock, AlertTriangle,
+    ShoppingBag // 🔥 IMPORTAMOS EL ÍCONO DEL SHOPPER
 } from 'lucide-react';
 
 // --- TIPO EXTENDIDO PARA LOS CÁLCULOS ---
@@ -43,6 +44,8 @@ interface ClientDashboardProps {
   enDestinoCount?: number;
   hasMailbox?: boolean;
   needsKycUpload?: boolean;
+  planType?: string | null;
+  savedCards?: any[]; // 🔥 AÑADIMOS LAS TARJETAS GUARDADAS
 }
 
 // 🔥 CONSTANTE DE HORARIOS
@@ -73,11 +76,14 @@ export default function ClientDashboard({
     inTransitCount = 0,
     enDestinoCount = 0,
     hasMailbox = false,     
-    needsKycUpload = false  
+    needsKycUpload = false,
+    planType = null,
+    savedCards = [] // 🔥 RECIBIMOS LAS TARJETAS
 }: ClientDashboardProps) {
     
-  // 1. Hook de Traducciones
+  // 1. Hook de Traducciones e Idioma
   const t = useTranslations('Dashboard'); 
+  const locale = useLocale(); // 🔥 Necesitamos el locale para el botón de Shopper
   const router = useRouter();
 
   const [selectedPkgs, setSelectedPkgs] = useState<string[]>([]);
@@ -98,10 +104,15 @@ export default function ClientDashboard({
       pkg.status === 'PENDIENTE' || 
       pkg.status === 'PRE_ALERTADO' || 
       pkg.status === 'EN_ALMACEN' ||
-      pkg.status === 'EN_PROCESAMIENTO'
+      pkg.status === 'EN_PROCESAMIENTO' ||
+      pkg.status === 'RECEIVED' 
   );
 
-  const packagesInMiami = packages.filter(p => p.status === 'RECIBIDO_MIAMI' || p.status === 'EN_ALMACEN');
+  const packagesInMiami = packages.filter(p => 
+      p.status === 'RECIBIDO_MIAMI' || 
+      p.status === 'EN_ALMACEN' || 
+      p.status === 'RECEIVED' 
+  );
   const hasPendingAction = pendingBillsCount > 0;
 
   // --- LÓGICA DE SELECCIÓN ---
@@ -118,7 +129,6 @@ export default function ClientDashboard({
       }
   };
 
-  // 🔥 CALCULOS CENTRALIZADOS PARA LAS VALIDACIONES DE PESO
   const selectedPackagesData = packages.filter(p => selectedPkgs.includes(p.id));
   const totalSelectedWeight = selectedPackagesData.reduce((acc, p) => acc + (Number(p.weightLbs) || 0), 0);
 
@@ -133,20 +143,21 @@ export default function ClientDashboard({
           return;
       }
 
-      // 🔥 REGLA DE NEGOCIO: LÍMITE INCREMENTADO A 15 PAQUETES
       if (selectedPkgs.length > 15) {
           alert(t('alertConsolidateLimit', { count: selectedPkgs.length }) || `El límite máximo es de 15 paquetes. Tienes ${selectedPkgs.length} seleccionados.`); 
           return;
       }
 
-      // 🔥 REGLA DE NEGOCIO: LÍMITE DE 150 LBS DE AEROLÍNEA (UPS/FEDEX)
       if (totalSelectedWeight > 150) {
           alert(`⚠️ Has alcanzado el límite de peso internacional por caja (150 lbs).\n\nTu selección actual pesa ${totalSelectedWeight.toFixed(2)} lbs.\nPor favor, deselecciona algunos paquetes para poder continuar.`);
           return;
       }
 
-      // Validación de facturas
-      const packagesWithoutInvoice = selectedPackagesData.filter(p => !p.invoiceUrl);
+      // 🔥 VALIDACIÓN DE FACTURAS CORREGIDA PARA OMITIR SOBRES
+      const packagesWithoutInvoice = selectedPackagesData.filter(p => {
+          const isDocument = p.courier === 'Buzón Virtual' || (p.carrierTrackingNumber || '').startsWith('DOC-') || (p.gmcTrackingNumber || '').startsWith('GMC-DOC-');
+          return !p.invoiceUrl && !isDocument; // Solo bloquea si falta factura Y NO es documento
+      });
 
       if (packagesWithoutInvoice.length > 0) {
           const names = packagesWithoutInvoice.map(p => p.carrierTrackingNumber || p.gmcTrackingNumber).join('\n- ');
@@ -246,8 +257,24 @@ export default function ClientDashboard({
       }
   };
 
+  // 🔥 CÁLCULO DE FEES CON EXCEPCIÓN PARA DOCUMENTOS EN PICKUP
   const totalStorageFee = selectedPackagesData.reduce((acc, p) => acc + (p.storageFee || 0), 0);
-  const totalHandlingFee = selectedPackagesData.reduce((acc, p) => acc + (p.pickupHandlingFee || 0), 0);
+  
+  const totalHandlingFee = selectedPackagesData.reduce((acc, p) => {
+      // Verificamos si es un documento del buzón virtual
+      const isDocument = p.courier === 'Buzón Virtual' || (p.carrierTrackingNumber || '').startsWith('DOC-') || (p.gmcTrackingNumber || '').startsWith('GMC-DOC-');
+      
+      if (isDocument) {
+          // 🔥 PRECIO DIFERENTE PARA PICKUP DE SOBRES/DOCUMENTOS
+          // Si cobran algo por recoger la carta en persona, cámbialo aquí. Si es gratis, déjalo en 0.
+          const documentPickupFee = 0.00; 
+          return acc + documentPickupFee;
+      }
+      
+      // Si es un paquete normal, cobra el Handling estándar
+      return acc + (p.pickupHandlingFee || 0);
+  }, 0);
+
   const grandTotalPickup = totalStorageFee + totalHandlingFee;
 
   const handlePackageAction = (e: React.MouseEvent, pkg: PackageWithFees) => {
@@ -283,22 +310,39 @@ export default function ClientDashboard({
             
             <div className="lg:col-span-4 xl:col-span-3 flex">
                 <div className="w-full h-full">
-                    {/* <VirtualMailboxCard hasMailbox={hasMailbox} needsKycUpload={needsKycUpload} /> */}
+                  {/* 🔥 PASAMOS LAS TARJETAS AL COMPONENTE */}
+                  <VirtualMailboxCard 
+                    hasMailbox={hasMailbox} 
+                    needsKycUpload={needsKycUpload} 
+                    planType={planType} 
+                    savedCards={savedCards} 
+                  /> 
                 </div>
             </div>
         </div>
         
-        {/* MENÚ DE ACCIONES */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-6 mb-8">
-            <Link href="/dashboard-cliente/pre-alerta" className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all group flex flex-col justify-between h-full">
+        {/* ===================================================================
+           🔥 MENÚ DE ACCIONES MODIFICADO (AHORA SON 4 BOTONES)
+           Cambié de md:grid-cols-3 a grid-cols-2 md:grid-cols-4 para que el diseño no se rompa
+           =================================================================== */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-8">
+            <Link href="/dashboard-cliente/pre-alerta" className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:shadow-md hover:border-blue-200 transition-all group flex flex-col justify-between h-full">
                 <div className="bg-blue-50 w-10 h-10 rounded-lg flex items-center justify-center text-blue-600 mb-3 group-hover:bg-blue-600 group-hover:text-white transition-colors"><PackageIcon size={20} /></div>
                 <div><h3 className="font-bold text-gray-800 text-sm mb-1 leading-tight">{t('actionPreAlert')}</h3><p className="text-[10px] text-gray-500 leading-snug">{t('descPreAlert')}</p></div>
             </Link>
-            <Link href="/dashboard-cliente/solicitar-pickup" className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all group flex flex-col justify-between h-full">
+            
+            {/* 🔥 NUEVO BOTÓN: PERSONAL SHOPPER */}
+            <Link href={`/${locale}/dashboard-cliente/compras`} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:shadow-md hover:border-[#e6c200] transition-all group flex flex-col justify-between h-full">
+                <div className="bg-yellow-50 w-10 h-10 rounded-lg flex items-center justify-center text-[#e6c200] mb-3 group-hover:bg-[#e6c200] group-hover:text-black transition-colors"><ShoppingBag size={20} /></div>
+                <div><h3 className="font-bold text-gray-800 text-sm mb-1 leading-tight">Personal Shopper</h3><p className="text-[10px] text-gray-500 leading-snug">{t('personalShopperDesc')}</p></div>
+            </Link>
+
+            <Link href="/dashboard-cliente/solicitar-pickup" className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:shadow-md hover:border-orange-200 transition-all group flex flex-col justify-between h-full">
                 <div className="bg-orange-50 w-10 h-10 rounded-lg flex items-center justify-center text-orange-600 mb-3 group-hover:bg-orange-600 group-hover:text-white transition-colors"><Truck size={20} /></div>
                 <div><h3 className="font-bold text-gray-800 text-sm mb-1 leading-tight">{t('actionPickup')}</h3><p className="text-[10px] text-gray-500 leading-snug">{t('descPickup')}</p></div>
             </Link>
-            <Link href="/dashboard-cliente/historial-solicitudes" className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all group flex flex-col justify-between h-full">
+            
+            <Link href="/dashboard-cliente/historial-solicitudes" className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:shadow-md hover:border-purple-200 transition-all group flex flex-col justify-between h-full">
                 <div className="bg-purple-50 w-10 h-10 rounded-lg flex items-center justify-center text-purple-600 mb-3 group-hover:bg-purple-600 group-hover:text-white transition-colors"><FileText size={20} /></div>
                 <div><h3 className="font-bold text-gray-800 text-sm mb-1 leading-tight">{t('actionHistory')}</h3><p className="text-[10px] text-gray-500 leading-snug">{t('descHistory')}</p></div>
             </Link>
@@ -308,6 +352,7 @@ export default function ClientDashboard({
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
           <div className="lg:col-span-2 space-y-4">
+
              <div className="flex justify-between items-center px-1 cursor-pointer select-none" onClick={() => setIsExpanded(!isExpanded)}>
                 <div className="flex items-center gap-3">
                     <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
@@ -343,8 +388,11 @@ export default function ClientDashboard({
                     <div className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-4 px-1 items-stretch [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
                         {displayPackages.map((pkg) => {
                             const isSelected = selectedPkgs.includes(pkg.id);
-                            const missingInvoice = !pkg.invoiceUrl;
                             const isBlocked = pkg.isBlocked; 
+                            
+                            // 🔥 IDENTIFICAR SI ES DOCUMENTO PARA OMITIR FACTURA
+                            const isDocument = pkg.courier === 'Buzón Virtual' || (pkg.carrierTrackingNumber || '').startsWith('DOC-') || (pkg.gmcTrackingNumber || '').startsWith('GMC-DOC-');
+                            const missingInvoice = !pkg.invoiceUrl && !isDocument; 
                             
                             return (
                                 <div 
@@ -415,15 +463,18 @@ export default function ClientDashboard({
                                                     ? 'bg-red-600 text-white border-red-600 hover:bg-red-700 shadow-sm' 
                                                     : missingInvoice 
                                                         ? 'bg-red-50 text-red-600 border-red-100 hover:bg-red-100' 
-                                                        : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50 hover:text-blue-600'}
+                                                        : 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100 hover:text-green-800'}
                                             `}
                                         >
                                             {isBlocked ? (
                                                 <><DollarSign size={14} /> {t('btnPayDebt')}</>
                                             ) : missingInvoice ? (
                                                 <><AlertCircle size={14} /> {t('btnUploadInvoice')}</>
+                                            ) : isDocument ? (
+                                                // 🔥 ETIQUETA EXCLUSIVA PARA DOCUMENTOS
+                                                <><FileCheck size={14} className="text-green-600"/> Documento OK</>
                                             ) : (
-                                                <><FileCheck size={14} className="text-green-500"/> {t('btnInvoiceOK')}</>
+                                                <><FileCheck size={14} className="text-green-600"/> {t('btnInvoiceOK')}</>
                                             )}
                                         </button>
                                     </div>

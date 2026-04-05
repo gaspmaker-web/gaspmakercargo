@@ -3,22 +3,21 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { 
   ArrowRight, ShieldCheck, Globe, Zap, 
   Package, ShoppingCart, FileText, Plane, Layers,
-  CheckCircle, Box
+  CheckCircle, Box, Mailbox, Ship
 } from 'lucide-react';
 
-// 🔥 IMPORTAMOS TU NUEVO COMPONENTE DE TIENDAS AFILIADAS
 import RecommendedStores from '@/components/RecommendedStores';
 
 export default function HomePage() {
   const t = useTranslations('HomePage');
   const tSteps = useTranslations('HowItWorks'); 
   const tNav = useTranslations('Navigation');
+  const locale = useLocale(); 
 
-  // Definimos los 6 pasos visualmente
   const steps = [
     { id: 1, icon: Zap, color: 'text-blue-500', bg: 'bg-blue-50' },
     { id: 2, icon: ShoppingCart, color: 'text-purple-500', bg: 'bg-purple-50' },
@@ -40,29 +39,16 @@ export default function HomePage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div className="text-center lg:text-left">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-md mb-6">
-                
-                {/* Logo oficial */}
-                <Image 
-                  src="/gaspmakercargoproject.png" 
-                  alt="Gasp Maker Cargo Logo" 
-                  width={18} 
-                  height={18} 
-                  className="object-contain drop-shadow-md"
-                />
-                
-                <span className="text-xs font-bold tracking-[2px] text-gray-200 uppercase">
-                  {t('Hero.badge')}
-                </span>
+                <Image src="/gaspmakercargoproject.png" alt="Logo" width={18} height={18} />
+                <span className="text-xs font-bold tracking-[2px] text-gray-200 uppercase">{t('Hero.badge')}</span>
               </div>
               <h1 className="text-5xl md:text-7xl font-bold font-garamond text-white leading-[1.1] mb-6">
                 {t('Hero.title_part1')} <br />
                 <span className="text-gmc-dorado-principal">{t('Hero.title_part2')}</span>
               </h1>
-              <p className="text-gray-300 text-lg md:text-xl mb-10 max-w-xl mx-auto lg:mx-0 leading-relaxed font-light">
-                {t('Hero.subtitle')}
-              </p>
+              <p className="text-gray-300 text-lg mb-10 max-w-xl mx-auto lg:mx-0 leading-relaxed font-light">{t('Hero.subtitle')}</p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                <Link href="/registro-cliente" className="px-8 py-4 bg-gmc-dorado-principal text-black font-bold rounded-xl hover:bg-yellow-400 transition-all transform hover:scale-105 shadow-2xl flex items-center justify-center gap-2">
+                <Link href="/registro-cliente" className="px-8 py-4 bg-gmc-dorado-principal text-black font-bold rounded-xl hover:bg-yellow-400 transition-all flex items-center justify-center gap-2">
                   {t('Hero.cta_primary')} <ArrowRight size={20}/>
                 </Link>
                 <Link href="/calculadora-costos" className="px-8 py-4 bg-white/10 text-white font-bold rounded-xl border border-white/20 hover:bg-white/20 transition-all backdrop-blur-sm flex items-center justify-center gap-2">
@@ -79,18 +65,13 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* --- 2. PASOS DINÁMICOS (6 PASOS) --- */}
+      {/* --- 2. LOGISTICS IN SIMPLE STEPS --- */}
       <section id="como-funciona" className="py-24 px-4 bg-white">
         <div className="container mx-auto max-w-7xl">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-5xl font-bold font-garamond text-gray-900 mb-4">
-              {tSteps('title')}
-            </h2>
-            <p className="text-gray-500 max-w-2xl mx-auto text-lg font-light">
-              {tSteps('subtitle')}
-            </p>
+            <h2 className="text-3xl md:text-5xl font-bold font-garamond text-gray-900 mb-4">{tSteps('title')}</h2>
+            <p className="text-gray-500 max-w-2xl mx-auto text-lg font-light">{tSteps('subtitle')}</p>
           </div>
-          
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {steps.map((step) => (
               <div key={step.id} className="group relative bg-gray-50 p-8 rounded-[32px] border border-gray-100 hover:bg-white hover:shadow-2xl transition-all duration-500">
@@ -100,20 +81,60 @@ export default function HomePage() {
                     </div>
                     <span className="text-4xl font-black text-gray-200 group-hover:text-gmc-dorado-principal/20 transition-colors">0{step.id}</span>
                 </div>
-                <h3 className="text-xl font-bold text-gray-800 mb-3 font-garamond">
-                  {tSteps(`step${step.id}Title`)}
-                </h3>
-                <p className="text-gray-500 text-sm leading-relaxed">
-                  {tSteps(`step${step.id}Desc`)}
-                </p>
+                <h3 className="text-xl font-bold text-gray-800 mb-3 font-garamond">{tSteps(`step${step.id}Title`)}</h3>
+                <p className="text-gray-500 text-sm leading-relaxed">{tSteps(`step${step.id}Desc`)}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* --- 3. SECCIÓN DE DESTINOS --- */}
-      <section className="py-24 bg-gray-50 px-4 overflow-hidden">
+      {/* --- 3. SECCIÓN DE VALOR AGREGADO --- */}
+      <section className="py-24 bg-gray-50 border-y border-gray-100">
+        <div className="container mx-auto max-w-7xl px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-5xl font-bold font-garamond text-gray-900 mb-4">{t('Features.title')}</h2>
+            <p className="text-gray-500 max-w-2xl mx-auto text-lg font-light">{t('Features.subtitle')}</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="bg-white p-8 rounded-[32px] border border-gray-200 hover:shadow-xl transition-all group">
+              <div className="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                <Layers size={28} />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">{t('Features.consolidationTitle')}</h3>
+              <p className="text-gray-500 text-sm leading-relaxed">{t('Features.consolidationDesc')}</p>
+            </div>
+
+            <div className="bg-white p-8 rounded-[32px] border border-gray-200 hover:shadow-xl transition-all group">
+              <div className="w-14 h-14 bg-pink-50 text-pink-600 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-pink-600 group-hover:text-white transition-colors">
+                <ShoppingCart size={28} />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">{t('Features.shopperTitle')}</h3>
+              <p className="text-gray-500 text-sm leading-relaxed">{t('Features.shopperDesc')}</p>
+            </div>
+
+            <div className="bg-white p-8 rounded-[32px] border border-gray-200 hover:shadow-xl transition-all group">
+              <div className="w-14 h-14 bg-orange-50 text-orange-600 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-orange-600 group-hover:text-white transition-colors">
+                <Mailbox size={28} />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">{t('Features.mailboxTitle')}</h3>
+              <p className="text-gray-500 text-sm leading-relaxed">{t('Features.mailboxDesc')}</p>
+            </div>
+
+            <div className="bg-white p-8 rounded-[32px] border border-gray-200 hover:shadow-xl transition-all group">
+              <div className="w-14 h-14 bg-slate-100 text-slate-800 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-slate-800 group-hover:text-white transition-colors">
+                <Ship size={28} />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">{t('Features.commercialTitle')}</h3>
+              <p className="text-gray-500 text-sm leading-relaxed">{t('Features.commercialDesc')}</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* --- 4. SECCIÓN DE DESTINOS --- */}
+      <section className="py-24 bg-white px-4 overflow-hidden">
         <div className="container mx-auto max-w-7xl flex flex-col lg:flex-row items-center gap-16">
           <div className="lg:w-1/2 space-y-8 relative z-10">
             <h2 className="text-4xl md:text-5xl font-bold font-garamond text-gray-900 leading-tight">
@@ -124,11 +145,11 @@ export default function HomePage() {
               {t('Destinations.description')}
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="flex items-center gap-3 p-4 bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+              <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-2xl shadow-sm border border-gray-100">
                 <CheckCircle className="text-green-500 shrink-0" size={20} /> 
                 <span className="text-sm font-bold text-gray-700">{t('Destinations.feature1')}</span>
               </div>
-              <div className="flex items-center gap-3 p-4 bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+              <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-2xl shadow-sm border border-gray-100">
                 <CheckCircle className="text-green-500 shrink-0" size={20} /> 
                 <span className="text-sm font-bold text-gray-700">{t('Destinations.feature2')}</span>
               </div>
@@ -140,11 +161,10 @@ export default function HomePage() {
           
           <div className="lg:w-1/2 relative flex items-center justify-center perspective-1000">
             <div className="absolute w-[120%] h-[120%] bg-gradient-radial from-blue-500/10 via-blue-500/5 to-transparent rounded-full blur-[80px]"></div>
-            <div className="relative w-full max-w-[500px] aspect-square bg-white/70 backdrop-blur-2xl rounded-[60px] shadow-[0_30px_90px_rgba(59,130,246,0.15)] border border-white/60 flex items-center justify-center overflow-hidden group">
+            <div className="relative w-full max-w-[500px] aspect-square bg-white/70 backdrop-blur-2xl rounded-[60px] shadow-[0_30px_90px_rgba(59,130,246,0.15)] border border-gray-100 flex items-center justify-center overflow-hidden group">
                 <div className="absolute inset-0 flex items-center justify-center">
                     <svg className="w-[70%] h-[70%] animate-[spin_60s_linear_infinite]" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <defs>
-                        {/* 🔥 AQUÍ ESTABA EL ERROR: Ya está corregido sin el punto */}
                         <radialGradient id="globeBlue" cx="50%" cy="50%" r="50%">
                             <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.1" />
                             <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.05" />
@@ -176,21 +196,44 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 🔥 4. NUEVA SECCIÓN DE TIENDAS AFILIADAS (ESTRATÉGICO PARA AMAZON) */}
+      {/* --- 5. TIENDAS AFILIADAS --- */}
       <RecommendedStores />
 
-      {/* --- 5. CTA & NAVEGACIÓN --- */}
+     {/* --- 6. PRE-FOOTER / LEGALIDAD Y CONFIANZA --- */}
       <section className="py-20 bg-white border-t border-gray-100 text-center">
         <div className="container mx-auto px-4">
-            <h2 className="text-3xl md:text-4xl font-bold font-garamond text-gray-900 mb-10">
-                {t('Footer.cta_title')}
-            </h2>
-            <div className="flex flex-wrap items-center justify-center gap-6 md:gap-12 text-[11px] font-black text-gray-400 tracking-[3px] uppercase">
-                <Link href="/servicios" className="hover:text-gmc-dorado-principal transition-colors">{tNav('services')}</Link>
-                <span className="hidden md:block h-5 w-[1px] bg-gray-300"></span>
-                <Link href="/acerca-de-nosotros" className="hover:text-gmc-dorado-principal transition-colors">{tNav('aboutUs')}</Link>
-                <span className="hidden md:block h-5 w-[1px] bg-gray-300"></span>
-                <Link href="/testimonios" className="hover:text-gmc-dorado-principal transition-colors">{tNav('testimonials')}</Link>
+            <h2 className="text-3xl font-bold font-garamond text-gray-900 mb-10">{t('Footer.cta_title')}</h2>
+            
+            <div className="flex flex-wrap items-center justify-center gap-4 md:gap-6 text-[11px] font-black text-gray-400 tracking-[3px] uppercase">
+                <Link href={`/${locale}/acerca-de-nosotros`} className="hover:text-gmc-dorado-principal transition-colors">
+                  {tNav('aboutUs')}
+                </Link>
+                
+                <span className="hidden md:block h-4 w-[1px] bg-gray-300"></span>
+                
+                <Link href={`/${locale}/ubicaciones`} className="hover:text-gmc-dorado-principal transition-colors">
+                  {tNav('locations')}
+                </Link>
+                
+                <span className="hidden md:block h-4 w-[1px] bg-gray-300"></span>
+                
+                {/* Puedes dejarlo en inglés o usar {tNav('mailboxPolicies')} si lo agregaste al JSON */}
+                <Link href={`/${locale}/terms-of-service#mailbox-policies`} className="hover:text-gmc-dorado-principal transition-colors">
+                  Mailbox Policies
+                </Link>
+                
+                <span className="hidden md:block h-4 w-[1px] bg-gray-300"></span>
+
+                <Link href={`/${locale}/testimonios`} className="hover:text-gmc-dorado-principal transition-colors">
+                  {tNav('testimonials')}
+                </Link>
+
+                <span className="hidden md:block h-4 w-[1px] bg-gray-300"></span>
+                
+                {/* 🔥 AQUÍ ESTÁ LA MAGIA MULTILINGÜE */}
+                <Link href={`/${locale}/terms-of-service`} className="hover:text-gmc-dorado-principal transition-colors">
+                  {tNav('termsOfService')}
+                </Link>
             </div>
         </div>
       </section>

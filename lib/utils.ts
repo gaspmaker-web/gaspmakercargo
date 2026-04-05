@@ -21,6 +21,25 @@ export function calculateVolumeFt3(l?: number | null, w?: number | null, h?: num
 }
 
 // ==========================================
+// 🔥 NUEVA TARIFA: CALCULADORA DE MANEJO (IN-OUT)
+// ==========================================
+export function calculateHandlingFee(weightLbs: number | null | undefined): number {
+    if (!weightLbs || weightLbs <= 0) return 0; // Prevención de errores
+    
+    if (weightLbs <= 10) {
+        return 2.50;  // Mini (Compite con iPostal1)
+    } 
+    if (weightLbs <= 50) {
+        return 5.00;  // Estándar
+    } 
+    if (weightLbs <= 150) {
+        return 12.50; // Pesado
+    } 
+    
+    return 30.00;     // Carga / Pallet (+150 lbs)
+}
+
+// ==========================================
 // CALCULADORA DE ALMACENAJE (CORREGIDA)
 // ==========================================
 export const calculateStorageCost = (pkg: { createdAt: Date | string, storagePaidUntil?: Date | string | null, lengthIn?: number | null, widthIn?: number | null, heightIn?: number | null }) => {

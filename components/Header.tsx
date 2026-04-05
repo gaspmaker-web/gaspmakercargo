@@ -4,10 +4,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation'; 
 import Link from 'next/link';
-import { Menu, ArrowLeft, ChevronDown, User } from 'lucide-react'; 
+import { Menu, ArrowLeft, ChevronDown, User, Shield } from 'lucide-react'; 
 import ProfileButton from "@/components/ProfileButton";
 import { useSession } from "next-auth/react";
-import { useTranslations, useLocale } from 'next-intl'; // Importamos useLocale
+import { useTranslations, useLocale } from 'next-intl'; 
 import NotificationBell from "@/components/ui/NotificationBell";
 
 interface HeaderProps {
@@ -16,7 +16,7 @@ interface HeaderProps {
 
 export default function Header({ backButtonUrl }: HeaderProps) {
   const t = useTranslations('Navigation'); 
-  const locale = useLocale(); // 🔥 IDIOMA ACTUAL
+  const locale = useLocale(); 
   const pathname = usePathname();
   const router = useRouter();
   
@@ -24,15 +24,19 @@ export default function Header({ backButtonUrl }: HeaderProps) {
   const langRef = useRef<HTMLDivElement>(null);
   const { data: session } = useSession(); 
 
-  // Detectar si estamos en dashboard
   const isDashboard = pathname.includes('/dashboard-cliente') || pathname.includes('/menu') || pathname.includes('/account-settings');
   const isBillingPage = pathname.includes('/pagar-facturas');
 
-  // Sub-páginas (🔥 AQUÍ SE AGREGÓ EL RASTREO PARA OCULTAR LA HAMBURGUESA)
+  const isMailboxSetup = pathname.includes('/mailbox-setup');
+  const isBuzon = pathname.includes('/buzon');
+  const isKyc = pathname.includes('/mailbox-setup/kyc');
+  const isKycFix = pathname.includes('/mailbox-setup/kyc-fix');
+
   const isSubPage = 
     pathname.includes('/referidos') ||
     pathname.includes('/pre-alerta') ||
     pathname.includes('/solicitar-pickup') ||
+    pathname.includes('/compras') ||
     pathname.includes('/historial-solicitudes') ||
     pathname.includes('/en-transito') ||
     pathname.includes('/en-destino') ||
@@ -40,11 +44,13 @@ export default function Header({ backButtonUrl }: HeaderProps) {
     pathname.includes('/notificaciones') ||
     pathname.includes('/account-settings') ||
     pathname.includes('/paquetes') ||
-    pathname.includes('/rastreo'); // 🔥 <- REGLA AÑADIDA
+    pathname.includes('/rastreo') ||
+    isBuzon ||        
+    isMailboxSetup;   
 
   const headerClasses = isDashboard 
     ? "bg-transparent fixed top-0 z-40 w-full h-[72px] transition-colors duration-300" 
-    : "bg-gmc-gris-oscuro border-b border-white/5 backdrop-blur-md sticky top-0 z-40 shadow-2xl font-montserrat w-full h-[72px] transition-colors duration-300";
+    : "bg-[#1a1f2e] border-b border-white/5 backdrop-blur-md sticky top-0 z-40 shadow-2xl font-montserrat w-full h-[72px] transition-colors duration-300";
 
   const iconColorClass = isDashboard ? "text-[#1a1f2e]" : "text-white";
 
@@ -57,7 +63,6 @@ export default function Header({ backButtonUrl }: HeaderProps) {
   
   const currentLang = languages.find(l => l.code === locale) || languages[0];
 
-  // 🔥 Cambiamos el idioma usando window.location para forzar limpieza de caché
   const handleLanguageChange = (code: string) => {
     if (code === locale) {
         setIsLangMenuOpen(false);
@@ -73,8 +78,19 @@ export default function Header({ backButtonUrl }: HeaderProps) {
     window.location.href = newPath; 
   };
 
-  // 🔥 REGRESAR AL DASHBOARD (Para la flecha <-)
-  const handleBackToDashboard = () => {
+  const handleBackNavigation = () => {
+    if (isKycFix) {
+        router.push(`/${locale}/dashboard-cliente/buzon`);
+        return;
+    }
+    if (isKyc) {
+        router.push(`/${locale}/dashboard-cliente`);
+        return;
+    }
+    if (backButtonUrl) {
+        router.push(backButtonUrl);
+        return;
+    }
     router.push(`/${locale}/dashboard-cliente`);
   };
 
@@ -88,12 +104,10 @@ export default function Header({ backButtonUrl }: HeaderProps) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [langRef]);
 
-  // 🔥 ESTA ES LA CLAVE: Función para generar links con idioma
   const getLink = (path: string) => `/${locale}${path}`;
 
   return (
     <header className={headerClasses}>
-      {/* 🔥 NUEVO: Agregamos 'relative' para centrar el logo */}
       <div className="container mx-auto px-4 h-full flex justify-between items-center relative">
         
         {/* ZONA IZQUIERDA */}
@@ -102,16 +116,15 @@ export default function Header({ backButtonUrl }: HeaderProps) {
             {/* MÓVIL */}
             <div className="lg:hidden">
                 {isSubPage ? (
-                    <button 
-                        onClick={handleBackToDashboard}
-                        className={`focus:outline-none p-2 rounded-lg transition-colors block ${iconColorClass} ${
-                            isDashboard ? "hover:bg-black/5" : "hover:bg-white/10"
-                        }`}
-                    >
-                        <ArrowLeft size={28} />
-                    </button>
+                    (isMailboxSetup && isBuzon && !isKyc && !isKycFix) ? null : (
+                        <button 
+                            onClick={handleBackNavigation}
+                            className="flex items-center justify-center w-10 h-10 mt-4 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors shadow-sm focus:outline-none"
+                        >
+                            <ArrowLeft size={20} className="text-gmc-dorado-principal" strokeWidth={2.5} />
+                        </button>
+                    )
                 ) : (
-                    // ✅ CORREGIDO: Usamos getLink para ir al menú con el idioma correcto
                     <Link 
                         href={getLink('/menu-movil')} 
                         className={`focus:outline-none p-2 -ml-2 rounded-lg transition-colors block ${iconColorClass} ${
@@ -126,13 +139,15 @@ export default function Header({ backButtonUrl }: HeaderProps) {
             {/* DESKTOP */}
             <div className={`hidden lg:flex items-center flex-shrink-0 ${iconColorClass}`}>
                 {isSubPage ? (
-                    <button 
-                        onClick={handleBackToDashboard} 
-                        className={`hover:text-gmc-dorado-principal transition-all duration-300 ml-4 p-2 rounded-full hover:bg-black/5`}
-                        title="Volver"
-                    >
-                        <ArrowLeft size={24} />
-                    </button>
+                    (isMailboxSetup && isBuzon && !isKyc && !isKycFix) ? null : (
+                        <button 
+                            onClick={handleBackNavigation} 
+                            className="flex items-center justify-center w-10 h-10 mt-4 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors shadow-sm ml-4 focus:outline-none"
+                            title="Volver"
+                        >
+                            <ArrowLeft size={20} className="text-gmc-dorado-principal" strokeWidth={2.5} />
+                        </button>
+                    )
                 ) : (
                     <Link href={`/${locale}`} className="flex items-center group transition-transform hover:scale-105">
                         <Image
@@ -148,10 +163,7 @@ export default function Header({ backButtonUrl }: HeaderProps) {
             </div>
         </div>
 
-        {/* ========================================================================= */}
-        {/* 🔥 CORRECCIÓN: LOGO CENTRAL SOLO SI NO ESTAMOS EN DASHBOARD */}
-        {/* ========================================================================= */}
-        {!isDashboard && (
+        {!isDashboard && !isMailboxSetup && !isBuzon && (
             <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 lg:hidden flex items-center justify-center">
                 <Link href={`/${locale}`} className="transition-transform hover:scale-105 active:scale-95">
                     <Image
@@ -165,18 +177,14 @@ export default function Header({ backButtonUrl }: HeaderProps) {
                 </Link>
             </div>
         )}
-        {/* ========================================================================= */}
 
-        {/* ZONA CENTRAL (Links Desktop Corregidos) */}
+       {/* ZONA CENTRAL: NAVEGACIÓN LIMPIA Y ESTRATÉGICA */}
         {!isSubPage && !isBillingPage && (
-            <div className={`hidden lg:flex items-center space-x-4 xl:space-x-6 ${iconColorClass}`}>
-            <Link href={getLink('/como-funciona')} className="text-[11px] xl:text-[13px] font-bold hover:text-gmc-dorado-principal transition-all uppercase tracking-[1px] opacity-90">{t('howItWorks')}</Link>
-            <Link href={getLink('/servicios')} className="text-[11px] xl:text-[13px] font-bold hover:text-gmc-dorado-principal transition-all uppercase tracking-[1px] opacity-90">{t('services')}</Link>
-            <Link href={getLink('/calculadora-costos')} className="text-[11px] xl:text-[13px] font-bold hover:text-gmc-dorado-principal transition-all uppercase tracking-[1px] opacity-90">{t('calculator')}</Link>
-            <Link href={getLink('/acerca-de-nosotros')} className="text-[11px] xl:text-[13px] font-bold hover:text-gmc-dorado-principal transition-all uppercase tracking-[1px] opacity-90">{t('aboutUs')}</Link>
-            <Link href={getLink('/faq')} className="text-[11px] xl:text-[13px] font-bold hover:text-gmc-dorado-principal transition-all uppercase tracking-[1px] opacity-90">{t('faq')}</Link>
-            <Link href={getLink('/testimonios')} className="text-[11px] xl:text-[13px] font-bold hover:text-gmc-dorado-principal transition-all uppercase tracking-[1px] opacity-90">{t('testimonials')}</Link>
-            <Link href={getLink('/ubicaciones')} className="text-[11px] xl:text-[13px] font-bold hover:text-gmc-dorado-principal transition-all uppercase tracking-[1px] opacity-90">{t('locations')}</Link>
+            <div className={`hidden lg:flex items-center gap-6 xl:gap-8 ${iconColorClass}`}>
+                <Link href={getLink('/como-funciona')} className="whitespace-nowrap text-[11px] xl:text-[13px] font-bold hover:text-gmc-dorado-principal transition-all uppercase tracking-[2px] opacity-90">{t('howItWorks')}</Link>
+                <Link href={getLink('/servicios')} className="whitespace-nowrap text-[11px] xl:text-[13px] font-bold hover:text-gmc-dorado-principal transition-all uppercase tracking-[2px] opacity-90">{t('services')}</Link>
+                <Link href={getLink('/calculadora-costos')} className="whitespace-nowrap text-[11px] xl:text-[13px] font-bold hover:text-gmc-dorado-principal transition-all uppercase tracking-[2px] opacity-90">{t('calculator')}</Link>
+                <Link href={getLink('/faq')} className="whitespace-nowrap text-[11px] xl:text-[13px] font-bold hover:text-gmc-dorado-principal transition-all uppercase tracking-[2px] opacity-90">{t('faq')}</Link>
             </div>
         )}
 
@@ -215,14 +223,13 @@ export default function Header({ backButtonUrl }: HeaderProps) {
                     </div>
                 )}
 
-                {/* Perfil */}
+                {/* Perfil o Botón de Acción Principal (CTA) */}
                 <div className="flex items-center">
                     {session ? (
                         <>
                             <div className="hidden lg:block">
                                 <ProfileButton />
                             </div>
-                            {/* ✅ CORREGIDO: Link al menú perfil con idioma */}
                             <Link 
                                 href={getLink('/menu-perfil')} 
                                 className={`lg:hidden w-9 h-9 rounded-full flex items-center justify-center font-bold shadow-sm border active:scale-95 transition-transform overflow-hidden ${
@@ -243,14 +250,23 @@ export default function Header({ backButtonUrl }: HeaderProps) {
                             </Link>
                         </>
                     ) : (
-                        // ✅ CORREGIDO: Link al login con idioma
-                        <Link 
-                        href={getLink('/login-cliente')}
-                        className="px-3 py-2 lg:px-5 lg:py-2 bg-gmc-dorado-principal text-black font-bold rounded-lg hover:bg-[#e6c200] transition-all text-sm shadow-md flex items-center gap-2"
-                        >
-                        <User size={18} />
-                        <span className="hidden lg:inline">{t('access')}</span>
-                        </Link>
+                        <div className="flex items-center gap-3">
+                            <Link 
+                                href={getLink('/login-cliente')}
+                                className="hidden lg:flex px-4 py-2 text-white font-bold hover:text-gmc-dorado-principal transition-all text-sm items-center gap-2"
+                            >
+                                <User size={16} />
+                                 {t('access')}
+                            </Link>
+                            
+                            <Link 
+                                href={getLink('/registro-cliente')}
+                                className="px-4 py-2 lg:px-6 lg:py-2.5 bg-gmc-dorado-principal text-black font-extrabold rounded-lg hover:bg-yellow-400 transition-all text-sm shadow-lg flex items-center gap-2 transform hover:-translate-y-0.5"
+                            >
+                                <Shield size={16} className="hidden lg:block" />
+                                <span>{locale === 'en' ? 'Open Free Locker' : locale === 'es' ? 'Abrir Casillero' : locale === 'pt' ? 'Abrir Armário' : 'Ouvrir Casier'}</span>
+                            </Link>
+                        </div>
                     )}
                 </div>
             </>
@@ -261,4 +277,3 @@ export default function Header({ backButtonUrl }: HeaderProps) {
     </header> 
   );
 }
-

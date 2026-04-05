@@ -32,7 +32,7 @@ export async function POST(req: Request) {
         type, // 'WAREHOUSE_PICKUP', 'CONSOLIDATION', o 'SHIPPING_INTL'
         scheduledDate, scheduledTime,
         selectedCourier, courierService, totalWeight, subtotal, processingFee, totalPaid, stripePaymentId, 
-        shippingAddress // 🔥 RECIBIMOS LA DIRECCIÓN DEL MENÚ NIVEL AMAZON
+        shippingAddress 
     } = body;
 
     if (!packageIds || packageIds.length === 0) {
@@ -68,7 +68,15 @@ export async function POST(req: Request) {
         
         packages.forEach(pkg => {
             const now = new Date();
-            let handling = (pkg.weightLbs || 0) <= 50 ? 5.00 : (pkg.weightLbs || 0) <= 150 ? 15.00 : 35.00;
+            
+            // 🔥 DETECTAR SI ES DOCUMENTO PARA EXIMIRLO DE LA TARIFA DE HANDLING
+            const isDocument = pkg.courier === 'Buzón Virtual' || (pkg.carrierTrackingNumber || '').startsWith('DOC-') || (pkg.gmcTrackingNumber || '').startsWith('GMC-DOC-') || pkg.description === "Documento Físico (Enviado desde Buzón)";
+            
+            let handling = 0;
+            if (!isDocument) {
+                handling = (pkg.weightLbs || 0) <= 50 ? 5.00 : (pkg.weightLbs || 0) <= 150 ? 15.00 : 35.00;
+            }
+
             let storage = 0;
             const paidUntil = pkg.storagePaidUntil ? new Date(pkg.storagePaidUntil) : null;
             
@@ -124,14 +132,42 @@ export async function POST(req: Request) {
     // =======================================================================
     // ✈️ CASO 2: CONSOLIDACIÓN / ENVÍO
     // =======================================================================
-    const shipmentNumber = `GMC-SHIP-${Math.floor(100000 + Math.random() * 900000)}`;
     
-    // Si viene del botón "Solicitar Consolidación", el type suele ser 'CONSOLIDATION'
-    // Si es un envío directo, será 'SHIPPING_INTL'
-    const finalServiceType = (type === 'CONSOLIDATION' || packageIds.length > 1) ? 'CONSOLIDATION' : 'SHIPPING_INTL';
+    // 🔥 1. REGLA DE NEGOCIO: CONSOLIDACIÓN DE DOCUMENTOS GRATIS
+    const packagesToConsolidate = await prisma.package.findMany({ 
+        where: { id: { in: packageIds }, userId: session.user.id } 
+    });
 
-    // Estado inicial: Si es consolidación, es SOLICITUD. Si es envío directo pagado, es PAGADO.
+    let normalBoxesCount = 0;
+    let documentsCount = 0;
+
+    packagesToConsolidate.forEach(pkg => {
+        // Detectamos si es un documento legal/físico
+        const isDocument = pkg.courier === 'Buzón Virtual' || 
+                           (pkg.carrierTrackingNumber || '').startsWith('DOC-') || 
+                           (pkg.gmcTrackingNumber || '').startsWith('GMC-DOC-') ||
+                           pkg.description === "Documento Físico (Enviado desde Buzón)";
+        
+        if (isDocument) {
+            documentsCount++;
+        } else {
+            normalBoxesCount++;
+        }
+    });
+
+    const shipmentNumber = `GMC-SHIP-${Math.floor(100000 + Math.random() * 900000)}`;
+    const finalServiceType = (type === 'CONSOLIDATION' || packageIds.length > 1) ? 'CONSOLIDATION' : 'SHIPPING_INTL';
     const initialStatus = type === 'CONSOLIDATION' ? 'SOLICITUD_CONSOLIDACION' : 'PAGADO';
+
+    // 🔥 2. ETIQUETA INTELIGENTE PARA EL ADMINISTRADOR
+    let smartCourierService = courierService;
+    if (type === 'CONSOLIDATION') {
+        if (normalBoxesCount === 0 && documentsCount > 0) {
+            smartCourierService = "SOLO DOCUMENTOS (CONSOLIDACIÓN GRATIS)";
+        } else if (documentsCount > 0) {
+            smartCourierService = `MIXTO: ${normalBoxesCount} Caja(s) + ${documentsCount} Doc(s) Gratis`;
+        }
+    }
 
     const shipment = await prisma.consolidatedShipment.create({
         data: {
@@ -146,18 +182,15 @@ export async function POST(req: Request) {
             totalAmount: totalPaid,
             paymentId: stripePaymentId,
             selectedCourier,
-            courierService,
+            // 🔥 Inyectamos la instrucción automática al Admin
+            courierService: smartCourierService || null, 
             weightLbs: totalWeight,
-            // 🔥 GUARDAMOS LA DIRECCIÓN ELEGIDA PARA QUE EASYPOST LA PUEDA LEER DESPUÉS
-            // Nota: Si tu Prisma te marca error aquí, es porque debes agregar 'shippingAddress String?' al modelo ConsolidatedShipment
             shippingAddress: shippingAddress || null,
             packages: { connect: packageIds.map((id: string) => ({ id })) }
         }
     });
 
     // Actualizamos paquetes
-    // Si es consolidación, ponemos EN_PROCESO_CONSOLIDACION
-    // Si es envío directo, ponemos EN_PROCESO_ENVIO
     const newPackageStatus = type === 'CONSOLIDATION' ? 'EN_PROCESO_CONSOLIDACION' : 'EN_PROCESO_ENVIO';
 
     await prisma.package.updateMany({
@@ -166,39 +199,9 @@ export async function POST(req: Request) {
             status: newPackageStatus, 
             selectedCourier, 
             courierService,
-            consolidatedShipmentId: shipment.id // Vinculamos ID padre
+            consolidatedShipmentId: shipment.id 
         }
     });
-
-    // 💰 SISTEMA DE REFERIDOS (Solo si realmente pagó > $100)
-    if (initialStatus === 'PAGADO' && (subtotal || 0) >= 100) {
-        try {
-            const previousShipmentsCount = await prisma.consolidatedShipment.count({
-                where: { userId: session.user.id, status: 'PAGADO', id: { not: shipment.id } }
-            });
-
-            if (previousShipmentsCount === 0) {
-                const currentUser = await prisma.user.findUnique({
-                    where: { id: session.user.id },
-                    select: { referredBy: true, email: true }
-                });
-
-                if (currentUser?.referredBy) {
-                    const referrerUser = await prisma.user.findFirst({
-                        where: { referralCode: currentUser.referredBy }
-                    });
-
-                    if (referrerUser) {
-                        await prisma.user.update({
-                            where: { id: referrerUser.id },
-                            data: { walletBalance: { increment: 25.00 } }
-                        });
-                        console.log(`💰 REFERRAL REWARD: $25 added to ${referrerUser.email}`);
-                    }
-                }
-            }
-        } catch (error) { console.error("Error procesando recompensa:", error); }
-    }
 
     // =========================================================================
     // 🔔 NOTIFICACIONES
@@ -207,7 +210,6 @@ export async function POST(req: Request) {
         const userLang = (session.user as any).language || 'en';
         
         if (type === 'CONSOLIDATION') {
-            // ✅ A. ES UNA SOLICITUD DE CONSOLIDACIÓN (No pagada aún)
             console.log("🔄 Enviando email de Solicitud de Consolidación...");
             
             await sendConsolidationRequestEmail(
@@ -225,7 +227,6 @@ export async function POST(req: Request) {
             );
 
         } else {
-            // ✅ B. ES UN ENVÍO PAGADO DIRECTO
             console.log("💰 Enviando Recibo de Pago...");
             
             const safeTotal = typeof totalPaid === 'number' ? totalPaid : 0;

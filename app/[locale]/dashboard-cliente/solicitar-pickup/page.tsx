@@ -11,15 +11,17 @@ import { useJsApiLoader, Autocomplete } from '@react-google-maps/api';
 import { getProcessingFee } from '@/lib/stripeCalc';
 import { useTranslations } from 'next-intl';
 
-// --- CONFIGURACIÓN ---
-const FEE_STANDARD = 5.00;   
-const FEE_HEAVY = 15.00;     
-const FEE_PALLET = 35.00;    
+// --- CONFIGURACIÓN DE TARIFAS (HANDLING RATES) ---
+// 🔥 NUEVA ESTRATEGIA COMPETITIVA
+const FEE_MINI = 2.50;       // 0-10 lbs (Compite con iPostal1)
+const FEE_STANDARD = 5.00;   // 11-50 lbs
+const FEE_HEAVY = 12.50;     // 51-150 lbs
+const FEE_PALLET = 30.00;    // +150 lbs (Carga comercial)
 
 const BASE_MILES = 10;
 const GMC_WAREHOUSE_ADDRESS = "1861 NW 22nd St, Miami, FL 33142";
 
-// 🔥 NUEVAS TARIFAS
+// 🔥 TARIFAS DE DELIVERY / SHIPPING
 const MILE_RATE_STD = 1.50;      // Milla Estándar
 const MILE_RATE_TRUCK = 2.50;    // Milla Camión
 const HEAVY_RATE_STD = 0.55;     // Peso <= 1999 lbs
@@ -507,12 +509,14 @@ export default function SolicitarPickupPage() {
                                 </div>
                             )}
                             
+                            {/* 🔥 LA NUEVA TABLA VISUAL DE PRECIOS PARA EL CLIENTE */}
                             <div className="mt-6 bg-yellow-50 p-4 rounded-lg border border-yellow-100 text-xs text-yellow-800">
                                 <p className="font-bold mb-2 flex items-center gap-2"><Info size={14}/> {t('handlingRatesTitle')}</p>
                                 <ul className="space-y-1 pl-1">
-                                    <li>• 0-50 lbs: <strong>$5.00</strong></li>
-                                    <li>• 51-150 lbs: <strong>$15.00</strong></li>
-                                    <li>• +150 lbs: <strong>$35.00</strong></li>
+                                    <li>• 0-10 lbs (Mini): <strong>${FEE_MINI.toFixed(2)}</strong></li>
+                                    <li>• 11-50 lbs (Estándar): <strong>${FEE_STANDARD.toFixed(2)}</strong></li>
+                                    <li>• 51-150 lbs (Pesado): <strong>${FEE_HEAVY.toFixed(2)}</strong></li>
+                                    <li>• +150 lbs (Carga/Pallet): <strong>${FEE_PALLET.toFixed(2)}</strong></li>
                                 </ul>
                             </div>
                         </div>
@@ -607,7 +611,6 @@ export default function SolicitarPickupPage() {
                                     <div className="mb-4 animate-in fade-in slide-in-from-top-2 duration-300">
                                         <div className="relative">
                                             <Weight className="absolute left-3 top-1/2 -translate-y-1/2 text-gmc-dorado-principal" size={18} />
-                                            {/* 🔥 TRADUCCIÓN APLICADA AQUÍ: exactWeightPlaceholder */}
                                             <input 
                                                 type="number" 
                                                 placeholder={t.has('exactWeightPlaceholder') ? t('exactWeightPlaceholder') : "Exact weight (Lbs)"} 

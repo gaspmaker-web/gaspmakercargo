@@ -13,7 +13,9 @@ export default function TawkLoader() {
       '/', 
       '/en', '/es', '/fr', '/pt',
       '/en/faq', '/es/faq', '/fr/faq', '/pt/faq',
-      '/en/contact', '/es/contact', '/fr/contact', '/pt/contact'
+      '/en/contact', '/es/contact', '/fr/contact', '/pt/contact',
+      // 🔥 Agregamos las páginas de Términos de Servicio para los 4 idiomas
+      '/en/terms-of-service', '/es/terms-of-service', '/fr/terms-of-service', '/pt/terms-of-service'
   ];
 
   const currentPath = pathname.endsWith('/') && pathname.length > 1 

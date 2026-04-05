@@ -11,7 +11,8 @@
     "faq": "FAQ’s",
     "testimonials": "Testimonios",
     "locations": "Ubicaciones",
-    "access": "Acceso"
+    "access": "Acceso",
+    "termsOfService": "Términos de Servicio"
   },
   "HomePage": {
     "Hero": {
@@ -21,6 +22,19 @@
       "subtitle": "Simplificamos la logística global con soluciones eficientes, seguras y puntuales. Porque tu tranquilidad es nuestra prioridad.",
       "cta_primary": "Abrir Casillero Gratis",
       "cta_secondary": "Calcular Envío"
+    },
+
+  "Features": {
+    "title": "Más que un simple casillero",
+    "subtitle": "Soluciones logísticas diseñadas para facilitar tus compras y potenciar tu negocio.",
+    "consolidationTitle": "Consolidación",
+    "consolidationDesc": "Combina hasta 15 paquetes en una sola caja. Ahorra en el flete internacional consolidando tus compras.",
+    "shopperTitle": "Personal Shopper",
+    "shopperDesc": "Compramos por ti en Amazon, Target y Home Depot. Ideal si no tienes tarjeta de EE. UU.",
+    "mailboxTitle": "Buzón Virtual",
+    "mailboxDesc": "Gestiona tu correspondencia física de forma digital. Recibe, escanea o destruye tus cartas online.",
+    "commercialTitle": "Carga Comercial",
+    "commercialDesc": "Gestión de flete aéreo y marítimo para importadores y empresas. Movimiento de pallets y carga pesada."
     },
       "RecommendedStores": {
       "title": "Compra en USA, recibe en tu país",
@@ -134,6 +148,7 @@
     "activeShipments": "Envíos Activos",
     "noPackages": "No tienes paquetes activos en este momento.",
     "preAlertBtn": "Pre-Alertar Paquete",
+    "personalShopperDesc": "Compramos por ti en USA",
     "payBillsBtn": "Pagar Facturas",
     "inTransit": "En Tránsito",
     "readyForDelivery": "Listo para Entrega",
@@ -198,9 +213,10 @@
     "alertWeekend": "⚠️ La bodega está cerrada los fines de semana.\nPor favor selecciona de Lunes a Viernes.",
     "alertBusinessHours": "⚠️ Horario de atención: 9:00 AM a 4:00 PM.",
     "confirmPickup": "¿Confirmas la cita y el cargo a tu cuenta?",
-    "successPickup": "✅ Cita agendada exitosamente.\nSe ha generado una orden de pago pendiente."
+    "successPickup": "✅ Cita agendada exitosamente.\nSe ha generado una orden de pago pendiente.",
+    "physicalDocument": "Documento Físico (Enviado desde Buzón)"
   },
-  "Notifications": {
+"Notifications": {
     "title": "Notificaciones",
     "markRead": "Marcar leídas",
     "emptyTitle": "Sin notificaciones",
@@ -223,7 +239,10 @@
     "mailboxRejectedTitle": "⚠️ Acción requerida en tu Casillero",
     "mailboxRejectedDesc": "Tus documentos no pasaron la verificación. Motivo: {reason}. Por favor, vuelve a subirlos.",
     "additionalRejectedTitle": "⚠️ Documentos de Adicional Rechazados",
-    "additionalRejectedDesc": "Los documentos de tu persona adicional ({name}) fueron rechazados. Motivo: {reason}."
+    "additionalRejectedDesc": "Los documentos de tu persona adicional ({name}) fueron rechazados. Motivo: {reason}.",
+    "vaciar": "Eliminar todas",
+    "shopperQuoteTitle": "🛍️ Cotización Lista",
+    "shopperQuoteMsg": "Tu orden ha sido cotizada. Ve a la pestaña 'Mis Cotizaciones' para revisar el total y pagar."
 },
   "AddressCard": {
     "title": "Tu Dirección en Miami (Casillero)",
@@ -301,6 +320,12 @@
     "pdfDocument": "Documento PDF",
     "viewFile": "Ver archivo",
     "noInvoice": "Sin Factura",
+    "freightCost": "Costo de Flete",
+    "feeHandling": "Tarifa: Manejo (GMC)",
+    "free": "GRATIS",
+    "processingFee": "Tarifa de Procesamiento",
+    "discount": "Descuento",
+    "welcomeBonus": "¡Bono de Bienvenida Automático! 🎁",
     "shippingOptions": "Opciones de Envío",
     "viewRatesBtn": "Ver Tarifas Disponibles",
     "calculating": "Calculando...",
@@ -341,7 +366,14 @@
     "selected": "Seleccionado",
     "errorAddress": "Falta dirección de envío en tu configuración.",
     "configureAddress": "Configurar Dirección",
-    "pickupInStore": "Pickup en Tienda"
+    "pickupInStore": "Pickup en Tienda",
+    "freightCost": "Costo de Flete",
+    "consolidationFee": "Tarifa de Consolidación",
+    "processingFee": "Tarifa de Procesamiento",
+    "discount": "Descuento",
+    "welcomeBonusApplied": "¡Bono de Bienvenida Automático! 🎁",
+    "walletTitle": "BILLETERA DE RECOMPENSAS",
+    "walletBalance": "Saldo disponible"
   },
   "PreAlertPage": {
     "title": "Pre-Alertar Paquete",
@@ -487,7 +519,7 @@
     "lockerDesc": "Tu dirección física en USA para recibir compras de Amazon, eBay, Shein y más.",
     "consolidationTitle": "Consolidación de Paquetes",
     "consolidationDesc": "Compra en varias tiendas, espera que lleguen todos y envíalos en una sola caja para ahorrar.",
-    "consolidationNote": "Combina hasta 7 paquetes múltiples para ahorrar costos.",
+    "consolidationNote": "Combina hasta 15 paquetes múltiples para ahorrar costos.",
     "pickupTitle": "Recogida y Delivery",
     "pickupDesc": "Servicio de transporte local en Miami y entregas puerta a puerta en tu país.",
     "corporateTitle": "Carga Comercial",
@@ -1068,7 +1100,33 @@
     "documentViewerTitle": "Visor de Documentos",
     "btnDownload": "Descargar",
     "openNewTab": "Abrir en nueva pestaña",
-    "btnClose": "Cerrar"
+    "btnClose": "Cerrar",
+    "pickupBtnDesktop": "Recoger en Persona (Gratis)",
+    "pickupBtnMobile": "Recoger (Gratis)",
+    "pickupModalTitle": "Agendar Recogida",
+    "pickupFreeNotice": "El servicio de entrega física de documentos es 100% gratuito. Estarás recogiendo {count} documento(s).",
+    "pickupDateLabel": "Fecha de Recogida",
+    "pickupTimeLabel": "Hora Aproximada",
+    "pickupTimePlaceholder": "Selecciona una hora",
+    "pickupCancel": "Cancelar",
+    "pickupConfirm": "Confirmar Cita",
+    "pickupProcessing": "Procesando...",
+    "pickupAlertSelect": "Por favor selecciona fecha y hora.",
+    "pickupAlertSuccess": "¡Recogida programada con éxito! Te esperamos en la oficina.",
+    "pickupAlertError": "Hubo un error al procesar tu solicitud.",
+    "pickupScheduled": "Recogida Programada",
+    "deliveredPhysical": "Recogido en Oficina",
+    "selectDocuments": "Selecciona los documentos:",
+    "selectAll": "Marcar todos",
+    "unselectAll": "Desmarcar todos",
+    "unknownSender": "Remitente Desconocido",
+    "officeHours": "Horario de Oficina: Lunes a Viernes, 9:00 AM - 4:00 PM",
+    "errorNoSelection": "Debes seleccionar al menos un documento.",
+    "errorWeekend": "La oficina está cerrada los fines de semana. Por favor elige de lunes a viernes.",
+    "errorTime": "El horario de recogida es de 9:00 AM a 4:00 PM.",
+    "upgradeBannerTitle": "¡Mejora tu plan a Premium Cargo!",
+    "upgradeBannerDesc": "Desbloquea escaneos gratis y agrega hasta 5 personas/empresas.",
+    "upgradeBannerBtn": "Hacer Upgrade"
 },
   "KycFix": {
   "title": "Corregir Documentos",
@@ -1101,5 +1159,42 @@
     "fairUseExtra": "A partir de la solicitud número 31 en el mismo mes, se aplicará la tarifa estándar de $1.50 por escaneo adicional. Tu contador se reiniciará a cero el día 1 del siguiente mes.",
     "shredTitle": "3. Privacidad y Trituración Segura",
     "shredDesc": "Cualquier carta que solicites destruir (o que alcance su fecha de caducidad) es procesada mediante Trituración de Corte Cruzado (Secure Shredding). No tiramos documentos a la basura; los destruimos para garantizar que nadie tenga acceso a tu información bancaria o personal."
-}
+},
+"Shopper": {
+    "title": "Compra por Mí (Personal Shopper)",
+    "subtitle": "Pega el link de Amazon, Target, Home Depot o cualquier tienda de USA. Nosotros lo compramos y enviamos a tu país.",
+    "urlLabel": "Link del Producto (URL) *",
+    "urlPlaceholder": "https://www.amazon.com/...",
+    "priceLabel": "Precio en la tienda ($) *",
+    "qtyLabel": "Cantidad",
+    "detailsLabel": "Detalles (Talla, Color, Modelo)",
+    "detailsPlaceholder": "Ej. Talla M, Color Rojo oscuro...",
+    "addBtn": "+ Añadir a mi lista de compras",
+    "cartTitle": "Tu Lista de Pedidos",
+    "emptyCart": "Tu lista está vacía.",
+    "emptyCartSub": "Pega un link para empezar.",
+    "item": "Artículo",
+    "subtotal": "Subtotal estimado",
+    "shippingNote": "Envío USA y Taxes",
+    "shippingCalc": "Se calculará en la cotización",
+    "quoteBtn": "Solicitar Cotización Exacta",
+    "quoteDisclaimer": "No se te cobrará nada hasta que confirmemos los costos de envío interno de la tienda.",
+    "tabNew": "Nueva Compra",
+    "tabQuotes": "Mis Cotizaciones",
+    "statusPending": "En Revisión",
+    "statusQuoted": "Lista para Pagar",
+    "statusPaid": "Pagada",
+    "payNow": "Pagar con Tarjeta",
+    "financialSummary": "Resumen Financiero",
+    "itemsCost": "Costo de Artículos",
+    "usTaxes": "Taxes USA",
+    "domesticShipping": "Envío Interno USA",
+    "gmcFee": "Servicio Shopper (GMC)",
+    "cardFee": "Procesamiento de Tarjeta",
+    "totalToPay": "Total a Pagar",
+    "noOrders": "Aún no tienes solicitudes previas.",
+    "reviewingLinks": "Estamos revisando tus links. Pronto verás el costo exacto aquí para poder pagar.",
+    "loadingQuotes": "Cargando cotizaciones...",
+    "calculating": "Calculando..."
+  }
 }

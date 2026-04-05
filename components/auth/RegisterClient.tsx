@@ -6,7 +6,12 @@ import { useRouter } from 'next/navigation';
 import { ALL_COUNTRIES, Country } from '@/lib/countries';
 import { useTranslations } from 'next-intl';
 
-export default function RegisterClient() {
+// 🔥 1. Definimos los props para aceptar el código que viene de la URL
+interface RegisterClientProps {
+  initialReferralCode?: string;
+}
+
+export default function RegisterClient({ initialReferralCode }: RegisterClientProps) {
     const t = useTranslations('RegisterPage');
     const router = useRouter(); 
     
@@ -103,7 +108,9 @@ export default function RegisterClient() {
                 password: password,
                 countryCode: selectedCountry.code, 
                 phone: fullPhoneNumber,
-                dateOfBirth: isoDateOfBirth 
+                dateOfBirth: isoDateOfBirth,
+                // 🔥 2. ENVIAMOS EL CÓDIGO INVISIBLE AL SERVIDOR
+                referredBy: initialReferralCode 
               }),
             });
     
@@ -112,9 +119,7 @@ export default function RegisterClient() {
               throw new Error(errorData.message || 'Algo salió mal durante el registro');
             }
     
-            // 🔥 CAMBIO REALIZADO:
-            // Eliminamos la línea: alert(t('alertSuccess'));
-            // Ahora la redirección es limpia e inmediata.
+            // Redirección limpia e inmediata
             router.push('/login-cliente');
     
         } catch (error: any) {
@@ -131,6 +136,17 @@ export default function RegisterClient() {
                 
                 <h1 className="text-center font-garamond text-4xl mb-2">{t('title')}</h1>
                 <p className="text-center text-gray-600 mb-8">{t('subtitle')}</p>
+
+                {/* 🔥 MENSAJE VISUAL SI TIENEN UN CÓDIGO (Opcional, pero da confianza al cliente) */}
+                {initialReferralCode && (
+                    <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg text-center">
+                        <span className="text-xl mr-2">🎁</span>
+                        <span className="text-sm font-bold text-green-800">
+                            ¡Estás siendo invitado por <span className="font-mono">{initialReferralCode}</span>! 
+                            Termina tu registro para activar tu beneficio.
+                        </span>
+                    </div>
+                )}
 
                 <form onSubmit={handleFormSubmit}>
                     

@@ -90,15 +90,15 @@ export default function StorageLockScreen({
                         </button>
                     </div>
                     
-                    <div className="p-6">
+                   <div className="p-6">
                         <div className="text-center mb-6">
                             <p className="text-sm text-gray-500 mb-1">{t('totalToPay')}</p>
                             <p className="text-3xl font-black text-gray-900">${totalToPay.toFixed(2)}</p>
                             <p className="text-xs text-gray-400 mt-1">
-                                Incluye tarifa de procesamiento
+                                {t('processingFeeIncluded')}
                             </p>
                         </div>
-
+                        
                         <p className="text-xs font-bold text-gray-500 uppercase mb-3">{t('savedCards')}</p>
                         <div className="space-y-3 mb-6">
                             {paymentMethods.length > 0 ? (

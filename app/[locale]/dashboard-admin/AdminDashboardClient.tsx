@@ -5,8 +5,8 @@ import Link from 'next/link';
 import { useSession } from 'next-auth/react'; 
 import { 
   Package, Users, Truck, MapPin, PlusCircle, Layers, 
-  Activity, DollarSign, ClipboardList, Car, Loader2, TrendingUp, Container, Store 
-} from 'lucide-react';
+  Activity, DollarSign, ClipboardList, Car, Loader2, TrendingUp, Container, Store, ShieldAlert, Mailbox, FileSearch, Archive, ShoppingBag, Gift 
+} from 'lucide-react'; 
 
 export default function AdminDashboardClient({ locale }: { locale: string }) {
   const { data: session } = useSession();
@@ -19,7 +19,10 @@ export default function AdminDashboardClient({ locale }: { locale: string }) {
     pickups: 0,
     entregasHoy: 0,
     nuevosClientes: 0,
-    ventas: 0
+    ventas: 0,
+    kycPendientes: 0,
+    tareasBuzon: 0, 
+    comprasPendientes: 0 
   });
 
   useEffect(() => {
@@ -46,8 +49,7 @@ export default function AdminDashboardClient({ locale }: { locale: string }) {
   }
 
   return (
-    // 🔥 APLICANDO EL MÉTODO DE TESTIMONIOS: font-montserrat en el padre
-    <div className="min-h-screen bg-gray-50 p-6 font-montserrat">
+    <div className="min-h-screen bg-gray-50 p-6 font-montserrat pb-20">
       <div className="max-w-7xl mx-auto space-y-8">
         
         {/* ENCABEZADO */}
@@ -62,7 +64,7 @@ export default function AdminDashboardClient({ locale }: { locale: string }) {
             </p>
           </div>
           <div className="text-right">
-             <p className="text-xs font-bold text-gray-400 uppercase tracking-widest lining-nums">
+             <p className="text-xs font-bold text-gray-400 uppercase tracking-widest lining-nums hidden sm:block">
                 {new Date().toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
              </p>
           </div>
@@ -75,8 +77,6 @@ export default function AdminDashboardClient({ locale }: { locale: string }) {
             <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center hover:shadow-md hover:border-blue-200 transition-all cursor-pointer">
               <div>
                 <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Paquetes Activos</p>
-                
-                {/* 🔥 EL SECRETO: 'lining-nums' hace que los números se alineen rectos */}
                 <h3 className="text-4xl font-extrabold text-gmc-gris-oscuro tracking-tight font-montserrat lining-nums group-hover:text-blue-600 transition-colors">
                     {stats.paquetes}
                 </h3>
@@ -90,7 +90,6 @@ export default function AdminDashboardClient({ locale }: { locale: string }) {
           <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center">
             <div>
               <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Entregas Hoy</p>
-              {/* 🔥 lining-nums aplicado aquí */}
               <h3 className="text-4xl font-extrabold text-gmc-gris-oscuro tracking-tight font-montserrat lining-nums">
                   {stats.entregasHoy || 0}
               </h3> 
@@ -104,7 +103,6 @@ export default function AdminDashboardClient({ locale }: { locale: string }) {
             <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center hover:shadow-md hover:border-purple-200 transition-all cursor-pointer">
               <div>
                 <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Nuevos Clientes</p>
-                {/* 🔥 lining-nums aplicado aquí */}
                 <h3 className="text-4xl font-extrabold text-gmc-gris-oscuro tracking-tight font-montserrat lining-nums group-hover:text-purple-600 transition-colors">
                     {stats.usuarios}
                 </h3>
@@ -118,7 +116,6 @@ export default function AdminDashboardClient({ locale }: { locale: string }) {
           <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center border-b-4 border-b-gmc-dorado-principal">
             <div>
               <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Ventas (Semana)</p>
-              {/* 🔥 lining-nums aplicado aquí */}
               <h3 className="text-4xl font-extrabold text-gmc-gris-oscuro tracking-tight font-montserrat lining-nums">
                   ${(stats.ventas || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </h3>
@@ -139,7 +136,6 @@ export default function AdminDashboardClient({ locale }: { locale: string }) {
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               
-              {/* 🔥 NUEVO: TARJETA DROP & GO (DESTACADA) 🔥 */}
               <Link href={`/${locale}/dashboard-admin/pay-and-go`} 
                 className="group bg-slate-900 p-5 rounded-xl border border-slate-700 hover:border-gmc-dorado-principal hover:shadow-[0_0_15px_rgba(234,216,177,0.3)] transition-all cursor-pointer block relative md:col-span-2 overflow-hidden">
                 <div className="absolute -right-10 -top-10 opacity-10 text-white">
@@ -155,15 +151,115 @@ export default function AdminDashboardClient({ locale }: { locale: string }) {
                   </div>
                 </div>
               </Link>
-              
-              <Link href={`/${locale}/dashboard-admin/crear-envio`} 
-                className="group bg-white p-5 rounded-xl border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all cursor-pointer block">
+
+              {/* 🔥 NUEVA TARJETA: CONTROL DE REFERIDOS 🔥 */}
+              <Link href={`/${locale}/dashboard-admin/referidos`} 
+                className="group bg-white p-5 rounded-xl border border-gray-200 hover:border-green-500 hover:shadow-md transition-all cursor-pointer block relative">
                 <div className="flex items-start justify-between">
                   <div>
-                    <h3 className="text-base font-bold text-gmc-gris-oscuro group-hover:text-blue-600 transition-colors">Crear Envío (Bodega)</h3>
-                    <p className="text-xs text-gray-500 mt-1 font-medium">Registrar paquete a cliente con suite.</p>
+                    <h3 className="text-base font-bold text-gmc-gris-oscuro group-hover:text-green-600 transition-colors">Control de Referidos</h3>
+                    <p className="text-xs text-gray-500 mt-1 font-medium">Monitorea el programa de recompensas de $25.</p>
                   </div>
-                  <div className="bg-blue-50 p-2 rounded-lg text-blue-600 group-hover:bg-blue-100 transition-colors">
+                  <div className="bg-green-50 p-2 rounded-lg text-green-600 group-hover:bg-green-100 transition-colors border border-green-100">
+                    <Gift size={20} strokeWidth={2} />
+                  </div>
+                </div>
+              </Link>
+
+              <Link href={`/${locale}/dashboard-admin/compras`} 
+                className="group bg-white p-5 rounded-xl border border-gray-200 hover:border-pink-500 hover:shadow-md transition-all cursor-pointer block relative">
+                
+                {(stats.comprasPendientes || 0) > 0 && (
+                    <span className="absolute top-4 right-4 bg-pink-600 text-white text-[10px] font-bold px-2 py-1 rounded-full animate-pulse uppercase tracking-wide lining-nums shadow-sm border border-pink-700">
+                        {(stats.comprasPendientes || 0)} Por Cotizar
+                    </span>
+                )}
+
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h3 className="text-base font-bold text-gmc-gris-oscuro group-hover:text-pink-600 transition-colors">Personal Shopper</h3>
+                    <p className="text-xs text-gray-500 mt-1 font-medium">Gestionar compras y cotizaciones de clientes.</p>
+                  </div>
+                  <div className="bg-pink-50 p-2 rounded-lg text-pink-600 group-hover:bg-pink-100 transition-colors border border-pink-100">
+                    <ShoppingBag size={20} strokeWidth={2} />
+                  </div>
+                </div>
+              </Link>
+
+              <Link href={`/${locale}/dashboard-admin/tareas-buzon`} 
+                className="group bg-white p-5 rounded-xl border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all cursor-pointer block relative">
+                
+                {(stats.tareasBuzon || 0) > 0 && (
+                    <span className="absolute top-4 right-4 bg-blue-600 text-white text-[10px] font-bold px-2 py-1 rounded-full animate-pulse uppercase tracking-wide lining-nums shadow-sm border border-blue-700">
+                        {(stats.tareasBuzon || 0)} Pendientes
+                    </span>
+                )}
+
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h3 className="text-base font-bold text-gmc-gris-oscuro group-hover:text-blue-600 transition-colors">Tareas del Buzón</h3>
+                    <p className="text-xs text-gray-500 mt-1 font-medium">Escanear PDFs y destruir sobres.</p>
+                  </div>
+                  <div className="bg-blue-50 p-2 rounded-lg text-blue-600 group-hover:bg-blue-100 transition-colors border border-blue-100">
+                    <FileSearch size={20} strokeWidth={2} />
+                  </div>
+                </div>
+              </Link>
+
+              <Link href={`/${locale}/dashboard-admin/buzones-kyc`} 
+                className="group bg-white p-5 rounded-xl border border-gray-200 hover:border-red-400 hover:shadow-md transition-all cursor-pointer block relative">
+                
+                {(stats.kycPendientes || 0) > 0 && (
+                    <span className="absolute top-4 right-4 bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded-full animate-pulse uppercase tracking-wide lining-nums shadow-sm border border-red-700">
+                        {(stats.kycPendientes || 0)} Por Revisar
+                    </span>
+                )}
+
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h3 className="text-base font-bold text-gmc-gris-oscuro group-hover:text-red-600 transition-colors">Buzones & KYC</h3>
+                    <p className="text-xs text-gray-500 mt-1 font-medium">Aprobar Formas 1583 y asignar Suites.</p>
+                  </div>
+                  <div className="bg-red-50 p-2 rounded-lg text-red-600 group-hover:bg-red-100 transition-colors border border-red-100">
+                    <ShieldAlert size={20} strokeWidth={2} />
+                  </div>
+                </div>
+              </Link>
+
+              <Link href={`/${locale}/dashboard-admin/recepcion-buzones`} 
+                className="group bg-white p-5 rounded-xl border border-gray-200 hover:border-cyan-500 hover:shadow-md transition-all cursor-pointer block">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h3 className="text-base font-bold text-gmc-gris-oscuro group-hover:text-cyan-600 transition-colors">Recepción en Bodega</h3>
+                    <p className="text-xs text-gray-500 mt-1 font-medium">Escaneo de correspondencia y paquetes al PMB.</p>
+                  </div>
+                  <div className="bg-cyan-50 p-2 rounded-lg text-cyan-600 group-hover:bg-cyan-100 transition-colors border border-cyan-100">
+                    <Mailbox size={20} strokeWidth={2} />
+                  </div>
+                </div>
+              </Link>
+
+              <Link href={`/${locale}/dashboard-admin/inventario-buzones`} 
+                className="group bg-white p-5 rounded-xl border border-gray-200 hover:border-slate-600 hover:shadow-md transition-all cursor-pointer block">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h3 className="text-base font-bold text-gmc-gris-oscuro group-hover:text-slate-700 transition-colors">Archivo Maestro</h3>
+                    <p className="text-xs text-gray-500 mt-1 font-medium">Control y trituración de correspondencia.</p>
+                  </div>
+                  <div className="bg-slate-100 p-2 rounded-lg text-slate-600 group-hover:bg-slate-200 transition-colors border border-slate-200">
+                    <Archive size={20} strokeWidth={2} />
+                  </div>
+                </div>
+              </Link>
+              
+              <Link href={`/${locale}/dashboard-admin/crear-envio`} 
+                className="group bg-white p-5 rounded-xl border border-gray-200 hover:border-indigo-500 hover:shadow-md transition-all cursor-pointer block">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h3 className="text-base font-bold text-gmc-gris-oscuro group-hover:text-indigo-600 transition-colors">Crear Envío (Carga)</h3>
+                    <p className="text-xs text-gray-500 mt-1 font-medium">Registrar paquete grande a cliente.</p>
+                  </div>
+                  <div className="bg-indigo-50 p-2 rounded-lg text-indigo-600 group-hover:bg-indigo-100 transition-colors border border-indigo-100">
                     <PlusCircle size={20} strokeWidth={2} />
                   </div>
                 </div>
@@ -183,14 +279,14 @@ export default function AdminDashboardClient({ locale }: { locale: string }) {
                     <h3 className="text-base font-bold text-gmc-gris-oscuro group-hover:text-orange-600 transition-colors">Solicitudes de Pickup</h3>
                     <p className="text-xs text-gray-500 mt-1 font-medium">Gestionar recolecciones pagadas.</p>
                   </div>
-                  <div className="bg-orange-50 p-2 rounded-lg text-orange-600 group-hover:bg-orange-100 transition-colors">
+                  <div className="bg-orange-50 p-2 rounded-lg text-orange-600 group-hover:bg-orange-100 transition-colors border border-orange-100">
                     <Car size={20} strokeWidth={2} />
                   </div>
                 </div>
               </Link>
 
               <Link href={`/${locale}/dashboard-admin/consolidaciones`} 
-                className="group bg-white p-5 rounded-xl border border-gray-200 hover:border-indigo-500 hover:shadow-md transition-all cursor-pointer block relative">
+                className="group bg-white p-5 rounded-xl border border-gray-200 hover:border-rose-500 hover:shadow-md transition-all cursor-pointer block relative">
                 
                 {stats.consolidaciones > 0 && (
                     <span className="absolute top-4 right-4 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-full animate-pulse uppercase tracking-wide lining-nums">
@@ -200,16 +296,15 @@ export default function AdminDashboardClient({ locale }: { locale: string }) {
 
                 <div className="flex items-start justify-between">
                   <div>
-                    <h3 className="text-base font-bold text-gmc-gris-oscuro group-hover:text-indigo-600 transition-colors">Consolidaciones</h3>
+                    <h3 className="text-base font-bold text-gmc-gris-oscuro group-hover:text-rose-600 transition-colors">Consolidaciones</h3>
                     <p className="text-xs text-gray-500 mt-1 font-medium">Ver solicitudes de agrupación.</p>
                   </div>
-                  <div className="bg-indigo-50 p-2 rounded-lg text-indigo-600 group-hover:bg-indigo-100 transition-colors">
+                  <div className="bg-rose-50 p-2 rounded-lg text-rose-600 group-hover:bg-rose-100 transition-colors border border-rose-100">
                     <Layers size={20} strokeWidth={2} />
                   </div>
                 </div>
               </Link>
 
-              {/* 🔥 TARJETA: CONTROL DE ALMACENAJE 🔥 */}
               <Link href={`/${locale}/dashboard-admin/pagos-almacenaje`} 
                 className="group bg-white p-5 rounded-xl border border-gray-200 hover:border-amber-500 hover:shadow-md transition-all cursor-pointer block">
                 <div className="flex items-start justify-between">
@@ -217,7 +312,7 @@ export default function AdminDashboardClient({ locale }: { locale: string }) {
                     <h3 className="text-base font-bold text-gmc-gris-oscuro group-hover:text-amber-600 transition-colors">Control de Almacenaje</h3>
                     <p className="text-xs text-gray-500 mt-1 font-medium">Ver ingresos por tiempo excedido.</p>
                   </div>
-                  <div className="bg-amber-50 p-2 rounded-lg text-amber-600 group-hover:bg-amber-100 transition-colors">
+                  <div className="bg-amber-50 p-2 rounded-lg text-amber-600 group-hover:bg-amber-100 transition-colors border border-amber-100">
                     <Container size={20} strokeWidth={2} />
                   </div>
                 </div>
@@ -230,7 +325,7 @@ export default function AdminDashboardClient({ locale }: { locale: string }) {
                     <h3 className="text-base font-bold text-gmc-gris-oscuro group-hover:text-purple-600 transition-colors">Base de Clientes</h3>
                     <p className="text-xs text-gray-500 mt-1 font-medium">Ver listado y cuentas.</p>
                   </div>
-                  <div className="bg-purple-50 p-2 rounded-lg text-purple-600 group-hover:bg-purple-100 transition-colors">
+                  <div className="bg-purple-50 p-2 rounded-lg text-purple-600 group-hover:bg-purple-100 transition-colors border border-purple-100">
                     <Users size={20} strokeWidth={2} />
                   </div>
                 </div>
@@ -243,7 +338,7 @@ export default function AdminDashboardClient({ locale }: { locale: string }) {
                     <h3 className="text-base font-bold text-gmc-gris-oscuro group-hover:text-teal-600 transition-colors">Historial Global</h3>
                     <p className="text-xs text-gray-500 mt-1 font-medium">Consulta todos los envíos.</p>
                   </div>
-                  <div className="bg-teal-50 p-2 rounded-lg text-teal-600 group-hover:bg-teal-100 transition-colors">
+                  <div className="bg-teal-50 p-2 rounded-lg text-teal-600 group-hover:bg-teal-100 transition-colors border border-teal-100">
                     <ClipboardList size={20} strokeWidth={2} />
                   </div>
                 </div>
@@ -256,7 +351,7 @@ export default function AdminDashboardClient({ locale }: { locale: string }) {
                     <h3 className="text-base font-bold text-gmc-gris-oscuro group-hover:text-green-600 transition-colors">Monitor en Vivo</h3>
                     <p className="text-xs text-gray-500 mt-1 font-medium">Control de despachos.</p>
                   </div>
-                  <div className="bg-green-50 p-2 rounded-lg text-green-600 group-hover:bg-green-100 transition-colors">
+                  <div className="bg-green-50 p-2 rounded-lg text-green-600 group-hover:bg-green-100 transition-colors border border-green-100">
                     <Truck size={20} strokeWidth={2} />
                   </div>
                 </div>

@@ -55,13 +55,20 @@ export default async function ActivePackagesPage({
       });
 
       // 🛠️ EL ARREGLO PARA PAQUETES: Truco Ninja para forzar a la pantalla a leer el Total
-      const formattedLoosePackages = loosePackagesRaw.map(pkg => ({
-        ...pkg,
-        type: 'PACKAGE',
-        // 🔥 Engañamos a la pantalla: Si hay un total pagado con comisión, sobrescribimos el subtotal
-        shippingSubtotal: pkg.shippingTotalPaid ? pkg.shippingTotalPaid : pkg.shippingSubtotal, 
-        totalAmount: pkg.shippingTotalPaid || 0, // 🔥 Aseguramos la variable
-      }));
+      const formattedLoosePackages = loosePackagesRaw.map(pkg => {
+        // 🔥 Detectamos si es documento
+        const isDocument = pkg.courier === 'Buzón Virtual' || (pkg.carrierTrackingNumber || '').startsWith('DOC-') || (pkg.gmcTrackingNumber || '').startsWith('GMC-DOC-');
+        
+        // 🔥 REGLA ABSOLUTA: Si es documento el precio ES CERO SIEMPRE. Si no, usa el total de la base de datos.
+        const realTotal = isDocument ? 0.00 : (pkg.shippingTotalPaid !== null ? pkg.shippingTotalPaid : pkg.shippingSubtotal);
+
+        return {
+          ...pkg,
+          type: 'PACKAGE',
+          shippingSubtotal: realTotal, 
+          totalAmount: realTotal, 
+        };
+      });
 
       // 2. 🔥 CONSOLIDACIONES REALES (El Escudo Definitivo)
       const activeShipments = await prisma.consolidatedShipment.findMany({
@@ -117,9 +124,6 @@ export default async function ActivePackagesPage({
         isStorePickup: false,
         packages: ship.packages // 🔥 Pasamos los paquetes internos a la pantalla
       }));
-
-      // ✂️ AQUÍ FUE ELIMINADO EL PASO 3 (SOLICITUDES DE RETIRO / PICKUPS) ✂️
-      // Ya no "robamos" información de la tabla PickupRequest.
 
       // 3. UNIFICAMOS SOLO LAS 2 TABLAS DE INVENTARIO
       allItems = [...formattedLoosePackages, ...formattedShipments].sort((a: any, b: any) => 

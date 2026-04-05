@@ -3,7 +3,7 @@
 import React, { useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
-import { X, Globe, ChevronRight } from 'lucide-react'; // 🗑️ Eliminado Loader2
+import { X, Globe, ChevronRight } from 'lucide-react'; 
 import { useTranslations, useLocale } from 'next-intl';
 import { useSession } from "next-auth/react"; 
 
@@ -81,7 +81,6 @@ export default function MenuMovilClient() {
                     <Globe size={14} className="text-gmc-dorado-principal"/>
                     <p className="text-[10px] text-gmc-dorado-principal/80 uppercase tracking-[2px] font-bold">Idioma / Language</p>
                 </div>
-                {/* 🗑️ Loader2 eliminado de aquí */}
             </div>
             
             <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-[2rem] p-5 shadow-2xl shadow-black/20">
@@ -122,7 +121,20 @@ export default function MenuMovilClient() {
                 <NavItem href="/acerca-de-nosotros" label={t('aboutUs')} />
                 <NavItem href="/faq" label={t('faq')} />
                 <NavItem href="/testimonios" label={t('testimonials')} />
-                <NavItem href="/ubicaciones" label={t('locations')} isLast />
+                <NavItem href="/ubicaciones" label={t('locations')} />
+                
+                {/* POLÍTICAS DEL BUZÓN VIRTUAL */}
+                <NavItem 
+                    href="/terms-of-service#mailbox-policies" 
+                    label={currentLocale === 'en' ? 'Mailbox Policies' : currentLocale === 'pt' ? 'Políticas da Caixa' : currentLocale === 'fr' ? 'Politiques de Boîte' : 'Políticas Buzón'} 
+                />
+
+                {/* 🔥 NUEVO ENLACE: TERMS OF SERVICE 🔥 */}
+                <NavItem 
+                    href="/terms-of-service" 
+                    label={currentLocale === 'en' ? 'Terms of Service' : currentLocale === 'es' ? 'Términos de Servicio' : currentLocale === 'pt' ? 'Termos de Serviço' : 'Conditions de Service'} 
+                    isLast 
+                />
             </div>
         </div>
 

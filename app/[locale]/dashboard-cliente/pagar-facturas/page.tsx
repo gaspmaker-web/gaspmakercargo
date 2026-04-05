@@ -17,7 +17,7 @@ export default async function PagarFacturasPage({ params: { locale } }: { params
     redirect('/login-cliente');
   }
 
-  // 1. Obtener Perfil Viejo (Respaldo)
+  // 1. Obtener Perfil Viejo (Respaldo) + 🔥 CAMPOS DE RECOMPENSAS
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
     select: {
@@ -26,7 +26,11 @@ export default async function PagarFacturasPage({ params: { locale } }: { params
       cityZip: true,
       countryCode: true,
       country: true,
-      phone: true
+      phone: true,
+      // 👇 ¡AQUÍ ESTÁ LA MAGIA QUE FALTABA!
+      referredBy: true,          
+      referralRewardPaid: true,  
+      walletBalance: true,
     }
   });
 
@@ -137,9 +141,12 @@ export default async function PagarFacturasPage({ params: { locale } }: { params
     name: defaultAddress?.fullName || user?.name || '',
     address: defaultAddress?.address || user?.address || '',
     cityZip: defaultAddress?.cityZip || user?.cityZip || '',
-    // Usamos el country de la libreta, o el del perfil viejo
     countryCode: defaultAddress?.country || user?.country || user?.countryCode || 'US', 
-    phone: defaultAddress?.phone || user?.phone || ''
+    phone: defaultAddress?.phone || user?.phone || '',
+    // 👇 ¡PASANDO LOS DATOS DE RECOMPENSA AL FRONTEND!
+    referredBy: user?.referredBy || null,
+    referralRewardPaid: user?.referralRewardPaid || false,
+    walletBalance: user?.walletBalance || 0,
   };
 
   return (

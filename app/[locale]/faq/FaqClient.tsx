@@ -13,7 +13,7 @@ interface FAQItem {
   category: string;
 }
 
-export default function FaqClient() { // Renombrado para consistencia interna
+export default function FaqClient() { 
     const t = useTranslations('FAQPage');
     const [openIndex, setOpenIndex] = useState<number | null>(null);
 
@@ -58,6 +58,22 @@ export default function FaqClient() { // Renombrado para consistencia interna
             category: t('cat6'), 
             question: t('q6'),
             answer: t('a6')
+        },
+        // 🔥 NUEVAS PREGUNTAS: BUZÓN VIRTUAL (CATEGORÍA 7)
+        {
+            category: t('cat7'), 
+            question: t('q7'),
+            answer: t('a7')
+        },
+        {
+            category: t('cat7'), 
+            question: t('q8'),
+            answer: t('a8')
+        },
+        {
+            category: t('cat7'), 
+            question: t('q9'),
+            answer: t('a9')
         }
     ];
 

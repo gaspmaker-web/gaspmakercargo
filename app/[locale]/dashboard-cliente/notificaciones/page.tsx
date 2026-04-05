@@ -41,7 +41,8 @@ export default function NotificationsPage() {
     fetchNotifications();
   }, []);
 
-  const markAllAsRead = async () => {
+  const markAllAsRead = async (e: React.MouseEvent) => {
+    e.preventDefault();
     try {
       setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
       await fetch('/api/notifications', { method: 'PATCH' });
@@ -50,7 +51,8 @@ export default function NotificationsPage() {
     }
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: string, e: React.MouseEvent) => {
+    e.preventDefault();
     const prevNotifications = [...notifications];
     setNotifications(prev => prev.filter(n => n.id !== id));
     try {
@@ -61,16 +63,21 @@ export default function NotificationsPage() {
     }
   };
 
-  const handleDeleteAll = async () => {
+  const handleDeleteAll = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (notifications.length === 0) return;
+    
     setIsDeletingAll(true);
     const prevNotifications = [...notifications];
-    setNotifications([]); 
 
     try {
-        const res = await fetch('/api/notifications', { method: 'DELETE' });
-        if (!res.ok) throw new Error();
-        router.refresh();
+      const res = await fetch('/api/notifications', { method: 'DELETE' });
+      if (!res.ok) throw new Error("Error del servidor");
+      
+      setNotifications([]); 
+      router.refresh();
     } catch (error) {
+        console.error("Error al borrar todas", error);
         setNotifications(prevNotifications);
     } finally {
         setIsDeletingAll(false);
@@ -87,6 +94,20 @@ export default function NotificationsPage() {
   const getTranslatedText = (text: string) => {
     if (!text) return "";
     
+    if (text.includes("Cotización Lista") || text.includes("Quote Ready") || text.includes("Devis Prêt") || text.includes("Cotação Pronta")) {
+        try {
+           // @ts-ignore
+           return t.has('shopperQuoteTitle') ? t('shopperQuoteTitle') : t('titlePickup'); 
+        } catch(e) {}
+    }
+
+    if (text.includes("ha sido cotizada. Ve a la pestaña") || text.includes("has been quoted")) {
+         try {
+           // @ts-ignore
+           return t.has('shopperQuoteMsg') ? t('shopperQuoteMsg') : text; 
+        } catch(e) {}
+    }
+
     try {
       const parsed = JSON.parse(text);
       if (parsed && parsed.key) {
@@ -103,12 +124,6 @@ export default function NotificationsPage() {
       return t(cleanText);
     }
 
-    if (cleanText.startsWith('Notifications.')) {
-        const key = cleanText.replace('Notifications.', '');
-        // @ts-ignore
-        return t.has(key) ? t(key) : text;
-    }
-
     const legacyMap: Record<string, string> = {
         "¡Chofer Asignado!": "titlePickup",
         "Paquete Recogido": "titlePickup",
@@ -116,12 +131,7 @@ export default function NotificationsPage() {
         "¡Entrega Completada!": "titleDelivery",
         "¡Entrega Completada! 🏁": "titleDelivery",
         "Chofer Principal ha aceptado tu solicitud y está en camino.": "msgDriver",
-        "El chofer ya tiene tu envío y va en camino al destino.": "msgDriver",
-        "Tu Delivery Local ha sido completado exitosamente.": "msgLocalDelivery",
-        "Tu Pickup Recibido en Bodega ha sido completado exitosamente.": "msgWarehousePickup",
-        "Tu Consolidación ha sido completado exitosamente.": "msgConsolidation",
-        "Package Picked Up": "titlePickup",
-        "The driver has your shipment and is on the way to the destination.": "msgDriver"
+        "El chofer ya tiene tu envío y va en camino al destino.": "msgDriver"
     };
     
     if (legacyMap[cleanText]) {
@@ -144,59 +154,57 @@ export default function NotificationsPage() {
   });
 
   return (
-    // 🔥 Se eliminó el pt-[72px] para que suba hasta el tope y se fusione con el Header
-    <div className="min-h-screen bg-gray-50 font-montserrat pb-20">
+    <div className="min-h-screen bg-gray-50 font-montserrat pt-6 sm:pt-8 pb-20">
       
-      {/* 1. ENCABEZADO: Al subir hasta arriba, el Header y su flecha quedan flotando encima */}
-      <div className="bg-white shadow-sm/50 border-b border-gray-100 relative z-30">
+      {/* 🔥 FIX: Agregamos "pointer-events-none" al contenedor global del encabezado */}
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 mb-10 relative z-40 pointer-events-none">
         
-        {/* Usamos pt-4 para que la campana y botones se alineen horizontalmente con el mt-4 de la flecha */}
-        <div className="max-w-2xl mx-auto w-full px-4 sm:px-5 pt-4 pb-6 flex items-start justify-between relative min-h-[120px]">
-            
-            {/* IZQUIERDA: Vacío (La flecha del Header ocupará este espacio visualmente) */}
-            <div className="flex-1 pointer-events-none"></div>
+        <div className="flex justify-between items-start w-full">
+          
+          {/* IZQUIERDA: Transparente y ahora deja pasar los clics hacia la flecha */}
+          <div className="flex-1"></div>
 
-            {/* CENTRO: Campana y Textos (top-4 asegura que la campana esté al nivel exacto de la flecha) */}
-            <div className="absolute left-1/2 top-4 -translate-x-1/2 flex flex-col items-center justify-center w-[200px] pointer-events-none">
-                <div className="w-10 h-10 rounded-full bg-purple-50 text-purple-600 border border-purple-100 flex items-center justify-center shadow-sm mb-2">
-                    <Bell size={18} strokeWidth={2.5} />
-                </div>
-                
-                <h1 className="text-[20px] sm:text-[22px] font-bold text-gmc-gris-oscuro font-garamond leading-none text-center">
-                    {/* @ts-ignore */}
-                    {t.has('title') ? t('title') : "Notifications"}
-                </h1>
-                <p className="text-[9px] sm:text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1.5 text-center">Updates & Alerts</p>
-            </div>
+          {/* CENTRO: Título */}
+          <div className="flex flex-col items-center flex-none px-2">
+             <div className="w-12 h-12 rounded-full bg-white shadow-sm border border-gray-100 flex items-center justify-center text-purple-600 mb-3">
+               <Bell size={22} strokeWidth={2} />
+             </div>
+             <h1 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight text-center font-garamond">
+               {/* @ts-ignore */}
+               {t.has('title') ? t('title') : "Notifications"}
+             </h1>
+             <p className="text-[10px] sm:text-xs text-gray-400 font-bold uppercase tracking-widest mt-1 text-center">Updates & Alerts</p>
+          </div>
+
+          {/* 🔥 FIX: DERECHA: Agregamos "pointer-events-auto" SÓLO a la zona de botones */}
+          <div className="flex-1 flex justify-end gap-2 sm:gap-3 pointer-events-auto">
+            {uniqueNotifications.length > 0 && uniqueNotifications.some(n => !n.isRead) && (
+              <button 
+                  onClick={markAllAsRead}
+                  className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center hover:bg-blue-100 hover:scale-105 transition-all shadow-sm"
+                  title={/* @ts-ignore */ t.has('markRead') ? t('markRead') : "Mark as read"}
+              >
+                  <CheckCircle size={18} strokeWidth={2.5}/>
+              </button>
+            )}
             
-            {/* DERECHA: Botones (Al tener el pt-4 en el padre, se alinean perfecto con la flecha) */}
-            <div className="flex-1 flex gap-2 justify-end items-start z-10">
-                {uniqueNotifications.length > 0 && uniqueNotifications.some(n => !n.isRead) && (
-                    <button 
-                        onClick={markAllAsRead}
-                        className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center hover:bg-blue-100 hover:scale-105 transition-all shadow-sm"
-                        title={/* @ts-ignore */ t.has('markRead') ? t('markRead') : "Mark as read"}
-                    >
-                        <CheckCircle size={18} strokeWidth={2.5}/>
-                    </button>
-                )}
-                
-                {uniqueNotifications.length > 0 && (
-                    <button 
-                        onClick={handleDeleteAll}
-                        disabled={isDeletingAll}
-                        className="w-10 h-10 rounded-full bg-red-50 text-red-600 border border-red-100 flex items-center justify-center hover:bg-red-100 hover:scale-105 transition-all shadow-sm disabled:opacity-50"
-                        title={/* @ts-ignore */ t.has('vaciar') ? t('vaciar') : "Clear all"}
-                    >
-                        {isDeletingAll ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={18} strokeWidth={2.5}/>}
-                    </button>
-                )}
-            </div>
+            {uniqueNotifications.length > 0 && (
+              <button 
+                  onClick={handleDeleteAll}
+                  disabled={isDeletingAll}
+                  className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-red-50 text-red-600 border border-red-100 flex items-center justify-center hover:bg-red-100 hover:scale-105 transition-all shadow-sm disabled:opacity-50"
+                  title={/* @ts-ignore */ t.has('vaciar') ? t('vaciar') : "Clear all"}
+              >
+                  {isDeletingAll ? <Loader2 size={18} className="animate-spin" /> : <Trash2 size={20} strokeWidth={2.5}/>}
+              </button>
+            )}
+          </div>
+
         </div>
       </div>
 
       {/* 2. LISTA DE NOTIFICACIONES */}
-      <div className="max-w-2xl mx-auto px-4 py-6 space-y-4 relative z-30">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 space-y-4 relative z-30">
         {loading ? (
             <div className="flex flex-col items-center py-20"><Loader2 className="animate-spin text-gray-300" size={40}/></div>
         ) : uniqueNotifications.length === 0 ? (
@@ -238,7 +246,7 @@ export default function NotificationsPage() {
                         {notif.href && (
                             <Link href={notif.href} className="mt-3 inline-flex items-center text-xs font-bold text-gmc-dorado-principal hover:text-yellow-600 transition-colors bg-yellow-50 px-3 py-1.5 rounded-lg">
                                 {/* @ts-ignore */}
-                                {t.has('viewDetails') ? t('viewDetails') : "View Details"} 
+                                {t.has('viewDetails') ? t('viewDetails') : "Voir détails"} 
                                 <ArrowLeft size={12} className="rotate-180 ml-1"/>
                             </Link>
                         )}
@@ -249,7 +257,7 @@ export default function NotificationsPage() {
                     )}
 
                     <button 
-                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDelete(notif.id); }}
+                        onClick={(e) => handleDelete(notif.id, e)}
                         className="absolute bottom-4 right-4 p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-all opacity-0 group-hover:opacity-100 scale-90 hover:scale-100"
                     >
                         <Trash2 size={16} />

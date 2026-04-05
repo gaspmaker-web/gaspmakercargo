@@ -1,6 +1,7 @@
 import React from 'react';
-import { ScrollText, ShieldCheck, AlertTriangle, Scale, Clock, Truck, CreditCard, Mail } from 'lucide-react';
+import { ScrollText, ShieldCheck, AlertTriangle, Scale, Clock, Truck, CreditCard, Mail, Mailbox, FileText } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import EmailButton from '@/components/EmailButton';
 
 export const metadata = {
   title: 'Terms of Service | GaspMakerCargo',
@@ -9,12 +10,14 @@ export const metadata = {
 
 export default function TermsOfServicePage() {
   const t = useTranslations('TermsOfService');
+  // 🔥 Importamos las traducciones que creamos para el buzón
+  const tMailbox = useTranslations('MailboxPolicy'); 
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans">
       
-      {/* HEADER HERO */}
-      <div className="bg-gmc-gris-oscuro text-white py-16 px-4">
+      {/* 🔥 HEADER HERO: Fondo oscuro sin la fecha de actualización 🔥 */}
+      <div className="bg-slate-900 text-white py-16 px-4">
         <div className="max-w-4xl mx-auto text-center">
             <div className="flex justify-center mb-4">
                 <div className="bg-white/10 p-4 rounded-full backdrop-blur-sm">
@@ -25,9 +28,7 @@ export default function TermsOfServicePage() {
             <p className="text-gray-300 text-lg max-w-2xl mx-auto">
                 {t('subtitle')}
             </p>
-            <p className="mt-6 text-xs text-gray-500 uppercase tracking-widest font-bold">
-                {t('lastUpdated')}
-            </p>
+            {/* Se eliminó el texto de LAST UPDATED de aquí */}
         </div>
       </div>
 
@@ -35,7 +36,7 @@ export default function TermsOfServicePage() {
       <div className="max-w-4xl mx-auto px-4 py-12 -mt-8">
         
         {/* Intro Card */}
-        <div className="bg-white p-8 rounded-2xl shadow-xl border border-gray-100 mb-8">
+        <div className="bg-white p-8 rounded-2xl shadow-xl border border-gray-100 mb-8 relative z-10">
             <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-2">
                 <ShieldCheck className="text-green-600" /> {t('s1_title')}
             </h2>
@@ -96,6 +97,47 @@ export default function TermsOfServicePage() {
                 </ul>
             </Section>
 
+            {/* 🔥 VIRTUAL MAILBOX POLICIES */}
+            <Section 
+                id="mailbox-policies" 
+                icon={<Mailbox size={24} className="text-indigo-600"/>}
+                title={tMailbox('title')}
+            >
+                <p className="mb-4 text-gray-600">{tMailbox('subtitle')}</p>
+                
+                <div className="space-y-4">
+                    <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                        <strong className="text-gray-900 flex items-center gap-2 mb-2">
+                            <Clock size={16} className="text-orange-500"/> {tMailbox('storageTitle')}
+                        </strong>
+                        <p className="text-sm mb-2 text-gray-600">{tMailbox('storageDesc')}</p>
+                        <ul className="list-disc pl-5 space-y-1 text-sm text-gray-600 mb-3">
+                            <li>{tMailbox('storageBasic')}</li>
+                            <li>{tMailbox('storagePremium')}</li>
+                        </ul>
+                        <p className="text-xs italic text-gray-500 border-l-2 border-orange-300 pl-2">{tMailbox('storageAction')}</p>
+                    </div>
+
+                    <div className="bg-blue-50/50 p-4 rounded-xl border border-blue-100">
+                        <strong className="text-gray-900 flex items-center gap-2 mb-2">
+                            <FileText size={16} className="text-blue-500"/> {tMailbox('fairUseTitle')}
+                        </strong>
+                        <p className="text-sm mb-3 text-gray-600">{tMailbox('fairUseDesc')}</p>
+                        <p className="text-sm font-semibold text-blue-800 bg-white p-2 rounded-lg border border-blue-100 mb-2 shadow-sm">
+                            {tMailbox('fairUseLimit')}
+                        </p>
+                        <p className="text-xs text-gray-600 leading-relaxed">{tMailbox('fairUseExtra')}</p>
+                    </div>
+
+                    <div className="bg-green-50/50 p-4 rounded-xl border border-green-100">
+                        <strong className="text-gray-900 flex items-center gap-2 mb-2">
+                            <ShieldCheck size={16} className="text-green-500"/> {tMailbox('shredTitle')}
+                        </strong>
+                        <p className="text-sm text-gray-600 leading-relaxed">{tMailbox('shredDesc')}</p>
+                    </div>
+                </div>
+            </Section>
+
             {/* PROHIBITED ITEMS */}
             <Section 
                 icon={<AlertTriangle size={24} className="text-red-600"/>}
@@ -137,11 +179,9 @@ export default function TermsOfServicePage() {
             >
                 <p>{t('s7_intro')}</p>
                 <div className="mt-4 bg-gray-50 p-4 rounded-lg flex flex-col gap-2">
-                    <p className="text-sm font-bold text-gray-800">GaspMakerCargo LLC</p>
+                    <p className="text-sm font-bold text-gray-800">GaspMakerLLC</p>
                     <p className="text-sm text-gray-600">Miami, Florida, USA</p>
-                    <a href="mailto:support@gaspmakercargo.com" className="text-blue-600 hover:underline text-sm font-medium">
-                        support@gaspmakercargo.com
-                    </a>
+                    <EmailButton email="support@gaspmakercargo.com" />
                 </div>
             </Section>
 
@@ -153,9 +193,9 @@ export default function TermsOfServicePage() {
 }
 
 // --- Helper Component para Secciones ---
-function Section({ icon, title, children }: { icon: React.ReactNode, title: string, children: React.ReactNode }) {
+function Section({ id, icon, title, children }: { id?: string, icon: React.ReactNode, title: string, children: React.ReactNode }) {
     return (
-        <section className="bg-white p-6 md:p-8 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+        <section id={id} className="bg-white p-6 md:p-8 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow scroll-mt-24">
             <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-3">
                 <div className="bg-gray-50 p-2 rounded-lg">{icon}</div>
                 {title}

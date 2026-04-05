@@ -30,12 +30,12 @@ export default async function PackageDetailPage({ params }: Props) {
   }
 
   // 1. OBTENER EL PAQUETE Y EL USUARIO
-  const pkg = await prisma.package.findUnique({
+ const pkg = await prisma.package.findUnique({
     where: { id: params.id },
     include: {
         user: { 
-          // 🔥 IMPORTANTE: Traemos 'country' (que en la foto dice BB) y 'address'
-          select: { name: true, address: true, cityZip: true, countryCode: true, country: true, phone: true } 
+          // 🔥 AGREGAMOS REFERIDOS Y BILLETERA PARA EL FRONTEND
+          select: { name: true, address: true, cityZip: true, countryCode: true, country: true, phone: true, referredBy: true, referralRewardPaid: true, walletBalance: true } 
         },
         consolidatedShipment: {
             select: { serviceType: true }
@@ -259,7 +259,7 @@ export default async function PackageDetailPage({ params }: Props) {
       handlingFee: handlingFee 
   };
 
-  // 🔥 DATOS LIMPIOS PARA LA API
+ // 🔥 DATOS LIMPIOS PARA LA API
   // Priorizamos los datos de la nueva tabla "Address" (si existe). Si no existe, usamos los del perfil original.
   const userProfile = {
       // 1. Usa el "fullName" de la nueva libreta de direcciones (Ej. Jason Bosland). Si no, usa el del perfil.
@@ -267,7 +267,6 @@ export default async function PackageDetailPage({ params }: Props) {
       
       // 2. Prioriza los datos de la nueva libreta
       address: defaultAddress?.address || pkg.user?.address || '', 
-      
       city: defaultAddress?.cityZip || pkg.user?.cityZip || '',    
       zip: defaultAddress?.cityZip || pkg.user?.cityZip || '',     
       cityZip: defaultAddress?.cityZip || pkg.user?.cityZip || '',
@@ -276,8 +275,12 @@ export default async function PackageDetailPage({ params }: Props) {
       country: defaultAddress?.country || finalCountryCode, 
       countryCode: defaultAddress?.country || finalCountryCode,
       countryName: finalCountryName,
+      phone: defaultAddress?.phone || pkg.user?.phone || '',
       
-      phone: defaultAddress?.phone || pkg.user?.phone || ''
+      // 🔥 4. INYECCIÓN DE SISTEMA DE RECOMPENSAS (REFERIDOS Y BILLETERA)
+      referredBy: pkg.user?.referredBy || null,
+      referralRewardPaid: pkg.user?.referralRewardPaid || false,
+      walletBalance: pkg.user?.walletBalance || 0,
   };
 
   return (
@@ -285,7 +288,6 @@ export default async function PackageDetailPage({ params }: Props) {
       pkg={normalizedPkg} 
       userProfile={userProfile} 
       savedCards={paymentMethods} 
-      // 🔥 Le pasamos todas las direcciones al cliente para crear el menú desplegable en el siguiente paso
       allAddresses={userAddresses} 
     />
   );

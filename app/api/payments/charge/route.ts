@@ -27,15 +27,23 @@ export async function POST(req: Request) {
         billDetails, 
         selectedCourier, 
         courierService,
-        shippingAddress, // 🔥 NUEVO: Recibimos la dirección desde el frontend
-        planName         // 🔥 AHORA SÍ RECIBIMOS EL NOMBRE DEL PLAN PARA SUPABASE
+        shippingAddress, 
+        planName,        
+        shopperOrderId,
+        walletDiscount, // 🔥 NUEVO: Recibimos cuánto dinero de la billetera usar
+        discountApplied // 🔥 ¡AGREGA ESTA LÍNEA! Extraemos el descuento que envía el frontend
     } = await req.json();
 
     if (!amountNet || !paymentMethodId) {
         return NextResponse.json({ message: "Faltan datos de pago" }, { status: 400 });
     }
 
-    const user = await prisma.user.findUnique({ where: { id: session.user.id } });
+    // 🔥 MODIFICADO: Traemos los campos necesarios para los referidos y la billetera
+    const user = await prisma.user.findUnique({ 
+        where: { id: session.user.id },
+        select: { id: true, name: true, stripeCustomerId: true, walletBalance: true, referredBy: true, referralRewardPaid: true, email: true, countryCode: true }
+    });
+
     if (!user || !user.stripeCustomerId) {
         return NextResponse.json({ message: "Usuario no configurado para pagos" }, { status: 400 });
     }
@@ -48,8 +56,24 @@ export async function POST(req: Request) {
         return NextResponse.json({ message: "Tarjeta no encontrada" }, { status: 404 });
     }
 
+    // =========================================================================
+    // 🔥 1. LÓGICA DE BILLETERA (DESCUENTO DEL SALDO)
+    // =========================================================================
+    let totalToCharge = Number(amountNet); 
+    let appliedWallet = 0;
+
+    const requestedWalletDiscount = walletDiscount ? Number(walletDiscount) : 0;
+    
+    if (requestedWalletDiscount > 0 && user.walletBalance > 0) {
+        // Stripe exige un cargo mínimo de $0.50 centavos
+        appliedWallet = Math.min(requestedWalletDiscount, user.walletBalance, totalToCharge - 0.50);
+        if (appliedWallet < 0) appliedWallet = 0;
+        
+        totalToCharge = totalToCharge - appliedWallet;
+        console.log(`💰 Aplicando descuento de billetera: -$${appliedWallet.toFixed(2)}`);
+    }
+
     // --- CÁLCULO GENERAL AJUSTADO AL 4.4% + $0.30 ---
-    const totalToCharge = Number(amountNet); 
     const STRIPE_PERCENTAGE = 0.044; // 4.4%
     const STRIPE_FIXED_FEE = 0.30;
     
@@ -58,7 +82,9 @@ export async function POST(req: Request) {
     const feeAmount = totalToCharge - impliedSubtotal;
     const amountInCents = Math.round(totalToCharge * 100);
 
-    // 1. COBRAR EN STRIPE
+    // =========================================================================
+    // 2. COBRAR EN STRIPE
+    // =========================================================================
     const paymentIntent = await stripe.paymentIntents.create({
         amount: amountInCents,
         currency: 'usd',
@@ -71,6 +97,7 @@ export async function POST(req: Request) {
             userId: user.id,
             serviceType: serviceType,
             totalAmount: totalToCharge.toFixed(2),
+            walletApplied: appliedWallet.toFixed(2), // Registramos en Stripe que se usó billetera
             billIds: billIds ? (Array.isArray(billIds) ? billIds.join(',') : billIds) : null 
         }
     });
@@ -80,12 +107,108 @@ export async function POST(req: Request) {
     }
 
     // =========================================================================
-    // 🔔 NOTIFICACIONES
+    // 🔥 3. RESTAR SALDO Y PREMIAR REFERIDOS (EL CAJERO VIRTUAL ENTERPRISE)
     // =========================================================================
-    const userLang = (user as any).language || 'en';
+    
+    // A. Descontar saldo de la billetera del cliente (si usó algo)
+    if (appliedWallet > 0) {
+        await prisma.user.update({
+            where: { id: user.id },
+            data: { walletBalance: { decrement: appliedWallet } }
+        });
+    }
+
+   // =========================================================================
+    // 🔥 B. REGLA DE REFERIDOS (Auditoría Profunda)
+    // =========================================================================
+    
+    const numAmountNet = Number(amountNet);
+    const numDiscount = Number(discountApplied || 0);
+    const originalInvoiceAmount = numAmountNet + numDiscount;
+
+    console.log(`\n--- 🕵️‍♂️ AUDITORÍA DE REFERIDOS ---`);
+    console.log(`- Invitado ID: ${user.id}`);
+    console.log(`- Promotor Código: ${user.referredBy}`);
+    console.log(`- AmountNet recibido: $${numAmountNet}`);
+    console.log(`- Descuento recibido: $${numDiscount}`);
+    console.log(`- Monto Original Calculado: $${originalInvoiceAmount}`);
+    console.log(`- Estado del Candado Inicial: ${user.referralRewardPaid}`);
+
+    if (originalInvoiceAmount >= 100 && user.referredBy && user.referralRewardPaid === false) {
+        console.log(`- ✅ Condición Inicial Cumplida. Intentando cerrar candado...`);
+        
+        try {
+            // 🛡️ EL CANDADO ATÓMICO
+            const lock = await prisma.user.updateMany({
+                where: {
+                    id: user.id,
+                    referralRewardPaid: false
+                },
+                data: {
+                    referralRewardPaid: true
+                }
+            });
+
+            console.log(`- 🔒 Resultado del Candado Atómico: lock.count = ${lock.count}`);
+
+            if (lock.count > 0) { 
+                const promotor = await prisma.user.findUnique({
+                    where: { referralCode: user.referredBy }
+                });
+
+                if (promotor) {
+                    console.log(`- 🎁 Repartiendo premio. Sumando $25 al Promotor ID: ${promotor.id}`);
+                    
+                    await prisma.user.update({
+                        where: { id: promotor.id },
+                        data: { walletBalance: { increment: 25.00 } }
+                    });
+
+                    await sendNotification({
+                        userId: promotor.id,
+                        title: "¡Ganaste $25.00 USD! 🎁",
+                        message: `Tu referido ${user.name} acaba de completar su envío. ¡Te hemos abonado $25 a tu billetera!`,
+                        type: "SUCCESS"
+                    });
+                } else {
+                    console.log(`- ❌ ERROR: No se encontró al promotor con código ${user.referredBy}`);
+                }
+            } else {
+                console.log(`- ⚠️ Candado rechazado. Otra petición ya lo cerró (Posible Doble Clic).`);
+            }
+        } catch (dbError) {
+             console.log(`- ❌ ERROR en la Base de Datos durante la actualización de referidos:`, dbError);
+        }
+    } else {
+        console.log(`- ❌ Condición NO cumplida. No se ejecuta la regla de referidos.`);
+    }
+    console.log(`----------------------------------\n`);
+    // =========================================================================
+    // 4. NOTIFICACIONES (Soporte Multilingüe Completo: ES, EN, FR, PT)
+    // =========================================================================
+    const getLanguage = (code: string | null) => {
+        if (!code) return 'en'; // Inglés por defecto si no hay país
+        const upperCode = code.toUpperCase();
+        
+        // Países hispanohablantes
+        const spanishCountries = ['ES', 'MX', 'CO', 'AR', 'PE', 'VE', 'CL', 'EC', 'GT', 'CU', 'BO', 'DO', 'HN', 'PY', 'SV', 'NI', 'CR', 'PA', 'UY', 'PR', 'GQ'];
+        if (spanishCountries.includes(upperCode)) return 'es';
+        
+        // Países francófonos
+        const frenchCountries = ['FR', 'HT', 'CD', 'CG', 'ML', 'SN', 'CI', 'CM', 'BE', 'CH', 'MG', 'GN', 'BF', 'BI', 'BJ', 'TG', 'CF', 'GA', 'DJ', 'RW', 'VU', 'SC', 'KM', 'MC'];
+        if (frenchCountries.includes(upperCode)) return 'fr';
+        
+        // Países lusófonos
+        const portugueseCountries = ['BR', 'PT', 'AO', 'MZ', 'GW', 'CV', 'ST', 'TL'];
+        if (portugueseCountries.includes(upperCode)) return 'pt';
+        
+        return 'en'; // Resto del mundo en Inglés
+    };
+
+    const userLang = getLanguage(user.countryCode);
     const t = getT(userLang);
 
-    // B. Alerta al Admin (A ti sí te llega para control interno)
+    // B. Alerta al Admin
     await sendAdminPaymentAlert(
         user.name || 'Cliente Desconocido',
         totalToCharge,
@@ -93,37 +216,33 @@ export async function POST(req: Request) {
         paymentIntent.id
     );
 
-    // C. Notificación en Dashboard (Campanita del cliente)
+    // C. Notificación en Dashboard (Agregamos mención al ahorro si lo hubo)
     await sendNotification({
         userId: user.id,
         title: t.paymentTitle,
-        message: `${t.paymentBody} $${totalToCharge.toFixed(2)}`,
+        message: `${t.paymentBody} $${totalToCharge.toFixed(2)} ${appliedWallet > 0 ? `(Ahorraste $${appliedWallet.toFixed(2)})` : ''}`,
         type: "SUCCESS"
     });
 
     // =========================================================================
-    // 2. 💾 ACTUALIZACIÓN DE BASE DE DATOS (CORREGIDA)
+    // 5. 💾 ACTUALIZACIÓN DE BASE DE DATOS (Facturas y Paquetes)
     // =========================================================================
 
     if (billDetails && Array.isArray(billDetails) && billDetails.length > 0) {
         
         console.log(`✅ Procesando ${billDetails.length} facturas con montos INDIVIDUALES.`);
         
-        // Iteramos factura por factura
         await Promise.all(billDetails.map(async (detail: any) => {
             if (!detail.id || !detail.amount) return;
 
-            // 1. Averiguar qué tipo de envío es (Pickup o Ship)
             const currentShipment = await prisma.consolidatedShipment.findUnique({
                 where: { id: detail.id },
                 select: { serviceType: true }
             });
 
-            // 🚨 CORRECCIÓN VITAL: Definir el estado correcto
             const isPickup = currentShipment?.serviceType === 'STORAGE_FEE';
             const nextStatus = isPickup ? 'LISTO_PARA_RETIRO' : 'LISTO_PARA_ENVIO';
 
-            // 2. Calcular montos con el nuevo fee de 4.4%
             const rawTotal = Number(detail.amount); 
             const rawSubtotal = (rawTotal * (1 - STRIPE_PERCENTAGE)) - STRIPE_FIXED_FEE;
             const rawFee = rawTotal - rawSubtotal;     
@@ -132,7 +251,6 @@ export async function POST(req: Request) {
             const cleanTotal = Number(rawTotal.toFixed(2));
             const cleanFee = Number(rawFee.toFixed(2));
 
-            // 3. Actualizar la FACTURA
             await prisma.consolidatedShipment.update({
                 where: { id: detail.id },
                 data: {
@@ -140,7 +258,7 @@ export async function POST(req: Request) {
                     paymentId: paymentIntent.id,
                     selectedCourier: selectedCourier || undefined, 
                     courierService: courierService || undefined,   
-                    shippingAddress: shippingAddress || undefined, // 🔥 GUARDAMOS LA DIRECCIÓN AQUÍ
+                    shippingAddress: shippingAddress || undefined, 
                     
                     subtotalAmount: cleanSubtotal,
                     processingFee: cleanFee,
@@ -150,7 +268,6 @@ export async function POST(req: Request) {
                 }
             });
 
-            // 4. Actualizar los PAQUETES HIJOS con el estado correcto
             const childPackagesCount = await prisma.package.count({
                 where: { consolidatedShipmentId: detail.id }
             });
@@ -165,7 +282,7 @@ export async function POST(req: Request) {
                     data: {
                         status: nextStatus, 
                         stripePaymentId: paymentIntent.id,
-                        shippingAddress: shippingAddress || undefined, // 🔥 GUARDAMOS LA DIRECCIÓN EN EL HIJO TAMBIÉN
+                        shippingAddress: shippingAddress || undefined, 
                         
                         shippingTotalPaid: pkgTotal,
                         shippingSubtotal: pkgSub,
@@ -178,7 +295,6 @@ export async function POST(req: Request) {
         }));
 
     } else {
-        // --- FALLBACK (Lógica Antigua - PAQUETES INDIVIDUALES) ---
         if (packageIds) {
              const idsArray = Array.isArray(packageIds) ? packageIds : packageIds.split(',');
              const count = idsArray.length || 1;
@@ -193,7 +309,7 @@ export async function POST(req: Request) {
                     status: fallbackStatus, 
                     shippingTotalPaid: Number((totalToCharge / count).toFixed(2)),
                     stripePaymentId: paymentIntent.id,
-                    shippingAddress: shippingAddress || undefined // 🔥 GUARDAMOS LA DIRECCIÓN PARA PAQUETES INDIVIDUALES
+                    shippingAddress: shippingAddress || undefined 
                 }
              });
         }
@@ -206,13 +322,12 @@ export async function POST(req: Request) {
                     status: 'PAGADO', 
                     totalAmount: Number((totalToCharge / count).toFixed(2)),
                     paymentId: paymentIntent.id,
-                    shippingAddress: shippingAddress || undefined // 🔥 GUARDAMOS LA DIRECCIÓN AQUÍ TAMBIÉN
+                    shippingAddress: shippingAddress || undefined 
                 }
              });
         }
     }
 
-    // CASO C: Pickup Request
     if (pickupId) {
         await prisma.pickupRequest.update({
             where: { id: pickupId },
@@ -227,49 +342,74 @@ export async function POST(req: Request) {
         });
     }
 
-    // =========================================================================
-    // 🔥 NUEVO CASO D: Mailbox Setup / Suscripción
-    // ⚠️ COMENTADO TEMPORALMENTE: Las tablas no existen en Producción aún.
-    // =========================================================================
-    if (serviceType === 'MailboxSubscription') {
-        /*
-        // Calculamos la fecha de vencimiento (1 mes a partir de hoy)
-        const nextMonth = new Date();
-        nextMonth.setMonth(nextMonth.getMonth() + 1);
-
-        // 1. CREAR O ACTUALIZAR LA SUSCRIPCIÓN (Upsert)
-        await prisma.mailboxSubscription.upsert({
-            where: { 
-                userId: user.id 
-            },
-            update: {
-                planType: planName || 'Plan General',
-                currentPeriodEnd: nextMonth,
-                // Nota: No cambiamos el 'status' aquí si ya estaba ACTIVE, 
-                // para no quitarle el acceso si solo está renovando.
-            },
-            create: {
-                userId: user.id,
-                planType: planName || 'Plan General',
-                status: 'PENDING_USPS', // Estado inicial por defecto en tu schema
-                currentPeriodEnd: nextMonth,
-            }
-        });
-
-        // 2. REGISTRAR LA TRANSACCIÓN FINANCIERA (El recibo)
-        await prisma.mailboxTransaction.create({
+    if (shopperOrderId) {
+        await prisma.shopperOrder.update({
+            where: { id: shopperOrderId },
             data: {
-                userId: user.id,
-                amount: Number(totalToCharge.toFixed(2)),
-                description: description || `Suscripción a Buzón: ${planName}`,
-                status: 'COMPLETED',
-                stripePaymentId: paymentIntent.id
+                status: 'PAID', 
+                stripePaymentId: paymentIntent.id, 
+                updatedAt: new Date()
             }
         });
-        */
-       console.log("Suscripción procesada en Stripe. Guardado en BD desactivado hasta pase a Prod.");
+        console.log(`✅ Orden Shopper ${shopperOrderId} pagada con éxito.`);
     }
+
+   // =========================================================================
+    // 🔥 6. GUARDAR SUSCRIPCIÓN DE BUZÓN (SI APLICA)
     // =========================================================================
+    if (serviceType === 'MailboxSubscription' || planName || description?.includes('Buzón')) {
+        console.log("📥 Procesando guardado de Buzón Virtual en Base de Datos...");
+        
+        // 🔥 LA CORRECCIÓN: El dinero no tiene idioma. Nos basamos en el precio original.
+        const originalAmount = Number(amountNet);
+        const exactDbPlanName = originalAmount < 10 ? "Digital Basic" : "Premium Cargo";
+
+        // Creamos una fecha de vencimiento a 30 días
+        const currentPeriodEnd = new Date();
+        currentPeriodEnd.setDate(currentPeriodEnd.getDate() + 30);
+
+        try {
+            const existingSub = await prisma.mailboxSubscription.findFirst({
+                where: { userId: session.user.id }
+            });
+
+            if (existingSub) {
+                await prisma.mailboxSubscription.update({
+                    where: { id: existingSub.id },
+                    data: {
+                        planType: exactDbPlanName,
+                        stripeSubscriptionId: paymentIntent.id, 
+                        currentPeriodEnd: currentPeriodEnd,
+                        status: "PENDING_USPS" 
+                    }
+                });
+            } else {
+                await prisma.mailboxSubscription.create({
+                    data: {
+                        userId: session.user.id,
+                        planType: exactDbPlanName,
+                        stripeSubscriptionId: paymentIntent.id,
+                        currentPeriodEnd: currentPeriodEnd,
+                        status: "PENDING_USPS" 
+                    }
+                });
+            }
+
+            // Guardamos la transacción para el historial financiero del Admin
+            await prisma.mailboxTransaction.create({
+                data: {
+                    userId: session.user.id,
+                    amount: originalAmount,
+                    description: exactDbPlanName === "Digital Basic" ? "SUSCRIPCIÓN BUZÓN BÁSICO" : "SUSCRIPCIÓN BUZÓN PREMIUM",
+                    stripePaymentId: paymentIntent.id,
+                    status: "COMPLETADO" 
+                }
+            });
+            console.log(`✅ Suscripción de Buzón (${exactDbPlanName}) guardada correctamente.`);
+        } catch (dbError) {
+            console.error("❌ Error guardando Buzón en BD:", dbError);
+        }
+    }
 
     return NextResponse.json({ 
         success: true, 
@@ -277,7 +417,8 @@ export async function POST(req: Request) {
         financials: {
             total: Number(totalToCharge.toFixed(2)),
             subtotal: Number(impliedSubtotal.toFixed(2)),
-            fee: Number(feeAmount.toFixed(2))
+            fee: Number(feeAmount.toFixed(2)),
+            walletUsed: Number(appliedWallet.toFixed(2)) // Devolvemos cuánto se usó
         }
     });
 
