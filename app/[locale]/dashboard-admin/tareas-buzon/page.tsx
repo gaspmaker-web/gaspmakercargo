@@ -159,16 +159,19 @@ export default async function TareasBuzonPage({ params: { locale } }: Props) {
                                             <tr key={item.id} className="hover:bg-gray-50 transition-colors">
                                                 
                                                 {/* FOTO CON MODAL REUTILIZABLE */}
-                                                <td className="px-6 py-4">
-                                                    <div className="flex items-center gap-3">
-                                                        <ReassignEnvelopeModal 
-                                                            mailItemId={item.id}
-                                                            imageUrl={item.envelopeImageUrl}
-                                                            isExpired={null} 
-                                                            currentName={item.user?.name || 'Desconocido'}
-                                                            currentSuite={item.user?.suiteNo || ''}
-                                                            className="w-12 h-12 rounded-lg shadow-sm border border-gray-200 object-cover" 
-                                                        />
+                                               <td className="px-6 py-4">
+                                                 <div className="flex items-center gap-3">
+                                                 <div className="w-12 h-12 shrink-0 rounded-lg shadow-sm border border-gray-200 overflow-hidden relative">
+                                                 <div className="absolute inset-0 [&>button]:w-full [&>button]:h-full [&>button>img]:object-cover [&>button>img]:w-full [&>button>img]:h-full">
+                                                      <ReassignEnvelopeModal 
+                                                      mailItemId={item.id}
+                                                     imageUrl={item.envelopeImageUrl}
+                                                     isExpired={false} 
+                                                     currentName={item.user?.name || 'Desconocido'}
+                                                      currentSuite={item.user?.suiteNo || ''}
+                                                       />
+                                                </div>
+                                                </div>
                                                     <div className="flex flex-col items-start">
                                                             <span className="font-bold text-gray-900">{item.senderName || 'Remitente Desconocido'}</span>
                                                             <div className="flex items-center gap-2 mt-1 flex-wrap">

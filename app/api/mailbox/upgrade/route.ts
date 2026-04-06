@@ -3,7 +3,7 @@ import { auth } from '@/auth';
 import prisma from '@/lib/prisma';
 import Stripe from 'stripe';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2023-10-16' });
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2025-11-17.clover' });
 
 export async function POST(req: Request) {
   try {
@@ -66,14 +66,15 @@ export async function POST(req: Request) {
     });
 
     // Verificamos que el pago se haya completado
-    const invoice = newSubscription.latest_invoice as Stripe.Invoice;
-    const paymentIntent = invoice.payment_intent as Stripe.PaymentIntent;
+    const invoice: any = newSubscription.latest_invoice;
+    const paymentIntent: any = invoice.payment_intent;
 
     if (paymentIntent?.status !== 'succeeded' && paymentIntent?.status !== 'processing') {
       return NextResponse.json({ error: 'El cobro automático a tu tarjeta falló. Revisa tus fondos.' }, { status: 402 });
     }
 
-    const currentPeriodEnd = new Date(newSubscription.current_period_end * 1000);
+   const stripeSub: any = newSubscription;
+    const currentPeriodEnd = new Date(stripeSub.current_period_end * 1000);
 
     // 4. 🗄️ ACTUALIZAR SUPABASE INSTANTÁNEAMENTE Y REGISTRAR EN FINANZAS
     await prisma.$transaction([

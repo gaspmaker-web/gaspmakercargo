@@ -145,7 +145,18 @@ export default async function FinanzasPage() {
     })
   ]);
 
-  const recentTransactions = [
+  type TransactionType = {
+    id: string;
+    type: string;
+    date: Date;
+    amount: number;
+    debt: number;
+    status: string;
+    client: string;
+    description?: string | null;
+  };
+
+  const recentTransactions: TransactionType[] = [
     ...packages.map(p => {
         const isDocument = p.courier === 'Buzón Virtual' || (p.carrierTrackingNumber || '').startsWith('DOC-');
         const calculatedDebt = isDocument ? 0 : p.storageDebt + ((p.shippingSubtotal || 0) - (p.shippingTotalPaid || 0));
