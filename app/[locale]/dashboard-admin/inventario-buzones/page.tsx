@@ -35,8 +35,11 @@ interface Props {
 
 export default async function InventarioBuzonesPage({ params: { locale } }: Props) {
   const session = await auth();
-  if (!session?.user?.role || !['ADMIN', 'SUPERADMIN'].includes(session.user.role)) {
-    redirect(`/${locale}/login-admin`);
+  
+  // 1. Agregamos 'WAREHOUSE' a la lista permitida
+  // 2. Cambiamos la redirección a tu página de login real
+  if (!session?.user?.role || !['ADMIN', 'SUPERADMIN', 'WAREHOUSE'].includes(session.user.role)) {
+    redirect(`/${locale}/login`); 
   }
 
   // Traemos TODOS los sobres
