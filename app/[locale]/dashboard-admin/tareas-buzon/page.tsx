@@ -24,7 +24,7 @@ interface Props {
 
 export default async function TareasBuzonPage({ params: { locale } }: Props) {
   const session = await auth();
-  if (!session?.user?.role || !['ADMIN', 'SUPERADMIN'].includes(session.user.role)) {
+  if (!session?.user?.role || !['ADMIN', 'SUPERADMIN', 'WAREHOUSE'].includes(session.user.role)) {
     redirect(`/${locale}/login-admin`);
   }
 

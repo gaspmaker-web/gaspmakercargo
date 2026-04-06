@@ -78,6 +78,9 @@ export default auth((req: any) => {
         pathname.includes('/crear-envio') || 
         pathname.includes('/consolidaciones') ||
         pathname.includes('/pay-and-go'); // 🔥 AQUÍ LE ABRIMOS LA PUERTA AL WAREHOUSE 🔥
+        pathname.includes('/tareas-buzon') ||        // 🔥 Aceso a Escaneos y Destrucción
+        pathname.includes('/recepcion-buzones') ||   // 🔥 Acceso a Recibir Sobres
+        pathname.includes('/inventario-buzones');    // 🔥 Acceso a revisar expirados
 
       // Si NO está en una ruta permitida (ej: intenta ver el dashboard de gráficas)
       if (!isAllowedPath) {
