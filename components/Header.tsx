@@ -251,20 +251,22 @@ export default function Header({ backButtonUrl }: HeaderProps) {
                         </>
                     ) : (
                         <div className="flex items-center gap-3">
-                            <Link 
-                                href={getLink('/login-cliente')}
-                                className="hidden lg:flex px-4 py-2 text-white font-bold hover:text-gmc-dorado-principal transition-all text-sm items-center gap-2"
-                            >
-                                <User size={16} />
-                                 {t('access')}
-                            </Link>
-                            
+                            {/* Enlace de Registro (oculto en móvil, visible en LG) */}
                             <Link 
                                 href={getLink('/registro-cliente')}
+                                className="hidden lg:flex px-4 py-2 text-white font-bold hover:text-gmc-dorado-principal transition-all text-sm items-center gap-2"
+                            >
+                                <Shield size={16} />
+                                {locale === 'en' ? 'Sign Up' : locale === 'es' ? 'Registrarse' : locale === 'pt' ? 'Cadastrar' : 'S\'inscrire'}
+                            </Link>
+                            
+                            {/* Botón Principal (Login) - ESTE ES EL REEMPLAZO DEL OPEN FREE LOCKER */}
+                            <Link 
+                                href={getLink('/login-cliente')}
                                 className="px-4 py-2 lg:px-6 lg:py-2.5 bg-gmc-dorado-principal text-black font-extrabold rounded-lg hover:bg-yellow-400 transition-all text-sm shadow-lg flex items-center gap-2 transform hover:-translate-y-0.5"
                             >
-                                <Shield size={16} className="hidden lg:block" />
-                                <span>{locale === 'en' ? 'Open Free Locker' : locale === 'es' ? 'Abrir Casillero' : locale === 'pt' ? 'Abrir Armário' : 'Ouvrir Casier'}</span>
+                                <User size={16} className="hidden lg:block" />
+                                <span>{locale === 'en' ? 'Log In' : locale === 'es' ? 'Iniciar Sesión' : locale === 'pt' ? 'Entrar' : 'Connexion'}</span>
                             </Link>
                         </div>
                     )}
