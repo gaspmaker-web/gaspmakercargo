@@ -69,7 +69,7 @@ export default auth((req: any) => {
         return NextResponse.redirect(new URL(`/${currentLocale}/${target}`, req.url));
     }
 
-    // A.1) 🔥 REGLA DE ORO PARA WAREHOUSE (JAULA DE SEGURIDAD) 🔥
+   // A.1) 🔥 REGLA DE ORO PARA WAREHOUSE (JAULA DE SEGURIDAD) 🔥
     // Si es WAREHOUSE y ya está en zona Admin, verificamos que solo toque lo permitido.
     if (role === 'WAREHOUSE' && isAdminArea) {
       // Definimos las rutas permitidas (usando includes para ser flexible con sub-rutas)
@@ -77,8 +77,8 @@ export default auth((req: any) => {
         pathname.includes('/paquetes') || 
         pathname.includes('/crear-envio') || 
         pathname.includes('/consolidaciones') ||
-        pathname.includes('/pay-and-go'); // 🔥 AQUÍ LE ABRIMOS LA PUERTA AL WAREHOUSE 🔥
-        pathname.includes('/tareas-buzon') ||        // 🔥 Aceso a Escaneos y Destrucción
+        pathname.includes('/pay-and-go') ||          // 🔥 AHORA SÍ TIENE EL "||"
+        pathname.includes('/tareas-buzon') ||        // 🔥 Acceso a Escaneos y Destrucción
         pathname.includes('/recepcion-buzones') ||   // 🔥 Acceso a Recibir Sobres
         pathname.includes('/inventario-buzones');    // 🔥 Acceso a revisar expirados
 
