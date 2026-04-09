@@ -30,15 +30,14 @@ export async function POST(req: Request) {
         shippingAddress, 
         planName,        
         shopperOrderId,
-        walletDiscount, // 🔥 NUEVO: Recibimos cuánto dinero de la billetera usar
-        discountApplied // 🔥 ¡AGREGA ESTA LÍNEA! Extraemos el descuento que envía el frontend
+        walletDiscount, 
+        discountApplied 
     } = await req.json();
 
     if (!amountNet || !paymentMethodId) {
         return NextResponse.json({ message: "Faltan datos de pago" }, { status: 400 });
     }
 
-    // 🔥 MODIFICADO: Traemos los campos necesarios para los referidos y la billetera
     const user = await prisma.user.findUnique({ 
         where: { id: session.user.id },
         select: { id: true, name: true, stripeCustomerId: true, walletBalance: true, referredBy: true, referralRewardPaid: true, email: true, countryCode: true }
@@ -73,21 +72,49 @@ export async function POST(req: Request) {
         console.log(`💰 Aplicando descuento de billetera: -$${appliedWallet.toFixed(2)}`);
     }
 
-    // --- CÁLCULO GENERAL AJUSTADO AL 4.4% + $0.30 ---
-    const STRIPE_PERCENTAGE = 0.044; // 4.4%
+    const STRIPE_PERCENTAGE = 0.044; 
     const STRIPE_FIXED_FEE = 0.30;
     
-    // Despeje matemático para sacar el Subtotal real del Total Cobrado:
     const impliedSubtotal = (totalToCharge * (1 - STRIPE_PERCENTAGE)) - STRIPE_FIXED_FEE;
     const feeAmount = totalToCharge - impliedSubtotal;
-    const amountInCents = Math.round(totalToCharge * 100);
+    let amountInCents = Math.round(totalToCharge * 100);
+    let chargeCurrency = 'usd';
+
+    // =========================================================================
+    // 🔥 NUEVO: BYPASS DE DIVISAS PARA TRINIDAD Y TOBAGO (Doble Seguridad)
+    // =========================================================================
+    const GMC_TTD_EXCHANGE_RATE = 7.25; // Tu margen de seguridad. Puedes ajustarlo.
+
+    if (user.countryCode === 'TT' || user.countryCode === 'tt') {
+        console.log("🇹🇹 Cliente de Trinidad detectado. Verificando origen de tarjeta...");
+        
+        try {
+            // Consultamos a Stripe de dónde es la tarjeta
+            const paymentMethodDetails = await stripe.paymentMethods.retrieve(savedCard.stripePaymentMethodId);
+            const cardCountry = paymentMethodDetails.card?.country;
+            
+            console.log(`💳 País emisor de la tarjeta: ${cardCountry}`);
+
+            if (cardCountry === 'TT') {
+                // Doble validación superada: Es trinitense con tarjeta trinitense.
+                const totalInTTD = totalToCharge * GMC_TTD_EXCHANGE_RATE;
+                amountInCents = Math.round(totalInTTD * 100); // Stripe siempre pide centavos
+                chargeCurrency = 'ttd';
+                console.log(`✅ Bypass Activado: Cobrando ${totalInTTD.toFixed(2)} TTD en lugar de ${totalToCharge.toFixed(2)} USD.`);
+            } else {
+                console.log(`⚠️ Bypass Ignorado: La tarjeta es de ${cardCountry}, cobrando en USD normal.`);
+            }
+        } catch (stripeErr) {
+            console.error("❌ Error verificando tarjeta en Stripe, procediendo en USD:", stripeErr);
+        }
+    }
 
     // =========================================================================
     // 2. COBRAR EN STRIPE
     // =========================================================================
     const paymentIntent = await stripe.paymentIntents.create({
         amount: amountInCents,
-        currency: 'usd',
+        currency: chargeCurrency, // 🔥 Aquí usamos la moneda dinámica (usd o ttd)
         customer: user.stripeCustomerId,
         payment_method: savedCard.stripePaymentMethodId,
         off_session: true,
@@ -96,8 +123,9 @@ export async function POST(req: Request) {
         metadata: {
             userId: user.id,
             serviceType: serviceType,
-            totalAmount: totalToCharge.toFixed(2),
-            walletApplied: appliedWallet.toFixed(2), // Registramos en Stripe que se usó billetera
+            totalAmountUSD: totalToCharge.toFixed(2), // Guardamos el equivalente en USD para tu contabilidad
+            currencyCharged: chargeCurrency,
+            walletApplied: appliedWallet.toFixed(2), 
             billIds: billIds ? (Array.isArray(billIds) ? billIds.join(',') : billIds) : null 
         }
     });
@@ -110,17 +138,12 @@ export async function POST(req: Request) {
     // 🔥 3. RESTAR SALDO Y PREMIAR REFERIDOS (EL CAJERO VIRTUAL ENTERPRISE)
     // =========================================================================
     
-    // A. Descontar saldo de la billetera del cliente (si usó algo)
     if (appliedWallet > 0) {
         await prisma.user.update({
             where: { id: user.id },
             data: { walletBalance: { decrement: appliedWallet } }
         });
     }
-
-   // =========================================================================
-    // 🔥 B. REGLA DE REFERIDOS (Auditoría Profunda)
-    // =========================================================================
     
     const numAmountNet = Number(amountNet);
     const numDiscount = Number(discountApplied || 0);
@@ -138,7 +161,6 @@ export async function POST(req: Request) {
         console.log(`- ✅ Condición Inicial Cumplida. Intentando cerrar candado...`);
         
         try {
-            // 🛡️ EL CANDADO ATÓMICO
             const lock = await prisma.user.updateMany({
                 where: {
                     id: user.id,
@@ -183,32 +205,29 @@ export async function POST(req: Request) {
         console.log(`- ❌ Condición NO cumplida. No se ejecuta la regla de referidos.`);
     }
     console.log(`----------------------------------\n`);
+
     // =========================================================================
     // 4. NOTIFICACIONES (Soporte Multilingüe Completo: ES, EN, FR, PT)
     // =========================================================================
     const getLanguage = (code: string | null) => {
-        if (!code) return 'en'; // Inglés por defecto si no hay país
+        if (!code) return 'en'; 
         const upperCode = code.toUpperCase();
         
-        // Países hispanohablantes
         const spanishCountries = ['ES', 'MX', 'CO', 'AR', 'PE', 'VE', 'CL', 'EC', 'GT', 'CU', 'BO', 'DO', 'HN', 'PY', 'SV', 'NI', 'CR', 'PA', 'UY', 'PR', 'GQ'];
         if (spanishCountries.includes(upperCode)) return 'es';
         
-        // Países francófonos
         const frenchCountries = ['FR', 'HT', 'CD', 'CG', 'ML', 'SN', 'CI', 'CM', 'BE', 'CH', 'MG', 'GN', 'BF', 'BI', 'BJ', 'TG', 'CF', 'GA', 'DJ', 'RW', 'VU', 'SC', 'KM', 'MC'];
         if (frenchCountries.includes(upperCode)) return 'fr';
         
-        // Países lusófonos
         const portugueseCountries = ['BR', 'PT', 'AO', 'MZ', 'GW', 'CV', 'ST', 'TL'];
         if (portugueseCountries.includes(upperCode)) return 'pt';
         
-        return 'en'; // Resto del mundo en Inglés
+        return 'en'; 
     };
 
     const userLang = getLanguage(user.countryCode);
     const t = getT(userLang);
 
-    // B. Alerta al Admin
     await sendAdminPaymentAlert(
         user.name || 'Cliente Desconocido',
         totalToCharge,
@@ -216,11 +235,19 @@ export async function POST(req: Request) {
         paymentIntent.id
     );
 
-    // C. Notificación en Dashboard (Agregamos mención al ahorro si lo hubo)
+    // Ajustamos el mensaje para que el cliente sepa que pagó en su moneda
+    let successMessage = `${t.paymentBody} $${totalToCharge.toFixed(2)} USD.`;
+    if (chargeCurrency === 'ttd') {
+        successMessage = `Payment successful! Your bank was charged in TTD to avoid limits. (Equivalent: $${totalToCharge.toFixed(2)} USD).`;
+    }
+    if (appliedWallet > 0) {
+        successMessage += ` Ahorraste $${appliedWallet.toFixed(2)} USD usando tu billetera.`;
+    }
+
     await sendNotification({
         userId: user.id,
-        title: t.paymentTitle,
-        message: `${t.paymentBody} $${totalToCharge.toFixed(2)} ${appliedWallet > 0 ? `(Ahorraste $${appliedWallet.toFixed(2)})` : ''}`,
+        title: chargeCurrency === 'ttd' ? "Payment Successful (TTD) ✅" : t.paymentTitle,
+        message: successMessage,
         type: "SUCCESS"
     });
 
@@ -351,7 +378,7 @@ export async function POST(req: Request) {
                 updatedAt: new Date()
             }
         });
-        console.log(`✅ Orden Shopper ${shopperOrderId} pagada con éxito.`);
+        console.log(`✅ Orden Shopper ${shopperOrderId} pagada con éxito en ${chargeCurrency.toUpperCase()}.`);
     }
 
    // =========================================================================
@@ -360,11 +387,9 @@ export async function POST(req: Request) {
     if (serviceType === 'MailboxSubscription' || planName || description?.includes('Buzón')) {
         console.log("📥 Procesando guardado de Buzón Virtual en Base de Datos...");
         
-        // 🔥 LA CORRECCIÓN: El dinero no tiene idioma. Nos basamos en el precio original.
         const originalAmount = Number(amountNet);
         const exactDbPlanName = originalAmount < 10 ? "Digital Basic" : "Premium Cargo";
 
-        // Creamos una fecha de vencimiento a 30 días
         const currentPeriodEnd = new Date();
         currentPeriodEnd.setDate(currentPeriodEnd.getDate() + 30);
 
@@ -395,7 +420,6 @@ export async function POST(req: Request) {
                 });
             }
 
-            // Guardamos la transacción para el historial financiero del Admin
             await prisma.mailboxTransaction.create({
                 data: {
                     userId: session.user.id,
@@ -418,7 +442,8 @@ export async function POST(req: Request) {
             total: Number(totalToCharge.toFixed(2)),
             subtotal: Number(impliedSubtotal.toFixed(2)),
             fee: Number(feeAmount.toFixed(2)),
-            walletUsed: Number(appliedWallet.toFixed(2)) // Devolvemos cuánto se usó
+            walletUsed: Number(appliedWallet.toFixed(2)),
+            currencyCharged: chargeCurrency
         }
     });
 
