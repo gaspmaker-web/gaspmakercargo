@@ -329,20 +329,22 @@ export default function PackageDetailClient({
     const formattedAddress = `${currentDestination.name} | ${currentDestination.address}, ${currentDestination.cityZip}, ${currentDestination.countryCode || currentDestination.countryName} | Tel: ${currentDestination.phone || 'N/A'}`;
     
     try {
-      const payRes = await fetch("/api/payments/charge", {
+    const payRes = await fetch("/api/payments/charge", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          amountNet: total, // Este es el monto final que Stripe cobrará (ej. $85)
+          amountNet: total, // Este es el monto final que Stripe cobrará
           paymentMethodId: selectedCardId,
           serviceType: "SINGLE_SHIPMENT",
           description: `Envío ${pkg.gmcTrackingNumber} via ${selectedRate.carrier}`,
           packageIds: [pkg.id],
-          discountApplied: discount, // 🔥 VITAL: Le decimos al backend de cuánto fue el descuento
+          discountApplied: discount,
           shippingAddress: formattedAddress,
-          walletDiscount: useWallet ? appliedWalletAmount : 0 
+          walletDiscount: useWallet ? appliedWalletAmount : 0,
+          // 👇 INSERTA ESTA LÍNEA 👇
+          isTrinidad: isTrinidad
         }),
-      });;
+      });
 
       const payData = await payRes.json();
       if (!payRes.ok) throw new Error(payData.message || "Error al procesar el cobro.");
@@ -409,8 +411,27 @@ export default function PackageDetailClient({
   const baseAmount = servicePrice + handlingFee + insuranceCost;
   const processingFee = selectedRate ? (getProcessingFee ? getProcessingFee(baseAmount) : baseAmount * 0.0727) : 0;
   
-  let finalTotalAmount = Math.max(0, servicePrice + processingFee + handlingFee + insuranceCost - discount);
+ let finalTotalAmount = Math.max(0, servicePrice + processingFee + handlingFee + insuranceCost - discount);
   let appliedWalletAmount = 0;
+
+  // 👇 INSERTA ESTE BLOQUE NUEVO AQUÍ 👇
+  // 🔥 LÓGICA DE MONEDA LOCAL PARA TRINIDAD Y TOBAGO (MEJORADA)
+  const countryMatchesTT = (val: string | undefined | null) => {
+    if (!val) return false;
+    const str = val.toLowerCase();
+    return str === 'tt' || str.includes('trinidad');
+  };
+
+  const isTrinidad = countryMatchesTT(currentAddress?.country) || 
+                     countryMatchesTT(currentAddress?.countryCode) || 
+                     countryMatchesTT(userProfile?.country) || 
+                     countryMatchesTT(userProfile?.countryCode);
+
+  const tasaTTD = 7.30; // Tu Tasa Gasp Maker (1 USD = 7.30 TTD)
+  const montoTTD = (finalTotalAmount * tasaTTD).toFixed(2);
+  // 👆 FIN DEL BLOQUE NUEVO 👆
+
+  // 🔥 LÓGICA DE BILLETERA (Mínimo $0.50 Stripe)
 
   // 🔥 LÓGICA DE BILLETERA (Mínimo $0.50 Stripe)
   if (useWallet && walletBalance > 0) {
@@ -765,7 +786,27 @@ export default function PackageDetailClient({
                               </div>
                           )}
                       </div>
+                )} 
+                  {/* (Este es el cierre del bloque de billetera) */}
+
+                  {/* 👇 INSERTA ESTE BLOQUE AQUÍ (DESKTOP) 👇 */}
+                  {/* 🔥 ALERTA PAGO LOCAL TRINIDAD 🔥 */}
+                  {isTrinidad && finalTotalAmount > 0 && (
+                      <div className="mt-4 mb-6 p-3 bg-blue-900/20 border border-blue-500/30 rounded-xl">
+                          <div className="flex items-center gap-2 mb-1">
+                              <span className="text-lg">🇹🇹</span>
+                              <p className="text-xs font-bold text-blue-400 uppercase tracking-wide">Pago Local Habilitado</p>
+                          </div>
+                          <p className="text-[10px] text-gray-400 mb-2">
+                              Cobro procesado en tu moneda local para evitar bloqueos del banco. (Tasa: 1 USD = {tasaTTD} TTD).
+                          </p>
+                          <div className="pt-2 border-t border-blue-500/20 flex justify-between text-sm font-black text-blue-400">
+                              <span>Monto exacto a cargar:</span>
+                              <span>${montoTTD} TTD</span>
+                          </div>
+                      </div>
                   )}
+                  {/* 👆 FIN DEL BLOQUE NUEVO 👆 */}
 
                   <div className="flex justify-between items-center mb-8">
                     <span className="text-xl font-bold">{tPickup("sumTotal")}</span>
@@ -903,6 +944,26 @@ export default function PackageDetailClient({
                           )}
                       </div>
                   )}
+                  {/* (Este es el cierre del bloque de billetera móvil) */}
+
+                  {/* 👇 INSERTA ESTE BLOQUE AQUÍ (MÓVIL) 👇 */}
+                  {/* 🔥 ALERTA PAGO LOCAL TRINIDAD 🔥 */}
+                  {isTrinidad && finalTotalAmount > 0 && (
+                      <div className="mt-3 p-3 bg-blue-900/20 border border-blue-500/30 rounded-xl mb-3">
+                          <div className="flex items-center gap-2 mb-1">
+                              <span className="text-lg">🇹🇹</span>
+                              <p className="text-xs font-bold text-blue-400 uppercase tracking-wide">Pago Local Habilitado</p>
+                          </div>
+                          <p className="text-[10px] text-gray-400 mb-2">
+                              Cobro procesado en moneda local para evitar bloqueos del banco. (Tasa: 1 USD = {tasaTTD} TTD).
+                          </p>
+                          <div className="pt-2 border-t border-blue-500/20 flex justify-between text-sm font-black text-blue-400">
+                              <span>Monto a cargar:</span>
+                              <span>${montoTTD} TTD</span>
+                          </div>
+                      </div>
+                  )}
+                  {/* 👆 FIN DEL BLOQUE NUEVO 👆 */}
 
                   <div className="pt-4 border-t border-gray-600 pb-4">
                     <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Tarjeta Seleccionada</label>
