@@ -286,7 +286,7 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                      countryMatchesTT(userProfile?.countryCode);
 
   const tasaTTD = 7.30; // Tu Tasa Gasp Maker (1 USD = 7.30 TTD)
-  const montoTTD = (finalTotalAmount * tasaTTD).toFixed(2);
+  const montoTTD = (totals.total * tasaTTD).toFixed(2);
   // 👆 FIN DEL BLOQUE NUEVO 👆
 
   // 🔥 AUTO-APLICAR BONO DE BIENVENIDA (VERSIÓN BLINDADA)
