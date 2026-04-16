@@ -31,7 +31,8 @@ export async function POST(req: Request) {
         planName,        
         shopperOrderId,
         walletDiscount, 
-        discountApplied 
+        discountApplied,
+        isTrinidad // 🔥 NUEVO: Recibimos la orden directa del frontend 
     } = await req.json();
 
     if (!amountNet || !paymentMethodId) {
@@ -80,33 +81,18 @@ export async function POST(req: Request) {
     let amountInCents = Math.round(totalToCharge * 100);
     let chargeCurrency = 'usd';
 
+   // =========================================================================
+    // 🔥 NUEVO: BYPASS DE DIVISAS PARA TRINIDAD Y TOBAGO (Sincronizado con UI)
     // =========================================================================
-    // 🔥 NUEVO: BYPASS DE DIVISAS PARA TRINIDAD Y TOBAGO (Doble Seguridad)
-    // =========================================================================
-    const GMC_TTD_EXCHANGE_RATE = 7.25; // Tu margen de seguridad. Puedes ajustarlo.
+    const GMC_TTD_EXCHANGE_RATE = 7.30; // 🔥 DEBE COINCIDIR CON EL FRONTEND
 
-    if (user.countryCode === 'TT' || user.countryCode === 'tt') {
-        console.log("🇹🇹 Cliente de Trinidad detectado. Verificando origen de tarjeta...");
+    if (isTrinidad) {
+        console.log("🇹🇹 Cliente de Trinidad detectado desde el Frontend. Aplicando moneda local.");
         
-        try {
-            // Consultamos a Stripe de dónde es la tarjeta
-            const paymentMethodDetails = await stripe.paymentMethods.retrieve(savedCard.stripePaymentMethodId);
-            const cardCountry = paymentMethodDetails.card?.country;
-            
-            console.log(`💳 País emisor de la tarjeta: ${cardCountry}`);
-
-            if (cardCountry === 'TT') {
-                // Doble validación superada: Es trinitense con tarjeta trinitense.
-                const totalInTTD = totalToCharge * GMC_TTD_EXCHANGE_RATE;
-                amountInCents = Math.round(totalInTTD * 100); // Stripe siempre pide centavos
-                chargeCurrency = 'ttd';
-                console.log(`✅ Bypass Activado: Cobrando ${totalInTTD.toFixed(2)} TTD en lugar de ${totalToCharge.toFixed(2)} USD.`);
-            } else {
-                console.log(`⚠️ Bypass Ignorado: La tarjeta es de ${cardCountry}, cobrando en USD normal.`);
-            }
-        } catch (stripeErr) {
-            console.error("❌ Error verificando tarjeta en Stripe, procediendo en USD:", stripeErr);
-        }
+        const totalInTTD = totalToCharge * GMC_TTD_EXCHANGE_RATE;
+        amountInCents = Math.round(totalInTTD * 100); // Stripe siempre pide centavos
+        chargeCurrency = 'ttd';
+        console.log(`✅ Bypass Activado: Cobrando ${totalInTTD.toFixed(2)} TTD en lugar de ${totalToCharge.toFixed(2)} USD.`);
     }
 
     // =========================================================================

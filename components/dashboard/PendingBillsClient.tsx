@@ -272,6 +272,15 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
 
   const totals = calculateTotals();
 
+  // 👇 INSERTA ESTE BLOQUE NUEVO AQUÍ 👇
+  // 🔥 LÓGICA DE MONEDA LOCAL PARA TRINIDAD Y TOBAGO
+  const isTrinidad = currentAddress?.countryCode === 'TT' || 
+                     currentAddress?.country?.toLowerCase().includes('trinidad') || 
+                     userProfile?.countryCode === 'TT';
+  const tasaTTD = 7.30; // Tu Tasa Gasp Maker (1 USD = 7.30 TTD)
+  const montoTTD = (totals.total * tasaTTD).toFixed(2);
+  // 👆 FIN DEL BLOQUE NUEVO 👆
+
   // 🔥 AUTO-APLICAR BONO DE BIENVENIDA (VERSIÓN BLINDADA)
   useEffect(() => {
       const isEligibleForWelcomeBonus = userProfile?.referredBy && !userProfile?.referralRewardPaid;
@@ -405,7 +414,7 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
               return [billId]; 
           });
 
-          const payRes = await fetch('/api/payments/charge', {
+        const payRes = await fetch('/api/payments/charge', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
@@ -420,7 +429,9 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                   courierService: courierService,
                   discountApplied: discount,
                   shippingAddress: finalShippingAddress,
-                  walletDiscount: useWallet ? totals.appliedWallet : 0
+                  walletDiscount: useWallet ? totals.appliedWallet : 0,
+                  // 👇 INSERTA ESTA LÍNEA 👇
+                  isTrinidad: isTrinidad
               })
           });
           
@@ -774,9 +785,29 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                                                 </div>
                                             )}
                                         </div>
+                                        
                                     )}
 
-                                    <div className="flex justify-between text-xl font-bold pt-2 border-t border-gray-600 text-gmc-dorado-principal">
+                                    {/* 👇 INSERTA ESTE BLOQUE AQUÍ (DESKTOP) 👇 */}
+                                    {/* 🔥 ALERTA PAGO LOCAL TRINIDAD 🔥 */}
+                                    {isTrinidad && totals.total > 0 && (
+                                        <div className="mt-4 p-3 bg-blue-900/20 border border-blue-500/30 rounded-xl">
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <span className="text-lg">🇹🇹</span>
+                                                <p className="text-xs font-bold text-blue-400 uppercase tracking-wide">Pago Local Habilitado</p>
+                                            </div>
+                                            <p className="text-[10px] text-gray-400 mb-2">
+                                                Cobro procesado en tu moneda local para evitar bloqueos del banco. (Tasa: 1 USD = {tasaTTD} TTD).
+                                            </p>
+                                            <div className="pt-2 border-t border-blue-500/20 flex justify-between text-sm font-black text-blue-400">
+                                                <span>Monto exacto a cargar:</span>
+                                                <span>${montoTTD} TTD</span>
+                                            </div>
+                                        </div>
+                                    )}
+                                    {/* 👆 FIN DEL BLOQUE NUEVO 👆 */}
+
+                                    <div className="flex justify-between text-xl font-bold pt-2 border-t border-gray-600 text-gmc-dorado-principal mt-4">
                                         <span>{tPickup('sumTotal')}</span>
                                         <span>${totals.total.toFixed(2)}</span>
                                     </div>
@@ -939,6 +970,24 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                                             )}
                                         </div>
                                     )}
+                                    {/* 👇 INSERTA ESTE BLOQUE AQUÍ (MÓVIL) 👇 */}
+                                    {/* 🔥 ALERTA PAGO LOCAL TRINIDAD 🔥 */}
+                                    {isTrinidad && totals.total > 0 && (
+                                        <div className="mt-3 p-3 bg-blue-900/20 border border-blue-500/30 rounded-xl mb-3">
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <span className="text-lg">🇹🇹</span>
+                                                <p className="text-xs font-bold text-blue-400 uppercase tracking-wide">Pago Local Habilitado</p>
+                                            </div>
+                                            <p className="text-[10px] text-gray-400 mb-2">
+                                                Cobro procesado en moneda local para evitar bloqueos del banco. (Tasa: 1 USD = {tasaTTD} TTD).
+                                            </p>
+                                            <div className="pt-2 border-t border-blue-500/20 flex justify-between text-sm font-black text-blue-400">
+                                                <span>Monto a cargar:</span>
+                                                <span>${montoTTD} TTD</span>
+                                            </div>
+                                        </div>
+                                    )}
+                                    {/* 👆 FIN DEL BLOQUE NUEVO 👆 */}
 
                                     <div className="pt-3 border-t border-gray-600 pb-4">
                                         <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Tarjeta Seleccionada</label>
