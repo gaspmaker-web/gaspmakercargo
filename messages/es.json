@@ -1205,6 +1205,9 @@
     "noOrders": "Aún no tienes solicitudes previas.",
     "reviewingLinks": "Estamos revisando tus links. Pronto verás el costo exacto aquí para poder pagar.",
     "loadingQuotes": "Cargando cotizaciones...",
-    "calculating": "Calculando..."
+    "calculating": "Calculando...",
+    "noCards": "No tienes tarjetas guardadas.",
+    "addPaymentMethod": "Agrega un método de pago en Configuración para continuar.",
+    "itemsRequested": "Artículos Solicitados"
   }
 }

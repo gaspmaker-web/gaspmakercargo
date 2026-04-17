@@ -1186,6 +1186,9 @@
     "noOrders": "Você ainda não tem solicitações anteriores.",
     "reviewingLinks": "Estamos analisando seus links. Em breve você verá o custo exato aqui para poder pagar.",
     "loadingQuotes": "Carregando cotações...",
-    "calculating": "Calculando..."
+    "calculating": "Calculando...",
+    "noCards": "Nenhum cartão salvo encontrado.",
+    "addPaymentMethod": "Adicione um método de pagamento nas Configurações para continuar.",
+    "itemsRequested": "Itens Solicitados"
   }
 }

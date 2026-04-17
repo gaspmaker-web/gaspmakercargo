@@ -1163,6 +1163,9 @@
     "noOrders": "You don't have any previous requests yet.",
     "reviewingLinks": "We are reviewing your links. You will soon see the exact cost here to proceed with the payment.",
     "loadingQuotes": "Loading quotes...",
-    "calculating": "Calculating..."
+    "calculating": "Calculating...",
+    "noCards": "No saved cards found.",
+    "addPaymentMethod": "Add a payment method in Settings to continue.",
+    "itemsRequested": "Items Requested"
   }
 }

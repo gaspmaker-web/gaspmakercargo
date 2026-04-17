@@ -1165,6 +1165,9 @@
     "noOrders": "Vous n'avez pas encore de demandes précédentes.",
     "reviewingLinks": "Nous examinons vos liens. Vous verrez bientôt le coût exact ici pour pouvoir procéder au paiement.",
     "loadingQuotes": "Chargement des devis...",
-    "calculating": "Calcul en cours..."
+    "calculating": "Calcul en cours...",
+    "noCards": "Aucune carte enregistrée.",
+    "addPaymentMethod": "Ajoutez un moyen de paiement dans les Paramètres pour continuer.",
+    "itemsRequested": "Articles Demandés"
   }
 }
