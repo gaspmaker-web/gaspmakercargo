@@ -797,22 +797,22 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                                     )}
 
                                     {/* 👇 INSERTA ESTE BLOQUE AQUÍ (DESKTOP) 👇 */}
-                                    {/* 🔥 ALERTA PAGO LOCAL TRINIDAD 🔥 */}
-                                    {isTrinidad && totals.total > 0 && (
-                                        <div className="mt-4 p-3 bg-blue-900/20 border border-blue-500/30 rounded-xl">
-                                            <div className="flex items-center gap-2 mb-1">
-                                                <span className="text-lg">🇹🇹</span>
-                                                <p className="text-xs font-bold text-blue-400 uppercase tracking-wide">Pago Local Habilitado</p>
-                                            </div>
-                                            <p className="text-[10px] text-gray-400 mb-2">
-                                                Cobro procesado en tu moneda local para evitar bloqueos del banco. (Tasa: 1 USD = {tasaTTD} TTD).
-                                            </p>
-                                            <div className="pt-2 border-t border-blue-500/20 flex justify-between text-sm font-black text-blue-400">
-                                                <span>Monto exacto a cargar:</span>
-                                                <span>${montoTTD} TTD</span>
-                                            </div>
-                                        </div>
-                                    )}
+                                   {/* 🔥 ALERTA PAGO LOCAL TRINIDAD (MULTILINGÜE) 🔥 */}
+                                   {isTrinidad && totals.total > 0 && (
+                                   <div className="mt-4 p-3 bg-blue-900/20 border border-blue-500/30 rounded-xl mb-3">
+                                   <div className="flex items-center gap-2 mb-1">
+                                  <span className="text-lg">🇹🇹</span>
+                                  <p className="text-xs font-bold text-blue-400 uppercase tracking-wide">{t('localPaymentEnabled')}</p>
+                                  </div>
+                                  <p className="text-[10px] text-gray-400 mb-2">
+                                {t('localPaymentDesc')} ({t('exchangeRateLabel')}: 1 USD = {tasaTTD} TTD).
+                               </p>
+                            <div className="pt-2 border-t border-blue-500/20 flex justify-between text-sm font-black text-blue-400">
+                           <span>{t('amountToCharge')}</span>
+                           <span>${montoTTD} TTD</span>
+                            </div>
+                             </div>
+                             )}
                                     {/* 👆 FIN DEL BLOQUE NUEVO 👆 */}
 
                                     <div className="flex justify-between text-xl font-bold pt-2 border-t border-gray-600 text-gmc-dorado-principal mt-4">
@@ -821,23 +821,25 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                                     </div>
                                 </div>
 
-                                <div className="mb-6">
-                                    <p className="text-xs font-bold text-gray-400 mb-2 uppercase">{tPickup('paymentTitle')}</p>
-                                    {cards.length > 0 ? (
-                                        <div className="space-y-3">
-                                            <div className="bg-gray-700 p-3 rounded flex items-center justify-between border border-gray-600">
-                                                <div className="flex items-center gap-2"><CreditCard size={16}/><span className="text-xs">•••• {cards.find(c => c.id === selectedCardId)?.last4}</span></div>
-                                                <Link href={`/${locale}/account-settings`} className="text-xs text-gmc-dorado-principal">{tPickup('btnChange')}</Link>
-                                            </div>
-                                            <button onClick={handleAddCardRedirect} className="text-xs text-[#EAD8B1] hover:underline flex items-center gap-1"><Plus size={12} /> Agregar nueva (Ir a Configuración)</button>
-                                        </div>
-                                    ) : (
-                                        <button onClick={handleAddCardRedirect} className="w-full py-3 rounded-lg border border-gray-600 bg-gray-700/50 text-white hover:bg-gray-700 transition flex items-center justify-center gap-2 text-sm font-bold group">
-                                            <div className="bg-gray-800 p-1 rounded group-hover:bg-gray-900 transition"><Plus size={16} /></div>
-                                            Agregar Tarjeta en Billetera
-                                        </button>
-                                    )}
-                                </div>
+                               <div className="mb-6">
+                         <p className="text-xs font-bold text-gray-400 mb-2 uppercase">{tPickup('paymentTitle')}</p>
+                        {cards.length > 0 ? (
+                       <div className="space-y-3">
+                      <div className="bg-gray-700 p-3 rounded flex items-center justify-between border border-gray-600">
+                     <div className="flex items-center gap-2"><CreditCard size={16}/><span className="text-xs">•••• {cards.find(c => c.id === selectedCardId)?.last4}</span></div>
+                    <Link href={`/${locale}/account-settings`} className="text-xs text-gmc-dorado-principal">{tPickup('btnChange')}</Link>
+                     </div>
+                   <button onClick={handleAddCardRedirect} className="text-xs text-[#EAD8B1] hover:underline flex items-center gap-1">
+                   <Plus size={12} /> {t('addNewCard')}
+                   </button>
+                   </div>
+                   ) : (
+                 <button onClick={handleAddCardRedirect} className="w-full py-3 rounded-lg border border-gray-600 bg-gray-700/50 text-white hover:bg-gray-700 transition flex items-center justify-center gap-2 text-sm font-bold group">
+                  <div className="bg-gray-800 p-1 rounded group-hover:bg-gray-900 transition"><Plus size={16} /></div>
+                {t('addCardWallet')}
+                </button>
+               )}
+                </div>
 
                                 <button onClick={handlePay} disabled={isProcessing} className="w-full py-3 bg-gmc-dorado-principal text-gmc-gris-oscuro font-bold rounded-xl flex justify-center items-center gap-2 hover:bg-white transition-colors disabled:opacity-50">
                                     {isProcessing ? <Loader2 className="animate-spin"/> : <DollarSign size={18}/>} {t('payNowBtn')}
@@ -979,43 +981,45 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                                         </div>
                                     )}
                                     {/* 👇 INSERTA ESTE BLOQUE AQUÍ (MÓVIL) 👇 */}
-                                    {/* 🔥 ALERTA PAGO LOCAL TRINIDAD 🔥 */}
+                                    {/* 🔥 ALERTA PAGO LOCAL TRINIDAD (MULTILINGÜE) 🔥 */}
                                     {isTrinidad && totals.total > 0 && (
                                         <div className="mt-3 p-3 bg-blue-900/20 border border-blue-500/30 rounded-xl mb-3">
                                             <div className="flex items-center gap-2 mb-1">
                                                 <span className="text-lg">🇹🇹</span>
-                                                <p className="text-xs font-bold text-blue-400 uppercase tracking-wide">Pago Local Habilitado</p>
+                                                <p className="text-xs font-bold text-blue-400 uppercase tracking-wide">{t('localPaymentEnabled')}</p>
                                             </div>
                                             <p className="text-[10px] text-gray-400 mb-2">
-                                                Cobro procesado en moneda local para evitar bloqueos del banco. (Tasa: 1 USD = {tasaTTD} TTD).
+                                                {t('localPaymentDesc')} ({t('exchangeRateLabel')}: 1 USD = {tasaTTD} TTD).
                                             </p>
                                             <div className="pt-2 border-t border-blue-500/20 flex justify-between text-sm font-black text-blue-400">
-                                                <span>Monto a cargar:</span>
+                                                <span>{t('amountToCharge')}</span>
                                                 <span>${montoTTD} TTD</span>
                                             </div>
                                         </div>
                                     )}
                                     {/* 👆 FIN DEL BLOQUE NUEVO 👆 */}
+                                    {/* 👆 FIN DEL BLOQUE NUEVO 👆 */}
 
-                                    <div className="pt-3 border-t border-gray-600 pb-4">
-                                        <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Tarjeta Seleccionada</label>
-                                        {cards.length > 0 ? (
-                                            <div className="space-y-2">
-                                                <div className="relative bg-gray-700 rounded-lg border border-gray-600">
-                                                    <select value={selectedCardId} onChange={(e) => setSelectedCardId(e.target.value)} className="w-full p-2.5 bg-transparent text-white text-sm font-bold outline-none">
-                                                        {cards.map((c: any) => <option key={c.id} value={c.id} className="text-black">•••• {c.last4} ({c.brand})</option>)}
-                                                    </select>
-                                                </div>
-                                                <button onClick={handleAddCardRedirect} className="text-xs text-[#EAD8B1] font-bold flex items-center gap-1 hover:underline">
-                                                    <ExternalLink size={12}/> Gestionar en Configuración
-                                                </button>
-                                            </div>
-                                        ) : (
-                                            <button onClick={handleAddCardRedirect} className="w-full py-2 bg-gray-700 text-white font-bold rounded-lg border border-gray-600 flex items-center justify-center gap-2">
-                                                <Plus size={14}/> Ir a Agregar Tarjeta
-                                            </button>
-                                        )}
-                                    </div>
+                                  <div className="pt-3 border-t border-gray-600 pb-4">
+                                    {/* Usamos tPickup que ya tenías configurado para el título */}
+                                 <label className="block text-xs font-bold text-gray-400 uppercase mb-2">{tPickup('paymentTitle')}</label>
+                                   {cards.length > 0 ? (
+                                 <div className="space-y-2">
+                                 <div className="relative bg-gray-700 rounded-lg border border-gray-600">
+                                <select value={selectedCardId} onChange={(e) => setSelectedCardId(e.target.value)} className="w-full p-2.5 bg-transparent text-white text-sm font-bold outline-none">
+                               {cards.map((c: any) => <option key={c.id} value={c.id} className="text-black">•••• {c.last4} ({c.brand})</option>)}
+                              </select>
+                              </div>
+                             <button onClick={handleAddCardRedirect} className="text-xs text-[#EAD8B1] font-bold flex items-center gap-1 hover:underline">
+                             <ExternalLink size={12}/> {t('manageInSettings')}
+                             </button>
+                             </div>
+                           ) : (
+                            <button onClick={handleAddCardRedirect} className="w-full py-2 bg-gray-700 text-white font-bold rounded-lg border border-gray-600 flex items-center justify-center gap-2">
+                            <Plus size={14}/> {t('goToAddCard')}
+                           </button>
+                             )}
+                             </div>
                                 </div>
                             )}
                         </div>

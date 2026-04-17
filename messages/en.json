@@ -373,7 +373,15 @@
     "discount": "Discount",
     "welcomeBonusApplied": "Welcome Bonus Auto-Applied! 🎁",
     "walletTitle": "REWARDS WALLET",
-    "walletBalance": "Available balance"
+    "walletBalance": "Available balance",
+    "localPaymentEnabled": "LOCAL PAYMENT ENABLED",
+    "localPaymentDesc": "Charge processed in local currency to avoid bank blocks.",
+    "exchangeRateLabel": "Rate",
+    "amountToCharge": "Amount to charge:",
+    "manageInSettings": "Manage in Settings",
+    "goToAddCard": "Go to Add Card",
+    "addCardWallet": "Add Card to Wallet",
+    "addNewCard": "Add new (Go to Settings)"
   },
   "PreAlertPage": {
     "title": "Pre-Alert Package",

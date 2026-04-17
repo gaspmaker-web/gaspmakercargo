@@ -372,7 +372,15 @@
     "discount": "Réduction",
     "welcomeBonusApplied": "Bonus de Bienvenue Automatique ! 🎁",
     "walletTitle": "PORTEFEUILLE DE RÉCOMPENSES",
-    "walletBalance": "Solde disponible"
+    "walletBalance": "Solde disponible",
+    "localPaymentEnabled": "PAIEMENT LOCAL ACTIVÉ",
+    "localPaymentDesc": "Frais traités en monnaie locale pour éviter les blocages bancaires.",
+    "exchangeRateLabel": "Taux",
+    "amountToCharge": "Montant à facturer :",
+    "manageInSettings": "Gérer dans les Paramètres",
+    "goToAddCard": "Aller à Ajouter une Carte",
+    "addCardWallet": "Ajouter une Carte au Portefeuille",
+    "addNewCard": "Ajouter (Aller aux Paramètres)"
   },
   "PreAlertPage": {
     "title": "Pré-Alerter un Colis",

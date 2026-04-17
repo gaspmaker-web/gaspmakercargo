@@ -373,7 +373,15 @@
     "discount": "Descuento",
     "welcomeBonusApplied": "¡Bono de Bienvenida Automático! 🎁",
     "walletTitle": "BILLETERA DE RECOMPENSAS",
-    "walletBalance": "Saldo disponible"
+    "walletBalance": "Saldo disponible",
+    "localPaymentEnabled": "PAGO LOCAL HABILITADO",
+    "localPaymentDesc": "Cobro procesado en moneda local para evitar bloqueos del banco.",
+    "exchangeRateLabel": "Tasa",
+    "amountToCharge": "Monto a cargar:",
+    "manageInSettings": "Gestionar en Configuración",
+    "goToAddCard": "Ir a Agregar Tarjeta",
+    "addCardWallet": "Agregar Tarjeta en Billetera",
+    "addNewCard": "Agregar nueva (Ir a Configuración)"
   },
   "PreAlertPage": {
     "title": "Pre-Alertar Paquete",
