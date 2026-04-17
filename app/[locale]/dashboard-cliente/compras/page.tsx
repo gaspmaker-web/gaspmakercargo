@@ -2,10 +2,15 @@
 
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl"; 
+import { useRouter, useParams } from "next/navigation"; 
+import Link from "next/link"; 
 import { CreditCard, ExternalLink, Package, Receipt, ShieldCheck, ShoppingBag, ListOrdered, Loader2, ChevronDown, ChevronUp } from "lucide-react";
 
 export default function PersonalShopperPage() {
   const t = useTranslations("Shopper");
+  
+  const params = useParams();
+  const locale = params?.locale || "en"; 
 
   // ESTADOS DEL CARRITO (Pestaña 1)
   const [productUrl, setProductUrl] = useState("");
@@ -83,8 +88,6 @@ export default function PersonalShopperPage() {
       });
 
       if (response.ok) {
-        // 🔥 ELIMINAMOS EL ALERT. 
-        // Ahora limpia, recarga y cambia de pestaña mágicamente.
         setCartItems([]); 
         fetchOrdersAndCards(); 
         setActiveTab("quotes"); 
@@ -119,8 +122,6 @@ export default function PersonalShopperPage() {
       });
 
       if (res.ok) {
-        // 🔥 ELIMINAMOS EL ALERT.
-        // Al recargar, la tarjeta cambiará instantáneamente a color verde (PAID).
         fetchOrdersAndCards(); 
       } else {
         const errorData = await res.json();
@@ -250,7 +251,6 @@ export default function PersonalShopperPage() {
         {activeTab === "quotes" && (
           <div className="space-y-4 max-w-4xl mx-auto">
             {isLoadingOrders ? (
-              // 🔥 AQUÍ ESTÁ EL CAMBIO SOLICITADO CON EFECTO PULSE 🔥
               <p className="text-center font-bold text-gray-500 py-10 animate-pulse flex items-center justify-center gap-2">
                 <Loader2 size={18} className="animate-spin" />
                 {t("loadingQuotes") || "Cargando cotizaciones..."}
@@ -359,7 +359,7 @@ export default function PersonalShopperPage() {
                                   <span className="text-2xl font-black text-gray-900">${order.totalAmount?.toFixed(2)}</span>
                                 </div>
 
-                                {/* ZONA DE PAGO */}
+                               {/* ZONA DE PAGO */}
                                 {order.status === "QUOTED" && (
                                   <div className="mt-4 space-y-3">
                                     {savedCards.length > 0 ? (
@@ -390,10 +390,13 @@ export default function PersonalShopperPage() {
                                       </>
                                     ) : (
                                       <div className="text-center p-4 bg-red-50 text-red-600 rounded-lg border border-red-200 text-sm">
-                                        <p className="font-bold">{t("noCards") || "No tienes tarjetas guardadas."}</p>
-                                        <a href="/dashboard-cliente/metodos-pago" className="underline mt-1 inline-block">
-                                          {t("addPaymentMethod") || "Agregar método de pago"}
-                                        </a>
+                                        <p className="font-bold">{t("noCards")}</p>
+                                        <Link 
+                                          href={`/${locale}/account-settings?tab=billing`} 
+                                          className="underline mt-1 font-bold inline-block hover:text-red-800 transition-colors"
+                                        >
+                                          {t("addPaymentMethod")}
+                                        </Link>
                                       </div>
                                     )}
                                   </div>
