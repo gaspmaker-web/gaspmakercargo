@@ -923,15 +923,16 @@
       "legalDisclaimer": "* Le service de Boîte Postale Virtuelle est soumis à nos politiques de stockage physique et à notre Politique d'Utilisation Équitable pour les numérisations de courtoisie. En vous abonnant, vous acceptez nos "
     },
     "premiumPlan": {
-      "badge": "Recommandé",
-      "title": "Premium Cargo",
-      "description": "Pour les clients qui achètent en ligne et ont besoin d'un service tout compris.",
-      "feature1": "Jusqu'à 6 personnes et votre Entreprise (Usage Commercial - Case 2)",
-      "feature2": "Ouverture et Numérisation en PDF GRATUIT !",
-      "feature3": "Déplacer vers le Fret International GRATUIT !",
-      "feature4": "Déchiquetage de documents GRATUIT !",
-      "feature5": "Stockage de lettres jusqu'à 60 jours",
-      "button": "Sélectionner Premium"
+  "badge": "Recommandé",
+  "title": "Premium Cargo",
+  "description": "Pour les clients qui achètent en ligne et ont besoin de tout inclus.",
+  "feature1": "Jusqu'à 6 personnes et votre Entreprise (Usage Professionnel - Box 2)",
+  "feature2": "Ouverture et Numérisation en PDF GRATUITES !",
+  "feature3": "Transfert vers Fret International GRATUIT !",
+  "feature4": "Broyage de documents GRATUIT !",
+  "feature5": "Stockage du courrier jusqu'à 60 jours",
+  "feature6": "Consolidation de colis GRATUITE !",
+  "button": "Sélectionner Premium"
     },
     "footerTrust": "Nous respectons les réglementations du service postal américain (USPS).",
     "monthText": "mois",

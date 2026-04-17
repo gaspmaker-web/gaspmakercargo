@@ -921,15 +921,16 @@
       "legalDisclaimer": "* The Virtual Mailbox service is subject to our physical storage policies and our Fair Use Policy for courtesy scans. By subscribing, you agree to our "
     },
     "premiumPlan": {
-      "badge": "Recommended",
-      "title": "Premium Cargo",
-      "description": "For clients who shop online and need an all-inclusive service.",
-      "feature1": "Up to 6 people and your Company (Business Use - Box 2)",
-      "feature2": "Open and Scan to PDF for FREE!",
-      "feature3": "Move to International Cargo for FREE!",
-      "feature4": "Document shredding for FREE!",
-      "feature5": "Mail storage for up to 60 days",
-      "button": "Select Premium"
+  "badge": "Recommended",
+  "title": "Premium Cargo",
+  "description": "For customers who shop online and need everything included.",
+  "feature1": "Up to 6 people and your Company (Business Use - Box 2)",
+  "feature2": "Opening and Scanning to PDF for FREE!",
+  "feature3": "Move to International Cargo for FREE!",
+  "feature4": "Document shredding for FREE!",
+  "feature5": "Mail storage for up to 60 days",
+  "feature6": "Package consolidation for FREE!",
+  "button": "Select Premium"
     },
     "footerTrust": "We comply with U.S. Postal Service (USPS) regulations.",
     "monthText": "month",

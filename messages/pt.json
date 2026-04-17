@@ -944,16 +944,17 @@
       "legalDisclaimer": "* O serviço de Caixa Postal Virtual está sujeito às nossas políticas de armazenamento físico e à nossa Política de Uso Justo para digitalizações de cortesia. Ao se inscrever, você concorda com nossos "
     },
     "premiumPlan": {
-      "badge": "Recomendado",
-      "title": "Premium Cargo",
-      "description": "Para clientes que compram online e precisam de um serviço com tudo incluído.",
-      "feature1": "Até 6 pessoas e sua Empresa (Uso Comercial - Caixa 2)",
-      "feature2": "Abertura e Digitalização em PDF GRÁTIS!",
-      "feature3": "Mover para Carga Internacional GRÁTIS!",
-      "feature4": "Trituração de documentos GRÁTIS!",
-      "feature5": "Armazenamento de cartas por até 60 dias",
-      "button": "Selecionar Premium"
-    },
+  "badge": "Recomendado",
+  "title": "Premium Cargo",
+  "description": "Para clientes que compram online e precisam de tudo incluído.",
+  "feature1": "Até 6 pessoas e sua Empresa (Uso Comercial - Box 2)",
+  "feature2": "Apertura e Digitalização em PDF GRÁTIS!",
+  "feature3": "Mover para Carga Internacional GRÁTIS!",
+  "feature4": "Trituração de documentos GRÁTIS!",
+  "feature5": "Armazenamento de cartas por até 60 dias",
+  "feature6": "Consolidação de pacotes GRÁTIS!",
+  "button": "Selecionar Premium"
+   },
     "footerTrust": "Cumprimos com as regulamentações do Serviço Postal dos EUA (USPS).",
     "monthText": "mês",
     "savedCardsLabel": "MÉTODO DE PAGAMENTO",

@@ -958,20 +958,22 @@
       "feature5": "Trituración segura: ",
       "feature5Price": "$0.50 por sobre",
       "feature6": "Almacenamiento de correspondencia hasta por 30 días",
+      
       "button": "Seleccionar Básico",
       "legalDisclaimer": "* El servicio de Buzón Virtual está sujeto a nuestras políticas de almacenamiento físico y a nuestra Política de Uso Justo para escaneos de cortesía. Al suscribirte, aceptas nuestros "
     },
     "premiumPlan": {
-      "badge": "Recomendado",
-      "title": "Premium Cargo",
-      "description": "Para clientes que compran por internet y necesitan todo incluido.",
-      "feature1": "Hasta 6 personas y tu Empresa (Business Use - Casilla 2)",
-      "feature2": "Apertura y Escaneo en PDF ¡GRATIS!",
-      "feature3": "Mover a Carga Internacional ¡GRATIS!",
-      "feature4": "Trituración de documentos ¡GRATIS!",
-      "feature5": "Almacenamiento de cartas hasta por 60 días",
-      "button": "Seleccionar Premium"
-    },
+  "badge": "Recomendado",
+  "title": "Premium Cargo",
+  "description": "Para clientes que compran por internet y necesitan todo incluido.",
+  "feature1": "Hasta 6 personas y tu Empresa (Business Use - Casilla 2)",
+  "feature2": "Apertura y Escaneo en PDF ¡GRATIS!",
+  "feature3": "Mover a Carga Internacional ¡GRATIS!",
+  "feature4": "Trituración de documentos ¡GRATIS!",
+  "feature5": "Almacenamiento de cartas hasta por 60 días",
+  "feature6": "Consolidación de paquetes ¡GRATIS!",
+  "button": "Seleccionar Premium"
+   },
     "monthText": "mes",
     "savedCardsLabel": "MÉTODO DE PAGO",
     "payBtn": "Pagar",
