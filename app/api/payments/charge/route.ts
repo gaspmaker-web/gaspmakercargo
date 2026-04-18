@@ -31,8 +31,8 @@ export async function POST(req: Request) {
         planName,        
         shopperOrderId,
         walletDiscount, 
-        discountApplied,
-        isTrinidad // 🔥 NUEVO: Recibimos la orden directa del frontend 
+        discountApplied
+
     } = await req.json();
 
     if (!amountNet || !paymentMethodId) {
@@ -82,17 +82,23 @@ export async function POST(req: Request) {
     let chargeCurrency = 'usd';
 
    // =========================================================================
-    // 🔥 NUEVO: BYPASS DE DIVISAS PARA TRINIDAD Y TOBAGO (Sincronizado con UI)
+    // 🔥 NUEVO: BYPASS DE DIVISAS PARA TRINIDAD Y TOBAGO (NIVEL ENTERPRISE)
     // =========================================================================
-    const GMC_TTD_EXCHANGE_RATE = 7.30; // 🔥 DEBE COINCIDIR CON EL FRONTEND
+    const GMC_TTD_EXCHANGE_RATE = 7.30; 
+    
+    // 🕵️‍♂️ EL SECRETO: Leemos el país DIRECTAMENTE desde Stripe usando el ID guardado
+    const stripePaymentMethod = await stripe.paymentMethods.retrieve(savedCard.stripePaymentMethodId);
+    const isCardFromTrinidad = stripePaymentMethod.card?.country?.toUpperCase() === 'TT';
 
-    if (isTrinidad) {
-        console.log("🇹🇹 Cliente de Trinidad detectado desde el Frontend. Aplicando moneda local.");
+    if (isCardFromTrinidad) {
+        console.log(`🇹🇹 Tarjeta de Trinidad detectada (BIN: ${stripePaymentMethod.card?.country}). Aplicando moneda local para evitar bloqueo.`);
         
         const totalInTTD = totalToCharge * GMC_TTD_EXCHANGE_RATE;
-        amountInCents = Math.round(totalInTTD * 100); // Stripe siempre pide centavos
+        amountInCents = Math.round(totalInTTD * 100); 
         chargeCurrency = 'ttd';
         console.log(`✅ Bypass Activado: Cobrando ${totalInTTD.toFixed(2)} TTD en lugar de ${totalToCharge.toFixed(2)} USD.`);
+    } else {
+        console.log(`🇺🇸 Tarjeta de ${stripePaymentMethod.card?.country || 'USA'} detectada. Cobrando en USD normal.`);
     }
 
     // =========================================================================

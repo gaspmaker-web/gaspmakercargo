@@ -341,8 +341,7 @@ export default function PackageDetailClient({
           discountApplied: discount,
           shippingAddress: formattedAddress,
           walletDiscount: useWallet ? appliedWalletAmount : 0,
-          // 👇 INSERTA ESTA LÍNEA 👇
-          isTrinidad: isTrinidad
+          
         }),
       });
 
@@ -414,22 +413,12 @@ export default function PackageDetailClient({
  let finalTotalAmount = Math.max(0, servicePrice + processingFee + handlingFee + insuranceCost - discount);
   let appliedWalletAmount = 0;
 
-  // 👇 INSERTA ESTE BLOQUE NUEVO AQUÍ 👇
-  // 🔥 LÓGICA DE MONEDA LOCAL PARA TRINIDAD Y TOBAGO (MEJORADA)
-  const countryMatchesTT = (val: string | undefined | null) => {
-    if (!val) return false;
-    const str = val.toLowerCase();
-    return str === 'tt' || str.includes('trinidad');
-  };
-
-  const isTrinidad = countryMatchesTT(currentAddress?.country) || 
-                     countryMatchesTT(currentAddress?.countryCode) || 
-                     countryMatchesTT(userProfile?.country) || 
-                     countryMatchesTT(userProfile?.countryCode);
+// ✅ NUEVA LÓGICA ENTERPRISE: Basada en la Tarjeta ✅
+  const activeCardDetails = cards.find(c => c.id === selectedCardId);
+  const isTrinidad = activeCardDetails?.country?.toUpperCase() === 'TT';
 
   const tasaTTD = 7.30; // Tu Tasa Gasp Maker (1 USD = 7.30 TTD)
   const montoTTD = (finalTotalAmount * tasaTTD).toFixed(2);
-  // 👆 FIN DEL BLOQUE NUEVO 👆
 
   // 🔥 LÓGICA DE BILLETERA (Mínimo $0.50 Stripe)
 

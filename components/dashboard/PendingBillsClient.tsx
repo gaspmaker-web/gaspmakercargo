@@ -272,18 +272,9 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
 
   const totals = calculateTotals();
 
-  // 👇 INSERTA ESTE BLOQUE NUEVO AQUÍ 👇
-  // 🔥 LÓGICA DE MONEDA LOCAL PARA TRINIDAD Y TOBAGO (MEJORADA)
-  const countryMatchesTT = (val: string | undefined | null) => {
-    if (!val) return false;
-    const str = val.toLowerCase();
-    return str === 'tt' || str.includes('trinidad');
-  };
-
-  const isTrinidad = countryMatchesTT(currentAddress?.country) || 
-                     countryMatchesTT(currentAddress?.countryCode) || 
-                     countryMatchesTT(userProfile?.country) || 
-                     countryMatchesTT(userProfile?.countryCode);
+ // ✅ NUEVA LÓGICA ENTERPRISE: Basada en la Tarjeta ✅
+  const activeCardDetails = cards.find(c => c.id === selectedCardId);
+  const isTrinidad = activeCardDetails?.country?.toUpperCase() === 'TT';
 
   const tasaTTD = 7.30; // Tu Tasa Gasp Maker (1 USD = 7.30 TTD)
   const montoTTD = (totals.total * tasaTTD).toFixed(2);
@@ -438,8 +429,7 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                   discountApplied: discount,
                   shippingAddress: finalShippingAddress,
                   walletDiscount: useWallet ? totals.appliedWallet : 0,
-                  // 👇 INSERTA ESTA LÍNEA 👇
-                  isTrinidad: isTrinidad
+                  
               })
           });
           
