@@ -9,6 +9,7 @@ interface SavedCard {
   id: string;
   last4: string;
   brand: string;
+  country?: string; // 🔥 Agregamos country para la lógica Enterprise
 }
 
 interface MailboxCheckoutModalProps {
@@ -30,14 +31,20 @@ export default function MailboxCheckoutModal({
 }: MailboxCheckoutModalProps) {
   const router = useRouter();
   const locale = useLocale();
-  // Asumimos que puedes usar el mismo namespace 'MailboxSetup' o crear uno global como 'Checkout'
   const t = useTranslations('MailboxSetup'); 
+  const tBills = useTranslations('PendingBills'); // 🔥 Traemos las traducciones de la cajita azul
   
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedCardId, setSelectedCardId] = useState<string>(
     savedCards.length > 0 ? savedCards[0].id : ''
   );
+
+  // ✅ NUEVA LÓGICA ENTERPRISE: Basada en la Tarjeta ✅
+  const activeCardDetails = savedCards.find(c => c.id === selectedCardId);
+  const isTrinidadCard = activeCardDetails?.country?.toUpperCase() === 'TT';
+  const tasaTTD = 7.30;
+  const montoTTD = (price * tasaTTD).toFixed(2);
 
   if (!isOpen) return null;
 
@@ -59,10 +66,10 @@ export default function MailboxCheckoutModal({
         body: JSON.stringify({
           amountNet: price,
           paymentMethodId: selectedCardId,
-          // 🔥 AQUÍ ESTÁ EL CAMBIO CLAVE PARA TU BACKEND
           serviceType: 'MailboxSubscription', 
           description: `Pago GMC - ${planName}: ${price.toFixed(2)} USD`,
-          planName: planName, // 🔥 PASAMOS EL NOMBRE DEL PLAN
+          planName: planName, 
+          // ❌ Sin enviar isTrinidad. El backend decide.
         }),
       });
 
@@ -83,8 +90,8 @@ export default function MailboxCheckoutModal({
   };
 
   const handleGoToAddCard = () => {
-    onClose(); // Cerramos el modal primero
-    router.push(`/${locale}/account-settings`); // Redirigimos a la ruta multilingüe
+    onClose(); 
+    router.push(`/${locale}/account-settings`); 
   };
 
   return (
@@ -100,13 +107,12 @@ export default function MailboxCheckoutModal({
           <X size={18} strokeWidth={2.5} />
         </button>
 
-        {/* Título y Precio - Diseño limpio estilo rf136.png */}
+        {/* Título y Precio */}
         <div className="text-center mb-8 mt-2">
           <h2 className="text-[22px] font-bold text-gray-900 font-garamond mb-2">
             {planName}
           </h2>
           <div className="flex items-baseline justify-center gap-1.5">
-            {/* Números en negro como solicitaste */}
             <span className="text-[40px] leading-none font-extrabold text-black">
               ${price.toFixed(2)}
             </span>
@@ -132,7 +138,6 @@ export default function MailboxCheckoutModal({
                   {t('savedCardsLabel') || 'Método de pago'}
                 </label>
                 
-                {/* Lista de tarjetas simulando los inputs del diseño */}
                 {savedCards.map((card) => (
                   <label 
                     key={card.id} 
@@ -160,6 +165,25 @@ export default function MailboxCheckoutModal({
                 ))}
               </div>
 
+              {/* 🔥 ALERTA PAGO LOCAL TRINIDAD (NIVEL ENTERPRISE) 🔥 */}
+              {isTrinidadCard && price > 0 && (
+                  <div className="p-3 bg-blue-900/20 border border-blue-500/30 rounded-xl animate-in fade-in duration-300">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-lg">🇹🇹</span>
+                      <p className="text-xs font-bold text-blue-600 uppercase tracking-wide">
+                        {tBills('localPaymentEnabled') || "Pago Local Habilitado"}
+                      </p>
+                    </div>
+                    <p className="text-[10px] text-gray-500 mb-2">
+                      {tBills('localPaymentDesc') || "Cobro procesado en moneda local para evitar bloqueos del banco."} ({tBills('exchangeRateLabel') || "Tasa"}: 1 USD = {tasaTTD} TTD).
+                    </p>
+                    <div className="pt-2 border-t border-blue-500/20 flex justify-between text-sm font-black text-blue-600">
+                      <span>{tBills('amountToCharge') || "Monto a cargar"}:</span>
+                      <span>${montoTTD} TTD</span>
+                    </div>
+                  </div>
+              )}
+
               {/* Botón Principal (Oscuro) */}
               <button
                 type="submit"
@@ -181,7 +205,7 @@ export default function MailboxCheckoutModal({
             </form>
           ) : (
             
-            /* ESTADO SIN TARJETAS (Botón Go to Add Card) */
+            /* ESTADO SIN TARJETAS */
             <div className="space-y-6">
               <div className="p-4 bg-gray-50 rounded-2xl border border-gray-200 text-center">
                 <CreditCard size={32} className="mx-auto text-gray-400 mb-2" />
