@@ -47,11 +47,17 @@ export default async function PackageDetailPage({ params }: Props) {
     return <div className="p-10 text-center font-bold text-red-500">Acceso Denegado</div>;
   }
 
-  const paymentMethods = await prisma.paymentMethod.findMany({
+ const rawPaymentMethods = await prisma.paymentMethod.findMany({
     where: { userId: session.user.id },
     orderBy: { isDefault: 'desc' },
-    select: { id: true, brand: true, last4: true }
+    select: { id: true, brand: true, last4: true, stripePaymentMethodId: true }
   });
+
+  const paymentMethods = await Promise.all(
+    rawPaymentMethods.map(async (card) => {
+      // ... cruzamos con Stripe para agregarle "country"
+    })
+  );
 
   // 🔥 NUEVO: Traemos TODAS las direcciones de la libreta, ordenando la DEFAULT primero
   const userAddresses = await prisma.address.findMany({
