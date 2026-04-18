@@ -8,6 +8,7 @@ import { CreditCard, ExternalLink, Package, Receipt, ShieldCheck, ShoppingBag, L
 
 export default function PersonalShopperPage() {
   const t = useTranslations("Shopper");
+  const tBills = useTranslations("PendingBills"); // 🔥 Aprovechamos tus traducciones existentes
   
   const params = useParams();
   const locale = params?.locale || "en"; 
@@ -118,6 +119,7 @@ export default function PersonalShopperPage() {
           description: `Pago de Personal Shopper Orden #${orderId.slice(-6).toUpperCase()}`,
           serviceType: "Personal Shopper",
           shopperOrderId: orderId
+          // ❌ Sin enviar isTrinidad. El backend decide.
         })
       });
 
@@ -263,6 +265,11 @@ export default function PersonalShopperPage() {
               myOrders.map((order) => {
                 const isExpanded = expandedOrderId === order.id;
 
+                // ✅ NUEVA LÓGICA ENTERPRISE: Basada en la Tarjeta ✅
+                const activeCardDetails = savedCards.find(c => c.id === selectedCard);
+                const isTrinidadCard = activeCardDetails?.country?.toUpperCase() === 'TT';
+                const tasaTTD = 7.30; 
+
                 return (
                   <div key={order.id} className={`bg-white rounded-2xl shadow-sm border transition-all duration-300 overflow-hidden ${isExpanded ? 'border-gray-300 ring-2 ring-[#e6c200]/50 shadow-md' : 'border-gray-200 hover:border-gray-300'}`}>
                     
@@ -378,6 +385,25 @@ export default function PersonalShopperPage() {
                                             </option>
                                           ))}
                                         </select>
+
+                                        {/* 🔥 ALERTA PAGO LOCAL TRINIDAD (NIVEL ENTERPRISE) 🔥 */}
+                                        {isTrinidadCard && order.totalAmount > 0 && (
+                                            <div className="p-3 bg-blue-900/20 border border-blue-500/30 rounded-xl animate-in fade-in duration-300">
+                                              <div className="flex items-center gap-2 mb-1">
+                                                <span className="text-lg">🇹🇹</span>
+                                                <p className="text-xs font-bold text-blue-600 uppercase tracking-wide">
+                                                  {tBills('localPaymentEnabled') || "Pago Local Habilitado"}
+                                                </p>
+                                              </div>
+                                              <p className="text-[10px] text-gray-500 mb-2">
+                                                {tBills('localPaymentDesc') || "Cobro procesado en moneda local para evitar bloqueos del banco."} ({tBills('exchangeRateLabel') || "Tasa"}: 1 USD = {tasaTTD} TTD).
+                                              </p>
+                                              <div className="pt-2 border-t border-blue-500/20 flex justify-between text-sm font-black text-blue-600">
+                                                <span>{tBills('amountToCharge') || "Monto a cargar"}:</span>
+                                                <span>${(order.totalAmount * tasaTTD).toFixed(2)} TTD</span>
+                                              </div>
+                                            </div>
+                                        )}
 
                                         <button 
                                           onClick={() => handlePayment(order.id, order.totalAmount)}

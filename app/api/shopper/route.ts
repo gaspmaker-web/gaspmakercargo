@@ -1,6 +1,7 @@
-import { NextResponse } from "next/server"; // 🔥 ESTA ES LA LÍNEA QUE FALTABA
+import { NextResponse } from "next/server"; 
 import { auth } from "@/auth"; 
 import prisma from "@/lib/prisma";
+import { stripe } from "@/lib/stripe"; // 🔥 Importamos Stripe para validar el país
 
 export async function GET(req: Request) {
   try {
@@ -19,7 +20,24 @@ export async function GET(req: Request) {
       where: { userId: session.user.id }
     });
 
-    return NextResponse.json({ orders, savedCards }); 
+    // 🔥 NIVEL ENTERPRISE: Enriquecemos las tarjetas locales con el país real de Stripe
+    const cardsWithStripeData = await Promise.all(
+      savedCards.map(async (card) => {
+        try {
+          const stripePm = await stripe.paymentMethods.retrieve(card.stripePaymentMethodId);
+          return {
+            ...card,
+            country: stripePm.card?.country || null // <- Aquí capturamos el país (Ej: 'TT', 'US')
+          };
+        } catch (stripeError) {
+          console.error(`Error consultando Stripe para la tarjeta ${card.id}:`, stripeError);
+          return { ...card, country: null };
+        }
+      })
+    );
+
+    // Enviamos las tarjetas ya enriquecidas al frontend
+    return NextResponse.json({ orders, savedCards: cardsWithStripeData }); 
   } catch (error) {
     return NextResponse.json({ error: "Error al obtener órdenes" }, { status: 500 });
   }
