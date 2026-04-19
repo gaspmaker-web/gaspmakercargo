@@ -139,7 +139,7 @@ export default function MenuMovilClient() {
         </div>
 
         <div className="text-center pt-8 opacity-60">
-            <p className="text-xs font-garamond italic text-gmc-dorado-principal">GaspMakerLLC &copy; {new Date().getFullYear()}</p>
+            <p className="text-xs font-garamond italic text-gmc-dorado-principal">Gasp Maker LLC &copy; {new Date().getFullYear()}</p>
         </div>
 
       </div>

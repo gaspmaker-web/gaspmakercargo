@@ -33,7 +33,7 @@ export default function Footer() {
             3. COPYRIGHT ORIGINAL
             ========================================= */}
         <p className="text-xs md:text-sm text-gray-500 font-montserrat">
-            &copy; {new Date().getFullYear()} GaspMakerLLC {t('copyright')}
+            &copy; {new Date().getFullYear()} Gasp Maker LLC {t('copyright')}
         </p>
         
       </div>
