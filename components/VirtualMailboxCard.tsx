@@ -95,19 +95,37 @@ export default function VirtualMailboxCard({
 
   if (!currentPlan && !hasMailbox) {
     return (
-      <div className="bg-white rounded-xl shadow-md p-5 border border-gray-100 relative overflow-hidden h-full flex flex-col">
-        <div className="absolute top-0 right-0 bg-blue-600 text-white text-[10px] font-bold px-3 py-1 rounded-bl-lg uppercase tracking-wider">
-          {t('badgeNew') || 'Nuevo'}
+        /* VISTA 1: EL CLIENTE NO TIENE BUZÓN (Mostrar tarjeta oscura de Desbloqueo - op15) */
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col overflow-hidden group hover:shadow-md transition-shadow relative h-full">
+            <div className="p-6 flex-1">
+                <div className="absolute top-4 right-4 bg-blue-600 text-white px-2 py-1 rounded text-[9px] font-bold uppercase tracking-wider shadow-sm">
+                    {t('badgeNew') || 'Nuevo Servicio'}
+                </div>
+                
+                <div className="flex items-center gap-2 mb-3">
+                    <div className="bg-blue-50 p-2 rounded-lg">
+                        <Mail className="text-blue-500" size={20} />
+                    </div>
+                    <h3 className="font-bold text-gray-800 text-base">{t('titleSales') || 'Buzón Virtual USA'}</h3>
+                </div>
+                
+                <p className="text-gray-500 text-sm leading-relaxed pr-8">
+                    {t('descSales') || 'Recibe correspondencia, tarjetas de crédito y documentos del banco en tu propia suite en Miami.'}
+                </p>
+            </div>
+            
+            {/* 🔥 BOTÓN OSCURO DE DESBLOQUEO (Apunta a mailbox-setup) 🔥 */}
+            <Link 
+                href="/dashboard-cliente/mailbox-setup" 
+                className="bg-[#1a1f2e] text-white p-4 flex justify-between items-center hover:bg-gmc-dorado-principal hover:text-black transition-colors group-hover:bg-[#222b3c] mt-auto"
+            >
+                <span className="text-sm font-bold leading-tight text-left">
+                    Desbloquear desde<br/>
+                    <span className="text-gmc-dorado-principal group-hover:text-black transition-colors">$7.99/mes</span>
+                </span>
+                <ArrowRight size={18} className="text-gray-400 group-hover:text-black transition-colors" />
+            </Link>
         </div>
-        <div className="flex items-center gap-2 mb-2">
-          <Mail className="text-blue-600" size={22} shrink-0 />
-          <h2 className="text-lg font-bold text-gray-800">{t('titleSales') || 'Buzón Virtual'}</h2>
-        </div>
-        <p className="text-sm text-gray-600 mb-4 flex-1">{t('descSales') || 'Obtén tu dirección en Miami y gestiona tus compras.'}</p>
-        <Link href="/dashboard-cliente/mailbox-setup" className="w-full bg-gray-900 text-white font-semibold py-2.5 rounded-lg hover:bg-gray-800 transition flex items-center justify-center gap-2 text-sm mt-auto shrink-0">
-          {t('btnUnlock') || 'Activar Buzón'} <ArrowRight size={16} />
-        </Link>
-      </div>
     );
   }
 

@@ -57,7 +57,8 @@ export async function GET(req: Request) {
         titularStatus: subscription.status, // 🔥 EL ESTADO LEGAL ESTRICTO DEL TITULAR
         planType: subscription.planType, 
         hasUploadedMainDocs, 
-        additionalPeopleCount, 
+        additionalPeopleCount,
+        rejectionReason: subscription.rejectionReason, // 🔥 AQUÍ ENVIAMOS EL MOTIVO AL FRONTEND
         message: hasUploadedMainDocs ? "Documents in review" : "Action required"
       }, { status: 200 });
     }
@@ -65,11 +66,12 @@ export async function GET(req: Request) {
     return NextResponse.json({
       hasPlan: true,
       status: effectiveStatus, 
-      titularStatus: subscription.status, // 🔥 EL ESTADO LEGAL ESTRICTO DEL TITULAR
+      titularStatus: subscription.status, 
       planType: subscription.planType,
       unreadCount: user.mailItems.length,
       hasUploadedMainDocs,
       additionalPeopleCount,
+      rejectionReason: subscription.rejectionReason, // 🔥 Lo agregamos aquí también por seguridad
       message: "Active mailbox"
     }, { status: 200 });
 
