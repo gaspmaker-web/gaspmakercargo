@@ -5,8 +5,8 @@ import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { 
     MapPin, Layers, Truck, Building2, 
-    ArrowRight, CheckCircle, ShieldCheck, Globe, Info 
-} from 'lucide-react';
+    ArrowRight, CheckCircle, ShieldCheck, Globe, Info, Mail 
+} from 'lucide-react'; // 🔥 IMPORTAMOS EL ÍCONO 'Mail'
 
 // 🛡️ ESCUDO NUCLEAR: Evita errores de generación estática
 export const dynamic = 'force-dynamic';
@@ -77,7 +77,39 @@ export default function ServicesPage() {
 
             {/* SERVICES GRID */}
             <div className="max-w-7xl mx-auto px-4 -mt-20 relative z-20 mb-20">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    
+                   {/* 🔥 LA NUEVA TARJETA DEL EMBUDO (Buzón Virtual) 🔥 */}
+                    <div className="bg-white rounded-2xl p-8 shadow-2xl hover:-translate-y-2 transition-all duration-300 border-2 border-gmc-dorado-principal relative group flex flex-col">
+                        {/* Etiqueta de Nuevo Servicio */}
+                        <div className="absolute top-4 right-4 bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider shadow-sm">
+                            {t('mailboxBadgeNew')}
+                        </div>
+                        
+                        <div className="flex justify-between items-start mb-6">
+                            <div className="w-14 h-14 rounded-2xl flex items-center justify-center bg-blue-50 text-blue-600 group-hover:scale-110 transition-transform duration-300 shadow-sm">
+                                <Mail size={28} />
+                            </div>
+                        </div>
+                        
+                        <h3 className="text-xl font-bold text-gray-800 mb-3 font-garamond group-hover:text-gmc-dorado-principal transition-colors">
+                            {t('mailboxTitle')}
+                        </h3>
+                        
+                        <p className="text-gray-500 text-sm leading-relaxed mb-6 flex-grow">
+                            {t('mailboxDesc')}
+                        </p>
+                        
+                      {/* 🔥 BOTÓN CON RUTA CORREGIDA 🔥 */}
+                        <Link 
+                            href="/mailbox" 
+                            className="w-full text-center py-3 rounded-xl bg-gmc-gris-oscuro text-white font-bold hover:bg-gmc-dorado-principal hover:text-black transition-colors shadow-md flex justify-center items-center gap-2 mt-auto"
+                        >
+                            {t('mailboxBtn')} <ArrowRight size={16}/>
+                        </Link>
+                    </div>
+
+                    {/* LAS DEMÁS TARJETAS DE SERVICIOS */}
                     {services.map((service) => (
                         <div 
                             key={service.id} 
@@ -104,7 +136,7 @@ export default function ServicesPage() {
                                 {service.desc}
                             </p>
 
-                            {/* 🔥 NUEVO: ALERTA VISUAL (Solo para Consolidation) */}
+                            {/* Alerta Visual Consolidation */}
                             {service.id === 'consolidation' && (
                                 <div className="mb-6 p-3 bg-amber-50 border border-amber-100 rounded-xl flex gap-3 items-start animate-in fade-in slide-in-from-bottom-2">
                                     <Info className="text-amber-600 shrink-0 mt-0.5" size={16} />

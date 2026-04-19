@@ -34,6 +34,7 @@ export default function KycSetupPage() {
   const [hasPrimaryDocs, setHasPrimaryDocs] = useState(false); 
   
   const [kycStatus, setKycStatus] = useState<string | null>(null);
+  const [rejectionReason, setRejectionReason] = useState<string | null>(null); // 🔥 NUEVO ESTADO
 
   useEffect(() => {
     const fetchUserPlan = async () => {
@@ -54,6 +55,10 @@ export default function KycSetupPage() {
           setHasPrimaryDocs(data.hasUploadedMainDocs || false);
           
           setKycStatus(data.titularStatus || data.status || null); 
+          // 🔥 GUARDAMOS EL MOTIVO DEL RECHAZO
+          setRejectionReason(data.rejectionReason || null);
+          
+          
         }
       } catch (error) {
         console.error("No se pudo verificar el plan del cliente", error);
@@ -252,7 +257,7 @@ export default function KycSetupPage() {
 
                   <form onSubmit={handleSubmit} className="space-y-8 animate-in fade-in duration-500">
                     
-                    {!isCorrectionMode && hasPrimaryDocs ? (
+                  {!isCorrectionMode && hasPrimaryDocs ? (
                       <div className="bg-green-50 border border-green-200 rounded-2xl p-6 text-center shadow-sm">
                         <CheckCircle2 className="text-green-500 mx-auto mb-3" size={40} />
                         <h3 className="text-green-800 font-bold text-lg mb-1">{t('primaryAccountHolder')}</h3>
@@ -262,12 +267,31 @@ export default function KycSetupPage() {
                       </div>
                     ) : (
                       <div className="space-y-5">
+                          
+                          {/* 🔥 NUEVO CUADRO ROJO CON EL MOTIVO DEL RECHAZO EXACTO 🔥 */}
                           {isCorrectionMode && (
-                            <div className="bg-red-50 border border-red-200 p-4 rounded-xl flex items-start gap-3">
-                                <AlertCircle className="text-red-600 shrink-0 mt-0.5" size={20} />
-                                <div>
-                                    <p className="text-red-800 font-bold text-sm">{t('rejectedDocsTitle') || 'Documentos Rechazados'}</p>
-                                    <p className="text-red-600 text-xs mt-1">{t('rejectedDocsDesc') || 'Por favor, vuelve a subir tus archivos corregidos aquí para una nueva revisión.'}</p>
+                            <div className="bg-red-50 border border-red-200 p-5 rounded-xl flex items-start gap-4 shadow-sm">
+                                <AlertCircle className="text-red-600 shrink-0 mt-0.5" size={24} />
+                                <div className="w-full">
+                                    <p className="text-red-800 font-bold text-base mb-1">
+                                      {t('rejectedDocsTitle')}
+                                    </p>
+                                    <p className="text-red-700 text-sm mb-3">
+                                      {t('rejectedDocsReason')}
+                                    </p>
+                                    
+                                    {/* 🔥 Aquí se imprime la nota que el admin dejó en la BD (Ej: "FALT") */}
+                                    {rejectionReason && (
+                                      <div className="bg-white/60 p-3 rounded-lg border border-red-100 mb-2">
+                                        <p className="font-mono text-red-900 font-bold text-sm break-words">
+                                          "{rejectionReason}"
+                                        </p>
+                                      </div>
+                                    )}
+                                    
+                                    <p className="text-red-600 text-xs font-medium">
+                                      {t('rejectedDocsDesc')}
+                                    </p>
                                 </div>
                             </div>
                           )}
