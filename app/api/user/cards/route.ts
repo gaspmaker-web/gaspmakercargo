@@ -3,21 +3,40 @@ import { NextResponse } from "next/server";
 // 👇 VACUNA 1: Forzar modo dinámico (Vital para Stripe)
 export const dynamic = 'force-dynamic';
 
-// GET: Listar tarjetas guardadas
+// GET: Listar tarjetas guardadas (🔥 AHORA ENRIQUECIDAS CON STRIPE 🔥)
 export async function GET(req: Request) {
   // 👇 VACUNA 2: Imports dentro de la función (Lazy Loading)
   const { auth } = await import("@/auth");
   const prisma = (await import("@/lib/prisma")).default;
+  const { stripe } = await import("@/lib/stripe"); // 🔥 IMPORTAMOS STRIPE AQUÍ TAMBIÉN
 
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ message: "No autorizado" }, { status: 401 });
 
-  const cards = await prisma.paymentMethod.findMany({
+  const rawCards = await prisma.paymentMethod.findMany({
     where: { userId: session.user.id },
     orderBy: { isDefault: 'desc' } // Muestra la predeterminada primero
   });
 
-  return NextResponse.json({ cards });
+  // 🔥 NIVEL ENTERPRISE: Cruzamos con Stripe para extraer el país (country)
+  const cardsWithCountry = await Promise.all(
+    rawCards.map(async (card) => {
+      try {
+        if (!card.stripePaymentMethodId) return { ...card, country: null };
+        const stripePm = await stripe.paymentMethods.retrieve(card.stripePaymentMethodId);
+        return {
+          ...card,
+          country: stripePm.card?.country || null
+        };
+      } catch (error) {
+        console.error(`Error consultando Stripe para la tarjeta ${card.id}:`, error);
+        return { ...card, country: null };
+      }
+    })
+  );
+
+  // Devolvemos las tarjetas ya con el país incluido
+  return NextResponse.json({ cards: cardsWithCountry });
 }
 
 // POST: Guardar referencia de tarjeta nueva

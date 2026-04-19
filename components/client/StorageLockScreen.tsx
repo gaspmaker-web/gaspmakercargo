@@ -3,13 +3,14 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Lock, DollarSign, Clock, AlertTriangle, Box, Loader2, CreditCard, X, CheckCircle, Plus } from 'lucide-react';
-// 🔥 1. Importamos el hook
+// 🔥 1. Importamos los hooks de traducciones
 import { useTranslations } from 'next-intl';
 
 interface PaymentMethod {
     id: string;
     brand: string;
     last4: string;
+    country?: string; // 🔥 Agregamos el país que ahora viene desde el servidor
 }
 
 interface Props {
@@ -27,6 +28,7 @@ export default function StorageLockScreen({
 }: Props) {
   // 🔥 2. Inicializamos traducciones
   const t = useTranslations('StorageLock'); 
+  const tBills = useTranslations('PendingBills'); // 🔥 Traemos las traducciones de la cajita azul
   
   const [loading, setLoading] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false); 
@@ -39,9 +41,15 @@ export default function StorageLockScreen({
   const stripeFee = storageDebt * 0.072;
   const totalToPay = storageDebt + stripeFee;
 
+  // ✅ NUEVA LÓGICA ENTERPRISE: Basada en la Tarjeta ✅
+  const activeCardDetails = paymentMethods.find(c => c.id === selectedCard);
+  const isTrinidadCard = activeCardDetails?.country?.toUpperCase() === 'TT';
+  const tasaTTD = 7.30;
+  const montoTTD = (totalToPay * tasaTTD).toFixed(2);
+
   const handleProcessPayment = async () => {
     if (!selectedCard) {
-        alert(t('alertSelectMethod')); // "Por favor selecciona un método de pago."
+        alert(t('alertSelectMethod')); 
         return;
     }
 
@@ -53,7 +61,7 @@ export default function StorageLockScreen({
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 packageId: pkg.id,
-                amount: totalToPay, // 🔥 Enviamos el TOTAL con el fee del 7.2% incluido
+                amount: totalToPay, 
                 paymentMethodId: selectedCard
             })
         });
@@ -64,11 +72,11 @@ export default function StorageLockScreen({
             setShowPaymentModal(false);
             router.refresh(); 
         } else {
-            alert(data.message || t('alertError')); // "❌ Error al procesar el pago."
+            alert(data.message || t('alertError')); 
         }
     } catch (error) {
         console.error(error);
-        alert(t('alertConnection')); // "Error de conexión."
+        alert(t('alertConnection')); 
     } finally {
         setLoading(false);
     }
@@ -99,6 +107,25 @@ export default function StorageLockScreen({
                             </p>
                         </div>
                         
+                        {/* 🔥 ALERTA PAGO LOCAL TRINIDAD (NIVEL ENTERPRISE) 🔥 */}
+                        {isTrinidadCard && totalToPay > 0 && (
+                            <div className="mb-4 p-3 bg-blue-900/10 border border-blue-500/30 rounded-xl text-left animate-in fade-in">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="text-lg">🇹🇹</span>
+                                <p className="text-[11px] font-bold text-blue-700 uppercase tracking-wide">
+                                  {tBills('localPaymentEnabled') || "Pago Local Habilitado"}
+                                </p>
+                              </div>
+                              <p className="text-[10px] text-gray-600 mb-2 leading-tight">
+                                {tBills('localPaymentDesc') || "Cobro procesado en moneda local para evitar bloqueos del banco."} ({tBills('exchangeRateLabel') || "Tasa"}: 1 USD = {tasaTTD} TTD).
+                              </p>
+                              <div className="pt-2 border-t border-blue-500/20 flex justify-between text-xs font-black text-blue-700">
+                                <span>{tBills('amountToCharge') || "Monto a cargar"}:</span>
+                                <span>${montoTTD} TTD</span>
+                              </div>
+                            </div>
+                        )}
+
                         <p className="text-xs font-bold text-gray-500 uppercase mb-3">{t('savedCards')}</p>
                         <div className="space-y-3 mb-6">
                             {paymentMethods.length > 0 ? (

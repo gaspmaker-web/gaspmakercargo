@@ -1,5 +1,6 @@
 import { auth } from '@/auth';
 import prisma from '@/lib/prisma';
+import { stripe } from '@/lib/stripe';
 import { redirect } from 'next/navigation';
 import PackageDetailClient from '@/components/PackageDetailClient';
 import StorageLockScreen from '@/components/client/StorageLockScreen';
@@ -55,7 +56,20 @@ export default async function PackageDetailPage({ params }: Props) {
 
   const paymentMethods = await Promise.all(
     rawPaymentMethods.map(async (card) => {
-      // ... cruzamos con Stripe para agregarle "country"
+      try {
+        if (!card.stripePaymentMethodId) {
+          return { id: card.id, brand: card.brand, last4: card.last4, country: null };
+        }
+        const stripePm = await stripe.paymentMethods.retrieve(card.stripePaymentMethodId);
+        return {
+          id: card.id,
+          brand: card.brand,
+          last4: card.last4,
+          country: stripePm.card?.country || null
+        };
+      } catch (error) {
+        return { id: card.id, brand: card.brand, last4: card.last4, country: null };
+      }
     })
   );
 
