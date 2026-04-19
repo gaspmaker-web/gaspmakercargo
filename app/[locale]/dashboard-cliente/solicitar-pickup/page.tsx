@@ -35,6 +35,7 @@ const GOOGLE_LIBRARIES: ("places")[] = ["places"];
 
 export default function SolicitarPickupPage() {
   const t = useTranslations('Pickup');
+  const tBills = useTranslations('PendingBills'); // 🔥 Importamos traducciones de la cajita azul
   const router = useRouter();
   
   const inventorySectionRef = useRef<HTMLDivElement>(null);
@@ -180,6 +181,12 @@ export default function SolicitarPickupPage() {
     };
     calculateTotal();
   }, [formData.weightTier, formData.volumeTier, formData.exactWeight, quote.distanceMiles, isLoaded, serviceType, inventory]);
+
+  // ✅ NUEVA LÓGICA ENTERPRISE: Basada en la Tarjeta ✅
+  const activeCardDetails = cards.find(c => c.id === selectedCardId);
+  const isTrinidadCard = activeCardDetails?.country?.toUpperCase() === 'TT';
+  const tasaTTD = 7.30;
+  const montoTTD = (quote.total * tasaTTD).toFixed(2);
 
   // --- MAPS & VALIDACIÓN ---
   const handleOriginChange = () => {
@@ -668,7 +675,7 @@ export default function SolicitarPickupPage() {
                     )}
                 </div>
 
-                {!isBodega && (
+               {!isBodega && (
                     <div className="hidden lg:block lg:col-span-1">
                         <div className="bg-gmc-gris-oscuro text-white p-6 rounded-2xl shadow-xl sticky top-6">
                             <h3 className="font-bold text-gmc-dorado-principal text-lg mb-4 border-b border-gray-600 pb-2">{t('summaryTitle')}</h3>
@@ -686,6 +693,24 @@ export default function SolicitarPickupPage() {
                                     <span>${quote.total.toFixed(2)}</span>
                                 </div>
                             </div>
+                            
+                            {/* 🔥 ALERTA PAGO LOCAL TRINIDAD (DESKTOP) 🔥 */}
+                            {isTrinidadCard && quote.total > 0 && (
+                                <div className="mt-4 p-3 bg-blue-900/40 border border-blue-500/50 rounded-xl mb-4">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <span className="text-lg">🇹🇹</span>
+                                        <p className="text-xs font-bold text-blue-300 uppercase tracking-wide">{tBills('localPaymentEnabled')}</p>
+                                    </div>
+                                    <p className="text-[10px] text-gray-300 mb-2">
+                                        {tBills('localPaymentDesc')} ({tBills('exchangeRateLabel')}: 1 USD = {tasaTTD} TTD).
+                                    </p>
+                                    <div className="pt-2 border-t border-blue-500/30 flex justify-between text-sm font-black text-blue-300">
+                                        <span>{tBills('amountToCharge')}</span>
+                                        <span>${montoTTD} TTD</span>
+                                    </div>
+                                </div>
+                            )}
+
                             <div className="mb-4">
                                 <p className="text-xs font-bold text-gray-400 mb-2 uppercase">{t('paymentTitle')}</p>
                                 {cards.length > 0 ? (
@@ -726,7 +751,7 @@ export default function SolicitarPickupPage() {
                         </button>
                     </div>
 
-                    {showMobileSummary && (
+   {showMobileSummary && (
                         <div className="mt-5 pt-5 border-t border-gray-600 animate-fadeIn text-sm space-y-3">
                             <div className="flex justify-between text-gray-300">
                                 <span>Service Base</span>
@@ -739,6 +764,23 @@ export default function SolicitarPickupPage() {
                                 <span>Processing Fee</span>
                                 <span>+${quote.processingFee.toFixed(2)}</span>
                             </div>
+                            
+                            {/* 🔥 ALERTA PAGO LOCAL TRINIDAD (MÓVIL) 🔥 */}
+                            {isTrinidadCard && quote.total > 0 && (
+                                <div className="mt-3 p-3 bg-blue-900/40 border border-blue-500/50 rounded-xl mb-3">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <span className="text-lg">🇹🇹</span>
+                                        <p className="text-xs font-bold text-blue-300 uppercase tracking-wide">{tBills('localPaymentEnabled')}</p>
+                                    </div>
+                                    <p className="text-[10px] text-gray-300 mb-2">
+                                        {tBills('localPaymentDesc')} ({tBills('exchangeRateLabel')}: 1 USD = {tasaTTD} TTD).
+                                    </p>
+                                    <div className="pt-2 border-t border-blue-500/30 flex justify-between text-sm font-black text-blue-300">
+                                        <span>{tBills('amountToCharge')}</span>
+                                        <span>${montoTTD} TTD</span>
+                                    </div>
+                                </div>
+                            )}
                             
                             <div className="pt-4 mt-2 border-t border-gray-600">
                                 <label className="block text-xs font-bold text-gray-400 uppercase mb-2">PAYING WITH</label>
