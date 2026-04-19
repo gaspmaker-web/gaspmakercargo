@@ -2,7 +2,11 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma"; 
 import { auth } from "@/auth"; 
 
+// 🔥 EL ESCUDO NUCLEAR: Agrega esta línea justo aquí 🔥
+export const dynamic = 'force-dynamic';
+
 export async function GET(req: Request) {
+  // ... aquí continúa el resto de tu código ...
   try {
     const session = await auth();
     
