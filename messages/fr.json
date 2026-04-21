@@ -1162,6 +1162,7 @@
     "gmcFee": "Service Shopper (GMC)",
     "cardFee": "Frais de Carte",
     "totalToPay": "Total à Payer",
+    "payWith": "Payer avec",
     "noOrders": "Vous n'avez pas encore de demandes précédentes.",
     "reviewingLinks": "Nous examinons vos liens. Vous verrez bientôt le coût exact ici pour pouvoir procéder au paiement.",
     "loadingQuotes": "Chargement des devis...",
