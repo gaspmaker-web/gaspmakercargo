@@ -1167,6 +1167,9 @@
     "reviewingLinks": "Nous examinons vos liens. Vous verrez bientôt le coût exact ici pour pouvoir procéder au paiement.",
     "loadingQuotes": "Chargement des devis...",
     "calculating": "Calcul en cours...",
+    "quote": "Devis",
+    "itemSingle": "article",
+    "itemPlural": "articles",
     "noCards": "Aucune carte enregistrée.",
     "addPaymentMethod": "Ajoutez un moyen de paiement dans les Paramètres pour continuer.",
     "itemsRequested": "Articles Demandés"

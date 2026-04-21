@@ -292,7 +292,7 @@ export default function PersonalShopperPage() {
                           <div className="flex items-center gap-2 text-xs text-gray-500 mt-0.5">
                             <span>{new Date(order.createdAt).toLocaleDateString()}</span>
                             <span>•</span>
-                            <span>{order.items.length} {order.items.length === 1 ? 'artículo' : 'artículos'}</span>
+                            <span>{order.items.length} {order.items.length === 1 ? t('itemSingle') : t('itemPlural')}</span>
                           </div>
                         </div>
                       </div>
