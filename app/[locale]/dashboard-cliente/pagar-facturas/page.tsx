@@ -87,11 +87,15 @@ export default async function PagarFacturasPage({ params: { locale } }: { params
         type = 'WAREHOUSE_PICKUP';
         displayService = 'Retiro en Bodega';
 
-        // Aplicamos la tabla In-Out por paquete
+       // Aplicamos la tabla In-Out por paquete
         let totalHandlingForPickup = 0;
         if (s.packages && s.packages.length > 0) {
             s.packages.forEach(pkg => {
-                const weight = pkg.weight || pkg.peso || 1;
+                // 🔥 TRUCO TYPESCRIPT: Usamos 'any' para evitar el error de Prisma
+                const p = pkg as any; 
+                // Buscamos el peso bajo cualquier nombre que tenga tu BD
+                const weight = p.weightLbs || p.weight || p.peso || 1;
+                
                 if (weight <= 10) totalHandlingForPickup += 2.50;
                 else if (weight <= 50) totalHandlingForPickup += 5.00;
                 else if (weight <= 150) totalHandlingForPickup += 12.50;
