@@ -238,16 +238,8 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
               if (rate) {
                   itemServicePrice = rate.price;
               } else {
-                  // 🔥 CORRECCIÓN: Si es WAREHOUSE_PICKUP o STORAGE, el precio del servicio es exactamente el totalAmount, sin restar nada.
-                  const isRetiroOAlmacenaje = bill.type === 'WAREHOUSE_PICKUP' || bill.type === 'STORAGE';
-                  
-                  if (isRetiroOAlmacenaje) {
-                      itemServicePrice = bill.totalAmount || 0;
-                  } else {
-                      // Solo para envíos internacionales, le restamos el handlingFee para evitar doble cobro (porque se suma más abajo en handlingSubtotal)
-                      const totalFromServer = bill.totalAmount || 0;
-                      itemServicePrice = Math.max(0, totalFromServer - (bill.handlingFee || 0) - ins);
-                  }
+                  const totalFromServer = bill.totalAmount || 0;
+                  itemServicePrice = Math.max(0, totalFromServer - (bill.handlingFee || 0) - ins);
               }
               
               serviceSubtotal += itemServicePrice;
