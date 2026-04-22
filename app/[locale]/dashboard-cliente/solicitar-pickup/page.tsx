@@ -5,14 +5,13 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { 
     Truck, MapPin, Warehouse, CreditCard, Info, Loader2, Package, Check, 
-    ChevronDown, ChevronUp, Calendar, Phone, Weight, Building2, AlertTriangle, XCircle, Clock
+    ChevronDown, ChevronUp, Calendar, Phone, Weight, AlertTriangle, Clock
 } from 'lucide-react';
 import { useJsApiLoader, Autocomplete } from '@react-google-maps/api';
 import { getProcessingFee } from '@/lib/stripeCalc';
 import { useTranslations } from 'next-intl';
 
 // --- CONFIGURACIÓN DE TARIFAS (HANDLING RATES) ---
-// 🔥 NUEVA ESTRATEGIA COMPETITIVA
 const FEE_MINI = 2.50;       // 0-10 lbs (Compite con iPostal1)
 const FEE_STANDARD = 5.00;   // 11-50 lbs
 const FEE_HEAVY = 12.50;     // 51-150 lbs
@@ -35,7 +34,7 @@ const GOOGLE_LIBRARIES: ("places")[] = ["places"];
 
 export default function SolicitarPickupPage() {
   const t = useTranslations('Pickup');
-  const tBills = useTranslations('PendingBills'); // 🔥 Importamos traducciones de la cajita azul
+  const tBills = useTranslations('PendingBills'); 
   const router = useRouter();
   
   const inventorySectionRef = useRef<HTMLDivElement>(null);
@@ -59,7 +58,7 @@ export default function SolicitarPickupPage() {
     { id: 'v_30', label: t('volLow'), price: 30 },
     { id: 'v_55', label: t('volMed'), price: 55 },
     { id: 'v_75', label: t('volHigh'), price: 75 },
-    { id: 'v_250', label: t('volFull'), price: 250 }, // Full Freight
+    { id: 'v_250', label: t('volFull'), price: 250 }, 
   ];
 
   const [step, setStep] = useState(1);
@@ -182,7 +181,7 @@ export default function SolicitarPickupPage() {
     calculateTotal();
   }, [formData.weightTier, formData.volumeTier, formData.exactWeight, quote.distanceMiles, isLoaded, serviceType, inventory]);
 
-  // ✅ NUEVA LÓGICA ENTERPRISE: Basada en la Tarjeta ✅
+  // ✅ LÓGICA ENTERPRISE: Basada en la Tarjeta
   const activeCardDetails = cards.find(c => c.id === selectedCardId);
   const isTrinidadCard = activeCardDetails?.country?.toUpperCase() === 'TT';
   const tasaTTD = 7.30;
@@ -277,7 +276,13 @@ export default function SolicitarPickupPage() {
 
         if (serviceType === 'SHIPPING') {
             const leg1 = await getLeg(GMC_WAREHOUSE_ADDRESS, origin); 
-            totalMiles = leg1 * 2; 
+            
+            // 🔥 REGLA DE ORO: Solo Low Volume cobra 1 vía. El resto paga el regreso.
+            if (formData.volumeTier === 'v_30') {
+                totalMiles = leg1; 
+            } else {
+                totalMiles = leg1 * 2; 
+            }
         } 
         else if (serviceType === 'DELIVERY') {
             if (!destination) return;
@@ -285,11 +290,12 @@ export default function SolicitarPickupPage() {
             const leg1 = await getLeg(GMC_WAREHOUSE_ADDRESS, origin); 
             const leg2 = await getLeg(origin, destination);           
             
+            // 🔥 REGLA DE ORO: Solo Low Volume cobra trayecto útil. El resto paga el circuito completo.
             if (formData.volumeTier === 'v_30') {
                 totalMiles = leg1 + leg2;
             } else {
                 const leg3 = await getLeg(destination, GMC_WAREHOUSE_ADDRESS); 
-                totalMiles = leg1 + leg2 + leg3;
+                totalMiles = leg1 + leg2 + leg3; 
             }
         }
 
@@ -335,7 +341,6 @@ export default function SolicitarPickupPage() {
     setFormData({...formData, pickupDate: val});
     validateTimeWindow(val);
   };
-
 
   const handlePaymentAndSubmit = async () => {
     if (serviceType !== 'PICKUP_WAREHOUSE') {
@@ -419,7 +424,7 @@ export default function SolicitarPickupPage() {
     finally { setIsLoading(false); }
   };
 
- if (!isLoaded) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin text-gmc-dorado-principal"/></div>;
+  if (!isLoaded) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin text-gmc-dorado-principal"/></div>;
 
   if (step === 2) {
       return (
@@ -514,7 +519,6 @@ export default function SolicitarPickupPage() {
                                 </div>
                             )}
                             
-                            {/* 🔥 LA NUEVA TABLA VISUAL DE PRECIOS PARA EL CLIENTE */}
                             <div className="mt-6 bg-yellow-50 p-4 rounded-lg border border-yellow-100 text-xs text-yellow-800">
                                 <p className="font-bold mb-2 flex items-center gap-2"><Info size={14}/> {t('handlingRatesTitle')}</p>
                                 <ul className="space-y-1 pl-1">
@@ -677,32 +681,29 @@ export default function SolicitarPickupPage() {
                     <div className="hidden lg:block lg:col-span-1">
                         <div className="bg-gmc-gris-oscuro text-white p-6 rounded-2xl shadow-xl sticky top-6">
                             <h3 className="font-bold text-gmc-dorado-principal text-lg mb-4 border-b border-gray-600 pb-2">{t('summaryTitle')}</h3>
-                           <div className="space-y-3 text-sm mb-4">
-    <div className="flex justify-between">
-        <span>{t('sumService')}</span>
-        <span className="font-mono font-bold">${quote.baseFare.toFixed(2)}</span>
-    </div>
-    {quote.distanceSurcharge > 0 && (
-        <div className="flex justify-between">
-            <span>{t('sumDistance')}</span>
-            <span>+${quote.distanceSurcharge.toFixed(2)}</span>
-        </div>
-    )}
-    <div className="flex justify-between text-gray-400 text-xs">
-        <span>Processing Fee</span>
-        <span>+${quote.processingFee.toFixed(2)}</span>
-    </div>
-    <div className="flex justify-between text-xl font-bold pt-2 border-t border-gray-600 text-gmc-dorado-principal">
-        <span>{t('sumTotal')}</span>
-        <span>${quote.total.toFixed(2)}</span>
-    </div>
-</div>
+                            
+                            {/* 🔥 NUESTRO BLOQUE CORREGIDO 🔥 */}
+                            <div className="space-y-3 text-sm mb-4">
+                                <div className="flex justify-between">
+                                    <span>{t('sumService')}</span>
+                                    <span className="font-mono font-bold">${quote.baseFare.toFixed(2)}</span>
+                                </div>
+                                {quote.distanceSurcharge > 0 && (
+                                    <div className="flex justify-between">
+                                        <span>{t('sumDistance')}</span>
+                                        <span>+${quote.distanceSurcharge.toFixed(2)}</span>
+                                    </div>
+                                )}
+                                <div className="flex justify-between text-gray-400 text-xs">
+                                    <span>Processing Fee</span>
+                                    <span>+${quote.processingFee.toFixed(2)}</span>
+                                </div>
                                 <div className="flex justify-between text-xl font-bold pt-2 border-t border-gray-600 text-gmc-dorado-principal">
                                     <span>{t('sumTotal')}</span>
                                     <span>${quote.total.toFixed(2)}</span>
                                 </div>
                             </div>
-                            
+
                             {/* 🔥 ALERTA PAGO LOCAL TRINIDAD (DESKTOP) 🔥 */}
                             {isTrinidadCard && quote.total > 0 && (
                                 <div className="mt-4 p-3 bg-blue-900/40 border border-blue-500/50 rounded-xl mb-4">
@@ -760,7 +761,7 @@ export default function SolicitarPickupPage() {
                         </button>
                     </div>
 
-   {showMobileSummary && (
+                    {showMobileSummary && (
                         <div className="mt-5 pt-5 border-t border-gray-600 animate-fadeIn text-sm space-y-3">
                             <div className="flex justify-between text-gray-300">
                                 <span>Service Base</span>
@@ -774,7 +775,6 @@ export default function SolicitarPickupPage() {
                                 <span>+${quote.processingFee.toFixed(2)}</span>
                             </div>
                             
-                            {/* 🔥 ALERTA PAGO LOCAL TRINIDAD (MÓVIL) 🔥 */}
                             {isTrinidadCard && quote.total > 0 && (
                                 <div className="mt-3 p-3 bg-blue-900/40 border border-blue-500/50 rounded-xl mb-3">
                                     <div className="flex items-center gap-2 mb-1">
