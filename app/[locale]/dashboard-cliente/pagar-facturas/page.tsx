@@ -7,9 +7,6 @@ export const metadata = {
   title: 'Pagar Facturas | Gasp Maker Cargo',
 };
 
-// 💰 CONSTANTE: Fee de Manejo (Solo para internacionales)
-const INTERNATIONAL_HANDLING_FEE = 10.00;
-
 export default async function PagarFacturasPage({ params: { locale } }: { params: { locale: string } }) {
   const session = await auth();
 
@@ -60,31 +57,6 @@ export default async function PagarFacturasPage({ params: { locale } }: { params
   });
 
   // 3. MAPEAR DATOS (CON LA CORRECCIÓN DE LÓGICA DE NEGOCIO)
-  const bills = pendingShipments.map(s => {
-    
-    // =========================================================================
-    // 🛡️ LÓGICA BLINDADA PARA DETECTAR PICKUP / RETIRO
-    // =========================================================================
-    
-    let isStorePickup = false;
-    let displayService = s.courierService || 'Envío';
-
-    // 1. Verificar por ID (Si empieza con PICKUP)
-    const isIdPickup = s.gmcShipmentNumber?.toUpperCase().startsWith('PICKUP');
-    
-    // 2. Verificar por Tipo de Servicio (Backend usa STORAGE_FEE para pickups)
-    const isTypeStorage = s.serviceType === 'STORAGE_FEE' || s.serviceType?.includes('STORAGE') || s.serviceType === 'PICKUP';
-    
-    // 3. Verificar por Texto del servicio (Por si acaso dice 'Cita' o 'Pickup')
-    const isServiceTextPickup = s.courierService?.toLowerCase().includes('pickup') || s.courierService?.toLowerCase().includes('cita');
-
-    // SI CUMPLE CUALQUIERA, ES UN RETIRO
-    if (isIdPickup || isTypeStorage || isServiceTextPickup) {
-        displayService = 'Retiro en Bodega'; // Forzamos el nombre correcto
-        isStorePickup = true;
-    }
-    
-   // 3. MAPEAR DATOS (CON LA CORRECCIÓN DE LÓGICA DE NEGOCIO)
   const bills = pendingShipments.map(s => {
     
     // =========================================================================
