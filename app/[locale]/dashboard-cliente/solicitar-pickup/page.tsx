@@ -125,7 +125,7 @@ export default function SolicitarPickupPage() {
       }, 100);
   };
 
-  // --- 3. CÁLCULOS ---
+ // --- 3. CÁLCULOS ---
   useEffect(() => {
     if (!isLoaded && serviceType !== 'PICKUP_WAREHOUSE') return;
     const calculateTotal = () => {
@@ -133,7 +133,27 @@ export default function SolicitarPickupPage() {
         let distanceSurcharge = 0;
 
         if (serviceType === 'PICKUP_WAREHOUSE') {
-             subtotal = 0; 
+             // 🔥 NUEVA LÓGICA: Cobrar Handling Fee por cada paquete en la bodega
+             let totalHandling = 0;
+             
+             if (inventory && inventory.length > 0) {
+                 inventory.forEach(pkg => {
+                     // Toma el peso del paquete. Si no tiene peso registrado, asume 1 lb por defecto (tarifa Mini).
+                     const weight = pkg.weight || pkg.peso || 1; 
+                     
+                     if (weight <= 10) {
+                         totalHandling += FEE_MINI;       // + $2.50
+                     } else if (weight <= 50) {
+                         totalHandling += FEE_STANDARD;   // + $5.00
+                     } else if (weight <= 150) {
+                         totalHandling += FEE_HEAVY;      // + $12.50
+                     } else {
+                         totalHandling += FEE_PALLET;     // + $30.00
+                     }
+                 });
+             }
+             
+             subtotal = totalHandling; 
         } else {
             let tp = 0;
             if (formData.weightTier === 'w_heavy') {
