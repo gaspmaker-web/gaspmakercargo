@@ -419,9 +419,7 @@ export default function SolicitarPickupPage() {
     finally { setIsLoading(false); }
   };
 
-  const serviceWithFee = quote.baseFare + quote.processingFee;
-
-  if (!isLoaded) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin text-gmc-dorado-principal"/></div>;
+ if (!isLoaded) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin text-gmc-dorado-principal"/></div>;
 
   if (step === 2) {
       return (
@@ -679,15 +677,26 @@ export default function SolicitarPickupPage() {
                     <div className="hidden lg:block lg:col-span-1">
                         <div className="bg-gmc-gris-oscuro text-white p-6 rounded-2xl shadow-xl sticky top-6">
                             <h3 className="font-bold text-gmc-dorado-principal text-lg mb-4 border-b border-gray-600 pb-2">{t('summaryTitle')}</h3>
-                            <div className="space-y-3 text-sm mb-4">
-                                <div className="flex justify-between">
-                                    <span>{t('sumService')}</span>
-                                    <span className="font-mono font-bold">${serviceWithFee.toFixed(2)}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span>{t('sumDistance')}</span>
-                                    <span>+${quote.distanceSurcharge.toFixed(2)}</span>
-                                </div>
+                           <div className="space-y-3 text-sm mb-4">
+    <div className="flex justify-between">
+        <span>{t('sumService')}</span>
+        <span className="font-mono font-bold">${quote.baseFare.toFixed(2)}</span>
+    </div>
+    {quote.distanceSurcharge > 0 && (
+        <div className="flex justify-between">
+            <span>{t('sumDistance')}</span>
+            <span>+${quote.distanceSurcharge.toFixed(2)}</span>
+        </div>
+    )}
+    <div className="flex justify-between text-gray-400 text-xs">
+        <span>Processing Fee</span>
+        <span>+${quote.processingFee.toFixed(2)}</span>
+    </div>
+    <div className="flex justify-between text-xl font-bold pt-2 border-t border-gray-600 text-gmc-dorado-principal">
+        <span>{t('sumTotal')}</span>
+        <span>${quote.total.toFixed(2)}</span>
+    </div>
+</div>
                                 <div className="flex justify-between text-xl font-bold pt-2 border-t border-gray-600 text-gmc-dorado-principal">
                                     <span>{t('sumTotal')}</span>
                                     <span>${quote.total.toFixed(2)}</span>
