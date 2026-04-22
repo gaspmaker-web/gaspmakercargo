@@ -84,47 +84,82 @@ export default async function PagarFacturasPage({ params: { locale } }: { params
         isStorePickup = true;
     }
     
+   // 3. MAPEAR DATOS (CON LA CORRECCIÓN DE LÓGICA DE NEGOCIO)
+  const bills = pendingShipments.map(s => {
+    
     // =========================================================================
-    // 💰 CÁLCULO DE FEES
+    // 🛡️ LÓGICA BLINDADA: SEPARAR PICKUP, STORAGE Y ENVÍO
     // =========================================================================
     
-    // Regla de Oro: Solo cobramos los $10 si NO es retiro en tienda.
+    let type = 'CONSOLIDATION';
+    let displayService = s.courierService || 'Envío';
     let handlingFee = 0;
+    let finalSubtotal = s.subtotalAmount || 0;
 
-    if (!isStorePickup) {
-        // Solo aplicamos el fee si es un envío internacional real
-        handlingFee = INTERNATIONAL_HANDLING_FEE;
+    // 1. Identificadores
+    const isIdPickup = s.gmcShipmentNumber?.toUpperCase().startsWith('PICKUP');
+    const isServicePickup = s.serviceType === 'PICKUP' || s.courierService?.toLowerCase().includes('pickup') || s.courierService?.toLowerCase().includes('cita');
+    
+    // 🚨 CRÍTICO: Detectar si es un cobro de Almacenaje (Storage)
+    const isStorage = s.serviceType === 'STORAGE_FEE' || s.serviceType?.includes('STORAGE');
+
+    if (isStorage) {
+        // 📦 ESCENARIO 1: PAGO DE ALMACENAJE (Imágenes op40 y op41)
+        type = 'STORAGE';
+        displayService = 'Cargo por Almacenaje';
+        // Se respeta intacto el finalSubtotal que viene de la BD (ej. los $3.45 por el volumen)
+        handlingFee = 0; 
+        
+    } else if (isIdPickup || isServicePickup) {
+        // 🏬 ESCENARIO 2: RETIRO EN BODEGA (Imagen op39)
+        type = 'WAREHOUSE_PICKUP';
+        displayService = 'Retiro en Bodega';
+
+        // Aplicamos la tabla In-Out por paquete
+        let totalHandlingForPickup = 0;
+        if (s.packages && s.packages.length > 0) {
+            s.packages.forEach(pkg => {
+                const weight = pkg.weight || pkg.peso || 1;
+                if (weight <= 10) totalHandlingForPickup += 2.50;
+                else if (weight <= 50) totalHandlingForPickup += 5.00;
+                else if (weight <= 150) totalHandlingForPickup += 12.50;
+                else totalHandlingForPickup += 30.00;
+            });
+        }
+        
+        finalSubtotal = 0; // El flete es 0 porque vienen a buscarlo
+        handlingFee = totalHandlingForPickup;
+        
+    } else {
+        // ✈️ ESCENARIO 3: ENVÍO INTERNACIONAL / CONSOLIDACIÓN
+        type = 'CONSOLIDATION';
+        // YA NO SE COBRAN LOS $10 DE HANDLING FEE. 
+        handlingFee = 0;
+        // Se respeta el costo de flete original que calculó el admin (finalSubtotal)
     }
 
     // Calcular Total Final
-    const currentTotal = s.totalAmount || 0;
-    
-    // IMPORTANTE: Si la factura ya incluía el fee en la BD, no lo sumamos de nuevo visualmente
-    // Pero como estamos recalculando 'handlingFee' para mostrarlo separado, asumimos que 's.totalAmount'
-    // viene limpio o ajustamos según tu lógica de base de datos.
-    // Para seguridad visual: Total = Subtotal BD + Fee Calculado Aquí
-    const finalTotalAmount = (s.subtotalAmount || currentTotal) + handlingFee;
+    const finalTotalAmount = finalSubtotal + handlingFee;
 
     // Etiqueta visual
     const labelId = s.gmcShipmentNumber || s.id.slice(0, 8).toUpperCase();
-    const typeLabel = isStorePickup ? 'Solicitud de Retiro' : 'Consolidación';
+    let typeLabel = 'Consolidación';
+    if (type === 'WAREHOUSE_PICKUP') typeLabel = 'Solicitud de Retiro';
+    if (type === 'STORAGE') typeLabel = 'Cargo por Almacenaje';
 
     return {
       id: s.id,
-      type: isStorePickup ? 'WAREHOUSE_PICKUP' : 'CONSOLIDATION',
-      
+      type: type,
       description: `${typeLabel} #${labelId}`,
       gmcShipmentNumber: s.gmcShipmentNumber,
       createdAt: s.createdAt,
       
       // --- MONTOS AJUSTADOS ---
-      // Usamos el subtotal base de la BD y le sumamos el fee calculado dinámicamente
       totalAmount: finalTotalAmount, 
-      subtotalAmount: s.subtotalAmount || 0,
+      subtotalAmount: finalSubtotal,
       handlingFee: handlingFee,      
       
       declaredValue: s.declaredValue || 0,
-
       weightLbs: s.weightLbs || 0,
       lengthIn: s.lengthIn || 0,
       widthIn: s.widthIn || 0,
