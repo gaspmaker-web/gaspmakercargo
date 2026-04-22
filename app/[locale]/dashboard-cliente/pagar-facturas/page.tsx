@@ -68,32 +68,24 @@ export default async function PagarFacturasPage({ params: { locale } }: { params
     let handlingFee = 0;
     let finalSubtotal = s.subtotalAmount || 0;
 
-    // 1. Identificadores
+   // 1. Identificadores
     const isIdPickup = s.gmcShipmentNumber?.toUpperCase().startsWith('PICKUP');
     const isServicePickup = s.serviceType === 'PICKUP' || s.courierService?.toLowerCase().includes('pickup') || s.courierService?.toLowerCase().includes('cita');
     
     // 🚨 CRÍTICO: Detectar si es un cobro de Almacenaje (Storage)
     const isStorage = s.serviceType === 'STORAGE_FEE' || s.serviceType?.includes('STORAGE');
 
-    if (isStorage) {
-        // 📦 ESCENARIO 1: PAGO DE ALMACENAJE (Imágenes op40 y op41)
-        type = 'STORAGE';
-        displayService = 'Cargo por Almacenaje';
-        // Se respeta intacto el finalSubtotal que viene de la BD (ej. los $3.45 por el volumen)
-        handlingFee = 0; 
-        
-    } else if (isIdPickup || isServicePickup) {
-        // 🏬 ESCENARIO 2: RETIRO EN BODEGA (Imagen op39)
+    // 🔥 LA SOLUCIÓN: Evaluamos PRIMERO si el ID o el Servicio indican que es un Retiro.
+    if (isIdPickup || isServicePickup) {
+        // 🏬 ESCENARIO 1: RETIRO EN BODEGA (Imagen op39 y op43)
         type = 'WAREHOUSE_PICKUP';
         displayService = 'Retiro en Bodega';
 
-       // Aplicamos la tabla In-Out por paquete
+        // Aplicamos la tabla In-Out por paquete
         let totalHandlingForPickup = 0;
         if (s.packages && s.packages.length > 0) {
             s.packages.forEach(pkg => {
-                // 🔥 TRUCO TYPESCRIPT: Usamos 'any' para evitar el error de Prisma
                 const p = pkg as any; 
-                // Buscamos el peso bajo cualquier nombre que tenga tu BD
                 const weight = p.weightLbs || p.weight || p.peso || 1;
                 
                 if (weight <= 10) totalHandlingForPickup += 2.50;
@@ -106,12 +98,17 @@ export default async function PagarFacturasPage({ params: { locale } }: { params
         finalSubtotal = 0; // El flete es 0 porque vienen a buscarlo
         handlingFee = totalHandlingForPickup;
         
+    } else if (isStorage) {
+        // 📦 ESCENARIO 2: PAGO DE ALMACENAJE (Llega aquí solo si no es un Pickup real)
+        type = 'STORAGE';
+        displayService = 'Cargo por Almacenaje';
+        // Se respeta intacto el finalSubtotal que viene de la BD
+        handlingFee = 0; 
+        
     } else {
         // ✈️ ESCENARIO 3: ENVÍO INTERNACIONAL / CONSOLIDACIÓN
         type = 'CONSOLIDATION';
-        // YA NO SE COBRAN LOS $10 DE HANDLING FEE. 
         handlingFee = 0;
-        // Se respeta el costo de flete original que calculó el admin (finalSubtotal)
     }
 
     // Calcular Total Final
