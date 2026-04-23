@@ -32,43 +32,50 @@ const formatDate = (date: Date) => {
 };
 
 export default async function FinanzasPage() {
-  
-// ==============================================================================
-  // 1. CONSULTAS DE AGREGACIÓN (CARGA TRADICIONAL Y PICKUPS)
+
+// 🔥 LA REGLA DE NEGOCIO: 30 Días Gratis
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+  // ==============================================================================
+  // 1. CONSULTAS DE AGREGACIÓN Y PAQUETES MOROSOS
   // ==============================================================================
   
-  const [packageStats, packageDebtStats, consolidationStats, pickupStats] = await Promise.all([
-    // A. Para ingresos y deuda de FLETES (filtramos los paquetes hijos para no duplicar dinero)
+  const [packageStats, packagesInDebt, consolidationStats, pickupStats] = await Promise.all([
+    // A. Ingresos de fletes (filtramos los hijos para no duplicar dinero)
     prisma.package.aggregate({
       where: { consolidatedShipmentId: null }, 
-      _sum: {
-        shippingTotalPaid: true, 
-        shippingSubtotal: true   // 🔥 Quitamos storageDebt de aquí
-      },
+      _sum: { shippingTotalPaid: true, shippingSubtotal: true },
       _count: { id: true }
     }),
-    // B. 🔥 NUEVA: Para la deuda de ALMACENAJE (Sumamos TODOS los paquetes de la bodega, sin filtro)
-    prisma.package.aggregate({
-      _sum: {
-        storageDebt: true 
-      }
+    // B. 🔥 TRAEMOS LOS PAQUETES MOROSOS PARA CALCULAR LA DEUDA EN VIVO
+    prisma.package.findMany({
+      where: {
+        AND: [
+          {
+            OR: [
+              { storageDebt: { gt: 0 } },
+              { status: { contains: 'BLOCK', mode: 'insensitive' } },
+              { createdAt: { lt: thirtyDaysAgo } } 
+            ]
+          },
+          { status: { notIn: ['ENTREGADO', 'DELIVERED', 'COMPLETADO', 'ENVIADO', 'SHIPPED'] } }
+        ]
+      },
+      select: { createdAt: true, storageDebt: true, lengthIn: true, widthIn: true, heightIn: true }
     }),
     // C. Consolidaciones
     prisma.consolidatedShipment.aggregate({
-      _sum: {
-        totalAmount: true,       
-      },
+      _sum: { totalAmount: true },
       _count: { id: true }
     }),
     // D. Pickups
     prisma.pickupRequest.aggregate({
-      _sum: {
-        totalPaid: true,
-        subtotal: true
-      },
+      _sum: { totalPaid: true, subtotal: true },
       _count: { id: true }
     })
   ]);
+
 // ==============================================================================
   // 2. INGRESOS DEL BUZÓN VIRTUAL (LECTURA EXACTA DE TRANSACCIONES Y SERVICIOS)
   // ==============================================================================
@@ -120,10 +127,28 @@ export default async function FinanzasPage() {
   // B. INGRESO GLOBAL DE LA EMPRESA
   const grandTotalIncome = totalIncomeCarga + incomePickups + totalIncomeBuzon;
 
-  // C. CUENTAS POR COBRAR (Deuda)
+ // C. CUENTAS POR COBRAR (Deuda)
   
-  // 🔥 AHORA LEEMOS EL ALMACENAJE DE LA NUEVA CONSULTA GLOBAL:
-  const debtStorage = packageDebtStats._sum.storageDebt || 0; 
+  // 🔥 CÁLCULO DE ALMACENAJE "AL VUELO" (Igual que en Control de Almacenaje)
+  let calculatedStorageDebt = 0;
+  const msPerDay = 1000 * 60 * 60 * 24;
+
+  packagesInDebt.forEach(p => {
+    let debt = p.storageDebt || 0;
+    const daysInWarehouse = Math.floor((new Date().getTime() - new Date(p.createdAt).getTime()) / msPerDay);
+    
+    if (debt === 0 && daysInWarehouse > 30) {
+        const length = p.lengthIn || 10;
+        const width = p.widthIn || 10;
+        const height = p.heightIn || 10;
+        const volumeFt3 = (length * width * height) / 1728;
+        const monthsOverdue = Math.ceil((daysInWarehouse - 30) / 30);
+        debt = monthsOverdue * 2.25 * volumeFt3;
+    }
+    calculatedStorageDebt += debt;
+  });
+
+  const debtStorage = calculatedStorageDebt; // 🔴 La variable final que va a la tarjeta roja
   
   const subtotalPackages = packageStats._sum.shippingSubtotal || 0;
   const debtShipping = Math.max(0, subtotalPackages - incomePackages);
