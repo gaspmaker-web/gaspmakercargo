@@ -37,23 +37,30 @@ export default async function FinanzasPage() {
   // 1. CONSULTAS DE AGREGACIÓN (CARGA TRADICIONAL Y PICKUPS)
   // ==============================================================================
   
-  const [packageStats, consolidationStats, pickupStats] = await Promise.all([
+  const [packageStats, packageDebtStats, consolidationStats, pickupStats] = await Promise.all([
+    // A. Para ingresos y deuda de FLETES (filtramos los paquetes hijos para no duplicar dinero)
     prisma.package.aggregate({
-      // 🔥 FILTRO ANTI-CLONES: Ignorar los paquetes que ya pertenecen a un Pickup o Consolidación
       where: { consolidatedShipmentId: null }, 
       _sum: {
         shippingTotalPaid: true, 
-        storageDebt: true,       
-        shippingSubtotal: true   
+        shippingSubtotal: true   // 🔥 Quitamos storageDebt de aquí
       },
       _count: { id: true }
     }),
+    // B. 🔥 NUEVA: Para la deuda de ALMACENAJE (Sumamos TODOS los paquetes de la bodega, sin filtro)
+    prisma.package.aggregate({
+      _sum: {
+        storageDebt: true 
+      }
+    }),
+    // C. Consolidaciones
     prisma.consolidatedShipment.aggregate({
       _sum: {
         totalAmount: true,       
       },
       _count: { id: true }
     }),
+    // D. Pickups
     prisma.pickupRequest.aggregate({
       _sum: {
         totalPaid: true,
@@ -62,7 +69,6 @@ export default async function FinanzasPage() {
       _count: { id: true }
     })
   ]);
-
 // ==============================================================================
   // 2. INGRESOS DEL BUZÓN VIRTUAL (LECTURA EXACTA DE TRANSACCIONES Y SERVICIOS)
   // ==============================================================================
@@ -115,7 +121,10 @@ export default async function FinanzasPage() {
   const grandTotalIncome = totalIncomeCarga + incomePickups + totalIncomeBuzon;
 
   // C. CUENTAS POR COBRAR (Deuda)
-  const debtStorage = packageStats._sum.storageDebt || 0;
+  
+  // 🔥 AHORA LEEMOS EL ALMACENAJE DE LA NUEVA CONSULTA GLOBAL:
+  const debtStorage = packageDebtStats._sum.storageDebt || 0; 
+  
   const subtotalPackages = packageStats._sum.shippingSubtotal || 0;
   const debtShipping = Math.max(0, subtotalPackages - incomePackages);
   const debtPickups = Math.max(0, (pickupStats._sum.subtotal || 0) - incomePickups);
