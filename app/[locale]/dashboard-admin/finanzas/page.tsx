@@ -221,15 +221,18 @@ export default async function FinanzasPage() {
       status: c.status,
       client: c.user.name || c.user.email,
     })),
-    ...pickups.map(pk => ({
+   ...pickups.map(pk => ({
       id: pk.id.substring(0, 8).toUpperCase(),
-      type: 'Pickup',
+      // 🔥 MEJORA VISUAL: Si es un cobro de almacenaje, que diga "Almacenaje"
+      type: pk.serviceType === 'STORAGE' || pk.serviceType === 'STORAGE_FEE' ? 'Almacenaje' : 'Pickup',
       date: pk.createdAt,
       amount: pk.totalPaid || 0,
-      debt: (pk.subtotal || 0) - (pk.totalPaid || 0),
+      // Usamos Math.max para que la deuda nunca salga negativa
+      debt: Math.max(0, (pk.subtotal || 0) - (pk.totalPaid || 0)),
       status: pk.status,
-      client: pk.user.name || pk.user.email,
+      client: pk.user?.name || pk.user?.email || 'N/A',
     })),
+    
     // 🔥 NUEVO: Mapeamos los recibos reales (Transacciones) a la tabla
     ...mailboxTxs.map(tx => ({
       id: tx.stripePaymentId ? `STRIPE-${tx.stripePaymentId.substring(0,8)}` : `TX-${tx.id.substring(0, 6).toUpperCase()}`,
