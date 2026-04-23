@@ -331,7 +331,7 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
     }, 800);
   };
 
-  // 5. PAGAR
+// 5. PAGAR (Versión Limpia)
   const handlePay = async () => {
       if (!selectedCardId) {
           setShowMobileSummary(true); 
@@ -377,11 +377,10 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
              const bill = bills.find(b => b.id === id);
              const rate = selectedRateMap[id];
              
-           const isConsolidated = bill?.serviceType === 'CONSOLIDATION' || 
+             const isConsolidated = bill?.serviceType === 'CONSOLIDATION' || 
                                     bill?.description?.toLowerCase().includes('consolid') ||
                                     (bill?.packages && bill?.packages.length > 1);
              
-             // 🔥 REPLICA LÓGICA DE EXCLUSIÓN PARA EL SERVIDOR DE PAGOS
              let dynamicHandling = 0;
              if (isConsolidated && bill?.packages) {
                  let chargeablePackagesCount = 0;
@@ -421,24 +420,25 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
               return [billId]; 
           });
 
-        const payRes = await fetch('/api/payments/charge', {
+          const payloadToSend = {
+              amountNet: totals.total,
+              paymentMethodId: selectedCardId,
+              serviceType: 'BILL_PAYMENT',
+              description: `Pago Envíos (${totals.count}) ${discount > 0 ? "(Promo Applied)" : ""}`,
+              packageIds: allPackageIds,
+              billDetails: billsPayload, 
+              billIds: selectedBillIds,          
+              selectedCourier: selectedCourier,  
+              courierService: courierService,
+              discountApplied: discount,
+              shippingAddress: finalShippingAddress,
+              walletDiscount: useWallet ? totals.appliedWallet : 0,
+          };
+
+          const payRes = await fetch('/api/payments/charge', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                  amountNet: totals.total,
-                  paymentMethodId: selectedCardId,
-                  serviceType: 'BILL_PAYMENT',
-                  description: `Pago Envíos (${totals.count}) ${discount > 0 ? "(Promo Applied)" : ""}`,
-                  packageIds: allPackageIds,
-                  billDetails: billsPayload, 
-                  billIds: selectedBillIds,          
-                  selectedCourier: selectedCourier,  
-                  courierService: courierService,
-                  discountApplied: discount,
-                  shippingAddress: finalShippingAddress,
-                  walletDiscount: useWallet ? totals.appliedWallet : 0,
-                  
-              })
+              body: JSON.stringify(payloadToSend)
           });
           
           if (!payRes.ok) {
@@ -455,7 +455,6 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
           router.push(`/${locale}/dashboard-cliente`);
 
       } catch (e: any) { 
-          console.error(e);
           alert(e.message); 
       }
       finally { setIsProcessing(false); }

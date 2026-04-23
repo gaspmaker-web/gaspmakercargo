@@ -178,15 +178,67 @@ export default async function DashboardPage({ params: { locale } }: Props) {
     const s = pkg.status?.toUpperCase().trim() || '';
     return !['ENTREGADO', 'DELIVERED', 'CANCELADO', 'ENTREGADO_HISTORICO', 'EN_PROCESAMIENTO'].includes(s);
   });
-
-  // 3. Deuda Global
+// 3. Deuda Global (Sincronizada y Protegida contra Driver Pickups)
   const pendingBills = await prisma.consolidatedShipment.findMany({
-    where: { userId: session.user.id, status: 'PENDIENTE_PAGO' },
+    where: { 
+        userId: session.user.id, 
+        status: { in: ['PENDIENTE_PAGO', 'PENDIENTE', 'CREATED', 'EN_ALMACEN'] } 
+    },
     include: { packages: true }
   });
 
-  const totalDebt = pendingBills.reduce((acc, curr) => acc + (curr.totalAmount || 0), 0);
+  const totalDebt = pendingBills.reduce((acc, s) => {
+      let handlingFee = 0;
+      let finalSubtotal = s.subtotalAmount || s.totalAmount || 0;
 
+      const gmcNumber = s.gmcShipmentNumber?.toUpperCase() || '';
+      const serviceType = s.serviceType?.toUpperCase() || '';
+      const courierService = s.courierService?.toLowerCase() || '';
+      // 🔥 AÑADIMOS LA LECTURA DEL COURIER
+      const selectedCourier = s.selectedCourier?.toUpperCase() || ''; 
+
+      const isIdPickup = gmcNumber.startsWith('PICKUP');
+      const isStorage = serviceType === 'STORAGE_FEE' || serviceType.includes('STORAGE');
+
+      // 🚨 BLINDAJE DRIVER
+      const isDriverInvolved = courierService.includes('driver') || courierService.includes('chofer') || courierService.includes('domicilio');
+      
+      const isWarehousePickup = (
+          isIdPickup || 
+          serviceType === 'PICKUP' || 
+          selectedCourier === 'CLIENTE_RETIRO' || // 🔥 LA LLAVE MAESTRA QUE FALTABA
+          courierService.includes('cita') ||  
+          courierService.includes('tienda') || 
+          courierService.includes('bodega') || 
+          (courierService.includes('pickup') && !isDriverInvolved)
+      );
+
+      if (isStorage) {
+          handlingFee = 0; 
+      } else if (isWarehousePickup && !isDriverInvolved) {
+          // Es Retiro en Bodega 
+          let totalHandlingForPickup = 0;
+          if (s.packages && s.packages.length > 0) {
+              s.packages.forEach(pkg => {
+                  const p = pkg as any; 
+                  const weight = p.weightLbs || p.weight || p.peso || 1;
+                  
+                  if (weight <= 10) totalHandlingForPickup += 2.50;
+                  else if (weight <= 50) totalHandlingForPickup += 5.00;
+                  else if (weight <= 150) totalHandlingForPickup += 12.50;
+                  else totalHandlingForPickup += 30.00;
+              });
+          } else {
+              totalHandlingForPickup = 2.50;
+          }
+          finalSubtotal = 0; // Flete a cero
+          handlingFee = totalHandlingForPickup;
+      } else {
+          handlingFee = 0; // Se respeta el flete original para envíos
+      }
+
+      return acc + (finalSubtotal + handlingFee);
+  }, 0);
   return (
     <div className="min-h-screen bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

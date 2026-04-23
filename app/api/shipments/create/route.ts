@@ -74,7 +74,12 @@ export async function POST(req: Request) {
             
             let handling = 0;
             if (!isDocument) {
-                handling = (pkg.weightLbs || 0) <= 50 ? 5.00 : (pkg.weightLbs || 0) <= 150 ? 15.00 : 35.00;
+                // 🔥 LA TABLA MAESTRA IN-OUT DE GASP MAKER (El fin del fantasma)
+                const w = pkg.weightLbs || 1;
+                if (w <= 10) handling = 2.50;
+                else if (w <= 50) handling = 5.00;
+                else if (w <= 150) handling = 12.50;
+                else handling = 30.00;
             }
 
             let storage = 0;
@@ -109,9 +114,10 @@ export async function POST(req: Request) {
                 gmcShipmentNumber: `PICKUP-${Date.now().toString().slice(-6)}`,
                 status: 'PENDIENTE_PAGO',
                 destinationCountryCode: 'USA',
-                serviceType: 'STORAGE_FEE', 
+                serviceType: 'PICKUP', // 🔥 ACTUALIZAMOS EL SERVICIO
                 courierService: `Cita: ${scheduledDate} ${scheduledTime}`,
                 totalAmount: parseFloat(calculatedTotal.toFixed(2)),
+                subtotalAmount: parseFloat(calculatedTotal.toFixed(2)), // Guardamos el subtotal limpio
                 weightLbs: packages.reduce((acc, p) => acc + (p.weightLbs || 0), 0),
                 packages: { connect: packageIds.map((id: string) => ({ id })) }
             }

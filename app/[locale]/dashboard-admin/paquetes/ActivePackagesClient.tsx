@@ -192,16 +192,30 @@ export default function ActivePackagesClient({ allItems, currentLocale }: Packag
                                 const isReadyToShip = (!isConsolidatedBox && (pkg.status === 'EN_PROCESO_ENVIO' || pkg.status === 'ENVIADO' || hasCourierAssigned)) || 
                                                       (isConsolidatedBox && (pkg.status === 'PAGADO' || pkg.status === 'ENVIADO' || hasCourierAssigned));
 
-                                let price = pkg.shippingTotalPaid || 0;
-                                if (!isConsolidatedBox && pkg.consolidatedShipmentId && pkg.shippingSubtotal > 0) {
-                                    price = pkg.shippingSubtotal;
-                                } 
-                                else if (!isConsolidatedBox && pkg.consolidatedShipment?.totalAmount) {
-                                    const totalGroupAmount = pkg.consolidatedShipment.totalAmount;
-                                    const packageCount = pkg.consolidatedShipment.packages?.length || 1;
-                                    price = totalGroupAmount / packageCount;
-                                }
+                               let price = pkg.shippingTotalPaid || 0;
 
+                                if (isConsolidatedBox) {
+                                    // 📦 Cajas Maestras
+                                    price = pkg.totalAmount || pkg.shippingTotalPaid || 0;
+                                } else if (isStorePickup) { // 🔥 TIENE PRIORIDAD AHORA
+                                    // 🏪 Retiro en Bodega
+                                    const isDocument = pkg.courier === 'Buzón Virtual' || (pkg.carrierTrackingNumber || '').startsWith('DOC-') || (pkg.gmcTrackingNumber || '').startsWith('GMC-DOC-');
+                                    if (isDocument) {
+                                        price = 0;
+                                    } else {
+                                        const w = pkg.weightLbs || 1;
+                                        if (w <= 10) price = 2.50;
+                                        else if (w <= 50) price = 5.00;
+                                        else if (w <= 150) price = 12.50;
+                                        else price = 30.00;
+                                    }
+                                } else if (pkg.consolidatedShipmentId) {
+                                    // 📦 Paquete Individual dentro de una caja normal
+                                    price = pkg.shippingSubtotal || 0;
+                                } else {
+                                    // 🚚 Envío Normal
+                                    price = pkg.shippingTotalPaid || pkg.shippingSubtotal || pkg.totalAmount || 0;
+                                }
                                 return (
                                 <tr key={pkg.id} className={`transition-colors ${isConsolidatedBox ? 'bg-purple-50/30' : isProcessing ? 'bg-orange-50' : isReadyToShip ? 'bg-green-50/60' : isPreAlert ? 'bg-yellow-50/20' : 'hover:bg-blue-50/30'}`}>
                                     

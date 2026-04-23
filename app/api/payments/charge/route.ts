@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache"; // 🔥 EL LIMPIADOR DE PANTALLA
 
 // 👇 VACUNA 1: Forzar modo dinámico (Vital para transacciones financieras)
 export const dynamic = 'force-dynamic';
@@ -243,52 +244,49 @@ export async function POST(req: Request) {
         type: "SUCCESS"
     });
 
-    // =========================================================================
-    // 5. 💾 ACTUALIZACIÓN DE BASE DE DATOS (Facturas y Paquetes)
+// =========================================================================
+    // 5. 💾 ACTUALIZACIÓN DE BASE DE DATOS (Versión Limpia)
     // =========================================================================
 
     if (billDetails && Array.isArray(billDetails) && billDetails.length > 0) {
         
-        console.log(`✅ Procesando ${billDetails.length} facturas con montos INDIVIDUALES.`);
-        
+        const count = billDetails.length;
+        const cleanTotal = Number((totalToCharge / count).toFixed(2));
+        const cleanSubtotal = Number((impliedSubtotal / count).toFixed(2));
+        const cleanFee = Number((feeAmount / count).toFixed(2));
+
         await Promise.all(billDetails.map(async (detail: any) => {
-            if (!detail.id || !detail.amount) return;
+            const targetId = detail.id || detail.shipmentId || detail.billId;
+
+            if (!targetId) return;
 
             const currentShipment = await prisma.consolidatedShipment.findUnique({
-                where: { id: detail.id },
+                where: { id: targetId },
                 select: { serviceType: true }
             });
 
-            const isPickup = currentShipment?.serviceType === 'STORAGE_FEE';
+            if (!currentShipment) return;
+
+            const isPickup = currentShipment.serviceType === 'STORAGE_FEE' || currentShipment.serviceType === 'PICKUP';
             const nextStatus = isPickup ? 'LISTO_PARA_RETIRO' : 'LISTO_PARA_ENVIO';
 
-            const rawTotal = Number(detail.amount); 
-            const rawSubtotal = (rawTotal * (1 - STRIPE_PERCENTAGE)) - STRIPE_FIXED_FEE;
-            const rawFee = rawTotal - rawSubtotal;     
-
-            const cleanSubtotal = Number(rawSubtotal.toFixed(2));
-            const cleanTotal = Number(rawTotal.toFixed(2));
-            const cleanFee = Number(rawFee.toFixed(2));
-
             await prisma.consolidatedShipment.update({
-                where: { id: detail.id },
+                where: { id: targetId },
                 data: {
                     status: 'PAGADO', 
                     paymentId: paymentIntent.id,
                     selectedCourier: selectedCourier || undefined, 
                     courierService: courierService || undefined,   
                     shippingAddress: shippingAddress || undefined, 
-                    
                     subtotalAmount: cleanSubtotal,
                     processingFee: cleanFee,
                     totalAmount: cleanTotal,
-                    
                     updatedAt: new Date()
                 }
             });
 
             const childPackagesCount = await prisma.package.count({
-                where: { consolidatedShipmentId: detail.id }
+                where: { consolidatedShipmentId: targetId }
             });
 
             if (childPackagesCount > 0) {
@@ -297,16 +295,14 @@ export async function POST(req: Request) {
                 const pkgFee = Number((cleanFee / childPackagesCount).toFixed(2));
 
                 await prisma.package.updateMany({
-                    where: { consolidatedShipmentId: detail.id },
+                    where: { consolidatedShipmentId: targetId },
                     data: {
                         status: nextStatus, 
                         stripePaymentId: paymentIntent.id,
                         shippingAddress: shippingAddress || undefined, 
-                        
                         shippingTotalPaid: pkgTotal,
                         shippingSubtotal: pkgSub,
                         shippingProcessingFee: pkgFee,
-                        
                         updatedAt: new Date()
                     }
                 });
@@ -317,9 +313,8 @@ export async function POST(req: Request) {
         if (packageIds) {
              const idsArray = Array.isArray(packageIds) ? packageIds : packageIds.split(',');
              const count = idsArray.length || 1;
-             
-             const fallbackStatus = (serviceType === 'Warehousing' || serviceType === 'Pickup') 
-                ? 'PENDIENTE_RETIRO' 
+             const fallbackStatus = (serviceType === 'Warehousing' || serviceType === 'Pickup' || serviceType === 'PICKUP') 
+                ? 'LISTO_PARA_RETIRO' 
                 : 'LISTO_PARA_ENVIO';
 
              await prisma.package.updateMany({
@@ -370,7 +365,16 @@ export async function POST(req: Request) {
                 updatedAt: new Date()
             }
         });
-        console.log(`✅ Orden Shopper ${shopperOrderId} pagada con éxito en ${chargeCurrency.toUpperCase()}.`);
+    }
+
+    // =========================================================================
+    // 🔥 EL LIMPIADOR DE PANTALLA (Este sí lo dejamos, es vital)
+    // =========================================================================
+    try {
+        const { revalidatePath } = await import("next/cache");
+        revalidatePath('/', 'layout');
+    } catch (e) {
+        console.error("Error limpiando caché:", e);
     }
 
    // =========================================================================
@@ -425,6 +429,17 @@ export async function POST(req: Request) {
         } catch (dbError) {
             console.error("❌ Error guardando Buzón en BD:", dbError);
         }
+    }
+
+ // =========================================================================
+    // 🔥 EL LIMPIADOR: Obliga a la pantalla del cliente a refrescarse al instante
+    // =========================================================================
+    try {
+        const { revalidatePath } = await import("next/cache");
+        console.log("🧹 Limpiando la memoria caché de la pantalla...");
+        revalidatePath('/', 'layout');
+    } catch (e) {
+        console.error("Error limpiando caché:", e);
     }
 
     return NextResponse.json({ 
