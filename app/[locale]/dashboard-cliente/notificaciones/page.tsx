@@ -243,8 +243,11 @@ export default function NotificationsPage() {
                         <p className="text-xs text-gray-500 leading-relaxed font-medium">
                             {getTranslatedText(notif.message)}
                         </p>
-                        {notif.href && (
-                            <Link href={notif.href} className="mt-3 inline-flex items-center text-xs font-bold text-gmc-dorado-principal hover:text-yellow-600 transition-colors bg-yellow-50 px-3 py-1.5 rounded-lg">
+                       {notif.href && (
+                            <Link 
+                                href={notif.href.includes('/paquetes') ? notif.href.replace('/paquetes', '') : notif.href} 
+                                className="mt-3 inline-flex items-center text-xs font-bold text-gmc-dorado-principal hover:text-yellow-600 transition-colors bg-yellow-50 px-3 py-1.5 rounded-lg"
+                            >
                                 {/* @ts-ignore */}
                                 {t.has('viewDetails') ? t('viewDetails') : "Voir détails"} 
                                 <ArrowLeft size={12} className="rotate-180 ml-1"/>
