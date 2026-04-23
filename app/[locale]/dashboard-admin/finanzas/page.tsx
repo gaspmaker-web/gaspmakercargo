@@ -10,7 +10,8 @@ import {
   AlertCircle,
   Mail,
   Package,
-  CheckCircle // 🔥 Importación correcta del icono
+  CheckCircle,
+  Truck // 🔥 NUEVO ICONO PARA LOS PICKUPS
 } from 'lucide-react';
 
 // Función auxiliar para formatear dinero
@@ -102,15 +103,16 @@ export default async function FinanzasPage() {
   // 3. CÁLCULOS FINANCIEROS GLOBALES
   // ==============================================================================
 
-  // A. INGRESOS DE CARGA (Paquetes, Consolidaciones, Pickups)
+  // A. INGRESOS DE CARGA Y PICKUPS (SEPARADOS)
   const incomePackages = packageStats._sum.shippingTotalPaid || 0;
   const incomeConsolidations = consolidationStats._sum.totalAmount || 0; 
   const incomePickups = pickupStats._sum.totalPaid || 0;
   
-  const totalIncomeCargo = incomePackages + incomeConsolidations + incomePickups;
+  // 🔥 AQUÍ ESTÁ LA VARIABLE QUE FALTABA: Sumamos paquetes y consolidaciones (sin pickups)
+  const totalIncomeCarga = incomePackages + incomeConsolidations;
 
   // B. INGRESO GLOBAL DE LA EMPRESA
-  const grandTotalIncome = totalIncomeCargo + totalIncomeBuzon;
+  const grandTotalIncome = totalIncomeCarga + incomePickups + totalIncomeBuzon;
 
   // C. CUENTAS POR COBRAR (Deuda)
   const debtStorage = packageStats._sum.storageDebt || 0;
@@ -142,7 +144,7 @@ export default async function FinanzasPage() {
       take: 10,
       include: { user: true }
     }),
-    
+
     // 🔥 NUEVO: Leemos directamente los Recibos (Transactions) para la tabla
     prisma.mailboxTransaction.findMany({
       orderBy: { createdAt: 'desc' },
@@ -225,16 +227,16 @@ export default async function FinanzasPage() {
         <ExportButton transactions={recentTransactions} />
       </div>
 
-      {/* KPI CARDS (4 Columnas) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+     {/* KPI CARDS (5 Columnas) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 md:gap-4">
         
         {/* 1. INGRESOS GLOBALES EMPRESA */}
-        <div className="bg-gradient-to-br from-gmc-gris-oscuro to-gray-800 p-6 rounded-2xl shadow-lg border border-gray-700 flex flex-col justify-between text-white relative overflow-hidden">
-          <div className="absolute top-0 right-0 p-4 opacity-20"><TrendingUp size={64} /></div>
+        <div className="bg-gradient-to-br from-gmc-gris-oscuro to-gray-800 p-5 rounded-2xl shadow-lg border border-gray-700 flex flex-col justify-between text-white relative overflow-hidden">
+          <div className="absolute top-0 right-0 p-4 opacity-20"><TrendingUp size={48} /></div>
           <div className="relative z-10">
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Total Global (GMC)</p>
-            <h3 className="text-3xl md:text-4xl font-bold text-gmc-dorado-principal mt-1">{formatCurrency(grandTotalIncome)}</h3>
-            <span className="text-xs text-gray-300 mt-2 flex items-center gap-1">
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Total Global (GMC)</p>
+            <h3 className="text-2xl md:text-3xl font-bold text-gmc-dorado-principal mt-1">{formatCurrency(grandTotalIncome)}</h3>
+            <span className="text-[10px] text-gray-300 mt-2 flex items-center gap-1">
               <CheckCircle className="text-green-400" size={12}/> Facturación Neta
             </span>
           </div>
@@ -243,49 +245,61 @@ export default async function FinanzasPage() {
         {/* 2. INGRESOS CARGA (Tradicional) */}
         <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between">
           <div className="flex justify-between items-start mb-2">
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Carga & Pickups</p>
-            <div className="p-2 bg-blue-50 rounded-lg"><Package className="text-blue-600" size={18} /></div>
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Carga Tradicional</p>
+            <div className="p-2 bg-blue-50 rounded-lg"><Package className="text-blue-600" size={16} /></div>
           </div>
           <div>
-            <h3 className="text-2xl font-bold text-gray-800">{formatCurrency(totalIncomeCargo)}</h3>
-            <span className="text-[10px] text-gray-500 mt-1 block font-medium">Cajas, Consolidaciones y Envíos</span>
+            <h3 className="text-xl md:text-2xl font-bold text-gray-800">{formatCurrency(totalIncomeCarga)}</h3>
+            <span className="text-[10px] text-gray-500 mt-1 block font-medium">Cajas y Envíos</span>
           </div>
         </div>
 
-        {/* 3. INGRESOS BUZÓN VIRTUAL (Ahora es 100% exacto) */}
-        <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between relative overflow-hidden group hover:border-purple-200 transition-colors">
-          <div className="absolute top-0 right-0 w-1 h-full bg-purple-500"></div>
+        {/* 3. NUEVA: PICKUPS A DOMICILIO */}
+        <div className="bg-white p-5 rounded-2xl shadow-sm border border-orange-100 flex flex-col justify-between relative overflow-hidden group hover:border-orange-200 transition-colors">
           <div className="flex justify-between items-start mb-2">
-            <p className="text-xs font-bold text-purple-500 uppercase tracking-wider">Buzón Virtual</p>
-            <div className="p-2 bg-purple-50 rounded-lg group-hover:bg-purple-100 transition-colors"><Mail className="text-purple-600" size={18} /></div>
+            <p className="text-[10px] font-bold text-orange-500 uppercase tracking-wider">Pickups Domicilio</p>
+            <div className="p-2 bg-orange-50 rounded-lg group-hover:bg-orange-100 transition-colors"><Truck className="text-orange-600" size={16} /></div>
           </div>
           <div>
-            <h3 className="text-2xl font-bold text-gray-800">{formatCurrency(totalIncomeBuzon)}</h3>
+            <h3 className="text-xl md:text-2xl font-bold text-gray-800">{formatCurrency(incomePickups)}</h3>
+            <span className="text-[10px] text-gray-500 mt-1 block font-medium">Recogidas a clientes</span>
+          </div>
+        </div>
+
+        {/* 4. INGRESOS BUZÓN VIRTUAL */}
+        <div className="bg-white p-5 rounded-2xl shadow-sm border border-purple-100 flex flex-col justify-between relative overflow-hidden group hover:border-purple-200 transition-colors">
+          <div className="absolute top-0 right-0 w-1 h-full bg-purple-500"></div>
+          <div className="flex justify-between items-start mb-2">
+            <p className="text-[10px] font-bold text-purple-500 uppercase tracking-wider">Buzón Virtual</p>
+            <div className="p-2 bg-purple-50 rounded-lg group-hover:bg-purple-100 transition-colors"><Mail className="text-purple-600" size={16} /></div>
+          </div>
+          <div>
+            <h3 className="text-xl md:text-2xl font-bold text-gray-800">{formatCurrency(totalIncomeBuzon)}</h3>
             <div className="mt-2 space-y-1">
                <p className="flex justify-between text-[10px] text-gray-500">
-                 <span>Pagos Recibidos:</span> <span className="font-bold text-purple-600">{formatCurrency(incomeBuzonSuscripciones)}</span>
+                 <span>Planes:</span> <span className="font-bold text-purple-600">{formatCurrency(incomeBuzonSuscripciones)}</span>
                </p>
                <p className="flex justify-between text-[10px] text-gray-500">
-                 <span>Scan & Shredding:</span> <span className="font-bold text-purple-600">{formatCurrency(incomeBuzonServicios)}</span>
+                 <span>Servicios:</span> <span className="font-bold text-purple-600">{formatCurrency(incomeBuzonServicios)}</span>
                </p>
             </div>
           </div>
         </div>
 
-        {/* 4. POR COBRAR (DEUDA) */}
+        {/* 5. POR COBRAR (DEUDA) */}
         <div className="bg-white p-5 rounded-2xl shadow-sm border border-red-100 flex flex-col justify-between">
           <div className="flex justify-between items-start mb-2">
-            <p className="text-xs font-bold text-red-400 uppercase tracking-wider">Por Cobrar (Deuda)</p>
-            <div className="p-2 bg-red-50 rounded-lg"><AlertCircle className="text-red-500" size={18} /></div>
+            <p className="text-[10px] font-bold text-red-400 uppercase tracking-wider">Por Cobrar</p>
+            <div className="p-2 bg-red-50 rounded-lg"><AlertCircle className="text-red-500" size={16} /></div>
           </div>
           <div>
-            <h3 className="text-2xl font-bold text-red-600">{formatCurrency(totalReceivable)}</h3>
+            <h3 className="text-xl md:text-2xl font-bold text-red-600">{formatCurrency(totalReceivable)}</h3>
             <div className="mt-2 space-y-1">
                <p className="flex justify-between text-[10px] text-gray-500">
                  <span>Almacenaje:</span> <span className="font-bold text-red-400">{formatCurrency(debtStorage)}</span>
                </p>
                <p className="flex justify-between text-[10px] text-gray-500">
-                 <span>Fletes/Pickups:</span> <span className="font-bold text-red-400">{formatCurrency(debtShipping + debtPickups)}</span>
+                 <span>Fletes/Carga:</span> <span className="font-bold text-red-400">{formatCurrency(debtShipping + debtPickups)}</span>
                </p>
             </div>
           </div>
