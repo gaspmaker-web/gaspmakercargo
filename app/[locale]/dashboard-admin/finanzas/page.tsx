@@ -1,4 +1,5 @@
 import React from 'react';
+import ExportButton from './ExportButton';
 import { prisma } from '@/lib/prisma';
 import { 
   DollarSign, 
@@ -31,12 +32,14 @@ const formatDate = (date: Date) => {
 
 export default async function FinanzasPage() {
   
-  // ==============================================================================
+// ==============================================================================
   // 1. CONSULTAS DE AGREGACIÓN (CARGA TRADICIONAL Y PICKUPS)
   // ==============================================================================
   
   const [packageStats, consolidationStats, pickupStats] = await Promise.all([
     prisma.package.aggregate({
+      // 🔥 FILTRO ANTI-CLONES: Ignorar los paquetes que ya pertenecen a un Pickup o Consolidación
+      where: { consolidatedShipmentId: null }, 
       _sum: {
         shippingTotalPaid: true, 
         storageDebt: true,       
@@ -123,6 +126,8 @@ export default async function FinanzasPage() {
   // ==============================================================================
   const [packages, consolidations, pickups, mailboxTxs] = await Promise.all([
     prisma.package.findMany({
+      // 🔥 FILTRO VISUAL ANTI-CLONES: Oculta los paquetes que pertenecen a una Consolidación o Pickup
+      where: { consolidatedShipmentId: null },
       orderBy: { createdAt: 'desc' },
       take: 20,
       include: { user: true }
@@ -137,6 +142,7 @@ export default async function FinanzasPage() {
       take: 10,
       include: { user: true }
     }),
+    
     // 🔥 NUEVO: Leemos directamente los Recibos (Transactions) para la tabla
     prisma.mailboxTransaction.findMany({
       orderBy: { createdAt: 'desc' },
@@ -205,7 +211,7 @@ export default async function FinanzasPage() {
   return (
     <div className="space-y-8 pb-20">
       
-      {/* Header */}
+     {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold text-gmc-gris-oscuro font-garamond">
@@ -215,10 +221,8 @@ export default async function FinanzasPage() {
             Métricas de Carga Tradicional y Buzón Virtual en tiempo real.
           </p>
         </div>
-        <button className="flex items-center gap-2 bg-white border border-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors shadow-sm font-medium text-sm">
-          <Download size={18} />
-          <span>Exportar Reporte</span>
-        </button>
+        {/* 🔥 AQUÍ INYECTAMOS EL NUEVO BOTÓN EXPORTADOR 🔥 */}
+        <ExportButton transactions={recentTransactions} />
       </div>
 
       {/* KPI CARDS (4 Columnas) */}
