@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { X, Lock, CreditCard, Plus, AlertCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl';
@@ -40,6 +40,9 @@ export default function MailboxCheckoutModal({
     savedCards.length > 0 ? savedCards[0].id : ''
   );
 
+  // 🔥 ESCUDO ANTI-DOBLE-CLIC (Cerrojo Síncrono)
+  const isPayingRef = useRef(false);
+
   // ✅ NUEVA LÓGICA ENTERPRISE: Basada en la Tarjeta ✅
   const activeCardDetails = savedCards.find(c => c.id === selectedCardId);
   const isTrinidadCard = activeCardDetails?.country?.toUpperCase() === 'TT';
@@ -48,6 +51,7 @@ export default function MailboxCheckoutModal({
 
   if (!isOpen) return null;
 
+  // 5. PAGAR (Versión Blindada Anti-Doble-Clic)
   const handleCheckout = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -56,6 +60,12 @@ export default function MailboxCheckoutModal({
       setError(t('selectPaymentMethodError') || 'Por favor, selecciona un método de pago.');
       return;
     }
+
+    // 🔥 1. EL ESCUDO: Si ya está procesando un pago, bloquea cualquier clic adicional
+    if (isPayingRef.current) return;
+    
+    // 🔥 2. CERRAMOS EL CERROJO: Bloqueo en memoria al instante
+    isPayingRef.current = true;
 
     setIsProcessing(true);
     
@@ -85,10 +95,11 @@ export default function MailboxCheckoutModal({
     } catch (err: any) {
       setError(err.message || t('unexpectedError') || 'Ocurrió un error inesperado.');
     } finally {
+      // 🔥 3. ABRIMOS EL CERROJO: Pase lo que pase, liberamos el escudo
       setIsProcessing(false);
+      isPayingRef.current = false;
     }
   };
-
   const handleGoToAddCard = () => {
     onClose(); 
     router.push(`/${locale}/account-settings`); 
