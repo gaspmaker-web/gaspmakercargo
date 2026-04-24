@@ -63,6 +63,10 @@ export default function SolicitarPickupPage() {
 
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
+  
+  // 🔥 ESCUDO ANTI-DOBLE-CLIC (Cerrojo Síncrono)
+  const isPayingRef = useRef(false);
+
   const [serviceType, setServiceType] = useState<string | null>('PICKUP_WAREHOUSE'); 
   const [inventory, setInventory] = useState<any[]>([]);
   const [inventoryLoading, setInventoryLoading] = useState(true);
@@ -362,7 +366,7 @@ export default function SolicitarPickupPage() {
     validateTimeWindow(val);
   };
 
-  const handlePaymentAndSubmit = async () => {
+const handlePaymentAndSubmit = async () => {
     if (serviceType !== 'PICKUP_WAREHOUSE') {
         if (!isAddressValid || !formData.originAddress) { 
             alert("⚠️ Dirección no válida. Selecciona una opción de la lista."); return; 
@@ -378,6 +382,12 @@ export default function SolicitarPickupPage() {
             return; 
         }
     }
+
+    // 🔥 1. EL ESCUDO: Si ya está pagando, rechazamos cualquier clic adicional al instante
+    if (isPayingRef.current) return; 
+    
+    // 🔥 2. CERRAMOS EL CERROJO: Bloqueo instantáneo en memoria
+    isPayingRef.current = true; 
 
     setIsLoading(true);
     try {
@@ -441,7 +451,11 @@ export default function SolicitarPickupPage() {
         else { alert("Error guardando la solicitud."); }
 
     } catch (error: any) { alert(error.message || "Error inesperado."); } 
-    finally { setIsLoading(false); }
+    finally { 
+        // 🔥 3. ABRIMOS EL CERROJO: Pase lo que pase, liberamos el botón
+        setIsLoading(false); 
+        isPayingRef.current = false;
+    }
   };
 
   if (!isLoaded) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin text-gmc-dorado-principal"/></div>;
