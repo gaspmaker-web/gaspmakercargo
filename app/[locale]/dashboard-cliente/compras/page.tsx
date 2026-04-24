@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl"; 
 import { useRouter, useParams } from "next/navigation"; 
 import Link from "next/link"; 
@@ -30,6 +30,9 @@ export default function PersonalShopperPage() {
   const [savedCards, setSavedCards] = useState<any[]>([]);
   const [selectedCard, setSelectedCard] = useState<string>("");
   const [isPaying, setIsPaying] = useState<string | null>(null);
+
+  // 🔥 ESCUDO ANTI-DOBLE-CLIC (Cerrojo Síncrono)
+  const isPayingRef = useRef(false);
 
   // ESTADO: Controla qué tarjeta está abierta (Acordeón)
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
@@ -102,11 +105,18 @@ export default function PersonalShopperPage() {
     }
   };
 
+// 5. PAGAR (Versión Blindada Anti-Doble-Clic)
   const handlePayment = async (orderId: string, totalAmount: number) => {
     if (!selectedCard) {
       alert("Por favor selecciona una tarjeta de crédito guardada.");
       return;
     }
+
+    // 🔥 1. EL ESCUDO: Si ya está procesando algún pago, bloquea clics extra al instante
+    if (isPayingRef.current) return;
+    
+    // 🔥 2. CERRAMOS EL CERROJO: Bloqueo en memoria
+    isPayingRef.current = true;
 
     setIsPaying(orderId);
     try {
@@ -132,7 +142,9 @@ export default function PersonalShopperPage() {
     } catch (error) {
       alert("Error de conexión al procesar el pago.");
     } finally {
+      // 🔥 3. ABRIMOS EL CERROJO: Pase lo que pase, liberamos la función
       setIsPaying(null);
+      isPayingRef.current = false;
     }
   };
 
