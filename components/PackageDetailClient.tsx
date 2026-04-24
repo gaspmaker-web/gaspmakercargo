@@ -99,11 +99,14 @@ export default function PackageDetailClient({
   const [cards, setCards] = useState<any[]>(savedCards);
   const [selectedCardId, setSelectedCardId] = useState<string>("");
   
-  // 🔥 NUEVOS ESTADOS PARA EL SELECTOR DE DIRECCIONES
+// 🔥 NUEVOS ESTADOS PARA EL SELECTOR DE DIRECCIONES
   const [selectedAddressId, setSelectedAddressId] = useState<string>("");
 
   const [isPaying, setIsPaying] = useState(false);
   const [showMobileDetails, setShowMobileDetails] = useState(false);
+
+  // 🔥 ESCUDO ANTI-DOBLE-CLIC (Cerrojo Síncrono)
+  const isPayingRef = useRef(false);
 
   // Cupones
   const [couponCode, setCouponCode] = useState("");
@@ -308,6 +311,7 @@ export default function PackageDetailClient({
     }, 800);
   };
 
+ // 5. PAGAR (Versión Blindada Anti-Doble-Clic)
   const handlePay = async () => {
     if (!selectedCardId) {
         setShowMobileDetails(true); 
@@ -316,6 +320,12 @@ export default function PackageDetailClient({
     }
 
     if (!selectedRate) { alert("Selecciona un método de envío."); return; }
+
+    // 🔥 1. EL ESCUDO: Si ya está pagando, rechazamos cualquier clic adicional al instante
+    if (isPayingRef.current) return; 
+    
+    // 🔥 2. CERRAMOS EL CERROJO: Bloqueo instantáneo en memoria
+    isPayingRef.current = true; 
 
     setIsPaying(true);
 
@@ -378,7 +388,9 @@ export default function PackageDetailClient({
       console.error("ERROR DE PAGO:", error);
       alert(error.message || "Error de conexión.");
     } finally {
+      // 🔥 3. ABRIMOS EL CERROJO: Pase lo que pase, liberamos el botón
       setIsPaying(false);
+      isPayingRef.current = false;
     }
   };
 
