@@ -78,9 +78,12 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
   // ESTADO DE DIRECCIONES
   const [selectedAddressId, setSelectedAddressId] = useState<string>('');
 
-  // Estado de Proceso
+// Estado de Proceso
   const [isProcessing, setIsProcessing] = useState(false);
   const [loadingRatesId, setLoadingRatesId] = useState<string | null>(null);
+  
+  // 🔥 ESCUDO ANTI-DOBLE-CLIC (Cerrojo Síncrono)
+  const isPayingRef = useRef(false);
   
   // Estado de Selección y Tarifas
   const [selectedBillIds, setSelectedBillIds] = useState<string[]>([]);
@@ -331,7 +334,7 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
     }, 800);
   };
 
-// 5. PAGAR (Versión Limpia)
+// 5. PAGAR (Versión Limpia y Blindada Anti-Doble-Clic)
   const handlePay = async () => {
       if (!selectedCardId) {
           setShowMobileSummary(true); 
@@ -340,6 +343,13 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
       }
 
       if (totals.count === 0) return;
+
+      // 🔥 1. EL ESCUDO: Si ya está pagando, rechazamos cualquier clic adicional al instante
+      if (isPayingRef.current) return; 
+      
+      // 🔥 2. CERRAMOS EL CERROJO: Bloqueo instantáneo en memoria
+      isPayingRef.current = true; 
+      
       setIsProcessing(true);
 
       const finalShippingAddress = currentAddress 
@@ -457,7 +467,11 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
       } catch (e: any) { 
           alert(e.message); 
       }
-      finally { setIsProcessing(false); }
+      finally { 
+          // 🔥 3. ABRIMOS EL CERROJO: Pase lo que pase (éxito o error), liberamos el botón
+          setIsProcessing(false); 
+          isPayingRef.current = false;
+      }
   };
 
   const toggleBill = (id: string) => {
