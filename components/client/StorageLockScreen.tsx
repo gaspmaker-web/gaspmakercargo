@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Lock, DollarSign, Clock, AlertTriangle, Box, Loader2, CreditCard, X, CheckCircle, Plus } from 'lucide-react';
 // 🔥 1. Importamos los hooks de traducciones
@@ -35,6 +35,9 @@ export default function StorageLockScreen({
   const [selectedCard, setSelectedCard] = useState(paymentMethods[0]?.id || '');
   const router = useRouter();
 
+  // 🔥 ESTE ES EL BLOQUE A AGREGAR
+  const isProcessingRef = useRef(false);
+
   // ============================================================================
   // 🧮 CÁLCULO DE FEE DE STRIPE INTERNACIONAL (7.2%)
   // ============================================================================
@@ -53,6 +56,11 @@ export default function StorageLockScreen({
         return;
     }
 
+    // 🛡️ PROTECCIÓN 1: Bloqueo instantáneo
+    if (isProcessingRef.current) return;
+
+    // 🔒 PROTECCIÓN 2: Cierre del cerrojo
+    isProcessingRef.current = true;
     setLoading(true);
 
     try {
@@ -73,10 +81,13 @@ export default function StorageLockScreen({
             router.refresh(); 
         } else {
             alert(data.message || t('alertError')); 
+            // 🔓 PROTECCIÓN 3: Abrir cerrojo si falla para reintentar
+            isProcessingRef.current = false;
         }
     } catch (error) {
         console.error(error);
         alert(t('alertConnection')); 
+        isProcessingRef.current = false;
     } finally {
         setLoading(false);
     }
