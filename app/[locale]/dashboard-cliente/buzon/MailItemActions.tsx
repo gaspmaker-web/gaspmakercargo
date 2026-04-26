@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { FileText, Trash2, Loader2, Clock, CheckCircle2, PackagePlus, Plane, AlertTriangle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
@@ -20,8 +20,17 @@ export default function MailItemActions({ mailItemId, currentStatus, isPremium =
   // 🔥 NUEVO ESTADO PARA EL MODAL PERSONALIZADO
   const [showModal, setShowModal] = useState<'SCAN' | 'SHRED' | 'MOVE_TO_CARGO' | null>(null);
 
+  // 🔥 ESCUDO ANTI-DOBLE-CLIC (Cerrojo Síncrono)
+  const isProcessingRef = useRef(false);
+
   const confirmAndExecuteAction = async () => {
     if (!showModal) return;
+    
+    // 🛡️ ESCUDO: Si ya se está procesando, cancelamos cualquier clic extra
+    if (isProcessingRef.current) return;
+
+    // 🔒 CERRAMOS EL CERROJO: Bloqueo inmediato
+    isProcessingRef.current = true;
     
     const actionToExecute = showModal;
     setShowModal(null); // Cerramos el modal inmediatamente
@@ -42,7 +51,9 @@ export default function MailItemActions({ mailItemId, currentStatus, isPremium =
     } catch (error) {
       alert(t('alertConnection'));
     } finally {
+      // 🔓 ABRIMOS EL CERROJO: Liberamos para la siguiente acción
       setLoadingAction(null);
+      isProcessingRef.current = false;
     }
   };
 
