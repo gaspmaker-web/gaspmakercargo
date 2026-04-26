@@ -30,7 +30,26 @@ export async function GET() {
         orderBy: { createdAt: 'desc' }
     });
 
-    // 3. Normalizar
+    // 🔥 3. NUEVO: Shopper Orders (Compras)
+    const shopperOrders = await prisma.shopperOrder.findMany({
+        where: { 
+            userId,
+            status: { not: 'PENDING_QUOTE' } // Ocultamos cotizaciones que aún no se han pagado o aprobado
+        },
+        include: { items: { select: { name: true } } },
+        orderBy: { createdAt: 'desc' }
+    });
+
+    // 🔥 4. NUEVO: Mailbox Transactions (Buzón Virtual)
+    const mailboxTransactions = await prisma.mailboxTransaction.findMany({
+        where: { userId },
+        orderBy: { createdAt: 'desc' }
+    });
+
+    // ==========================================
+    // 🔄 NORMALIZACIÓN DE DATOS
+    // ==========================================
+
     const normalizedLocal = localRequests.map(req => ({
         id: req.id,
         createdAt: req.createdAt,
@@ -47,12 +66,13 @@ export async function GET() {
     }));
 
     const normalizedIntl = internationalShipments.map(ship => {
-        // 🔥 CLASIFICACIÓN ESTRICTA
+        // 🔥 CLASIFICACIÓN ESTRICTA QUE RESPETA EL NUEVO ESQUEMA ENTERPRISE
         const isStorage = ship.serviceType === 'STORAGE_FEE';
-        const finalType = isStorage ? 'STORAGE_FEE' : 'SHIPPING_INTL'; 
+        const isStorePickup = ship.serviceType === 'STORE_PICKUP';
         
-        // 🔥 LÓGICA DE CONTENIDO DEL PAQUETE 🔥
-        // Generamos un string con los nombres de los paquetes (ej: "Dede, 3234233, Zapatos...")
+        const finalType = isStorePickup ? 'STORE_PICKUP' : (isStorage ? 'STORAGE_FEE' : 'SHIPPING_INTL'); 
+        
+        // Generamos un string con los nombres de los paquetes
         const packageContent = ship.packages.length > 0
             ? ship.packages.map(p => p.description || p.gmcTrackingNumber || 'Paquete').join(', ')
             : 'Sin detalle de contenido';
@@ -63,16 +83,15 @@ export async function GET() {
             status: ship.status,
             serviceType: finalType, 
             
-            // 1. EL TÍTULO (description): Lo dejamos como el tipo de envío
+            // EL TÍTULO
             description: isStorage 
                 ? `Retiro en Bodega` 
-                : `Envío Internacional (${ship.selectedCourier || 'GMC'})`,
+                : (isStorePickup ? `Retiro en Tienda (${ship.selectedCourier || 'GMC'})` : `Envío Internacional (${ship.selectedCourier || 'GMC'})`),
             
             totalPaid: ship.totalAmount,
             courier: ship.selectedCourier,
 
-            // 2. EL DETALLE (service): Aquí metemos los nombres de los paquetes
-            // Esto reemplazará el texto "Gestión interna..." o el servicio del courier
+            // EL DETALLE
             service: isStorage 
                 ? `${ship.packages.length} paquetes` 
                 : packageContent, 
@@ -82,9 +101,38 @@ export async function GET() {
         };
     });
 
-    const allRequests = [...normalizedLocal, ...normalizedIntl].sort((a, b) => 
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
+    // 🔥 NORMALIZAR SHOPPER
+    const normalizedShopper = shopperOrders.map(order => ({
+        id: order.id,
+        createdAt: order.createdAt,
+        status: order.status,
+        serviceType: order.serviceType || 'PERSONAL_SHOPPER',
+        description: `Personal Shopper (${order.items.length} items)`,
+        totalPaid: order.totalAmount || order.itemsSubtotal || 0,
+        service: order.items.length > 0 ? order.items.map(i => i.name).join(', ') : 'Compra Asistida'
+    }));
+
+    // 🔥 NORMALIZAR MAILBOX
+    const normalizedMailbox = mailboxTransactions.map(tx => ({
+        id: tx.id,
+        createdAt: tx.createdAt,
+        status: tx.status,
+        serviceType: 'MAILBOX', // El Frontend lo acomodará en 'Services' con el ícono de Buzón
+        description: tx.description || 'Suscripción Buzón Virtual',
+        totalPaid: tx.amount,
+        service: 'Gestión Interna / Servicio'
+    }));
+
+    // ==========================================
+    // 📦 COMBINAR Y ORDENAR
+    // ==========================================
+
+    const allRequests = [
+        ...normalizedLocal, 
+        ...normalizedIntl,
+        ...normalizedShopper,
+        ...normalizedMailbox
+    ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
     return NextResponse.json({ requests: allRequests });
 

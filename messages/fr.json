@@ -676,7 +676,11 @@
     "evidence": "Preuve",
     "totalPaid": "Total Payé",
     "noMovements": "Aucun mouvement",
-    "tryFilter": "Changez les filtres."
+    "tryFilter": "Changez les filtres.",
+    "tabServices": "Services",
+    "labelPersonalShopper": "Acheteur Personnel",
+    "labelStorePickup": "Retrait en Magasin",
+    "labelMailbox": "Boîte Postale Virtuelle"
   },
  "StorageLock": {
     "title": "Colis Bloqué",
@@ -1172,7 +1176,8 @@
     "itemPlural": "articles",
     "noCards": "Aucune carte enregistrée.",
     "addPaymentMethod": "Ajoutez un moyen de paiement dans les Paramètres pour continuer.",
-    "itemsRequested": "Articles Demandés"
+    "itemsRequested": "Articles Demandés",
+    "paymentCompleted": "Paiement Terminé avec Succès"
   },
   "MailboxPublic": {
   "metadataTitle": "Boîte Postale Virtuelle USA | Gasp Maker Cargo",

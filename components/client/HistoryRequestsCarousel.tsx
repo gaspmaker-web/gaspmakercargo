@@ -5,10 +5,12 @@ import Image from 'next/image';
 import { 
   Truck, MapPin, CheckCircle, Clock, Package, Plane, 
   Warehouse, DollarSign, Box, Camera, ArrowLeft, 
-  ChevronDown, ChevronUp, Calendar, Search, FileText 
+  ChevronDown, ChevronUp, Calendar, Search, FileText,
+  ShoppingBag, Store, Mailbox // 🔥 Nuevos íconos agregados
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
+// 🔥 1. AGREGAMOS LOS 3 NUEVOS SERVICIOS CON SUS COLORES Y ESTILOS
 const TYPE_STYLES: Record<string, { icon: React.ElementType, color: string, badgeBg: string }> = {
     'SHIPPING': { icon: Truck, color: 'text-blue-600', badgeBg: 'bg-blue-100' },
     'DELIVERY': { icon: MapPin, color: 'text-green-600', badgeBg: 'bg-green-100' },
@@ -16,6 +18,9 @@ const TYPE_STYLES: Record<string, { icon: React.ElementType, color: string, badg
     'STORAGE_FEE': { icon: DollarSign, color: 'text-red-600', badgeBg: 'bg-red-100' },
     'CONSOLIDATION': { icon: Box, color: 'text-purple-600', badgeBg: 'bg-purple-100' },
     'SHIPPING_INTL': { icon: Plane, color: 'text-indigo-600', badgeBg: 'bg-indigo-100' },
+    'PERSONAL_SHOPPER': { icon: ShoppingBag, color: 'text-pink-600', badgeBg: 'bg-pink-100' },
+    'STORE_PICKUP': { icon: Store, color: 'text-teal-600', badgeBg: 'bg-teal-100' },
+    'MAILBOX': { icon: Mailbox, color: 'text-cyan-600', badgeBg: 'bg-cyan-100' },
     'DEFAULT': { icon: Package, color: 'text-gray-600', badgeBg: 'bg-gray-100' }
 };
 
@@ -23,7 +28,7 @@ const StatusBadge = ({ status }: { status: string }) => {
     const t = useTranslations('HistoryPage'); 
     const s = status?.toUpperCase() || 'PENDIENTE';
     
-    if (['PAGADO', 'COMPLETADO', 'PROCESADO', 'ENVIADO', 'ENTREGADO', 'DELIVERED'].includes(s)) {
+    if (['PAGADO', 'COMPLETADO', 'PROCESADO', 'ENVIADO', 'ENTREGADO', 'DELIVERED', 'PAID'].includes(s)) {
         return <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1 border border-green-200"><CheckCircle size={10}/> {t('statusPaid')}</span>;
     }
     return <span className="bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1 border border-yellow-200"><Clock size={10}/> {t('statusPending')}</span>;
@@ -36,6 +41,7 @@ const HistoryGroup = ({ type, requests }: { type: string, requests: any[] }) => 
     const styles = TYPE_STYLES[type] || TYPE_STYLES['DEFAULT'];
     const Icon = styles.icon;
 
+    // 🔥 2. AGREGAMOS LAS ETIQUETAS PARA LOS NUEVOS SERVICIOS
     const getLabel = (typeKey: string) => {
         switch (typeKey) {
             case 'SHIPPING': return t('labelShipping');
@@ -44,11 +50,14 @@ const HistoryGroup = ({ type, requests }: { type: string, requests: any[] }) => 
             case 'STORAGE_FEE': return t('labelStorageFee');
             case 'CONSOLIDATION': return t('labelConsolidation');
             case 'SHIPPING_INTL': return t('labelShippingIntl');
+            case 'PERSONAL_SHOPPER': return t('labelPersonalShopper') || 'Personal Shopper';
+            case 'STORE_PICKUP': return t('labelStorePickup') || 'Store Pickup';
+            case 'MAILBOX': return t('labelMailbox') || 'Virtual Mailbox';
             default: return t('labelDefault');
         }
     };
 
-    const totalSpent = requests.reduce((sum, req) => sum + (req.totalPaid || req.totalAmount || 0), 0);
+    const totalSpent = requests.reduce((sum, req) => sum + (req.totalPaid || req.totalAmount || req.amountNet || 0), 0);
     const isInternationalGroup = ['SHIPPING_INTL', 'CONSOLIDATION'].includes(type);
 
     return (
@@ -82,7 +91,7 @@ const HistoryGroup = ({ type, requests }: { type: string, requests: any[] }) => 
                                 <div className="p-5 flex flex-col gap-4 flex-1">
                                     <div>
                                         <h4 className="font-bold text-gray-800 text-lg leading-tight mb-1 line-clamp-2">
-                                            {req.description || req.gmcShipmentNumber || 'Operación sin título'}
+                                            {req.description || req.planName || req.gmcShipmentNumber || 'Operación sin título'}
                                         </h4>
                                         <p className="text-[10px] text-gray-400 font-mono bg-gray-50 inline-block px-2 py-0.5 rounded border border-gray-100">
                                             ID: {(req.id || '').slice(0,8).toUpperCase()}
@@ -104,26 +113,27 @@ const HistoryGroup = ({ type, requests }: { type: string, requests: any[] }) => 
                                             </>
                                         ) : (
                                             <div className="flex items-center gap-2 text-gray-500 italic">
-                                                <Package size={14}/> <span>{t('internalMgmt')}</span>
+                                                <Package size={14}/> <span>{t('internalMgmt') || 'Gestión Interna / Servicio'}</span>
                                             </div>
                                         )}
                                     </div>
 
-                                    {!isInternationalGroup && type !== 'STORAGE_FEE' && (
+                                    {/* 🔥 Solo mostramos fotos si realmente existen (para no mostrar cuadros vacíos en servicios digitales) */}
+                                    {!isInternationalGroup && type !== 'STORAGE_FEE' && (req.photoPickupUrl || req.photoDeliveryUrl) && (
                                         <div className="mt-1">
                                             <p className="text-[9px] font-bold text-gray-400 uppercase mb-2 flex items-center gap-1 tracking-wider"><Camera size={10}/> {t('evidence')}</p>
                                             <div className="flex gap-3">
-                                                {req.photoPickupUrl ? (
+                                                {req.photoPickupUrl && (
                                                     <a href={req.photoPickupUrl} target="_blank" className="relative w-16 h-12 rounded-lg overflow-hidden border border-gray-200 group">
                                                         <Image src={req.photoPickupUrl} alt="Pickup" fill className="object-cover transition-transform group-hover:scale-110"/>
                                                     </a>
-                                                ) : <div className="w-16 h-12 rounded-lg bg-gray-50 border border-dashed border-gray-200 flex items-center justify-center"><Camera size={14} className="text-gray-300"/></div>}
+                                                )}
                                                 
-                                                {req.photoDeliveryUrl ? (
+                                                {req.photoDeliveryUrl && (
                                                     <a href={req.photoDeliveryUrl} target="_blank" className="relative w-16 h-12 rounded-lg overflow-hidden border border-gray-200 group">
                                                         <Image src={req.photoDeliveryUrl} alt="Delivery" fill className="object-cover transition-transform group-hover:scale-110"/>
                                                     </a>
-                                                ) : <div className="w-16 h-12 rounded-lg bg-gray-50 border border-dashed border-gray-200 flex items-center justify-center"><Clock size={14} className="text-gray-300"/></div>}
+                                                )}
                                             </div>
                                         </div>
                                     )}
@@ -132,7 +142,7 @@ const HistoryGroup = ({ type, requests }: { type: string, requests: any[] }) => 
                                 <div className="p-4 bg-gray-50 border-t border-gray-100 flex justify-between items-center mt-auto">
                                     <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t('totalPaid')}</span>
                                     <span className="text-xl font-bold text-gray-800 flex items-baseline">
-                                        <span className="text-sm text-gray-400 mr-0.5">$</span>{(req.totalPaid || req.totalAmount || 0).toFixed(2)}
+                                        <span className="text-sm text-gray-400 mr-0.5">$</span>{(req.totalPaid || req.totalAmount || req.amountNet || 0).toFixed(2)}
                                     </span>
                                 </div>
                             </div>
@@ -146,30 +156,56 @@ const HistoryGroup = ({ type, requests }: { type: string, requests: any[] }) => 
 
 export default function HistoryRequestsCarousel({ requests }: { requests: any[] }) {
   const t = useTranslations('HistoryPage'); 
-  const [activeTab, setActiveTab] = useState<'LOCAL' | 'INTERNATIONAL' | 'PAYMENTS'>('LOCAL');
+  // 🔥 3. AGREGAMOS LA NUEVA PESTAÑA 'SERVICES'
+  const [activeTab, setActiveTab] = useState<'LOCAL' | 'INTERNATIONAL' | 'PAYMENTS' | 'SERVICES'>('LOCAL');
   const [searchTerm, setSearchTerm] = useState('');
 
+  // 🔥 4. NORMALIZAMOS LOS TIPOS DE SERVICIO QUE VIENEN DE LA BASE DE DATOS
   const getServiceType = (req: any) => {
-      if (req.serviceType) return req.serviceType;
+      // 1. Si el backend ya le pone un serviceType explícito
+      if (req.serviceType) {
+          const type = req.serviceType.toUpperCase();
+          if (type === 'PERSONAL SHOPPER' || type === 'PERSONAL_SHOPPER') return 'PERSONAL_SHOPPER';
+          if (type === 'STORE PICKUP' || type === 'STORE_PICKUP') return 'STORE_PICKUP';
+          if (type === 'MAILBOXSUBSCRIPTION' || type === 'MAILBOX') return 'MAILBOX';
+          return type;
+      }
+      
+      // 🔥 2. DETECCIÓN INTELIGENTE BASADA EN TU PRISMA SCHEMA
+      // Si tiene 'gmcShopperFee' o 'itemsSubtotal', es 100% un Personal Shopper
+      if (req.gmcShopperFee !== undefined || req.itemsSubtotal !== undefined) {
+          return 'PERSONAL_SHOPPER';
+      }
+      
+      // Si tiene 'planType', es una Suscripción de Buzón Virtual
+      if (req.planType !== undefined) {
+          return 'MAILBOX';
+      }
+
+      // 3. Fallbacks originales
       if (req.selectedCourier === 'STORAGE_FEE') return 'STORAGE_FEE';
       if (req.gmcShipmentNumber?.startsWith('GMC-SHIP')) return 'CONSOLIDATION';
       if (req.gmcShipmentNumber?.startsWith('PICKUP-')) return 'STORAGE_FEE';
+      
       return 'DEFAULT';
   };
 
+  // 🔥 5. ASIGNAMOS QUÉ TARJETAS VAN EN QUÉ PESTAÑA
   const getFilteredRequests = () => {
       return requests.filter(req => {
           const type = getServiceType(req);
           let matchTab = false;
+          
           if (activeTab === 'LOCAL') matchTab = ['SHIPPING', 'DELIVERY', 'STORAGE'].includes(type);
           else if (activeTab === 'INTERNATIONAL') matchTab = ['CONSOLIDATION', 'SHIPPING_INTL'].includes(type);
           else if (activeTab === 'PAYMENTS') matchTab = ['STORAGE_FEE'].includes(type); 
+          else if (activeTab === 'SERVICES') matchTab = ['PERSONAL_SHOPPER', 'STORE_PICKUP', 'MAILBOX'].includes(type); // 👈 Asignación
           
           if (!matchTab) return false;
 
           if (searchTerm) {
               const term = searchTerm.toLowerCase();
-              const desc = (req.description || '').toLowerCase();
+              const desc = (req.description || req.planName || '').toLowerCase();
               const id = (req.id || '').toLowerCase();
               const shipment = (req.gmcShipmentNumber || '').toLowerCase();
               return desc.includes(term) || id.includes(term) || shipment.includes(term);
@@ -190,11 +226,13 @@ export default function HistoryRequestsCarousel({ requests }: { requests: any[] 
 
   return (
     <div className="space-y-8">
+        {/* 🔥 6. AGREGAMOS EL BOTÓN DE LA NUEVA PESTAÑA */}
         <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
             <div className="flex bg-white p-1 rounded-full border border-gray-200 shadow-sm overflow-x-auto max-w-full">
                 <button onClick={() => setActiveTab('LOCAL')} className={`px-5 py-2.5 rounded-full font-bold text-xs flex items-center gap-2 whitespace-nowrap transition-all ${activeTab === 'LOCAL' ? 'bg-gray-800 text-white shadow-md' : 'text-gray-500 hover:bg-gray-50'}`}><Truck size={14}/> {t('tabLocal')}</button>
                 <button onClick={() => setActiveTab('INTERNATIONAL')} className={`px-5 py-2.5 rounded-full font-bold text-xs flex items-center gap-2 whitespace-nowrap transition-all ${activeTab === 'INTERNATIONAL' ? 'bg-gray-800 text-white shadow-md' : 'text-gray-500 hover:bg-gray-50'}`}><Plane size={14}/> {t('tabInternational')}</button>
                 <button onClick={() => setActiveTab('PAYMENTS')} className={`px-5 py-2.5 rounded-full font-bold text-xs flex items-center gap-2 whitespace-nowrap transition-all ${activeTab === 'PAYMENTS' ? 'bg-gray-800 text-white shadow-md' : 'text-gray-500 hover:bg-gray-50'}`}><DollarSign size={14}/> {t('tabStorage')}</button>
+                <button onClick={() => setActiveTab('SERVICES')} className={`px-5 py-2.5 rounded-full font-bold text-xs flex items-center gap-2 whitespace-nowrap transition-all ${activeTab === 'SERVICES' ? 'bg-gray-800 text-white shadow-md' : 'text-gray-500 hover:bg-gray-50'}`}><ShoppingBag size={14}/> {t('tabServices') || 'Services'}</button>
             </div>
 
             <div className="relative w-full md:w-72 group">

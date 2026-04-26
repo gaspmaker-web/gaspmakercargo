@@ -7,261 +7,265 @@ generator client {
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL") // Transaction Mode (Puerto 6543 - Supabase)
-  directUrl = env("DIRECT_URL") // Session Mode (Puerto 5432 - Supabase)
+  directUrl = env("DIRECT_URL")   // Session Mode (Puerto 5432 - Supabase)
 }
 
 // -----------------------------------------------------------------------------------------
 
 model User {
-  id   String  @id @default(uuid())
-  name String?
-
+  id                    String                @id @default(uuid())
+  name                  String?
+  
   // ✅ CAMPO IMAGEN (Avatar)
-  image String?
+  image                 String?               
 
   // ✅ EMAIL (Único)
-  email String @unique
-
+  email                 String                @unique
+  
   // 🔐 AUTENTICACIÓN (CORREGIDO)
-  password String?
+  password              String?
 
   // 🔄 RECUPERACIÓN
-  resetToken       String?   @unique
-  resetTokenExpiry DateTime?
+  resetToken            String?               @unique 
+  resetTokenExpiry      DateTime? 
 
-  role      String   @default("CLIENTE")
-  createdAt DateTime @default(now())
+  role                  String                @default("CLIENTE")
+  createdAt             DateTime              @default(now())
 
   // Campos de Perfil
-  countryCode String?
-  suiteNo     String?   @unique
-  dateOfBirth DateTime?
-  address     String?
-  cityZip     String?
-  country     String?
-  phone       String?
-
+  countryCode           String?
+  suiteNo               String?               @unique 
+  dateOfBirth           DateTime?
+  address               String?
+  cityZip               String?
+  country               String?
+  phone                 String?
+ 
   // 💰 BILLETERA & REFERIDOS
-  referralCode       String? @unique
-  referredBy         String?
-  referralRewardPaid Boolean @default(false) // 🔥 NUEVO: Control exacto de si ya se pagó el bono por este cliente
-  walletBalance      Float   @default(0.0)
-  shippingBalance    Float   @default(0.0)
+  referralCode          String?               @unique 
+  referredBy          String?
+  referralRewardPaid  Boolean  @default(false) // 🔥 NUEVO: Control exacto de si ya se pagó el bono por este cliente
+  walletBalance         Float                 @default(0.0) 
+  shippingBalance       Float                 @default(0.0) 
 
   // --- STRIPE ---
-  stripeCustomerId String? @unique
+  stripeCustomerId      String?               @unique 
 
   // Relaciones
   packages              Package[]
   consolidatedShipments ConsolidatedShipment[]
-  pickupRequests        PickupRequest[]
+  pickupRequests        PickupRequest[]       
   paymentMethods        PaymentMethod[]
   addresses             Address[]
-
+  
   // Tareas asignadas como Chofer
-  assignedTasks PickupRequest[] @relation("DriverAssignments")
+  assignedTasks         PickupRequest[]       @relation("DriverAssignments")
 
   // Notificaciones
-  notifications Notification[]
+  notifications         Notification[]
 
   // 📭 VIRTUAL MAILBOX (NUEVO)
-  mailboxSubscription MailboxSubscription? // 1 a 1 (Solo puede tener un plan activo)
-  mailItems           MailItem[] // 1 a muchos (Puede tener cientos de sobres)
-  mailboxTransactions MailboxTransaction[]
-  mailPickupRequests  MailPickupRequest[] // 🔥 AÑADE ESTA LÍNEA AQUÍ
+  mailboxSubscription   MailboxSubscription? // 1 a 1 (Solo puede tener un plan activo)
+  mailItems             MailItem[]           // 1 a muchos (Puede tener cientos de sobres)
+  mailboxTransactions   MailboxTransaction[]
+  mailPickupRequests    MailPickupRequest[]  // 🔥 AÑADE ESTA LÍNEA AQUÍ
 
   // 🛒 PERSONAL SHOPPER (NUEVO - Relación)
-  shopperOrders ShopperOrder[]
+  shopperOrders         ShopperOrder[]
 }
 
 // -----------------------------------------------------------------------------------------
 
 model PaymentMethod {
-  id        String   @id @default(uuid())
-  createdAt DateTime @default(now())
-
-  stripePaymentMethodId String @unique
-  brand                 String
-  last4                 String
+  id                    String   @id @default(uuid())
+  createdAt             DateTime @default(now())
+  
+  stripePaymentMethodId String   @unique 
+  brand                 String   
+  last4                 String   
   expMonth              Int
   expYear               Int
+  
+  isDefault             Boolean  @default(false)
+  isBackup              Boolean  @default(false)
 
-  isDefault Boolean @default(false)
-  isBackup  Boolean @default(false)
-
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId                String
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Package {
-  id        String   @id @default(uuid())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                     String   @id @default(uuid())
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+  
+  status                 String   
+  description            String?
 
-  status           String
-  description      String?
-  storagePaidUntil DateTime?
-  storageDebt      Float     @default(0.0)
+// 🔥 NUEVO: Etiqueta Enterprise para el historial
+  serviceType            String?  @default("SHIPPING_INTL")
 
-  courier       String?
-  declaredValue Float?  @default(0.0)
+  storagePaidUntil       DateTime? 
+  storageDebt            Float    @default(0.0) 
+  
+  courier                String?   
+  declaredValue          Float?   @default(0.0) 
+  
+  selectedCourier        String?   
+  courierService         String? 
+  shippingAddress        String?   // 🔥 NUEVO: Dirección para paquetes individuales Nivel Amazon  
 
-  selectedCourier String?
-  courierService  String?
-  shippingAddress String? // 🔥 NUEVO: Dirección para paquetes individuales Nivel Amazon  
-
-  shippingSubtotal      Float?  @default(0.0)
-  shippingProcessingFee Float?  @default(0.0)
-  shippingTotalPaid     Float?  @default(0.0)
-  stripePaymentId       String?
+  shippingSubtotal       Float?   @default(0.0) 
+  shippingProcessingFee  Float?   @default(0.0) 
+  shippingTotalPaid      Float?   @default(0.0) 
+  stripePaymentId        String?   
 
   // 🔥 NUEVO: Para guardar la tabla detallada de aduanas (DHL/FedEx)
-  customsItems Json?
+  customsItems           Json?    
 
-  weightLbs         Float?
-  lengthIn          Float?
-  widthIn           Float?
-  heightIn          Float?
-  photoUrlMiami     String?
-  receiptUrl        String?
-  invoiceUrl        String?
-  shippingLabelUrl  String?
-  deliveryPhotoUrl  String?
-  deliverySignature String?
-  deliveredBy       String? // 🔥 NUEVO: Nombre del personal que entregó
-  tookanLink        String?
-
-  carrierTrackingNumber String?
-  gmcTrackingNumber     String  @unique
-
-  finalTrackingNumber String?
-  estimatedArrival    DateTime?
-
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  weightLbs              Float?
+  lengthIn               Float?
+  widthIn                Float?
+  heightIn               Float?
+  photoUrlMiami          String?
+  receiptUrl             String?
+  invoiceUrl             String?
+  shippingLabelUrl       String?
+  deliveryPhotoUrl       String?   
+  deliverySignature      String?   
+  deliveredBy            String?   // 🔥 NUEVO: Nombre del personal que entregó
+  tookanLink             String?   
+  
+  carrierTrackingNumber  String?   
+  gmcTrackingNumber      String    @unique 
+  
+  finalTrackingNumber    String?
+  estimatedArrival       DateTime?
+  
+  userId                 String
+  user                   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   consolidatedShipmentId String?
   consolidatedShipment   ConsolidatedShipment? @relation(fields: [consolidatedShipmentId], references: [id])
 }
 
 model ConsolidatedShipment {
-  id        String   @id @default(uuid())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                     String   @id @default(uuid())
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
 
-  gmcShipmentNumber      String  @unique
+  gmcShipmentNumber      String   @unique 
   destinationCountryCode String?
 
   // 🔥 NUEVO: Dirección exacta de entrega seleccionada Nivel Amazon
-  shippingAddress String?
+  shippingAddress        String?
 
-  status String
+  status                 String   
+  
+  serviceType            String   @default("CONSOLIDATION")
 
-  serviceType String @default("CONSOLIDATION")
+  storagePaidUntil       DateTime?
+  selectedCourier        String?
+  courierService         String?
+  finalTrackingNumber    String?
+  shippingLabelUrl       String?
+  
+  deliveredBy            String?   // 🔥 NUEVO: Nombre del personal que entregó
 
-  storagePaidUntil    DateTime?
-  selectedCourier     String?
-  courierService      String?
-  finalTrackingNumber String?
-  shippingLabelUrl    String?
-
-  deliveredBy String? // 🔥 NUEVO: Nombre del personal que entregó
-
-  paymentId String?
-  weightLbs Float?
-
-  declaredValue Float? @default(0.0)
+  paymentId              String?
+  weightLbs              Float?
+  
+  declaredValue          Float?   @default(0.0)
 
   // 🔥 NUEVO: Para guardar la tabla detallada de aduanas de cajas agrupadas
-  customsItems Json?
+  customsItems           Json?    
 
-  subtotalAmount Float? @default(0.0)
-  processingFee  Float? @default(0.0)
-  totalAmount    Float?
-  widthIn        Float?
-  heightIn       Float?
-  lengthIn       Float?
+  subtotalAmount         Float?   @default(0.0) 
+  processingFee          Float?   @default(0.0) 
+  totalAmount            Float?
+  widthIn                Float?
+  heightIn               Float?
+  lengthIn               Float?
+  
+  userId                 String
+  user                   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  packages Package[]
+  packages               Package[]
 }
 
 model PickupRequest {
-  id        String   @id @default(uuid())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id               String   @id @default(uuid())
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  
+  serviceType      String   @default("SHIPPING") 
 
-  serviceType String @default("SHIPPING")
+  originAddress    String
+  originCity       String
+  pickupDate       DateTime 
+  description      String   
+  contactPhone     String
 
-  originAddress String
-  originCity    String
-  pickupDate    DateTime
-  description   String
-  contactPhone  String
+  dropOffAddress   String?
+  dropOffCity      String?
+  dropOffContact   String?
+  dropOffPhone     String?
+  
+  subtotal         Float?   @default(0.0) 
+  processingFee    Float?   @default(0.0) 
+  totalPaid        Float?   @default(0.0) 
+  
+  stripePaymentId  String?
+  weightInfo       String?
+  volumeInfo       String?
 
-  dropOffAddress String?
-  dropOffCity    String?
-  dropOffContact String?
-  dropOffPhone   String?
-
-  subtotal      Float? @default(0.0)
-  processingFee Float? @default(0.0)
-  totalPaid     Float? @default(0.0)
-
-  stripePaymentId String?
-  weightInfo      String?
-  volumeInfo      String?
-
-  photoPickupUrl   String?
+  photoPickupUrl   String?  
   photoDeliveryUrl String?
+  
+  signatureUrl     String?   
+  tookanLink       String?   
+  
+  status           String   @default("PENDIENTE") 
 
-  signatureUrl String?
-  tookanLink   String?
-
-  status String @default("PENDIENTE")
-
-  driverId String?
-  driver   User?   @relation("DriverAssignments", fields: [driverId], references: [id], onDelete: SetNull)
-
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  driverId         String?  
+  driver           User?    @relation("DriverAssignments", fields: [driverId], references: [id], onDelete: SetNull)
+  
+  userId           String
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Notification {
   id        String   @id @default(uuid())
   createdAt DateTime @default(now())
+  
+  title     String
+  message   String
+  href      String?
+  isRead    Boolean  @default(false)
+  type      String   @default("INFO") 
 
-  title   String
-  message String
-  href    String?
-  isRead  Boolean @default(false)
-  type    String  @default("INFO")
-
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
-  @@index([userId, isRead])
+  @@index([userId, isRead]) 
 }
 
 model Address {
-  id        String   @id @default(uuid())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String   @id @default(uuid())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
-  fullName    String // Para guardar "anto sol"
-  address     String // La calle
-  cityZip     String // La ciudad y código postal
-  country     String // El país
-  countryCode String? // Código de 2 letras (US, TT, etc)
-  phone       String? // Teléfono del contacto
+  fullName      String   // Para guardar "anto sol"
+  address       String   // La calle
+  cityZip       String   // La ciudad y código postal
+  country       String   // El país
+  countryCode   String?  // Código de 2 letras (US, TT, etc)
+  phone         String?  // Teléfono del contacto
 
-  isDefault Boolean @default(false)
+  isDefault     Boolean  @default(false)
 
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 }
@@ -271,93 +275,93 @@ model Address {
 // -----------------------------------------------------------------------------------------
 
 model MailboxSubscription {
-  id        String   @id @default(uuid())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                   String   @id @default(uuid())
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
 
-  planType String // Ej: "BASIC_799", "PREMIUM_1499"
-  status   String @default("PENDING_USPS") // "PENDING_USPS", "ACTIVE", "CANCELLED", "PAST_DUE", "REJECTED"
-
+  planType             String   // Ej: "BASIC_799", "PREMIUM_1499"
+  status               String   @default("PENDING_USPS") // "PENDING_USPS", "ACTIVE", "CANCELLED", "PAST_DUE", "REJECTED"
+  
   // Archivos Legales del Titular Principal
-  uspsForm1583Url String?
-  primaryIdUrl    String?
-  secondaryIdUrl  String?
-
-  rejectionReason String?
+  uspsForm1583Url      String?  
+  primaryIdUrl         String?  
+  secondaryIdUrl       String?  
+  
+  rejectionReason      String?  
 
   // Control de facturación
-  currentPeriodEnd     DateTime?
-  stripeSubscriptionId String?   @unique
+  currentPeriodEnd     DateTime? 
+  stripeSubscriptionId String?  @unique
 
   // Relación con el Usuario
-  userId String @unique
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId               String   @unique
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // Relación con los usuarios adicionales
   additionalRecipients AdditionalRecipient[]
 }
 
 model AdditionalRecipient {
-  id        String   @id @default(uuid())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                   String   @id @default(uuid())
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
 
-  fullName String
-  email    String?
+  fullName             String   
+  email                String?  
 
-  uspsForm1583Url String?
-  primaryIdUrl    String?
-  secondaryIdUrl  String?
+  uspsForm1583Url      String?  
+  primaryIdUrl         String?  
+  secondaryIdUrl       String?  
 
-  status          String  @default("PENDING_USPS")
-  rejectionReason String?
+  status               String   @default("PENDING_USPS") 
+  rejectionReason      String?
 
-  subscriptionId String
-  subscription   MailboxSubscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  subscriptionId       String
+  subscription         MailboxSubscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
 }
 
 model MailItem {
-  id        String   @id @default(uuid())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                   String   @id @default(uuid())
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
 
-  // 🔥 NUEVO: El tracking interno corto
-  trackingNumber String? @unique
+// 🔥 NUEVO: El tracking interno corto
+  trackingNumber       String?  @unique
+  
+  senderName           String?  
+  weightOz             Float?   
+  
+  lengthIn             Float?   
+  widthIn              Float?   
+  heightIn             Float?   
 
-  senderName String?
-  weightOz   Float?
+  isDamaged            Boolean  @default(false) 
+  
+  envelopeImageUrl     String   
+  scannedDocUrl        String?  
+  
+  status               String   @default("UNREAD") 
+  
+  receivedAt           DateTime @default(now()) 
+  
+  userId               String
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  lengthIn Float?
-  widthIn  Float?
-  heightIn Float?
-
-  isDamaged Boolean @default(false)
-
-  envelopeImageUrl String
-  scannedDocUrl    String?
-
-  status String @default("UNREAD")
-
-  receivedAt DateTime @default(now())
-
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  cargoPackageId String?             @unique
-  pickupRequests MailPickupRequest[] // 🔥 AÑADE ESTA LÍNEA AQUÍ 
+  cargoPackageId       String?  @unique
+  pickupRequests       MailPickupRequest[] // 🔥 AÑADE ESTA LÍNEA AQUÍ 
 }
 
 model MailboxTransaction {
-  id        String   @id @default(uuid())
-  createdAt DateTime @default(now())
-
+  id              String   @id @default(uuid())
+  createdAt       DateTime @default(now())
+  
   amount          Float
-  description     String
-  status          String  @default("COMPLETED")
+  description     String   
+  status          String   @default("COMPLETED")
   stripePaymentId String?
 
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 // ==========================================
@@ -365,45 +369,48 @@ model MailboxTransaction {
 // ==========================================
 
 model ShopperOrder {
-  id String @id @default(cuid())
-
+  id                String        @id @default(cuid())
+  
   // 🔥 AÑADIDA RELACIÓN CON USER
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId            String        
+  user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  status            String        @default("PENDING_QUOTE")
+  
+  // 🔥 NUEVO: Etiqueta Enterprise para el historial
+  serviceType       String        @default("PERSONAL_SHOPPER")
+  
+  items             ShopperItem[]
 
-  status String @default("PENDING_QUOTE")
+  itemsSubtotal     Float         @default(0) 
+  usTaxes           Float         @default(0) 
+  domesticShipping  Float         @default(0) 
+  gmcShopperFee     Float         @default(0) 
+  stripeFee         Float         @default(0) 
+  totalAmount       Float         @default(0) 
 
-  items ShopperItem[]
-
-  itemsSubtotal    Float @default(0)
-  usTaxes          Float @default(0)
-  domesticShipping Float @default(0)
-  gmcShopperFee    Float @default(0)
-  stripeFee        Float @default(0)
-  totalAmount      Float @default(0)
-
-  stripePaymentId String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  stripePaymentId   String?       
+  
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
 }
 
 model ShopperItem {
-  id      String       @id @default(cuid())
-  orderId String
-  order   ShopperOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
-
-  storeName  String?
-  productUrl String  @db.Text
-  name       String?
-  details    String? @db.Text
-  quantity   Int     @default(1)
-
-  declaredPrice Float
-  actualPrice   Float?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                String        @id @default(cuid())
+  orderId           String
+  order             ShopperOrder  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  
+  storeName         String?       
+  productUrl        String        @db.Text 
+  name              String?       
+  details           String?       @db.Text 
+  quantity          Int           @default(1)
+  
+  declaredPrice     Float         
+  actualPrice       Float?        
+  
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
 }
 
 model MailPickupRequest {

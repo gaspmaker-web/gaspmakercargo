@@ -359,6 +359,7 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
       try {
           let selectedCourier = null;
           let courierService = null;
+          let packageServiceType = 'SHIPPING_INTL'; // 🔥 1. NUEVO: Variable para la etiqueta Enterprise
 
           if (selectedBillIds.length > 0) {
               const primaryId = selectedBillIds[0];
@@ -367,13 +368,18 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
 
               if (rate) {
                   selectedCourier = rate.carrier; 
-                  courierService = rate.service;  
+                  courierService = rate.service;
+                  packageServiceType = 'SHIPPING_INTL'; // Si eligió FedEx/DHL, es internacional
               } else {
+                  // 🔥 2. Mejoramos la detección de Pickup basada en tu UI
                   const isStorePickup = originalBill?.serviceType === 'PICKUP' || 
-                                        originalBill?.courierService === 'Entregar en Tienda';
+                                        originalBill?.courierService === 'Entregar en Tienda' ||
+                                        originalBill?.description?.toUpperCase().includes('PICKUP');
+
                   if (isStorePickup) {
                       selectedCourier = 'CLIENTE_RETIRO';
                       courierService = 'Recogida en Tienda';
+                      packageServiceType = 'STORE_PICKUP'; // 🔥 3. LA ETIQUETA DEFINITIVA
                   } else if (originalBill?.selectedCourier) {
                       selectedCourier = originalBill.selectedCourier;
                       courierService = originalBill.courierService;
@@ -434,6 +440,7 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
               amountNet: totals.total,
               paymentMethodId: selectedCardId,
               serviceType: 'BILL_PAYMENT',
+              packageServiceType: packageServiceType, // 🔥 4. NUEVO: Le enviamos la etiqueta explícita al backend
               description: `Pago Envíos (${totals.count}) ${discount > 0 ? "(Promo Applied)" : ""}`,
               packageIds: allPackageIds,
               billDetails: billsPayload, 

@@ -674,7 +674,11 @@
     "evidence": "Evidence",
     "totalPaid": "Total Paid",
     "noMovements": "No movements found",
-    "tryFilter": "Try changing filters."
+    "tryFilter": "Try changing filters.",
+    "tabServices": "Services",
+    "labelPersonalShopper": "Personal Shopper",
+    "labelStorePickup": "Store Pickup",
+    "labelMailbox": "Virtual Mailbox"
   },
   "StorageLock": {
     "title": "Package Locked",
@@ -1170,7 +1174,8 @@
     "itemPlural": "items",
     "noCards": "No saved cards found.",
     "addPaymentMethod": "Add a payment method in Settings to continue.",
-    "itemsRequested": "Items Requested"
+    "itemsRequested": "Items Requested",
+    "paymentCompleted": "Payment Completed Successfully"
   },
   "MailboxPublic": {
     "metadataTitle": "Virtual Mailbox USA | Gasp Maker Cargo",

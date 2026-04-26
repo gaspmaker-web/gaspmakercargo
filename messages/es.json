@@ -715,7 +715,11 @@
     "evidence": "Evidencia",
     "totalPaid": "Total Pagado",
     "noMovements": "Sin movimientos",
-    "tryFilter": "Intenta cambiar los filtros."
+    "tryFilter": "Intenta cambiar los filtros.",
+    "tabServices": "Servicios",
+    "labelPersonalShopper": "Personal Shopper",
+    "labelStorePickup": "Retiro en Tienda",
+    "labelMailbox": "Buzón Virtual"
   },
 "StorageLock": {
     "title": "Paquete Bloqueado",
@@ -1215,7 +1219,8 @@
     "calculating": "Calculando...",
     "noCards": "No tienes tarjetas guardadas.",
     "addPaymentMethod": "Agrega un método de pago en Configuración para continuar.",
-    "itemsRequested": "Artículos Solicitados"
+    "itemsRequested": "Artículos Solicitados",
+    "paymentCompleted": "Pago Completado con Éxito"
 },
 "MailboxPublic": {
     "metadataTitle": "Buzón Virtual USA | Gasp Maker Cargo",

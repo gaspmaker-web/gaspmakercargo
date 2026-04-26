@@ -32,7 +32,8 @@ export async function POST(req: Request) {
         planName,        
         shopperOrderId,
         walletDiscount, 
-        discountApplied
+        discountApplied,
+        packageServiceType // 🔥 1. NUEVO: Atrapamos la variable
 
     } = await req.json();
 
@@ -278,6 +279,7 @@ export async function POST(req: Request) {
                     selectedCourier: selectedCourier || undefined, 
                     courierService: courierService || undefined,   
                     shippingAddress: shippingAddress || undefined, 
+                    serviceType: packageServiceType || undefined, // 🔥 2. NUEVO: Lo guardamos aquí
                     subtotalAmount: cleanSubtotal,
                     processingFee: cleanFee,
                     totalAmount: cleanTotal,
@@ -336,7 +338,8 @@ export async function POST(req: Request) {
                     status: 'PAGADO', 
                     totalAmount: Number((totalToCharge / count).toFixed(2)),
                     paymentId: paymentIntent.id,
-                    shippingAddress: shippingAddress || undefined 
+                    shippingAddress: shippingAddress || undefined, 
+                    serviceType: packageServiceType || undefined // 🔥 3. NUEVO: Lo guardamos aquí
                 }
              });
         }
