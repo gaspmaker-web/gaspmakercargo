@@ -23,14 +23,19 @@ export default async function ActivePackagesPage({
   let allItems: any[] = [];
 
   try {
-      // 1. 🔥 PAQUETES INDIVIDUALES (Mercancía real en tu bodega)
+      // 1. 🔥 PAQUETES INDIVIDUALES (Pickups, USPS local y paquetes no consolidados)
       const loosePackagesRaw = await prisma.package.findMany({
         where: {
           status: { notIn: ['ENTREGADO', 'CANCELADO'] },
+          
+          // 👇 LA REGLA MÁGICA 👇
+          // Deja el paquete suelto si NO tiene caja, o si su caja NO es internacional/consolidada.
+          // Esto asegura que Pickups y USPS se vean normales.
           OR: [
               { consolidatedShipmentId: null }, 
-              { consolidatedShipment: { serviceType: { not: 'CONSOLIDATION' } } } 
+              { consolidatedShipment: { serviceType: { notIn: ['CONSOLIDATION', 'SHIPPING_INTL'] } } } 
           ],
+
           ...(query ? {
             OR: [
               { id: { contains: query, mode: 'insensitive' } }, 
@@ -41,7 +46,6 @@ export default async function ActivePackagesPage({
           } : {})
         },
         include: {
-          // 🔥 AQUÍ AGREGAMOS PHONE Y EMAIL PARA EL INVOICE ADUANAL
           user: { select: { id: true, name: true, suiteNo: true, countryCode: true, phone: true, email: true } },
           consolidatedShipment: { 
             select: { 
@@ -54,12 +58,10 @@ export default async function ActivePackagesPage({
         orderBy: { createdAt: 'desc' }
       });
 
-      // 🛠️ EL ARREGLO PARA PAQUETES: Truco Ninja para forzar a la pantalla a leer el Total
+      // 🛠️ EL ARREGLO PARA PAQUETES: Truco Ninja
       const formattedLoosePackages = loosePackagesRaw.map(pkg => {
-        // 🔥 Detectamos si es documento
         const isDocument = pkg.courier === 'Buzón Virtual' || (pkg.carrierTrackingNumber || '').startsWith('DOC-') || (pkg.gmcTrackingNumber || '').startsWith('GMC-DOC-');
         
-        // 🔥 REGLA ABSOLUTA: Si es documento el precio ES CERO SIEMPRE. Si no, usa el total de la base de datos.
         const realTotal = isDocument ? 0.00 : (pkg.shippingTotalPaid !== null ? pkg.shippingTotalPaid : pkg.shippingSubtotal);
 
         return {
@@ -70,11 +72,15 @@ export default async function ActivePackagesPage({
         };
       });
 
-      // 2. 🔥 CONSOLIDACIONES REALES (El Escudo Definitivo)
+      // 2. 🔥 CONSOLIDACIONES REALES Y ENVÍOS INTERNACIONALES (Cajas Maestras)
       const activeShipments = await prisma.consolidatedShipment.findMany({
         where: {
           status: { notIn: ['ENTREGADO', 'CANCELADO'] },
-          serviceType: 'CONSOLIDATION', // 🛡️ EL ESCUDO
+          
+          // 👇 EL ESCUDO INTELIGENTE 👇
+          // Solo atrapa Cajas Maestras (Nelsom, Aisha). Ignora Pickups y USPS local.
+          serviceType: { in: ['CONSOLIDATION', 'SHIPPING_INTL'] }, 
+
           ...(query ? {
             OR: [
               { id: { contains: query, mode: 'insensitive' } }, 
@@ -84,16 +90,14 @@ export default async function ActivePackagesPage({
           } : {})
         },
         include: {
-          // 🔥 AQUÍ TAMBIÉN AGREGAMOS PHONE Y EMAIL PARA EL INVOICE DE CAJAS
           user: { select: { id: true, name: true, suiteNo: true, countryCode: true, phone: true, email: true } },
-          // 🔥 LA MAGIA: Le decimos que nos traiga también los paquetes internos con sus aduanas
           packages: { 
               select: { 
                   id: true, 
                   gmcTrackingNumber: true,
                   description: true, 
                   declaredValue: true, 
-                  customsItems: true // Vital para extraer las camisas y blusas
+                  customsItems: true 
               } 
           }
         },
@@ -115,17 +119,17 @@ export default async function ActivePackagesPage({
         widthIn: ship.widthIn,
         heightIn: ship.heightIn,
         shippingTotalPaid: ship.totalAmount, 
-        totalAmount: ship.totalAmount, // 🔥 Aseguramos la variable para el frontend
+        totalAmount: ship.totalAmount, 
         paymentId: ship.paymentId, 
         finalTrackingNumber: ship.finalTrackingNumber,
         status: ship.status,
         shippingLabelUrl: ship.shippingLabelUrl, 
         isProcessing: false,
         isStorePickup: false,
-        packages: ship.packages // 🔥 Pasamos los paquetes internos a la pantalla
+        packages: ship.packages 
       }));
 
-      // 3. UNIFICAMOS SOLO LAS 2 TABLAS DE INVENTARIO
+      // 3. UNIFICAMOS LAS 2 TABLAS DE INVENTARIO
       allItems = [...formattedLoosePackages, ...formattedShipments].sort((a: any, b: any) => 
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       );
