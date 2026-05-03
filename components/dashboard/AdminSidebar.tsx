@@ -21,7 +21,8 @@ import {
   Mailbox, 
   ChevronDown,
   ShoppingBag,
-  Gift 
+  Gift,
+  CheckCircle
 } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 
@@ -31,7 +32,7 @@ export default function AdminSidebar() {
   
   const [isOpen, setIsOpen] = useState(false);
   const [openSubmenu, setOpenSubmenu] = useState<string | null>(null); 
-  
+
   // Estados de Notificaciones (Generales)
   const [paidPackagesCount, setPaidPackagesCount] = useState(0);
   const [preAlertsCount, setPreAlertsCount] = useState(0);
@@ -41,8 +42,6 @@ export default function AdminSidebar() {
   const [tasksPendingCount, setTasksPendingCount] = useState(0);
   const [receptionPendingCount, setReceptionPendingCount] = useState(0);
   const [expiredCount, setExpiredCount] = useState(0);
-  
-  // 🔥 NUEVO ESTADO: Recogidas en Oficina (Pickups)
   const [pickupsPendingCount, setPickupsPendingCount] = useState(0);
 
   // ESTADO PARA PERSONAL SHOPPER Y CONSOLIDACIONES
@@ -57,26 +56,21 @@ export default function AdminSidebar() {
 
   useEffect(() => {
     const checkPendingWork = async () => {
-        
-        // 1. ESTADÍSTICAS CENTRALES (Trae casi todo en una sola llamada)
         try {
             const resStats = await fetch('/api/admin/stats', { cache: 'no-store' });
             if (resStats.ok) {
                 const dataStats = await resStats.json();
-                
                 if (dataStats.success && dataStats.stats) {
                     setKycPendingCount(dataStats.stats.kycPendientes || 0);
                     setTasksPendingCount(dataStats.stats.tareasBuzon || 0);
                     setExpiredCount(dataStats.stats.caducados || 0);
                     setPendingShopperCount(dataStats.stats.comprasPendientes || 0);
                     setPendingConsolidationsCount(dataStats.stats.consolidaciones || 0);
-                    // 🔥 ACTUALIZAMOS EL NUEVO CONTADOR DESDE LA API CENTRAL
                     setPickupsPendingCount(dataStats.stats.pickupsBuzon || 0);
                 }
             }
         } catch (error) { console.error("Error en API stats:", error); }
 
-        // 2. PAQUETES PAGADOS
         try {
             const resPaid = await fetch('/api/admin/packages/paid-count', { cache: 'no-store' });
             if (resPaid.ok) {
@@ -85,7 +79,6 @@ export default function AdminSidebar() {
             }
         } catch (e) { }
 
-        // 3. PRE-ALERTAS
         try {
             const resPreAlerts = await fetch('/api/admin/packages/prealerts-count', { cache: 'no-store' });
             if (resPreAlerts.ok) {
@@ -94,7 +87,6 @@ export default function AdminSidebar() {
             }
         } catch (e) { }
 
-        // 4. RECEPCIÓN
         try {
             const resReception = await fetch('/api/admin/bodega/reception-pending-count', { cache: 'no-store' });
             if (resReception.ok) {
@@ -150,11 +142,9 @@ export default function AdminSidebar() {
       name: "Buzón Virtual", 
       icon: Mailbox, 
       roles: ["ADMIN", "WAREHOUSE"],
-      // 🔥 AÑADIMOS EL CONTADOR DE PICKUPS A LA REGLA GENERAL PARA QUE EL GLOBITO DEL PADRE PARPADEE
       hasNotification: kycPendingCount > 0 || tasksPendingCount > 0 || receptionPendingCount > 0 || expiredCount > 0 || pickupsPendingCount > 0,
       subItems: [
         { name: "Aprobaciones KYC", href: `/${currentLocale}/dashboard-admin/buzones-kyc`, count: kycPendingCount },
-        // 🔥 SUMAMOS LAS TAREAS DE SOBRES (Escanear/Destruir) + LAS CITAS DE RECOGIDA EN LA MISMA ETIQUETA
         { name: "Tareas / Escaneos", href: `/${currentLocale}/dashboard-admin/tareas-buzon`, count: tasksPendingCount + pickupsPendingCount },
         { name: "Recepción", href: `/${currentLocale}/dashboard-admin/recepcion-buzones`, count: receptionPendingCount },
         { name: "Inventario Físico", href: `/${currentLocale}/dashboard-admin/inventario-buzones`, count: expiredCount } 
@@ -202,8 +192,11 @@ export default function AdminSidebar() {
         md:translate-x-0 md:shadow-none
       `}>
         
-        <div className="p-6 pt-14 border-b border-gray-100 flex flex-col items-center relative">
+        <div className="p-6 pt-16 border-b border-gray-100 flex flex-col items-center relative">
+            
+            {/* 🔥 LOS DOS BOTONES ORIGINALES RESTAURADOS 🔥 */}
             <div className="absolute top-4 left-0 w-full flex justify-center items-center gap-6">
+                {/* 1. Botón Rojo: Paquetes Pagados */}
                 <Link 
                     href={`/${currentLocale}/dashboard-admin/paquetes?filter=pagados`} 
                     className="relative p-1.5 bg-red-50 rounded-full text-red-400 hover:text-red-600 hover:bg-red-100 transition-all shadow-sm border border-red-100"
@@ -217,6 +210,7 @@ export default function AdminSidebar() {
                     )}
                 </Link>
 
+                {/* 2. Botón Morado: Pre-alertas (RESTAURADO) */}
                 <Link 
                     href={`/${currentLocale}/dashboard-admin/paquetes?filter=prealertas`} 
                     className="relative p-1.5 bg-purple-50 rounded-full text-purple-500 hover:text-purple-700 hover:bg-purple-100 transition-all shadow-sm border border-purple-100"
@@ -246,6 +240,7 @@ export default function AdminSidebar() {
             </span>
         </div>
 
+        {/* --- EL RESTO DEL MENÚ SE MANTIENE EXACTAMENTE IGUAL --- */}
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
             {allowedLinks.map((item) => {
             
