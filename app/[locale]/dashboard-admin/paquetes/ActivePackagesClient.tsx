@@ -232,7 +232,6 @@ export default function ActivePackagesClient({ allItems, currentLocale }: Packag
                                                 {pkg.gmcTrackingNumber}
                                                 {isProcessing && <span className="h-2 w-2 rounded-full bg-orange-500 animate-pulse"></span>}
                                             </div>
-                                            {/* 🔥 AQUÍ ESTÁ EL SHORT ID 🔥 */}
                                             <div className="text-[10px] text-gray-500 font-bold font-mono mt-1 bg-gray-100 inline-block px-1.5 py-0.5 rounded border border-gray-200">
                                                 ID: {shortId}
                                             </div>
@@ -255,9 +254,16 @@ export default function ActivePackagesClient({ allItems, currentLocale }: Packag
                                     </td>
 
                                     <td className="p-4 text-sm text-gray-600 max-w-[150px] truncate">
+                                        {/* 🔥 EL CAMBIO INTELIGENTE DE LA DESCRIPCIÓN 🔥 */}
                                         {isConsolidatedBox ? (
-                                            <span className="text-xs font-bold text-purple-700 bg-purple-100 px-2 py-0.5 rounded">
-                                                Consolidación
+                                            <span className={`text-xs font-bold px-2 py-0.5 rounded ${
+                                                pkg.description === 'Envío de Documento' 
+                                                    ? 'text-blue-700 bg-blue-100' // Azul para Documentos
+                                                    : pkg.description !== 'Consolidación'
+                                                    ? 'text-emerald-700 bg-emerald-100' // Verde para Paquetes Individuales (Zapatos, Ropa)
+                                                    : 'text-purple-700 bg-purple-100' // Morado para Consolidación Real
+                                            }`}>
+                                                {pkg.description || 'Consolidación'}
                                             </span>
                                         ) : (
                                             pkg.description || 'Sin descripción'

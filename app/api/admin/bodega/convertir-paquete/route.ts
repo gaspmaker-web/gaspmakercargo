@@ -25,7 +25,7 @@ export async function POST(req: Request) {
         // Convertimos las onzas del sobre a libras para el paquete (1 lb = 16 oz)
         const pesoEnLibras = mailItem.weightOz ? (mailItem.weightOz / 16) : 0.1;
 
-       // A. Creamos el PAQUETE oficial
+      // A. Creamos el PAQUETE oficial
         const newPackage = await tx.package.create({
             data: {
                 userId: mailItem.userId,
@@ -33,12 +33,17 @@ export async function POST(req: Request) {
                 gmcTrackingNumber: `GMC-DOC-${uniqueId}`, 
                 courier: 'Buzón Virtual',
                 weightLbs: pesoEnLibras, 
-                // 🔥 Ahora toma las medidas reales, o usa las estándar como respaldo de seguridad
+                
+                // 🔥 NIVEL ENTERPRISE: Definimos que es un DOCUMENTO desde el origen
+                serviceType: 'DOCUMENT', 
+                
+                // Medidas estándar de sobre profesional para EasyPost
                 lengthIn: mailItem.lengthIn || 12,  
                 widthIn: mailItem.widthIn || 9,    
                 heightIn: mailItem.heightIn || 0.5, 
-                description: mailItem.senderName ? `Documento de: ${mailItem.senderName}` : 'Documento Físico (Enviado desde Buzón)',
-                status: 'RECIBIDO_MIAMI', // 🔥 CAMBIO PROFESIONAL: El sistema lo reconocerá nativamente sin parches en el frontend
+                
+                description: mailItem.senderName ? `Envío de Documento: ${mailItem.senderName}` : 'Documento Físico (Buzón)',
+                status: 'RECIBIDO_MIAMI', 
                 receiptUrl: mailItem.envelopeImageUrl, 
             }
         });

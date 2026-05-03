@@ -261,16 +261,23 @@ export async function POST(req: Request) {
 
             if (!targetId) return;
 
+            // 🕵️‍♂️ PASO 1: Analizamos el shipment antes de actualizar
             const currentShipment = await prisma.consolidatedShipment.findUnique({
                 where: { id: targetId },
-                select: { serviceType: true }
+                include: { _count: { select: { packages: true } } } // Contamos los paquetes
             });
 
             if (!currentShipment) return;
 
-            const isPickup = currentShipment.serviceType === 'STORAGE_FEE' || currentShipment.serviceType === 'PICKUP';
-            const nextStatus = isPickup ? 'LISTO_PARA_RETIRO' : 'LISTO_PARA_ENVIO';
+            // 🧠 PASO 2: Lógica de Identidad
+            // Si tiene solo 1 paquete y pesa 0.5 lbs o menos, es un DOCUMENTO
+            const isActuallyDoc = currentShipment._count.packages === 1 && (currentShipment.weightLbs || 0) <= 0.5;
+            
+            const nextStatus = (currentShipment.serviceType === 'STORAGE_FEE' || currentShipment.serviceType === 'PICKUP') 
+                ? 'LISTO_PARA_RETIRO' 
+                : 'LISTO_PARA_ENVIO';
 
+            // 🚀 PASO 3: Actualización con el tipo de servicio correcto
             await prisma.consolidatedShipment.update({
                 where: { id: targetId },
                 data: {
@@ -279,7 +286,10 @@ export async function POST(req: Request) {
                     selectedCourier: selectedCourier || undefined, 
                     courierService: courierService || undefined,   
                     shippingAddress: shippingAddress || undefined, 
-                    serviceType: packageServiceType || undefined, // 🔥 2. NUEVO: Lo guardamos aquí
+                    
+                    // 🔥 Aquí está la corrección:
+                    serviceType: isActuallyDoc ? "DOCUMENT" : (packageServiceType || currentShipment.serviceType),
+                    
                     subtotalAmount: cleanSubtotal,
                     processingFee: cleanFee,
                     totalAmount: cleanTotal,
@@ -287,9 +297,11 @@ export async function POST(req: Request) {
                 }
             });
 
+            // (El resto de la actualización de childPackagesCount sigue igual debajo...)
             const childPackagesCount = await prisma.package.count({
                 where: { consolidatedShipmentId: targetId }
             });
+            
 
             if (childPackagesCount > 0) {
                 const pkgTotal = Number((cleanTotal / childPackagesCount).toFixed(2));
@@ -312,37 +324,58 @@ export async function POST(req: Request) {
         }));
 
     } else {
-        if (packageIds) {
-             const idsArray = Array.isArray(packageIds) ? packageIds : packageIds.split(',');
-             const count = idsArray.length || 1;
-             const fallbackStatus = (serviceType === 'Warehousing' || serviceType === 'Pickup' || serviceType === 'PICKUP') 
-                ? 'LISTO_PARA_RETIRO' 
-                : 'LISTO_PARA_ENVIO';
+       // --- CAMBIO: Bloque de Paquetes Individuales ---
+if (packageIds) {
+    const idsArray = Array.isArray(packageIds) ? packageIds : packageIds.split(',');
+    
+    for (const pkgId of idsArray) {
+        // 🕵️‍♂️ Buscamos el paquete para ver su peso
+        const pkg = await prisma.package.findUnique({ where: { id: pkgId } });
+        
+        // 🧠 Lógica: Si pesa <= 0.5 lbs y viaja solo, es un DOCUMENTO
+        const isDoc = (pkg?.weightLbs || 0) <= 0.5 && !pkg?.consolidatedShipmentId;
+        
+        await prisma.package.update({
+            where: { id: pkgId },
+            data: {
+                status: (serviceType === 'Warehousing' || serviceType === 'Pickup') ? 'LISTO_PARA_RETIRO' : 'LISTO_PARA_ENVIO',
+                stripePaymentId: paymentIntent.id,
+                shippingAddress: shippingAddress || undefined,
+                shippingTotalPaid: Number((totalToCharge / idsArray.length).toFixed(2)),
+                // 🔥 EL ARREGLO: Si no es documento, NO TOCAMOS EL TIPO (undefined)
+                 serviceType: isDoc ? 'DOCUMENT' : undefined,
+                 description: isDoc ? 'Envío de Documento' : pkg?.description
+            }
+        });
+    }
+}
 
-             await prisma.package.updateMany({
-                where: { id: { in: idsArray } },
-                data: {
-                    status: fallbackStatus, 
-                    shippingTotalPaid: Number((totalToCharge / count).toFixed(2)),
-                    stripePaymentId: paymentIntent.id,
-                    shippingAddress: shippingAddress || undefined 
-                }
-             });
-        }
-        if (billIds) {
-             const billsArr = Array.isArray(billIds) ? billIds : billIds.split(',');
-             const count = billsArr.length || 1;
-             await prisma.consolidatedShipment.updateMany({
-                where: { id: { in: billsArr } },
-                data: {
-                    status: 'PAGADO', 
-                    totalAmount: Number((totalToCharge / count).toFixed(2)),
-                    paymentId: paymentIntent.id,
-                    shippingAddress: shippingAddress || undefined, 
-                    serviceType: packageServiceType || undefined // 🔥 3. NUEVO: Lo guardamos aquí
-                }
-             });
-        }
+        // --- CAMBIO: Bloque de Facturas/Consolidaciones (SHIPs) ---
+if (billIds) {
+    const billsArr = Array.isArray(billIds) ? billIds : billIds.split(',');
+    
+    for (const bId of billsArr) {
+        // 🕵️‍♂️ Contamos cuántos paquetes hay dentro de este SHIP
+        const pkgCount = await prisma.package.count({ where: { consolidatedShipmentId: bId } });
+        const shipment = await prisma.consolidatedShipment.findUnique({ where: { id: bId } });
+        
+        // 🧠 Lógica Maestra: Si solo hay 1 paquete y pesa <= 0.5, FORZAMOS que sea DOCUMENT
+        // Esto es lo que enciende el botón de EasyPost en el Admin
+        const isDoc = pkgCount === 1 && (shipment?.weightLbs || 0) <= 0.5;
+
+        await prisma.consolidatedShipment.update({
+            where: { id: bId },
+            data: {
+                status: 'PAGADO', 
+                paymentId: paymentIntent.id,
+                shippingAddress: shippingAddress || undefined,
+                totalAmount: Number((totalToCharge / billsArr.length).toFixed(2)),
+                // 🔥 EL ARREGLO: Respetamos tu sistema original si no es documento
+                serviceType: isDoc ? "DOCUMENT" : (packageServiceType || undefined)
+            }
+        });
+    }
+}
     }
 
     if (pickupId) {

@@ -23,14 +23,10 @@ export default async function ActivePackagesPage({
   let allItems: any[] = [];
 
   try {
-      // 1. 🔥 PAQUETES INDIVIDUALES (Mercancía real en tu bodega)
+      // 1. 🔥 PAQUETES (Leemos la información real de la tabla Package, como pediste)
       const loosePackagesRaw = await prisma.package.findMany({
         where: {
           status: { notIn: ['ENTREGADO', 'CANCELADO'] },
-          
-          // 👇 REEMPLAZA EL "OR" POR ESTA ÚNICA LÍNEA 👇
-          consolidatedShipmentId: null, 
-
           ...(query ? {
             OR: [
               { id: { contains: query, mode: 'insensitive' } }, 
@@ -41,25 +37,32 @@ export default async function ActivePackagesPage({
           } : {})
         },
         include: {
-          // 🔥 AQUÍ AGREGAMOS PHONE Y EMAIL PARA EL INVOICE ADUANAL
           user: { select: { id: true, name: true, suiteNo: true, countryCode: true, phone: true, email: true } },
           consolidatedShipment: { 
             select: { 
+                serviceType: true,
                 totalAmount: true,
                 paymentId: true,
-                packages: { select: { id: true } } 
+                _count: { select: { packages: true } }
             } 
           }
         },
         orderBy: { createdAt: 'desc' }
       });
 
-      // 🛠️ EL ARREGLO PARA PAQUETES: Truco Ninja para forzar a la pantalla a leer el Total
-      const formattedLoosePackages = loosePackagesRaw.map(pkg => {
-        // 🔥 Detectamos si es documento
+      const formattedLoosePackages = loosePackagesRaw.filter(pkg => {
+         // Si está suelto, pasa.
+         if (!pkg.consolidatedShipmentId) return true;
+         
+         // 🔥 EL TRUCO: Si la caja maestra SOLO tiene 1 paquete, extraemos la info real del paquete (GM-US) 
+         // y ocultamos el disfraz de la caja consolidada.
+         if (pkg.consolidatedShipment && pkg.consolidatedShipment._count.packages === 1) return true;
+         
+         if (pkg.consolidatedShipment && !['CONSOLIDATION', 'SHIPPING_INTL', 'DOCUMENT'].includes(pkg.consolidatedShipment.serviceType)) return true;
+         
+         return false;
+      }).map(pkg => {
         const isDocument = pkg.courier === 'Buzón Virtual' || (pkg.carrierTrackingNumber || '').startsWith('DOC-') || (pkg.gmcTrackingNumber || '').startsWith('GMC-DOC-');
-        
-        // 🔥 REGLA ABSOLUTA: Si es documento el precio ES CERO SIEMPRE. Si no, usa el total de la base de datos.
         const realTotal = isDocument ? 0.00 : (pkg.shippingTotalPaid !== null ? pkg.shippingTotalPaid : pkg.shippingSubtotal);
 
         return {
@@ -67,17 +70,15 @@ export default async function ActivePackagesPage({
           type: 'PACKAGE',
           shippingSubtotal: realTotal, 
           totalAmount: realTotal, 
+          stripePaymentId: pkg.stripePaymentId || pkg.consolidatedShipment?.paymentId || null
         };
       });
 
-      // 2. 🔥 CONSOLIDACIONES REALES (El Escudo Definitivo)
-      const activeShipments = await prisma.consolidatedShipment.findMany({
+      // 2. 🔥 CONSOLIDACIONES REALES (Solo GMC-SHIP con 2 o más paquetes)
+      const activeShipmentsRaw = await prisma.consolidatedShipment.findMany({
         where: {
           status: { notIn: ['ENTREGADO', 'CANCELADO'] },
-          
-          // 👇 ELIMINA LA LÍNEA DE serviceType AQUÍ 👇
-          // (Dejamos que traiga TODAS las cajas sin importar su etiqueta)
-
+          serviceType: { in: ['CONSOLIDATION', 'SHIPPING_INTL', 'DOCUMENT'] }, 
           ...(query ? {
             OR: [
               { id: { contains: query, mode: 'insensitive' } }, 
@@ -87,48 +88,52 @@ export default async function ActivePackagesPage({
           } : {})
         },
         include: {
-          // 🔥 AQUÍ TAMBIÉN AGREGAMOS PHONE Y EMAIL PARA EL INVOICE DE CAJAS
           user: { select: { id: true, name: true, suiteNo: true, countryCode: true, phone: true, email: true } },
-          // 🔥 LA MAGIA: Le decimos que nos traiga también los paquetes internos con sus aduanas
           packages: { 
               select: { 
                   id: true, 
                   gmcTrackingNumber: true,
                   description: true, 
                   declaredValue: true, 
-                  customsItems: true // Vital para extraer las camisas y blusas
+                  customsItems: true 
               } 
-          }
+          },
+          _count: { select: { packages: true } }
         },
         orderBy: { createdAt: 'desc' }
       });
 
-      const formattedShipments = activeShipments.map(ship => ({
-        id: ship.id,
-        type: 'SHIPMENT', 
-        gmcTrackingNumber: ship.gmcShipmentNumber,
-        carrierTrackingNumber: `CAJA (${ship.weightLbs || 0} lbs)`, 
-        user: ship.user,
-        description: 'Consolidación', 
-        createdAt: ship.createdAt,
-        selectedCourier: ship.selectedCourier,
-        courierService: ship.courierService,
-        weightLbs: ship.weightLbs,
-        lengthIn: ship.lengthIn,
-        widthIn: ship.widthIn,
-        heightIn: ship.heightIn,
-        shippingTotalPaid: ship.totalAmount, 
-        totalAmount: ship.totalAmount, // 🔥 Aseguramos la variable para el frontend
-        paymentId: ship.paymentId, 
-        finalTrackingNumber: ship.finalTrackingNumber,
-        status: ship.status,
-        shippingLabelUrl: ship.shippingLabelUrl, 
-        isProcessing: false,
-        isStorePickup: false,
-        packages: ship.packages // 🔥 Pasamos los paquetes internos a la pantalla
-      }));
+      const formattedShipments = activeShipmentsRaw.filter(ship => {
+          // 🔥 REGLA estricta: La caja consolidada GMC-SHIP solo existe en frontend si tiene > 1 paquete
+          return ship._count.packages > 1;
+      }).map(ship => {
+        return {
+          id: ship.id,
+          type: 'SHIPMENT', 
+          gmcTrackingNumber: ship.gmcShipmentNumber,
+          carrierTrackingNumber: `CAJA (${ship.weightLbs || 0} lbs)`, 
+          user: ship.user,
+          description: 'Consolidación', 
+          serviceType: ship.serviceType, 
+          createdAt: ship.createdAt,
+          selectedCourier: ship.selectedCourier,
+          courierService: ship.courierService,
+          weightLbs: ship.weightLbs,
+          lengthIn: ship.lengthIn,
+          widthIn: ship.widthIn,
+          heightIn: ship.heightIn,
+          shippingTotalPaid: ship.totalAmount, 
+          totalAmount: ship.totalAmount, 
+          paymentId: ship.paymentId, 
+          finalTrackingNumber: ship.finalTrackingNumber,
+          status: ship.status,
+          shippingLabelUrl: ship.shippingLabelUrl, 
+          isProcessing: false,
+          isStorePickup: false,
+          packages: ship.packages 
+        };
+      });
 
-      // 3. UNIFICAMOS SOLO LAS 2 TABLAS DE INVENTARIO
       allItems = [...formattedLoosePackages, ...formattedShipments].sort((a: any, b: any) => 
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       );

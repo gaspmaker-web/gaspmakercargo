@@ -26,10 +26,11 @@ export default async function ConsolidacionesPage({
 }) {
   const query = searchParams?.q || '';
   
-  // 1. TRAEMOS TODO
-  const consolidaciones = await prisma.consolidatedShipment.findMany({
+ // 1. TRAEMOS TODO (PERO IGNORAMOS LOS DOCUMENTOS DE ORIGEN)
+  const consolidacionesDB = await prisma.consolidatedShipment.findMany({
     where: {
-        serviceType: 'CONSOLIDATION',
+        // 🔥 Solo traemos Consolidación y Envíos Internacionales (Ignora DOCUMENT)
+        serviceType: { in: ['CONSOLIDATION', 'SHIPPING_INTL'] },
         ...(query ? {
             OR: [
                 { user: { name: { contains: query, mode: 'insensitive' } } },
@@ -43,6 +44,22 @@ export default async function ConsolidacionesPage({
       packages: true
     },
     orderBy: { updatedAt: 'desc' } 
+  });
+
+  // 👇 🔥 FILTRO MAESTRO: EXPULSAMOS TODOS LOS ENVÍOS INDIVIDUALES 👇
+  const consolidaciones = consolidacionesDB.filter(c => {
+      // ¿Cuántos paquetes hay metidos en esta supuesta consolidación?
+      const cantidadDePaquetes = c.packages?.length || 0;
+
+      // 🧠 LÓGICA IMPLACABLE: 
+      // Si tiene 1 paquete o ninguno, NO es una consolidación. Lo expulsamos de esta pantalla.
+      // (Se mostrará exclusivamente en la pantalla de "Paquetes Activos").
+      if (cantidadDePaquetes <= 1) {
+          return false; 
+      }
+      
+      // Si tiene 2 o más, es una consolidación real y se queda.
+      return true; 
   });
 
   // 2. CLASIFICACIÓN
@@ -70,6 +87,7 @@ export default async function ConsolidacionesPage({
     // 🔥 CORRECCIÓN: Agregamos EN_RUTA y EN_TRANSITO al filtro para que no regresen a esta columna
     if (s === 'ENVIADO' || s === 'ENTREGADO' || s === 'CANCELADO' || s === 'EN_REPARTO' || s === 'EN_ALMACEN_DESTINO' || s === 'EN_RUTA' || s === 'EN_TRANSITO') return false;
     
+    // Si no tiene paquetes (por error de BD), lo dejamos aquí solo si es un "Zero Error" para que lo puedas borrar o corregir
     if ((!c.packages || c.packages.length <= 1) && !isZeroError(c)) return false; 
 
     return true;
