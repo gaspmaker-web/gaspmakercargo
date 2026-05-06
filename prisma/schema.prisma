@@ -130,6 +130,7 @@ model Package {
   receiptUrl             String?
   invoiceUrl             String?
   shippingLabelUrl       String?
+  awbDocumentUrl         String?   // 🔥 NUEVO: Documento AWB/Aduana para el cliente
   deliveryPhotoUrl       String?   
   deliverySignature      String?   
   deliveredBy            String?   // 🔥 NUEVO: Nombre del personal que entregó
@@ -146,6 +147,12 @@ model Package {
 
   consolidatedShipmentId String?
   consolidatedShipment   ConsolidatedShipment? @relation(fields: [consolidatedShipmentId], references: [id])
+
+  // ==========================================
+  // 🚀 ÍNDICES DE RENDIMIENTO (ENTERPRISE)
+  // ==========================================
+  @@index([gmcTrackingNumber])
+  @@index([userId])
 }
 
 model ConsolidatedShipment {
@@ -168,7 +175,7 @@ model ConsolidatedShipment {
   courierService         String?
   finalTrackingNumber    String?
   shippingLabelUrl       String?
-  
+  awbDocumentUrl         String?   // 🔥 NUEVO: Documento AWB/BL de la carga consolidada
   deliveredBy            String?   // 🔥 NUEVO: Nombre del personal que entregó
 
   paymentId              String?
@@ -190,6 +197,12 @@ model ConsolidatedShipment {
   user                   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   packages               Package[]
+
+ // ==========================================
+  // 🚀 ÍNDICES DE RENDIMIENTO (ENTERPRISE)
+  // ==========================================
+  @@index([gmcShipmentNumber]) // 🔥 CAMBIA ESTO AQUÍ
+  @@index([userId])
 }
 
 model PickupRequest {
@@ -393,6 +406,11 @@ model ShopperOrder {
   
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
+
+  // ==========================================
+  // 🚀 ÍNDICE AÑADIDO AQUÍ (Correcto)
+  // ==========================================
+  @@index([userId])
 }
 
 model ShopperItem {
@@ -411,6 +429,11 @@ model ShopperItem {
   
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
+
+  // ==========================================
+  // 🚀 ÍNDICE CAMBIADO AQUÍ (orderId, no userId)
+  // ==========================================
+  @@index([orderId])
 }
 
 model MailPickupRequest {

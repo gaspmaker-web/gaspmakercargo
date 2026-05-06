@@ -6,14 +6,16 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 // 🔥 1. Importamos el hook
 import { useTranslations } from 'next-intl';
+// 🔥 2. IMPORTAMOS NUESTRO COMPONENTE ENTERPRISE
+import AwbDownloadButton from './AwbDownloadButton';
 
 interface Props {
   packages: any[];
-  userCountryCode: string;
+  userCountryCode: string; // Mantienes esto como fallback de seguridad
 }
 
 export default function DeliveredPackagesCarousel({ packages, userCountryCode }: Props) {
-  // 🔥 2. Inicializamos traducciones
+  // 🔥 Inicializamos traducciones
   const t = useTranslations('PackageDetail');
   const tDelivered = useTranslations('DeliveredPage');
 
@@ -36,6 +38,21 @@ export default function DeliveredPackagesCarousel({ packages, userCountryCode }:
     setTimeout(() => setCopiedId(null), 2000);
   };
 
+  // 🔥 NUEVA FUNCIÓN: Extrae el código de país directamente de la dirección física del paquete
+  const getDestinationCode = (address?: string) => {
+    if (!address) return userCountryCode;
+    
+    // Busca 2 letras mayúsculas justo antes del teléfono (ej: "BB | Tel:")
+    const matchBeforeTel = address.match(/([A-Z]{2})\s*\|\s*Tel:/i);
+    if (matchBeforeTel && matchBeforeTel[1]) return matchBeforeTel[1].toUpperCase();
+
+    // Busca 2 letras mayúsculas al final de la dirección (ej: ", BB |")
+    const matchEnd = address.match(/,\s*([A-Z]{2})\s*(?:\||$)/);
+    if (matchEnd && matchEnd[1]) return matchEnd[1].toUpperCase();
+
+    return userCountryCode; // Fallback al perfil si falla el formato
+  };
+
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
       
@@ -56,83 +73,94 @@ export default function DeliveredPackagesCarousel({ packages, userCountryCode }:
       {/* 🎠 CARRUSEL PREMIUM */}
       {filteredPackages.length > 0 ? (
         <div className="flex overflow-x-auto pb-10 -mx-4 px-4 gap-6 snap-x snap-mandatory scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent pt-2">
-            {filteredPackages.map((pkg) => (
-                <div 
-                    key={pkg.id} 
-                    className="min-w-[340px] max-w-[340px] bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 p-6 snap-center transition-transform duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_rgb(0,0,0,0.08)] flex flex-col justify-between relative overflow-hidden group"
-                >
-                    {/* Decoración de fondo */}
-                    <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-green-50 to-transparent rounded-bl-full -mr-4 -mt-4 opacity-50"></div>
+            {filteredPackages.map((pkg) => {
+                // Obtenemos el país real en cada iteración
+                const realDestination = getDestinationCode(pkg.shippingAddress);
+                
+                // 🔥 LÓGICA DE URL: Buscamos el AWB en el master (consolidado) o en el individual
+                const awbUrl = pkg.consolidatedShipment?.awbDocumentUrl || pkg.awbDocumentUrl;
 
-                    {/* Encabezado */}
-                    <div className="relative z-10">
-                        <div className="flex justify-between items-start mb-4">
-                            <span className="bg-green-100/80 backdrop-blur-sm text-green-700 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 border border-green-200">
-                                <CheckCircleIcon size={12}/> {tDelivered('statusDelivered') || "Delivered"}
-                            </span>
-                            <span className="text-xs text-gray-400 font-mono flex items-center gap-1">
-                                <Calendar size={12}/>
-                                {new Date(pkg.updatedAt || pkg.createdAt).toLocaleDateString()}
-                            </span>
-                        </div>
+                return (
+                    <div 
+                        key={pkg.id} 
+                        className="min-w-[340px] max-w-[340px] bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 p-6 snap-center transition-transform duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_rgb(0,0,0,0.08)] flex flex-col justify-between relative overflow-hidden group"
+                    >
+                        {/* Decoración de fondo */}
+                        <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-green-50 to-transparent rounded-bl-full -mr-4 -mt-4 opacity-50"></div>
 
-                        {/* Título y Ubicación */}
-                        <div className="mb-5">
-                            <h3 className="font-bold text-gray-800 text-xl line-clamp-1 mb-1 capitalize tracking-tight">
-                                {pkg.description || t('noDescription')}
-                            </h3>
-                            <div className="flex items-center gap-1.5 text-xs text-gray-500 font-medium">
-                                <MapPin size={14} className="text-gray-400"/>
-                                <span>{tDelivered('destination') || "Destination"}: <strong className="text-gray-700">{userCountryCode}</strong></span>
+                        {/* Encabezado */}
+                        <div className="relative z-10">
+                            <div className="flex justify-between items-start mb-4">
+                                <span className="bg-green-100/80 backdrop-blur-sm text-green-700 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 border border-green-200">
+                                    <CheckCircleIcon size={12}/> {tDelivered('statusDelivered') || "Delivered"}
+                                </span>
+                                <span className="text-xs text-gray-400 font-mono flex items-center gap-1">
+                                    <Calendar size={12}/>
+                                    {new Date(pkg.updatedAt || pkg.createdAt).toLocaleDateString()}
+                                </span>
+                            </div>
+
+                            {/* Título y Ubicación */}
+                            <div className="mb-5">
+                                <h3 className="font-bold text-gray-800 text-xl line-clamp-1 mb-1 capitalize tracking-tight">
+                                    {pkg.description || t('noDescription')}
+                                </h3>
+                                <div className="flex items-center gap-1.5 text-xs text-gray-500 font-medium">
+                                    <MapPin size={14} className="text-gray-400"/>
+                                    {/* 🔥 APLICAMOS EL CÓDIGO REAL EXTRAÍDO DE LA DIRECCIÓN 🔥 */}
+                                    <span>{tDelivered('destination') || "Destination"}: <strong className="text-gray-700">{realDestination}</strong></span>
+                                </div>
+                            </div>
+
+                            {/* Tarjeta de Tracking Interna */}
+                            <div className="bg-gray-50 rounded-xl p-3 mb-5 border border-gray-200/60 group-hover:border-green-200 transition-colors">
+                                <div className="flex justify-between items-center mb-1">
+                                    <p className="text-[10px] text-gray-400 uppercase font-bold tracking-widest">{t('tracking')}</p>
+                                    <button 
+                                        onClick={() => handleCopy(pkg.gmcTrackingNumber, pkg.id)}
+                                        className="text-gray-400 hover:text-green-600 transition-colors"
+                                        title="Copy"
+                                    >
+                                        {copiedId === pkg.id ? <CheckCircle size={14} className="text-green-500"/> : <Copy size={14}/>}
+                                    </button>
+                                </div>
+                                <div className="font-mono text-sm font-bold text-gray-800 truncate flex items-center gap-2">
+                                    <Box size={16} className="text-green-600"/>
+                                    {pkg.gmcTrackingNumber}
+                                </div>
                             </div>
                         </div>
 
-                        {/* Tarjeta de Tracking Interna */}
-                        <div className="bg-gray-50 rounded-xl p-3 mb-5 border border-gray-200/60 group-hover:border-green-200 transition-colors">
-                            <div className="flex justify-between items-center mb-1">
-                                <p className="text-[10px] text-gray-400 uppercase font-bold tracking-widest">{t('tracking')}</p>
-                                <button 
-                                    onClick={() => handleCopy(pkg.gmcTrackingNumber, pkg.id)}
-                                    className="text-gray-400 hover:text-green-600 transition-colors"
-                                    title="Copy"
-                                >
-                                    {copiedId === pkg.id ? <CheckCircle size={14} className="text-green-500"/> : <Copy size={14}/>}
-                                </button>
-                            </div>
-                            <div className="font-mono text-sm font-bold text-gray-800 truncate flex items-center gap-2">
-                                <Box size={16} className="text-green-600"/>
-                                {pkg.gmcTrackingNumber}
-                            </div>
+                        {/* 🔥 ZONA DE BOTONES DE ACCIÓN 🔥 */}
+                        <div className="flex flex-col gap-2 mt-auto relative z-10 pt-2 border-t border-gray-100">
+                            
+                            {/* 1. BOTÓN DE RASTREO DORADO INYECTADO */}
+                           <Link 
+                                href={`/${locale}/dashboard-cliente/rastreo/${pkg.consolidatedShipment?.gmcShipmentNumber || pkg.gmcTrackingNumber}`}
+                                className="w-full flex items-center justify-center gap-2 bg-gmc-dorado-principal hover:bg-yellow-600 text-white text-sm font-bold py-3 px-4 rounded-xl transition-all active:scale-[0.98] shadow-sm"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"/>
+                                    <circle cx="12" cy="10" r="3"/>
+                                </svg>
+                                {tDelivered('trackPackage') || "Track Package"}
+                            </Link>
+
+                            {/* 2. BOTÓN DE VER PRUEBA ORIGINAL */}
+                            <Link 
+                                href={`/${locale}/dashboard-cliente/paquetes/${pkg.id}`}
+                                className="w-full py-3 rounded-xl bg-gray-900 text-white text-sm font-bold flex items-center justify-center gap-2 hover:bg-black transition-all shadow-lg shadow-gray-200 active:scale-[0.98]"
+                            >
+                                <ExternalLink size={16}/> {tDelivered('viewProof') || "View Proof"}
+                            </Link>
+
+                            {/* 🔥 3. NUEVO BOTÓN AWB INTEGRADO (Solo aparece si hay URL) */}
+                            <AwbDownloadButton url={awbUrl} />
                         </div>
+
                     </div>
-
-                    {/* 🔥 ZONA DE BOTONES DE ACCIÓN 🔥 */}
-                    <div className="flex flex-col gap-2 mt-auto relative z-10 pt-2 border-t border-gray-100">
-                        
-                        {/* 1. BOTÓN DE RASTREO DORADO INYECTADO */}
-                       <Link 
-    href={`/${locale}/dashboard-cliente/rastreo/${pkg.consolidatedShipment?.gmcShipmentNumber || pkg.gmcTrackingNumber}`}
-    className="w-full flex items-center justify-center gap-2 bg-gmc-dorado-principal hover:bg-yellow-600 text-white text-sm font-bold py-3 px-4 rounded-xl transition-all active:scale-[0.98] shadow-sm"
->
-    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"/>
-        <circle cx="12" cy="10" r="3"/>
-    </svg>
-    {/* 👇 CAMBIAMOS EL TEXTO FIJO POR LA TRADUCCIÓN 👇 */}
-    {tDelivered('trackPackage') || "Track Package"}
-</Link>
-
-                        {/* 2. BOTÓN DE VER PRUEBA ORIGINAL */}
-                        <Link 
-                            href={`/${locale}/dashboard-cliente/paquetes/${pkg.id}`}
-                            className="w-full py-3 rounded-xl bg-gray-900 text-white text-sm font-bold flex items-center justify-center gap-2 hover:bg-black transition-all shadow-lg shadow-gray-200 active:scale-[0.98]"
-                        >
-                            <ExternalLink size={16}/> {tDelivered('viewProof') || "View Proof"}
-                        </Link>
-                    </div>
-
-                </div>
-            ))}
+                );
+            })}
         </div>
       ) : (
         <div className="text-center py-16 bg-white rounded-3xl border border-dashed border-gray-200">

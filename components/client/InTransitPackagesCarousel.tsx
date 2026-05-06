@@ -8,6 +8,8 @@ import { useTranslations } from 'next-intl';
 import { getTrackingUrl } from '@/lib/getTrackingUrl';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+// 🔥 NUEVO: Importamos el botón AWB
+import AwbDownloadButton from './AwbDownloadButton';
 
 interface Props {
   packages: any[];
@@ -84,6 +86,9 @@ export default function InTransitPackagesCarousel({ packages, userCountryCode }:
                 const trackingUrl = (easyPostTracking && !isGMC)
                     ? getTrackingUrl(displayCourier, easyPostTracking)
                     : "#";
+
+                // 🔥 BUSCAMOS EL AWB (en el maestro o individual)
+                const awbUrl = parent?.awbDocumentUrl || pkg.awbDocumentUrl;
 
                 return (
                     <div 
@@ -218,6 +223,9 @@ export default function InTransitPackagesCarousel({ packages, userCountryCode }:
                                         Procesando Guía...
                                     </button>
                                 )}
+
+                                {/* 🔥 BOTÓN DE DESCARGA AWB (Si está disponible) 🔥 */}
+                                <AwbDownloadButton url={awbUrl} />
                             </div>
 
                         </div>

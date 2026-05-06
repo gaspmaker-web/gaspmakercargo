@@ -3,8 +3,11 @@ import { Package, CheckCircle, MapPin, Plane, Calendar, Box, Info, ArrowRight, X
 import prisma from '@/lib/prisma'; 
 import { getTranslations } from 'next-intl/server';
 
+// 🔥 FIX 1: EVITAMOS QUE NEXT.JS GUARDE "FOTOS VIEJAS" DE LA PÁGINA (CACHÉ)
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function RastreoPage({ params }: { params: { trackingNumber: string, locale: string } }) {
-  // 🔥 Decodificamos la URL por si viene con caracteres raros
   const trackingNumber = decodeURIComponent(params.trackingNumber).trim();
   const t = await getTranslations('TrackingDetails');
 
@@ -12,14 +15,12 @@ export default async function RastreoPage({ params }: { params: { trackingNumber
   let isConsolidated = false;
   let piecesCount = 1;
 
-  // 1️⃣ INTENTAMOS BUSCAR COMO PAQUETE SUELTO (GM-US-...)
   if (trackingNumber.startsWith('GM-US-') || trackingNumber.startsWith('GM-CU-')) {
     itemData = await prisma.package.findUnique({
       where: { gmcTrackingNumber: trackingNumber },
       include: { user: true } 
     });
   } 
-  // 2️⃣ INTENTAMOS BUSCAR COMO CONSOLIDACIÓN (GMC-SHIP-...)
   else if (trackingNumber.startsWith('GMC-SHIP-')) {
     itemData = await prisma.consolidatedShipment.findUnique({
       where: { gmcShipmentNumber: trackingNumber },
@@ -30,7 +31,6 @@ export default async function RastreoPage({ params }: { params: { trackingNumber
       piecesCount = itemData.packages?.length || 0;
     }
   }
-  // 3️⃣ SI NO TIENE PREFIJO CLARO, BUSCAMOS EN AMBOS (Modo Seguridad)
   else {
       itemData = await prisma.package.findFirst({
         where: { gmcTrackingNumber: { equals: trackingNumber, mode: 'insensitive' } },
@@ -49,7 +49,6 @@ export default async function RastreoPage({ params }: { params: { trackingNumber
       }
   }
 
-  // 🛑 SI NO ENCUENTRA NADA DESPUÉS DE LA BÚSQUEDA EXHAUSTIVA
   if (!itemData) {
     return (
       <div className="p-8 max-w-2xl mx-auto text-center mt-20 font-montserrat">
@@ -62,24 +61,44 @@ export default async function RastreoPage({ params }: { params: { trackingNumber
     );
   }
 
-  // 🧮 4️⃣ CÁLCULOS LOGÍSTICOS
   const status = itemData.status?.toUpperCase() || 'PENDIENTE';
   
+  // 🔥 FIX 2: LÓGICA DE VOLUMEN Y PESO A PRUEBA DE BALAS
   let volume = 0;
-  if (itemData.lengthIn && itemData.widthIn && itemData.heightIn) {
-      volume = (itemData.lengthIn * itemData.widthIn * itemData.heightIn) / 1728;
+  let actualWeight = Number(itemData.weightLbs) || 0;
+
+  const l = Number(itemData.lengthIn) || 0;
+  const w = Number(itemData.widthIn) || 0;
+  const h = Number(itemData.heightIn) || 0;
+
+  if (l > 0 && w > 0 && h > 0) {
+      // Si la caja (o consolidación) tiene sus propias medidas, calculamos normal
+      volume = (l * w * h) / 1728;
+  } else if (isConsolidated && itemData.packages?.length > 0) {
+      // Si es una consolidación que no tiene medidas globales aún, sumamos las de sus paquetes
+      let totalVol = 0;
+      let totalWt = 0;
+      itemData.packages.forEach((pkg: any) => {
+          const pl = Number(pkg.lengthIn) || 0;
+          const pw = Number(pkg.widthIn) || 0;
+          const ph = Number(pkg.heightIn) || 0;
+          if (pl > 0 && pw > 0 && ph > 0) {
+              totalVol += (pl * pw * ph) / 1728;
+          }
+          totalWt += Number(pkg.weightLbs) || 0;
+      });
+      volume = totalVol;
+      if (actualWeight === 0) actualWeight = totalWt;
   }
 
-  // 🌍 BÚSQUEDA INTELIGENTE DEL PAÍS ("PESCANDO" EL TT)
+  // 🌍 BÚSQUEDA INTELIGENTE DEL PAÍS 
   let extractedCountry = null;
   
   if (itemData.shippingAddress) {
-      // Intentamos pescar las 2 letras antes del "| Tel:"
       const match = itemData.shippingAddress.match(/,\s*([A-Za-z]{2})\s*\|/);
       if (match) {
-          extractedCountry = match[1].toUpperCase(); // Extrae "TT"
+          extractedCountry = match[1].toUpperCase(); 
       } else {
-          // Plan B: Cortamos el texto por pedacitos
           const parts = itemData.shippingAddress.split('|');
           if (parts.length >= 2) {
               const addressSections = parts[1].split(',');
@@ -88,13 +107,12 @@ export default async function RastreoPage({ params }: { params: { trackingNumber
       }
   }
 
-  // El sistema decide qué mostrar en orden de prioridad
   const destination = 
-    extractedCountry ||                // 1. El país que pescamos del shippingAddress ("TT")
-    itemData.destinationCountryCode || // 2. Código de destino
-    itemData.user?.country ||          // 3. País del perfil
-    itemData.user?.countryCode ||      // 4. Siglas del perfil
-    t('defaultDestination');           // 5. Fallback
+    extractedCountry ||                
+    itemData.destinationCountryCode || 
+    itemData.user?.country ||          
+    itemData.user?.countryCode ||      
+    t('defaultDestination');           
 
   const getStatusDisplay = (st: string) => {
       if (st.includes('ENTREGADO')) return { title: t('statusDelivered'), color: 'bg-green-600', text: 'text-green-700', bgL: 'bg-green-100', icon: <Home size={36} /> };
@@ -107,7 +125,6 @@ export default async function RastreoPage({ params }: { params: { trackingNumber
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto font-montserrat animate-in fade-in duration-500">
       
-      {/* ================= CABECERA CENTRADA ================= */}
       <div className="relative flex flex-col items-center justify-center mb-8 pt-2">
         <h1 className="text-2xl sm:text-3xl font-serif font-bold text-gray-900 uppercase tracking-widest text-center mb-4">
             {isConsolidated ? t('titleConsolidated') : t('titlePackage')}
@@ -120,10 +137,8 @@ export default async function RastreoPage({ params }: { params: { trackingNumber
         </p>
       </div>
 
-      {/* ================= CONTENEDOR PRINCIPAL ================= */}
       <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden max-w-4xl mx-auto">
         
-        {/* SECCIÓN 1: ESTADO ACTUAL */}
         <div className="p-8 sm:p-10 border-b border-gray-100 bg-gray-50/50 flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-6 w-full md:w-auto">
                 <div className={`w-20 h-20 ${uiStatus.color} text-white rounded-2xl flex items-center justify-center shadow-lg shrink-0`}>
@@ -149,7 +164,6 @@ export default async function RastreoPage({ params }: { params: { trackingNumber
             </div>
         </div>
 
-        {/* SECCIÓN 2: DETALLES DEL PAQUETE */}
         <div className="grid grid-cols-1 md:grid-cols-2 border-b border-gray-100">
             <div className="p-8 md:border-r border-gray-100">
                 <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2">
@@ -175,6 +189,7 @@ export default async function RastreoPage({ params }: { params: { trackingNumber
                 <div className="space-y-3">
                     <div className="flex justify-between items-center text-sm">
                         <span className="text-gray-500 flex items-center gap-2"><Box size={16}/> {t('volume')}</span>
+                        {/* 🔥 SE MUESTRA EL VOLUMEN SI ES MAYOR A 0 */}
                         <span className="font-semibold text-gray-900">{volume > 0 ? volume.toFixed(2) : '--'} ft³</span>
                     </div>
                     <div className="w-full h-px bg-gray-100"></div>
@@ -185,13 +200,13 @@ export default async function RastreoPage({ params }: { params: { trackingNumber
                     <div className="w-full h-px bg-gray-100"></div>
                     <div className="flex justify-between items-center text-sm">
                         <span className="text-gray-500 flex items-center gap-2">⚖️ {t('weight')}</span>
-                        <span className="font-semibold text-gray-900">{itemData.weightLbs ? `${itemData.weightLbs} lbs` : '--'}</span>
+                        {/* 🔥 SE MUESTRA EL PESO REAL SI ES MAYOR A 0 */}
+                        <span className="font-semibold text-gray-900">{actualWeight > 0 ? `${actualWeight.toFixed(2)} lbs` : '--'}</span>
                     </div>
                 </div>
             </div>
         </div>
         
-        {/* SECCIÓN 3: TIMELINE DE RASTREO */}
         <div className="p-8 sm:p-10">
             <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-8">
                 {t('historyTitle')}

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { FileSearch, Image as ImageIcon, X, Download, ExternalLink } from 'lucide-react';
+import { FileSearch, Image as ImageIcon, X, Download, ExternalLink, Loader2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 interface Props {
@@ -12,9 +12,10 @@ interface Props {
 
 export default function DocumentViewerButton({ url, isPdf, btnText }: Props) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
   const t = useTranslations('Buzon');
 
-  // Evita que el fondo haga scroll cuando el modal está abierto
+  // Bloqueo de scroll global (Nivel Enterprise)
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
@@ -24,70 +25,115 @@ export default function DocumentViewerButton({ url, isPdf, btnText }: Props) {
     return () => { document.body.style.overflow = 'unset'; };
   }, [isOpen]);
 
+  // 🔥 FUNCIÓN DE DESCARGA ENTERPRISE (Fuerza la descarga real)
+  const handleDownload = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    setIsDownloading(true);
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      // Generamos un nombre profesional para el cliente
+      link.download = isPdf ? `GaspMaker_Doc_${Date.now()}.pdf` : `GaspMaker_Img_${Date.now()}.jpg`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      console.error("Download failed:", error);
+      window.open(url, '_blank');
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
   return (
     <>
       <button 
         onClick={() => setIsOpen(true)}
-        className="inline-flex items-center gap-2 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 px-4 py-2 rounded-xl text-sm font-bold transition-colors shadow-sm active:scale-95"
+        className="inline-flex items-center gap-2 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-sm active:scale-95 group"
       >
-        {isPdf ? <FileSearch size={16} className="text-red-500" /> : <ImageIcon size={16} className="text-blue-500" />}
+        {isPdf ? (
+          <FileSearch size={16} className="text-red-500 group-hover:scale-110 transition-transform" />
+        ) : (
+          <ImageIcon size={16} className="text-blue-500 group-hover:scale-110 transition-transform" />
+        )}
         {btnText}
       </button>
 
       {isOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-gray-900/80 backdrop-blur-sm p-2 sm:p-6 transition-opacity">
-          <div className="bg-white w-full max-w-5xl h-full max-h-[90vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/70 backdrop-blur-md p-2 sm:p-6 animate-in fade-in duration-300">
+          <div className="bg-white w-full max-w-5xl h-full max-h-[90vh] rounded-[2rem] shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-300">
             
-            {/* Cabecera del Visor */}
-            <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100 bg-gray-50/80">
-              <h3 className="font-bold text-gray-800 flex items-center gap-2 text-sm sm:text-base truncate pr-2">
-                {isPdf ? <FileSearch className="text-red-500 shrink-0" /> : <ImageIcon className="text-blue-500 shrink-0" />}
-                <span className="truncate">{t('documentViewerTitle') || 'Visor de Documentos'}</span>
-              </h3>
-              <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-                <a 
-                  href={url} 
-                  download 
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-2 text-gray-500 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
+            {/* Cabecera Premium */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-white">
+              <div className="flex items-center gap-3">
+                <div className={isPdf ? "bg-red-50 p-2 rounded-lg" : "bg-blue-50 p-2 rounded-lg"}>
+                  {isPdf ? <FileSearch size={20} className="text-red-500" /> : <ImageIcon size={20} className="text-blue-500" />}
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-900 text-sm md:text-base font-garamond tracking-tight leading-none">
+                    {t('documentViewerTitle') || 'Visor de Documentos'}
+                  </h3>
+                  <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">
+                    Gasp Maker Cargo • Enterprise Viewer
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                {/* BOTÓN DE DESCARGA REPARADO */}
+                <button 
+                  onClick={handleDownload}
+                  disabled={isDownloading}
+                  className="p-2.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all disabled:opacity-50"
                   title={t('btnDownload') || "Descargar"}
                 >
-                  <Download size={18} />
-                </a>
+                  {isDownloading ? <Loader2 size={20} className="animate-spin" /> : <Download size={20} />}
+                </button>
+
                 <a 
                   href={url} 
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-200 rounded-lg transition-colors hidden sm:flex"
+                  className="p-2.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all hidden md:flex"
                   title={t('openNewTab') || "Abrir en nueva pestaña"}
                 >
-                  <ExternalLink size={18} />
+                  <ExternalLink size={20} />
                 </a>
+
+                <div className="w-px h-8 bg-gray-100 mx-2 hidden md:block"></div>
+
                 <button 
                   onClick={() => setIsOpen(false)}
-                  className="p-2 bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 rounded-lg transition-colors ml-1 sm:ml-2"
-                  title={t('btnClose') || "Cerrar"}
+                  className="p-2.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
                 >
-                  <X size={18} strokeWidth={2.5} />
+                  <X size={24} />
                 </button>
               </div>
             </div>
 
-            {/* Contenido del Documento */}
-            <div className="flex-1 bg-gray-200/50 w-full h-full p-2 sm:p-4 overflow-hidden flex justify-center items-center">
+            {/* Contenido del Documento "Clean View" */}
+            <div className="flex-1 bg-slate-100 w-full h-full p-2 sm:p-4 overflow-hidden flex justify-center items-center">
               {isPdf ? (
                 <iframe 
-                  src={`${url}#view=FitH`} 
-                  className="w-full h-full rounded-xl border border-gray-300 bg-white shadow-sm"
-                  title="Document Viewer"
+                  src={`${url}#toolbar=0&navpanes=0&view=FitH`} 
+                  className="w-full h-full rounded-2xl border border-gray-200 bg-white shadow-inner"
+                  title="Document Preview"
                 />
               ) : (
-                <img 
-                  src={url} 
-                  alt="Scanned Document" 
-                  className="max-w-full max-h-full object-contain rounded-xl shadow-sm border border-gray-300 bg-white"
-                />
+                <div className="relative w-full h-full flex items-center justify-center p-4">
+                    <img 
+                      src={url} 
+                      alt="Scanned" 
+                      className="max-w-full max-h-full object-contain rounded-2xl shadow-xl bg-white"
+                    />
+                </div>
               )}
             </div>
 
