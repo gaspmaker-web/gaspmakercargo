@@ -123,7 +123,7 @@ export default function CreatePackageForm() {
     }
   };
 
-  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -141,7 +141,10 @@ export default function CreatePackageForm() {
       
       if (data.secure_url) {
         setPhotoUrl(data.secure_url);
-        if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate([50, 50]);
+        // 🔥 VIBRACIÓN TRIPLE: Confirmación táctil de evidencia guardada
+        if (typeof navigator !== 'undefined' && navigator.vibrate) {
+            navigator.vibrate([100, 50, 100, 50, 100]); 
+        }
       } else {
         throw new Error("No se recibió URL");
       }
@@ -171,7 +174,10 @@ export default function CreatePackageForm() {
       
       if (data.secure_url) {
         setInvoiceUrl(data.secure_url);
-        if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate([50, 50]);
+        // 🔥 VIBRACIÓN ÚNICA: Confirmación de documento cargado
+        if (typeof navigator !== 'undefined' && navigator.vibrate) {
+            navigator.vibrate(150); 
+        }
       } else {
         throw new Error("No se recibió URL");
       }
@@ -182,6 +188,12 @@ export default function CreatePackageForm() {
       setIsUploadingInvoice(false);
     }
   };
+
+  useEffect(() => {
+    // Si entramos a la página, ponemos el foco en el buscador de cliente automáticamente
+    const searchInput = document.getElementById('userSearch');
+    if (searchInput) searchInput.focus();
+}, []);
 
   const onSubmit = async (data: any) => {
     if (!foundUser) {
@@ -360,6 +372,7 @@ export default function CreatePackageForm() {
                         <input 
                             {...register("trackingNumber", { required: true })}
                             placeholder="1Z99..." 
+                            enterKeyHint="next" // 👈 Agrega esto
                             className="w-full h-full pl-3 pr-2 md:pl-4 bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-gmc-dorado-principal focus:ring-0 text-base md:text-lg font-mono uppercase font-bold"
                         />
                     </div>
