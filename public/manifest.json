@@ -26,14 +26,14 @@
       "name": "Ver mis paquetes",
       "short_name": "Paquetes",
       "description": "Rastrea tu carga",
-      "url": "/",
+      "url": "/dashboard",
       "icons": [{ "src": "/icon-192x192.png", "sizes": "192x192" }]
     },
     {
       "name": "Escanear Carga",
       "short_name": "Escanear",
       "description": "Cámara para bodega",
-      "url": "/",
+      "url": "/dashboard-admin/crear-envio",
       "icons": [{ "src": "/icon-192x192.png", "sizes": "192x192" }]
     }
   ]
