@@ -1,4 +1,5 @@
 import React from 'react';
+import type { Metadata, Viewport } from 'next'; // 👈 1. IMPORTAMOS LOS TIPOS DE NEXT
 import { NextIntlClientProvider } from 'next-intl';
 import { Inter, Montserrat, Cormorant_Garamond } from 'next/font/google';
 // import Script from 'next/script'; // 👈 YA NO LO NECESITAMOS AQUÍ (Lo maneja TawkLoader)
@@ -19,9 +20,24 @@ const garamond = Cormorant_Garamond({
   variable: '--font-garamond' 
 });
 
-export const metadata = {
-  title: 'GaspMakerCargo',
+// 👈 2. AÑADIMOS EL VIEWPORT (Color de la barra del celular)
+export const viewport: Viewport = {
+  themeColor: "#000000", 
+};
+
+// 👈 3. ACTUALIZAMOS LOS METADATOS (El corazón de tu PWA)
+export const metadata: Metadata = {
+  title: 'Gasp Maker Cargo',
   description: 'Logística global y envíos internacionales.',
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Gasp Maker",
+  },
+  icons: {
+    apple: "/apple-touch-icon.png",
+  },
 };
 
 export default async function RootLayout({

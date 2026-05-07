@@ -3,6 +3,14 @@ const createNextIntlPlugin = require('next-intl/plugin');
 // Mantenemos tu corrección de la ruta explícita
 const withNextIntl = createNextIntlPlugin('./i18n.ts');
 
+// ✅ NUEVO: Configuración del motor de PWA (Aura)
+const withPWA = require("@ducanh2912/next-pwa").default({
+  dest: "public",
+  disable: process.env.NODE_ENV === "development",
+  register: true,
+  skipWaiting: true,
+});
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
@@ -39,4 +47,5 @@ const nextConfig = {
   // -----------------------------------------------
 };
 
-module.exports = withNextIntl(nextConfig);
+// 🔥 CAMBIO CLAVE: Exportamos envolviendo nextConfig primero en withPWA y luego en withNextIntl
+module.exports = withNextIntl(withPWA(nextConfig));
