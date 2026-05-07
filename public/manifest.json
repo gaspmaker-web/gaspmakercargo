@@ -20,5 +20,21 @@
       "type": "image/png",
       "purpose": "maskable any"
     }
+  ],
+  "shortcuts": [
+    {
+      "name": "Ver mis paquetes",
+      "short_name": "Paquetes",
+      "description": "Rastrea tu carga",
+      "url": "/",
+      "icons": [{ "src": "/icon-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Escanear Carga",
+      "short_name": "Escanear",
+      "description": "Cámara para bodega",
+      "url": "/",
+      "icons": [{ "src": "/icon-192x192.png", "sizes": "192x192" }]
+    }
   ]
 }
