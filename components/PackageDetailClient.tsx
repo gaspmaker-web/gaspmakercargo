@@ -29,6 +29,8 @@ import { useRouter, useParams } from "next/navigation";
 import { getProcessingFee } from "@/lib/stripeCalc";
 import { useTranslations } from "next-intl";
 import CourierLogo from "@/components/CourierLogo";
+// ✅ IMPORTACIÓN CORRECTA
+import InteractiveEvidence from "@/components/client/InteractiveEvidence";
 
 const getCarrierLogo = (carrier: string): string => {
   const c = carrier.toLowerCase();
@@ -458,16 +460,13 @@ export default function PackageDetailClient({
             <h3 className="text-green-800 font-bold flex items-center gap-2 mb-4">
               <Camera size={20} /> Prueba de Entrega (Proof of Delivery)
             </h3>
-            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden relative flex items-center justify-center group">
+            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden relative flex items-center justify-center group w-full">
               {pkg.deliveryPhotoUrl ? (
-                <div className="relative w-full h-[350px]">
-                  <Image
-                    src={pkg.deliveryPhotoUrl}
-                    alt="Evidencia de Entrega"
-                    fill
-                    className="object-contain"
-                  />
-                </div>
+                // 🔥 AQUÍ INYECTAMOS LA FOTO INTERACTIVA DEL CHOFER
+                <InteractiveEvidence 
+                  photoUrl={pkg.deliveryPhotoUrl} 
+                  trackingNumber={pkg.carrierTrackingNumber || pkg.gmcTrackingNumber} 
+                />
               ) : (
                 <div className="text-center text-gray-400 py-10">
                   <Camera size={48} className="mx-auto mb-2 opacity-20" />
@@ -554,7 +553,11 @@ export default function PackageDetailClient({
                 </h2>
                 <div className="flex-1 bg-gray-100 rounded-xl border-2 border-dashed flex items-center justify-center relative min-h-[180px] overflow-hidden">
                   {warehousePhoto ? (
-                    <Image src={warehousePhoto} alt="Warehouse Evidence" fill className="object-contain p-2 hover:scale-105 transition-transform duration-300" />
+                    // 🔥 AHORA SÍ, LA FOTO DE BODEGA ES INTERACTIVA 🔥
+                    <InteractiveEvidence 
+                      photoUrl={warehousePhoto} 
+                      trackingNumber={pkg.carrierTrackingNumber || pkg.gmcTrackingNumber} 
+                    />
                   ) : (
                     <div className="text-center text-gray-400">
                       <Box size={40} className="mx-auto mb-2 opacity-30" />

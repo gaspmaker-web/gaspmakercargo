@@ -1,5 +1,6 @@
 import { Resend } from 'resend';
 import prisma from "@/lib/prisma"; 
+import { sendPushNotification } from "./onesignal-server";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const EMAIL_FROM = 'Gasp Maker Cargo <info@gaspmakercargo.com>';
@@ -177,7 +178,7 @@ export const getT = (lang: string = 'en') => {
 };
 
 // =============================================================================
-// 🔔 PARTE 1: NOTIFICACIONES DE CAMPANA (BASE DE DATOS)
+// 🔔 PARTE 1: NOTIFICACIONES DE CAMPANA (DB) + ALERTAS PUSH (ONESIGNAL)
 // =============================================================================
 
 export async function sendNotification({
@@ -195,11 +196,17 @@ export async function sendNotification({
 }) {
   try {
     if (!userId) return;
+
+    // 1. Guardamos en Prisma (Para la página web)
     await prisma.notification.create({
       data: { userId, title, message, href, type }
     });
+
+    // 2. 🔥 Disparamos la alerta Push
+    await sendPushNotification(userId, title, message, href);
+
   } catch (error) {
-    console.error("Error guardando notificación en DB:", error);
+    console.error("Error en el sistema de notificaciones:", error);
   }
 }
 

@@ -36,6 +36,7 @@
     "react-barcode": "1.6.1",
     "react-dom": "18.3.1",
     "react-hook-form": "^7.55.0",
+    "react-onesignal": "^3.5.1",
     "react-signature-canvas": "^1.1.0-alpha.2",
     "react-to-print": "3.2.0",
     "resend": "6.6.0",

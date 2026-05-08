@@ -1,15 +1,18 @@
 import React from 'react';
-import type { Metadata, Viewport } from 'next'; // 👈 1. IMPORTAMOS LOS TIPOS DE NEXT
+import type { Metadata, Viewport } from 'next'; 
 import { NextIntlClientProvider } from 'next-intl';
 import { Inter, Montserrat, Cormorant_Garamond } from 'next/font/google';
-// import Script from 'next/script'; // 👈 YA NO LO NECESITAMOS AQUÍ (Lo maneja TawkLoader)
 import '../globals.css';
 import Header from '@/components/Header';
-import Footer from '@/components/Footer'; // 👈 1. IMPORTAMOS EL COMPONENTE FOOTER
+import Footer from '@/components/Footer'; 
 import Providers from '@/components/Providers';
 import HeaderWrapper from '@/components/HeaderWrapper'; 
 import CookieBanner from '@/components/ui/CookieBanner';
-import TawkLoader from '@/components/TawkLoader'; // 👈 1. IMPORTAMOS EL CEREBRO DEL CHAT
+import TawkLoader from '@/components/TawkLoader'; 
+import OneSignalInit from "@/components/client/OneSignalInit"; 
+
+// 🔥 1. IMPORTAMOS LA SESIÓN DE TU USUARIO
+import { auth } from "@/auth"; 
 
 // Configuración de fuentes
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
@@ -20,24 +23,29 @@ const garamond = Cormorant_Garamond({
   variable: '--font-garamond' 
 });
 
-// 👈 2. AÑADIMOS EL VIEWPORT (Color de la barra del celular)
+// Viewport: Controla el color de la barra en móviles
 export const viewport: Viewport = {
   themeColor: "#000000", 
 };
 
-// 👈 3. ACTUALIZAMOS LOS METADATOS (El corazón de tu PWA)
+// Metadatos actualizados (Sin avisos de depuración)
 export const metadata: Metadata = {
   title: 'Gasp Maker Cargo',
-  description: 'Logística global y envíos internacionales.',
+  description: 'Logística global, casillero y envíos internacionales desde Miami.',
+  keywords: ["Logística", "Miami", "Envíos", "Gasp Maker", "Aura", "Fulfillment"],
   manifest: "/manifest.json",
   appleWebApp: {
-    capable: true,
-    statusBarStyle: "default",
+    statusBarStyle: "black-translucent", 
     title: "Gasp Maker",
   },
   icons: {
     apple: "/apple-touch-icon.png",
   },
+  openGraph: {
+    title: 'Gasp Maker Cargo',
+    description: 'Tu centro logístico inteligente en Miami.',
+    type: 'website',
+  }
 };
 
 export default async function RootLayout({
@@ -48,6 +56,12 @@ export default async function RootLayout({
   params: { locale: string };
 }) {
   
+  // 🔥 2. OBTENEMOS LOS DATOS DEL USUARIO LOGUEADO
+  const session = await auth();
+  
+  // 🔥 EL DETECTIVE: Esto imprimirá los datos en tu terminal de VS Code
+  console.log("🔍 DATOS DE SESIÓN:", session?.user);
+  
   let messages;
   try {
     messages = (await import(`../../messages/${locale}.json`)).default;
@@ -57,7 +71,14 @@ export default async function RootLayout({
 
   return (
     <html lang={locale}>
-      <body className={`${inter.variable} ${montserrat.variable} ${garamond.variable} font-sans bg-gray-50 flex flex-col min-h-screen`}>
+      <body 
+        className={`${inter.variable} ${montserrat.variable} ${garamond.variable} font-sans bg-gray-50 flex flex-col min-h-screen`}
+        suppressHydrationWarning={true}
+      >
+        
+        {/* 🔥 3. PASAMOS EL ID MÁGICO A ONESIGNAL 🔥 */}
+        <OneSignalInit userId={session?.user?.id} />
+
         <NextIntlClientProvider locale={locale} messages={messages}>
           <Providers>
             
@@ -69,7 +90,6 @@ export default async function RootLayout({
               {children}
             </main>
 
-            {/* 👈 2. USAMOS EL COMPONENTE FOOTER AQUÍ (Reemplazando el manual) */}
             <Footer />
 
             <CookieBanner />
