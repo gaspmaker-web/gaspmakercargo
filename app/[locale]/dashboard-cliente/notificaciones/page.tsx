@@ -1,4 +1,4 @@
-"use client";
+ "use client";
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -152,34 +152,6 @@ export default function NotificationsPage() {
       return sameTitle && sameMsg && diffMinutes <= 10;
     });
   });
-
-  // 🔥 NUEVO: Lógica para el Globito Rojo (App Badge) en iOS/Mac 🔥
-  useEffect(() => {
-    const updateOsBadge = async () => {
-      // 1. Contamos cuántas notificaciones son nuevas (no leídas)
-      const unreadCount = uniqueNotifications.filter(n => !n.isRead).length;
-
-      // 2. Usamos 'any' para evitar que TypeScript falle en Vercel por la API nueva
-      const nav = navigator as any;
-
-      // 3. Verificamos si el dispositivo soporta los Badges nativos
-      if ('setAppBadge' in nav && 'clearAppBadge' in nav) {
-        try {
-          if (unreadCount > 0) {
-            // Si hay nuevas, le decimos al sistema que ponga el número rojo
-            await nav.setAppBadge(unreadCount);
-          } else {
-            // Si el contador es 0 (o las marcó como leídas), borramos el globito
-            await nav.clearAppBadge();
-          }
-        } catch (error) {
-          console.error("❌ Error comunicándose con el Badge de OS:", error);
-        }
-      }
-    };
-
-    updateOsBadge();
-  }, [uniqueNotifications]); // Se vuelve a ejecutar si cambian las notificaciones
 
   return (
     <div className="min-h-screen bg-gray-50 font-montserrat pt-6 sm:pt-8 pb-20">
