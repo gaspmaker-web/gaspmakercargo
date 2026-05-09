@@ -8,7 +8,6 @@ export default function OneSignalInit({ userId }: { userId?: string }) {
 
   useEffect(() => {
     const initOneSignal = async () => {
-      // 1. Inicializamos OneSignal para todos (logueados y no logueados)
       if (!initialized.current) {
         try {
           await OneSignal.init({
@@ -16,13 +15,16 @@ export default function OneSignalInit({ userId }: { userId?: string }) {
             allowLocalhostAsSecureOrigin: true,
           });
           initialized.current = true;
+          
+          // 🔥 LA LÍNEA MÁGICA: Obliga a mostrar el pop-up de "Permitir Notificaciones" 🔥
+          await OneSignal.Slidedown.promptPush();
+          
         } catch (error) {
           console.error("Error conectando a OneSignal:", error);
           return;
         }
       }
 
-      // 🔥 EL PARCHE: Solo hacemos "Login" si realmente hay un ID válido
       if (userId && initialized.current) {
         try {
           console.log("🔗 Vinculando dispositivo con usuario ID:", userId);
@@ -34,7 +36,7 @@ export default function OneSignalInit({ userId }: { userId?: string }) {
     };
 
     initOneSignal();
-  }, [userId]); // El useEffect volverá a correr cuando el userId cambie de undefined al ID real
+  }, [userId]);
 
   return null;
 }
