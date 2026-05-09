@@ -52,7 +52,7 @@ export default function NotificationsPage() {
   };
 
   const handleDelete = async (id: string, e: React.MouseEvent) => {
-    e.preventDefault();
+    e.preventDefault(); // Esto evita que se active el enlace al borrar
     const prevNotifications = [...notifications];
     setNotifications(prev => prev.filter(n => n.id !== id));
     try {
@@ -153,6 +153,34 @@ export default function NotificationsPage() {
     });
   });
 
+  // 🔥 NUEVO: Lógica para el Globito Rojo (App Badge) en iOS/Mac 🔥
+  useEffect(() => {
+    const updateOsBadge = async () => {
+      // 1. Contamos cuántas notificaciones son nuevas (no leídas)
+      const unreadCount = uniqueNotifications.filter(n => !n.isRead).length;
+
+      // 2. Usamos 'any' para evitar que TypeScript falle en Vercel por la API nueva
+      const nav = navigator as any;
+
+      // 3. Verificamos si el dispositivo soporta los Badges nativos
+      if ('setAppBadge' in nav && 'clearAppBadge' in nav) {
+        try {
+          if (unreadCount > 0) {
+            // Si hay nuevas, le decimos al sistema que ponga el número rojo
+            await nav.setAppBadge(unreadCount);
+          } else {
+            // Si el contador es 0 (o las marcó como leídas), borramos el globito
+            await nav.clearAppBadge();
+          }
+        } catch (error) {
+          console.error("❌ Error comunicándose con el Badge de OS:", error);
+        }
+      }
+    };
+
+    updateOsBadge();
+  }, [uniqueNotifications]); // Se vuelve a ejecutar si cambian las notificaciones
+
   return (
     <div className="min-h-screen bg-gray-50 font-montserrat pt-6 sm:pt-8 pb-20">
       
@@ -231,7 +259,11 @@ export default function NotificationsPage() {
                         <Bell size={22} />
                     </div>
 
-                    <div className="flex-1 pr-8">
+                    {/* 🔥 MAGIA AQUÍ: Convertimos el div en un Link para que TODO sea cliqueable 🔥 */}
+                    <Link 
+                        href={notif.href ? (notif.href.includes('/paquetes') ? notif.href.replace('/paquetes', '') : notif.href) : "/dashboard-cliente"} 
+                        className="flex-1 pr-8 block cursor-pointer"
+                    >
                         <div className="flex justify-between items-start mb-1">
                             <h4 className={`text-sm font-montserrat ${notif.isRead ? 'font-bold text-gray-700' : 'font-extrabold text-gray-900'}`}>
                                 {getTranslatedText(notif.title)}
@@ -243,25 +275,25 @@ export default function NotificationsPage() {
                         <p className="text-xs text-gray-500 leading-relaxed font-medium">
                             {getTranslatedText(notif.message)}
                         </p>
+                       
+                       {/* Se cambia a span para evitar el error de Link dentro de Link */}
                        {notif.href && (
-                            <Link 
-                                href={notif.href.includes('/paquetes') ? notif.href.replace('/paquetes', '') : notif.href} 
-                                className="mt-3 inline-flex items-center text-xs font-bold text-gmc-dorado-principal hover:text-yellow-600 transition-colors bg-yellow-50 px-3 py-1.5 rounded-lg"
-                            >
+                            <span className="mt-3 inline-flex items-center text-xs font-bold text-gmc-dorado-principal hover:text-yellow-600 transition-colors bg-yellow-50 px-3 py-1.5 rounded-lg">
                                 {/* @ts-ignore */}
                                 {t.has('viewDetails') ? t('viewDetails') : "Voir détails"} 
                                 <ArrowLeft size={12} className="rotate-180 ml-1"/>
-                            </Link>
+                            </span>
                         )}
-                    </div>
+                    </Link>
 
                     {!notif.isRead && (
                         <div className="absolute top-5 right-5 w-2.5 h-2.5 bg-red-500 rounded-full shadow-sm shadow-red-200 animate-pulse"></div>
                     )}
 
+                    {/* Agregado z-10 para que este botón se pueda clickear sin activar el Link general */}
                     <button 
                         onClick={(e) => handleDelete(notif.id, e)}
-                        className="absolute bottom-4 right-4 p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-all opacity-0 group-hover:opacity-100 scale-90 hover:scale-100"
+                        className="absolute bottom-4 right-4 p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-all opacity-0 group-hover:opacity-100 scale-90 hover:scale-100 z-10"
                     >
                         <Trash2 size={16} />
                     </button>
