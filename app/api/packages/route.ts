@@ -78,6 +78,21 @@ export async function POST(req: Request) {
       },
     });
 
+    // 🔥 EL GRITO A ONESIGNAL (LA ALERMA PUSH HACIA EL IPHONE) 🔥
+    try {
+      const { sendPushNotification } = await import('@/lib/onesignal-server');
+      await sendPushNotification(
+        data.userId, // El ID del cliente (Nelson, Zen Maison, etc.)
+        "New Package in Miami 📦", // Título de la notificación
+        `We have received a package. Tracking: ${data.carrierTrackingNumber}`, // Mensaje con el tracking
+        "https://www.gaspmakercargo.com/dashboard-cliente" // URL de destino al tocar la notificación
+      );
+    } catch (pushError) {
+      console.error("❌ Error al disparar la notificación Push a OneSignal:", pushError);
+      // Lo envolvemos en un try/catch propio para que, si OneSignal falla por algún motivo, 
+      // el paquete no dé error y se siga guardando correctamente.
+    }
+
     return NextResponse.json({
         message: "Paquete registrado con éxito.",
         gmcTrackingNumber: newPackage.gmcTrackingNumber
