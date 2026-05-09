@@ -33,7 +33,6 @@ export async function POST(req: Request) {
       photoUrlMiami,
       declaredValue,
       invoiceUrl,
-      // 🔥 NUEVO CAMPO: Recibimos la tabla de aduanas
       customsItems 
     } = body;
 
@@ -44,64 +43,51 @@ export async function POST(req: Request) {
 
     // --- LÓGICA DE CONEXIÓN CON PRE-ALERTA ---
     
-    // A. Buscar si YA existe una pre-alerta con ese tracking
     const existingPackage = await prisma.package.findFirst({
       where: {
         carrierTrackingNumber: carrierTrackingNumber,
-        status: 'PRE_ALERTA' // Solo nos interesa si está en pre-alerta
+        status: 'PRE_ALERTA' 
       }
     });
 
     if (existingPackage) {
       // --- CASO 1: ES UNA PRE-ALERTA (ACTUALIZAR) ---
-      console.log("Coincidencia encontrada con Pre-Alerta. Actualizando...");
-      
       const updatedPackage = await prisma.package.update({
         where: { id: existingPackage.id },
         data: {
-          status: 'RECIBIDO_MIAMI', // Cambiamos el estado
-          weightLbs,                // Agregamos el peso real
+          status: 'RECIBIDO_MIAMI', 
+          weightLbs,                
           lengthIn,
           widthIn,
           heightIn,
-          photoUrlMiami: photoUrlMiami || null, // Agregamos la foto del almacén
-          
-          // 🔥 GUARDAMOS EL INVOICE (Si el admin lo subió, lo guardamos. Si no, mantenemos el que el cliente haya subido)
+          photoUrlMiami: photoUrlMiami || null, 
           invoiceUrl: invoiceUrl || existingPackage.invoiceUrl,
-
-          // 🔥 GUARDAMOS EL VALOR (Si el admin lo ingresó, actualizamos la pre-alerta)
           declaredValue: declaredValue ? parseFloat(declaredValue) : existingPackage.declaredValue,
-
-          // 🔥 GUARDAMOS LA TABLA DE ADUANAS
           customsItems: customsItems || existingPackage.customsItems,
-
-          // NO tocamos 'description', así se mantiene lo que subió el cliente
-          // NO tocamos 'userId', respetamos al dueño original de la pre-alerta
         },
-        include: { user: true } // 👈 IMPORTANTE: Traemos al usuario para tener su email e idioma
+        include: { user: true } 
       });
 
-      // 🔔 NOTIFICAR AL CLIENTE (PRE-ALERTA PROCESADA) - MULTILINGÜE
+      // 🔔 NOTIFICAR AL CLIENTE (PRE-ALERTA PROCESADA)
       if (updatedPackage.user?.email) {
-          // Detectamos idioma (Si no existe user.language, getT usa 'en' por defecto)
           const userLang = (updatedPackage.user as any).language || 'en';
           const t = getT(userLang);
 
-          // 1. Enviar Email (Pasamos userLang)
           await sendPackageReceivedEmail(
               updatedPackage.user.email,
               updatedPackage.user.name || 'Cliente',
               updatedPackage.carrierTrackingNumber,
               updatedPackage.weightLbs || 0,
-              userLang // 👈 Idioma para el email
+              userLang 
           );
           
-          // 2. Notificación Dashboard (Usamos el diccionario t)
           await sendNotification({
               userId: updatedPackage.userId,
-              title: t.notifPreAlertTitle, // "Pre-Alert Received" / "Pre-Alerta Recibida"
+              title: t.notifPreAlertTitle, 
               message: t.notifPreAlertBody.replace('{TRACKING}', updatedPackage.carrierTrackingNumber),
-              type: "SUCCESS"
+              type: "SUCCESS",
+              // 🔥 CORRECCIÓN AQUÍ: Mandamos al detalle del paquete actualizado
+              href: `/dashboard-cliente/paquetes/${updatedPackage.id}`
           });
       }
 
@@ -113,8 +99,6 @@ export async function POST(req: Request) {
 
     } else {
       // --- CASO 2: ES UN PAQUETE NUEVO (CREAR) ---
-      console.log("Paquete nuevo. Creando registro...");
-
       if (!userId) {
          return NextResponse.json({ message: "Para paquetes nuevos, debes seleccionar un cliente." }, { status: 400 });
       }
@@ -134,24 +118,18 @@ export async function POST(req: Request) {
           heightIn,
           status: 'RECIBIDO_MIAMI',
           photoUrlMiami: photoUrlMiami || null,
-          
-          // 🔥 GUARDAMOS EL INVOICE Y TABLA DE ADUANAS
           invoiceUrl: invoiceUrl || null,
           customsItems: customsItems || null,
-          
-          // 🔥 GUARDAMOS EL VALOR DECLARADO (Default 0)
           declaredValue: declaredValue ? parseFloat(declaredValue) : 0
         },
-        include: { user: true } // 👈 IMPORTANTE: Traemos al usuario
+        include: { user: true } 
       });
 
-      // 🔔 NOTIFICAR AL CLIENTE (PAQUETE NUEVO) - MULTILINGÜE
+      // 🔔 NOTIFICAR AL CLIENTE (PAQUETE NUEVO)
       if (newPackage.user?.email) {
-          // Detectamos idioma (fallback a 'en')
           const userLang = (newPackage.user as any).language || 'en';
           const t = getT(userLang);
 
-          // 1. Enviar Email
           await sendPackageReceivedEmail(
               newPackage.user.email,
               newPackage.user.name || 'Cliente',
@@ -160,12 +138,13 @@ export async function POST(req: Request) {
               userLang
           );
           
-          // 2. Notificación Dashboard
           await sendNotification({
               userId: newPackage.userId,
-              title: t.notifPkgNewTitle, // "New Package in Miami"
+              title: t.notifPkgNewTitle, 
               message: t.notifPkgNewBody.replace('{TRACKING}', newPackage.carrierTrackingNumber),
-              type: "INFO"
+              type: "INFO",
+              // 🔥 CORRECCIÓN AQUÍ: Mandamos al detalle del nuevo paquete
+              href: `/dashboard-cliente/paquetes/${newPackage.id}`
           });
       }
 
@@ -174,7 +153,6 @@ export async function POST(req: Request) {
 
   } catch (error: any) {
     console.error("Error procesando paquete:", error);
-    // Si falla por tracking duplicado que no es pre-alerta
     if (error.code === 'P2002') {
         return NextResponse.json({ message: "Este paquete ya fue registrado anteriormente." }, { status: 409 });
     }

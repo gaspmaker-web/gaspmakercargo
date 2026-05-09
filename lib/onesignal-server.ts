@@ -9,14 +9,14 @@ export async function sendPushNotification(userId: string, title: string, messag
     return;
   }
 
-  // 🔥 REGLA DE ORO PARA ONESIGNAL: La URL tiene que ser ABSOLUTA (https://...) 🔥
-  let finalUrl = "https://www.gaspmakercargo.com/dashboard-cliente";
+  // 🔥 SOLUCIÓN AQUÍ: Cambiamos el destino por defecto para que abra las Notificaciones directamente 🔥
+  let finalUrl = "https://www.gaspmakercargo.com/dashboard-cliente/notificaciones";
   
   if (urlPath) {
     if (urlPath.startsWith("http")) {
       finalUrl = urlPath; // Si ya viene completa, la dejamos intacta
     } else {
-      // Si viene cortada (ej. "/dashboard-cliente/notificaciones"), le pegamos tu dominio oficial
+      // Si viene cortada (ej. "/dashboard-cliente/paquetes"), le pegamos tu dominio oficial
       finalUrl = `https://www.gaspmakercargo.com${urlPath.startsWith('/') ? '' : '/'}${urlPath}`;
     }
   }
@@ -34,7 +34,7 @@ export async function sendPushNotification(userId: string, title: string, messag
         headings: { en: title, es: title },
         contents: { en: message, es: message },
         
-        // 🔥 Redirección blindada 🔥
+        // 🔥 Redirección blindada hacia el iPhone/Safari 🔥
         url: finalUrl, 
         
         // 🔥 Forzando tu logo corporativo 🔥

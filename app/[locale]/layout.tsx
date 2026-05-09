@@ -9,9 +9,8 @@ import Providers from '@/components/Providers';
 import HeaderWrapper from '@/components/HeaderWrapper'; 
 import CookieBanner from '@/components/ui/CookieBanner';
 import TawkLoader from '@/components/TawkLoader'; 
-import OneSignalInit from "@/components/client/OneSignalInit"; 
 
-// 🔥 1. IMPORTAMOS LA SESIÓN DE TU USUARIO
+// 🔥 QUITA LA IMPORTACIÓN DE ONESIGNAL DE AQUÍ 🔥
 import { auth } from "@/auth"; 
 
 // Configuración de fuentes
@@ -23,12 +22,10 @@ const garamond = Cormorant_Garamond({
   variable: '--font-garamond' 
 });
 
-// Viewport: Controla el color de la barra en móviles
 export const viewport: Viewport = {
   themeColor: "#000000", 
 };
 
-// Metadatos actualizados (Sin avisos de depuración)
 export const metadata: Metadata = {
   title: 'Gasp Maker Cargo',
   description: 'Logística global, casillero y envíos internacionales desde Miami.',
@@ -56,11 +53,7 @@ export default async function RootLayout({
   params: { locale: string };
 }) {
   
-  // 🔥 2. OBTENEMOS LOS DATOS DEL USUARIO LOGUEADO
   const session = await auth();
-  
-  // 🔥 EL DETECTIVE: Esto imprimirá los datos en tu terminal de VS Code
-  console.log("🔍 DATOS DE SESIÓN:", session?.user);
   
   let messages;
   try {
@@ -76,8 +69,7 @@ export default async function RootLayout({
         suppressHydrationWarning={true}
       >
         
-        {/* 🔥 3. PASAMOS EL ID MÁGICO A ONESIGNAL 🔥 */}
-        <OneSignalInit userId={session?.user?.id} />
+        {/* 🔥 QUITA LA ETIQUETA DE ONESIGNAL DE AQUÍ 🔥 */}
 
         <NextIntlClientProvider locale={locale} messages={messages}>
           <Providers>

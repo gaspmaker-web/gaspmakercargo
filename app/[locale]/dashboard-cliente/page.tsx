@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import prisma from '@/lib/prisma';
 import { getTranslations } from 'next-intl/server';
 import ClientDashboard from "@/components/dashboard/ClientDashboard"; 
+import OneSignalInit from "@/components/client/OneSignalInit"; 
 
 // 🔥 IMPORTAMOS TU NUEVA CALCULADORA GLOBAL
 import { calculateHandlingFee } from '@/lib/utils'; 
@@ -239,10 +240,11 @@ export default async function DashboardPage({ params: { locale } }: Props) {
 
       return acc + (finalSubtotal + handlingFee);
   }, 0);
+
   return (
     <div className="min-h-screen bg-gray-50">
+        <OneSignalInit userId={session.user.id} />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            
             <ClientDashboard
                 user={session.user as any}
                 packages={activePackages}

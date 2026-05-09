@@ -13,10 +13,13 @@ export default function OneSignalInit({ userId }: { userId?: string }) {
           await OneSignal.init({
             appId: process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID || "85dd46b9-59dc-400a-843e-ce19b110861c",
             allowLocalhostAsSecureOrigin: true,
+            // @ts-ignore - Ignoramos la queja de TypeScript para esta propiedad
+            notifyButton: { enable: false }, 
           });
-          initialized.current = true;
           
-          // 🔥 LA LÍNEA MÁGICA: Obliga a mostrar el pop-up de "Permitir Notificaciones" 🔥
+          initialized.current = true;
+
+          // 🔥 LA LÍNEA MÁGICA: Esto hace que salga el pop-up de la imagen fi73 🔥
           await OneSignal.Slidedown.promptPush();
           
         } catch (error) {
