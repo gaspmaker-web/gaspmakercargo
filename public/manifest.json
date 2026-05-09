@@ -25,16 +25,41 @@
     {
       "name": "Ver mis paquetes",
       "short_name": "Paquetes",
-      "description": "Rastrea tu carga",
-      "url": "/dashboard",
-      "icons": [{ "src": "/icon-192x192.png", "sizes": "192x192" }]
+      "description": "Rastrea tu carga recibida",
+      "url": "/dashboard-cliente",
+      "icons": [
+        {
+          "src": "/icon-192x192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Notificaciones",
+      "short_name": "Alertas",
+      "description": "Ver actualizaciones de envíos",
+      "url": "/dashboard-cliente/notificaciones",
+      "icons": [
+        {
+          "src": "/icon-192x192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
     },
     {
       "name": "Escanear Carga",
       "short_name": "Escanear",
-      "description": "Cámara para bodega",
+      "description": "Cámara para bodega (Admin)",
       "url": "/dashboard-admin/crear-envio",
-      "icons": [{ "src": "/icon-192x192.png", "sizes": "192x192" }]
+      "icons": [
+        {
+          "src": "/icon-192x192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
     }
   ]
 }

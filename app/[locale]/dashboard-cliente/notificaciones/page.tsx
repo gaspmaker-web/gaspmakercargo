@@ -1,4 +1,4 @@
- "use client";
+"use client";
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -152,6 +152,28 @@ export default function NotificationsPage() {
       return sameTitle && sameMsg && diffMinutes <= 10;
     });
   });
+
+  // 🔥 Lógica para el Globito Rojo (App Badge) en iOS/Mac 🔥
+  useEffect(() => {
+    const updateOsBadge = async () => {
+      const unreadCount = uniqueNotifications.filter(n => !n.isRead).length;
+      const nav = navigator as any;
+
+      if ('setAppBadge' in nav && 'clearAppBadge' in nav) {
+        try {
+          if (unreadCount > 0) {
+            await nav.setAppBadge(unreadCount);
+          } else {
+            await nav.clearAppBadge();
+          }
+        } catch (error) {
+          console.error("❌ Error comunicándose con el Badge de OS:", error);
+        }
+      }
+    };
+
+    updateOsBadge();
+  }, [uniqueNotifications]);
 
   return (
     <div className="min-h-screen bg-gray-50 font-montserrat pt-6 sm:pt-8 pb-20">
