@@ -73,24 +73,58 @@ export default function NotificationsPage() {
     }
   }, []);
 
+  const uniqueNotifications = notifications.filter((notif, index, self) => {
+    return index === self.findIndex((t) => {
+      const sameTitle = t.title === notif.title;
+      const sameMsg = t.message === notif.message;
+      const diffTime = Math.abs(new Date(t.createdAt).getTime() - new Date(notif.createdAt).getTime()) < 600000;
+      return sameTitle && sameMsg && diffTime;
+    });
+  });
+
+  // 🔥 NUEVO: LÓGICA DE GLOBO ROJO EN EL ÍCONO DE LA APP (PWA BADGE) 🔥
+  useEffect(() => {
+    const updateAppBadge = async () => {
+      const unreadCount = uniqueNotifications.filter(n => !n.isRead).length;
+      
+      // Verificamos si el dispositivo soporta el Badge Nativo (iOS 16.4+ o Android)
+      if (typeof navigator !== 'undefined' && 'setAppBadge' in navigator && 'clearAppBadge' in navigator) {
+        try {
+          if (unreadCount > 0) {
+            // @ts-ignore
+            await navigator.setAppBadge(unreadCount);
+          } else {
+            // @ts-ignore
+            await navigator.clearAppBadge();
+          }
+        } catch (error) {
+          console.error("Error actualizando el globo del ícono:", error);
+        }
+      }
+    };
+
+    updateAppBadge();
+  }, [uniqueNotifications]);
+
+  // 🔥 MEJORA: PETICIÓN INSTANTÁNEA PARA QUE NO FALLE EN EL MÓVIL 🔥
   const handleEnablePush = async () => {
     try {
+      // 1. Disparamos el permiso ANTES de tocar el estado o el localStorage para mayor velocidad
+      const OneSignal = (window as any).OneSignal || [];
+      if (OneSignal.Notifications) {
+         await OneSignal.Notifications.requestPermission();
+      } else if (typeof window !== "undefined" && "Notification" in window) {
+         await Notification.requestPermission();
+      }
+
+      // 2. Ocultamos la tarjeta azul
       setShowPromptBanner(false);
+      
+      // 3. Guardamos el candado de memoria
       if (typeof window !== "undefined") {
         localStorage.setItem('gmc_hide_push_banner', 'true');
       }
 
-      if (typeof window !== "undefined" && "Notification" in window) {
-        if (Notification.permission === "denied") {
-          alert(currentBanner.blocked);
-          return;
-        }
-      }
-
-      const OneSignal = (window as any).OneSignal || [];
-      if (OneSignal.Notifications) {
-         await OneSignal.Notifications.requestPermission();
-      }
     } catch (error) {
       console.error("Error al solicitar permiso:", error);
     }
@@ -151,15 +185,6 @@ export default function NotificationsPage() {
     if (t.has(cleanText)) { return t(cleanText); }
     return text;
   };
-
-  const uniqueNotifications = notifications.filter((notif, index, self) => {
-    return index === self.findIndex((t) => {
-      const sameTitle = t.title === notif.title;
-      const sameMsg = t.message === notif.message;
-      const diffTime = Math.abs(new Date(t.createdAt).getTime() - new Date(notif.createdAt).getTime()) < 600000;
-      return sameTitle && sameMsg && diffTime;
-    });
-  });
 
   const getSmartUrl = (notif: Notification) => {
     if (notif.href && notif.href.trim() !== "") {
