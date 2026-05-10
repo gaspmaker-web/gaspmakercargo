@@ -82,12 +82,10 @@ export default function NotificationsPage() {
     });
   });
 
-  // 🔥 NUEVO: LÓGICA DE GLOBO ROJO EN EL ÍCONO DE LA APP (PWA BADGE) 🔥
+  // PWA BADGE (El globito rojo del ícono)
   useEffect(() => {
     const updateAppBadge = async () => {
       const unreadCount = uniqueNotifications.filter(n => !n.isRead).length;
-      
-      // Verificamos si el dispositivo soporta el Badge Nativo (iOS 16.4+ o Android)
       if (typeof navigator !== 'undefined' && 'setAppBadge' in navigator && 'clearAppBadge' in navigator) {
         try {
           if (unreadCount > 0) {
@@ -102,31 +100,44 @@ export default function NotificationsPage() {
         }
       }
     };
-
     updateAppBadge();
   }, [uniqueNotifications]);
 
-  // 🔥 MEJORA: PETICIÓN INSTANTÁNEA PARA QUE NO FALLE EN EL MÓVIL 🔥
+  // 🔥 SOLUCIÓN: REGISTRO OBLIGATORIO CON ONESIGNAL 🔥
   const handleEnablePush = async () => {
     try {
-      // 1. Disparamos el permiso ANTES de tocar el estado o el localStorage para mayor velocidad
-      const OneSignal = (window as any).OneSignal || [];
-      if (OneSignal.Notifications) {
-         await OneSignal.Notifications.requestPermission();
-      } else if (typeof window !== "undefined" && "Notification" in window) {
-         await Notification.requestPermission();
-      }
-
-      // 2. Ocultamos la tarjeta azul
+      // 1. Ocultamos el banner para experiencia de usuario fluida
       setShowPromptBanner(false);
-      
-      // 3. Guardamos el candado de memoria
       if (typeof window !== "undefined") {
         localStorage.setItem('gmc_hide_push_banner', 'true');
       }
 
+      // 2. Ejecutamos estrictamente el motor de OneSignal para asegurar el registro del dispositivo
+      if (typeof window !== "undefined") {
+        const OneSignal = (window as any).OneSignal || [];
+        const OneSignalDeferred = (window as any).OneSignalDeferred;
+
+        // Método para OneSignal v16 (Next.js moderno)
+        if (OneSignalDeferred) {
+            OneSignalDeferred.push(async function(os: any) {
+                await os.Notifications.requestPermission();
+            });
+        } 
+        // Método clásico
+        else if (OneSignal.Notifications) {
+            await OneSignal.Notifications.requestPermission();
+        } 
+        // Método de carga asíncrona
+        else if (typeof OneSignal.push === 'function') {
+            OneSignal.push(async function() {
+                if ((window as any).OneSignal.Notifications) {
+                    await (window as any).OneSignal.Notifications.requestPermission();
+                }
+            });
+        }
+      }
     } catch (error) {
-      console.error("Error al solicitar permiso:", error);
+      console.error("Error al solicitar permiso a OneSignal:", error);
     }
   };
 
