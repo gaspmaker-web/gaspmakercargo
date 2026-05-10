@@ -82,7 +82,7 @@ export default function NotificationsPage() {
     });
   });
 
-  // PWA BADGE (El globito rojo del ícono)
+  // 🔥 LÓGICA DE GLOBO ROJO EN EL ÍCONO DE LA APP (PWA BADGE) 🔥
   useEffect(() => {
     const updateAppBadge = async () => {
       const unreadCount = uniqueNotifications.filter(n => !n.isRead).length;
@@ -106,29 +106,22 @@ export default function NotificationsPage() {
   // 🔥 SOLUCIÓN: REGISTRO OBLIGATORIO CON ONESIGNAL 🔥
   const handleEnablePush = async () => {
     try {
-      // 1. Ocultamos el banner para experiencia de usuario fluida
       setShowPromptBanner(false);
       if (typeof window !== "undefined") {
         localStorage.setItem('gmc_hide_push_banner', 'true');
       }
 
-      // 2. Ejecutamos estrictamente el motor de OneSignal para asegurar el registro del dispositivo
       if (typeof window !== "undefined") {
         const OneSignal = (window as any).OneSignal || [];
         const OneSignalDeferred = (window as any).OneSignalDeferred;
 
-        // Método para OneSignal v16 (Next.js moderno)
         if (OneSignalDeferred) {
             OneSignalDeferred.push(async function(os: any) {
                 await os.Notifications.requestPermission();
             });
-        } 
-        // Método clásico
-        else if (OneSignal.Notifications) {
+        } else if (OneSignal.Notifications) {
             await OneSignal.Notifications.requestPermission();
-        } 
-        // Método de carga asíncrona
-        else if (typeof OneSignal.push === 'function') {
+        } else if (typeof OneSignal.push === 'function') {
             OneSignal.push(async function() {
                 if ((window as any).OneSignal.Notifications) {
                     await (window as any).OneSignal.Notifications.requestPermission();
