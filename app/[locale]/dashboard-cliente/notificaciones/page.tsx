@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Bell, Clock, Trash2, CheckCircle, Loader2, ArrowLeft } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 
 interface Notification {
   id: string;
@@ -18,6 +18,7 @@ interface Notification {
 
 export default function NotificationsPage() {
   const t = useTranslations('Notifications');
+  const locale = useLocale(); 
   
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
@@ -25,10 +26,28 @@ export default function NotificationsPage() {
   const [showPromptBanner, setShowPromptBanner] = useState(false);
   const router = useRouter();
 
+  const bannerTexts: Record<string, { msg: string, btn: string, blocked: string }> = {
+    en: { msg: "Enable notifications to know exactly when your cargo arrives in Miami.", btn: "Enable", blocked: "⚠️ Notifications are blocked. Please enable them using the padlock 🔒 icon in your browser's address bar." },
+    es: { msg: "Activa las notificaciones para saber exactamente cuándo llega tu carga a Miami.", btn: "Activar", blocked: "⚠️ Las notificaciones están bloqueadas. Actívalas haciendo clic en el candado 🔒 junto a la barra de direcciones." },
+    fr: { msg: "Activez les alertes pour savoir exactement quand votre cargaison arrive à Miami.", btn: "Activer", blocked: "⚠️ Notifications bloquées. Veuillez les activer via le cadenas 🔒 dans la barre d'adresse." },
+    pt: { msg: "Ative as notificações para saber exatamente quando sua carga chega a Miami.", btn: "Ativar", blocked: "⚠️ Notificações bloqueadas. Ative-as no cadeado 🔒 na barra de endereços do navegador." }
+  };
+
+  const emptyTexts: Record<string, string> = {
+    en: "No new alerts", es: "No hay alertas nuevas", fr: "Aucune nouvelle alerte", pt: "Sem novos alertas"
+  };
+
+  const viewDetailsTexts: Record<string, string> = {
+    en: "View details", es: "Ver detalles", fr: "Voir les détails", pt: "Ver detalhes"
+  };
+
+  const currentBanner = bannerTexts[locale as keyof typeof bannerTexts] || bannerTexts.en;
+  const currentEmpty = emptyTexts[locale as keyof typeof emptyTexts] || emptyTexts.en;
+  const currentDetails = viewDetailsTexts[locale as keyof typeof viewDetailsTexts] || viewDetailsTexts.en;
+
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
-        // 🔥 Forzamos descarga de datos frescos (Anti-caché)
         const res = await fetch('/api/notifications', { cache: 'no-store' });
         if (res.ok) {
           const data = await res.json();
@@ -43,23 +62,43 @@ export default function NotificationsPage() {
     fetchNotifications();
   }, []);
 
+  // 🔥 LÓGICA DE TARJETA INSTANTÁNEA Y CANDADO DE MEMORIA 🔥
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const OneSignal = (window as any).OneSignal || [];
-      OneSignal.push(function() {
-        const hasPermission = OneSignal.Notifications.hasPermission;
-        if (!hasPermission) {
-          setShowPromptBanner(true);
-        }
-      });
+    if (typeof window !== "undefined" && "Notification" in window) {
+      // 1. Verificamos si ya guardamos el "candado" en el navegador de este cliente
+      const isHiddenLocally = localStorage.getItem('gmc_hide_push_banner') === 'true';
+
+      // 2. Solo mostramos la tarjeta si no hay candado Y el navegador aún está en "default" (sin responder)
+      if (Notification.permission === "default" && !isHiddenLocally) {
+        setShowPromptBanner(true);
+      } else {
+        setShowPromptBanner(false);
+      }
     }
   }, []);
 
   const handleEnablePush = async () => {
     try {
-      const OneSignal = (window as any).OneSignal || [];
-      await OneSignal.Notifications.requestPermission();
+      // 1. Ocultamos la tarjeta instantáneamente al hacer clic
       setShowPromptBanner(false);
+      
+      // 2. Ponemos el candado permanente en la memoria del navegador
+      if (typeof window !== "undefined") {
+        localStorage.setItem('gmc_hide_push_banner', 'true');
+      }
+
+      if (typeof window !== "undefined" && "Notification" in window) {
+        if (Notification.permission === "denied") {
+          alert(currentBanner.blocked);
+          return;
+        }
+      }
+
+      // 3. Lanzamos la petición real silenciosa
+      const OneSignal = (window as any).OneSignal || [];
+      if (OneSignal.Notifications) {
+         await OneSignal.Notifications.requestPermission();
+      }
     } catch (error) {
       console.error("Error al solicitar permiso:", error);
     }
@@ -108,7 +147,7 @@ export default function NotificationsPage() {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return new Intl.DateTimeFormat('es-ES', {
+    return new Intl.DateTimeFormat(locale, {
       day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
     }).format(date);
   };
@@ -130,14 +169,10 @@ export default function NotificationsPage() {
     });
   });
 
-  // 🔥 ENRUTADOR INTELIGENTE (PRODUCCIÓN) 🔥
   const getSmartUrl = (notif: Notification) => {
-    // 1. Si la notificación tiene el link con el UUID (las nuevas), lo usamos.
     if (notif.href && notif.href.trim() !== "") {
       return notif.href;
     }
-    
-    // 2. Si no tiene link (las viejas), mandamos al Dashboard principal para EVITAR EL 404.
     return '/dashboard-cliente';
   };
 
@@ -145,19 +180,19 @@ export default function NotificationsPage() {
     <div className="min-h-screen bg-gray-50 font-montserrat pt-6 sm:pt-8 pb-20">
       
       {showPromptBanner && (
-        <div className="max-w-2xl mx-auto mb-6 px-4">
-          <div className="bg-blue-600 rounded-[20px] px-5 py-4 flex justify-between items-center shadow-md relative z-50">
-            <div className="flex items-center gap-3 pr-4">
+        <div className="max-w-md mx-auto mt-2 sm:mt-0 mb-8 px-4 relative z-50">
+          <div className="bg-blue-600 rounded-[20px] px-5 py-4 flex justify-between items-center shadow-md">
+            <div className="flex items-center gap-3 pr-3">
               <span className="text-2xl">🔔</span>
-              <p className="text-white text-xs sm:text-sm font-medium leading-snug">
-                Activa las notificaciones para saber exactamente cuándo llega tu carga a Miami.
+              <p className="text-white text-[11px] sm:text-xs font-medium leading-snug">
+                {currentBanner.msg}
               </p>
             </div>
             <button 
               onClick={handleEnablePush}
-              className="shrink-0 bg-white text-blue-600 px-5 py-2 rounded-full text-xs font-bold shadow-sm hover:bg-blue-50 transition-colors"
+              className="shrink-0 bg-white text-blue-600 px-4 py-2 rounded-full text-xs font-bold shadow-sm hover:bg-blue-50 transition-colors cursor-pointer pointer-events-auto"
             >
-              Activar
+              {currentBanner.btn}
             </button>
           </div>
         </div>
@@ -165,11 +200,13 @@ export default function NotificationsPage() {
 
       <div className="max-w-3xl mx-auto px-4 sm:px-6 mb-10 relative z-40">
         <div className="flex justify-between items-center w-full">
-             <h1 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight font-garamond">
-               {/* @ts-ignore */}
-               {t.has('title') ? t('title') : "Notifications"}
-             </h1>
-          <div className="flex gap-2 sm:gap-3">
+          <div className="flex-1"></div>
+          <div className="flex flex-col items-center flex-none px-2">
+             <div className="w-12 h-12 rounded-full bg-white shadow-sm border border-gray-100 flex items-center justify-center text-purple-600 mb-3">
+               <Bell size={22} strokeWidth={2} />
+             </div>
+          </div>
+          <div className="flex-1 flex justify-end gap-2 sm:gap-3">
             {uniqueNotifications.length > 0 && uniqueNotifications.some(n => !n.isRead) && (
               <button 
                   onClick={markAllAsRead}
@@ -197,7 +234,7 @@ export default function NotificationsPage() {
         ) : uniqueNotifications.length === 0 ? (
             <div className="text-center py-24 opacity-60">
                 <Bell size={40} className="mx-auto mb-6 text-gray-300"/>
-                <h3 className="text-xl font-bold text-gray-600 font-garamond">No hay alertas nuevas</h3>
+                <h3 className="text-xl font-bold text-gray-600 font-garamond">{currentEmpty}</h3>
             </div>
         ) : (
             uniqueNotifications.map((notif) => (
@@ -232,7 +269,7 @@ export default function NotificationsPage() {
                         </p>
                        
                         <span className="mt-3 inline-flex items-center text-xs font-bold text-gmc-dorado-principal hover:text-yellow-600 transition-colors bg-yellow-50 px-3 py-1.5 rounded-lg">
-                            Ver detalles 
+                            {currentDetails} 
                             <ArrowLeft size={12} className="rotate-180 ml-1"/>
                         </span>
                     </Link>

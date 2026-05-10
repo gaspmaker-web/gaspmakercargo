@@ -19,8 +19,9 @@ export default function OneSignalInit({ userId }: { userId?: string }) {
           
           initialized.current = true;
 
-          // 🔥 LA LÍNEA MÁGICA: Esto hace que salga el pop-up de la imagen fi73 🔥
-          await OneSignal.Slidedown.promptPush();
+          // 🔪 HEMOS ELIMINADO EL SLIDEDOWN AUTOMÁTICO AQUÍ 🔪
+          // Ahora OneSignal se inicia silenciosamente. El único que puede pedir
+          // permisos es tu Tarjeta Azul en la página de Notificaciones.
           
         } catch (error) {
           console.error("Error conectando a OneSignal:", error);
