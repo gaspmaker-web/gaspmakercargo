@@ -62,13 +62,9 @@ export default function NotificationsPage() {
     fetchNotifications();
   }, []);
 
-  // 🔥 LÓGICA DE TARJETA INSTANTÁNEA Y CANDADO DE MEMORIA 🔥
   useEffect(() => {
     if (typeof window !== "undefined" && "Notification" in window) {
-      // 1. Verificamos si ya guardamos el "candado" en el navegador de este cliente
       const isHiddenLocally = localStorage.getItem('gmc_hide_push_banner') === 'true';
-
-      // 2. Solo mostramos la tarjeta si no hay candado Y el navegador aún está en "default" (sin responder)
       if (Notification.permission === "default" && !isHiddenLocally) {
         setShowPromptBanner(true);
       } else {
@@ -79,10 +75,7 @@ export default function NotificationsPage() {
 
   const handleEnablePush = async () => {
     try {
-      // 1. Ocultamos la tarjeta instantáneamente al hacer clic
       setShowPromptBanner(false);
-      
-      // 2. Ponemos el candado permanente en la memoria del navegador
       if (typeof window !== "undefined") {
         localStorage.setItem('gmc_hide_push_banner', 'true');
       }
@@ -94,7 +87,6 @@ export default function NotificationsPage() {
         }
       }
 
-      // 3. Lanzamos la petición real silenciosa
       const OneSignal = (window as any).OneSignal || [];
       if (OneSignal.Notifications) {
          await OneSignal.Notifications.requestPermission();
@@ -177,10 +169,10 @@ export default function NotificationsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 font-montserrat pt-6 sm:pt-8 pb-20">
+    <div className="min-h-screen bg-gray-50 font-montserrat pt-24 pb-20">
       
       {showPromptBanner && (
-        <div className="max-w-md mx-auto mt-2 sm:mt-0 mb-8 px-4 relative z-50">
+        <div className="max-w-md mx-auto mb-8 px-4">
           <div className="bg-blue-600 rounded-[20px] px-5 py-4 flex justify-between items-center shadow-md">
             <div className="flex items-center gap-3 pr-3">
               <span className="text-2xl">🔔</span>
@@ -198,7 +190,7 @@ export default function NotificationsPage() {
         </div>
       )}
 
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 mb-10 relative z-40">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 mb-10">
         <div className="flex justify-between items-center w-full">
           <div className="flex-1"></div>
           <div className="flex flex-col items-center flex-none px-2">
@@ -228,7 +220,7 @@ export default function NotificationsPage() {
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 space-y-4 relative z-30">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 space-y-4">
         {loading ? (
             <div className="flex flex-col items-center py-20"><Loader2 className="animate-spin text-gray-300" size={40}/></div>
         ) : uniqueNotifications.length === 0 ? (
