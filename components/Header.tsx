@@ -31,7 +31,8 @@ export default function Header({ backButtonUrl }: HeaderProps) {
   const isBuzon = pathname.includes('/buzon');
   const isKyc = pathname.includes('/mailbox-setup/kyc');
   const isKycFix = pathname.includes('/mailbox-setup/kyc-fix');
-  // 🔥 DETECTAMOS SI ESTAMOS EN LA PÁGINA DE NOTIFICACIONES
+  
+  // 🔥 1. DETECTAMOS SI ESTAMOS EN LA PÁGINA DE NOTIFICACIONES
   const isNotifications = pathname.includes('/notificaciones');
 
   const isSubPage = 
@@ -43,7 +44,7 @@ export default function Header({ backButtonUrl }: HeaderProps) {
     pathname.includes('/en-transito') ||
     pathname.includes('/en-destino') ||
     pathname.includes('/pagar-facturas') || 
-    isNotifications ||
+    isNotifications || // Usamos la variable en lugar del includes directo
     pathname.includes('/account-settings') ||
     pathname.includes('/paquetes') ||
     pathname.includes('/rastreo') ||
@@ -80,9 +81,9 @@ export default function Header({ backButtonUrl }: HeaderProps) {
     window.location.href = newPath; 
   };
 
-  // 🔥 LÓGICA DE NAVEGACIÓN BLINDADA 🔥
+  // 🔥 2. LÓGICA DE NAVEGACIÓN BLINDADA 🔥
   const handleBackNavigation = () => {
-    // Si estamos en notificaciones, SIEMPRE mandamos al Dashboard (Anti-congelamiento)
+    // Si estamos en notificaciones, SIEMPRE mandamos al Dashboard con una recarga dura (Anti-congelamiento)
     if (isNotifications) {
         window.location.href = `/${locale}/dashboard-cliente`;
         return;
@@ -259,6 +260,7 @@ export default function Header({ backButtonUrl }: HeaderProps) {
                         </>
                     ) : (
                         <div className="flex items-center gap-3">
+                            {/* Enlace de Registro (oculto en móvil, visible en LG) */}
                             <Link 
                                 href={getLink('/registro-cliente')}
                                 className="hidden lg:flex px-4 py-2 text-white font-bold hover:text-gmc-dorado-principal transition-all text-sm items-center gap-2"
@@ -267,6 +269,7 @@ export default function Header({ backButtonUrl }: HeaderProps) {
                                 {locale === 'en' ? 'Sign Up' : locale === 'es' ? 'Registrarse' : locale === 'pt' ? 'Cadastrar' : 'S\'inscrire'}
                             </Link>
                             
+                            {/* Botón Principal (Login) - ESTE ES EL REEMPLAZO DEL OPEN FREE LOCKER */}
                             <Link 
                                 href={getLink('/login-cliente')}
                                 className="px-4 py-2 lg:px-6 lg:py-2.5 bg-gmc-dorado-principal text-black font-extrabold rounded-lg hover:bg-yellow-400 transition-all text-sm shadow-lg flex items-center gap-2 transform hover:-translate-y-0.5"
