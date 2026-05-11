@@ -200,11 +200,17 @@ export default function PackageDetailClient({
     }
   }, [selectedRate, userProfile, handlingFee, insuranceCost]);
 
-  // 🔥 HELPER: OBTIENE LOS DATOS COMPLETOS DE LA DIRECCIÓN SELECCIONADA
+ // 🔥 HELPER: OBTIENE LOS DATOS COMPLETOS DE LA DIRECCIÓN SELECCIONADA
   const currentAddress = allAddresses.find((a) => a.id === selectedAddressId);
   const currentDestination = currentAddress ? {
     name: currentAddress.fullName,
     address: currentAddress.address,
+    
+    // 👇 ESTO ES LO QUE ACTIVA A GmcDelivery AUTOMÁTICAMENTE 👇
+    city: currentAddress.city || '', 
+    state: currentAddress.state || '', 
+    zip: currentAddress.zip || '',
+    
     cityZip: currentAddress.cityZip,
     countryCode: currentAddress.country, 
     countryName: currentAddress.country, 

@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'; 
 import { useSession } from "next-auth/react"; 
-// 🔥 1. AGREGAMOS LAS FLECHITAS DE LUCIDE-REACT (ChevronDown, ChevronUp)
 import { Edit, Plus, Settings, MapPin, CheckCircle, Trash2, Star, ChevronDown, ChevronUp } from 'lucide-react'; 
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
@@ -37,14 +36,22 @@ export default function AccountContent() {
     
     // ESTADOS PARA LA LIBRETA DE DIRECCIONES
     const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
-    // 🔥 2. NUEVO ESTADO PARA ESCONDER/MOSTRAR LA LISTA (Falso por defecto para que inicie escondida)
     const [isAddressesExpanded, setIsAddressesExpanded] = useState(false);
     
     const [addresses, setAddresses] = useState<any[]>([]);
     const [loadingAddresses, setLoadingAddresses] = useState(true);
     const [editingAddressId, setEditingAddressId] = useState<string | null>(null);
+
+    // 🔥 ACTUALIZACIÓN ENTERPRISE: Agregamos los campos estructurados al estado inicial
     const [currentAddressData, setCurrentAddressData] = useState({
-        fullName: '', address: '', cityZip: '', country: '', phone: ''
+        fullName: '', 
+        address: '', 
+        city: '',    // Nueva pieza
+        state: '',   // Nueva pieza
+        zip: '',     // Nueva pieza
+        cityZip: '', 
+        country: '', 
+        phone: ''
     });
 
     // Estado de Datos de Usuario
@@ -82,7 +89,7 @@ export default function AccountContent() {
         }
     }, [session]);
 
-    // Traer todas las direcciones de la base de datos
+    // Traer todas las direcciones
     const fetchAddresses = async () => {
         setLoadingAddresses(true);
         try {
@@ -124,19 +131,33 @@ export default function AccountContent() {
     // --- Handlers de Libreta de Direcciones ---
     const openNewAddressModal = () => {
         setEditingAddressId(null);
-        setCurrentAddressData({ fullName: '', address: '', cityZip: '', country: '', phone: '' });
+        // 🔥 Limpiamos todo el estado, incluyendo los campos nuevos
+        setCurrentAddressData({ 
+            fullName: '', address: '', city: '', state: '', zip: '', cityZip: '', country: '', phone: '' 
+        });
         setIsAddressModalOpen(true);
     };
 
     const openEditAddressModal = (addr: any) => {
         setEditingAddressId(addr.id);
-        setCurrentAddressData({ fullName: addr.fullName, address: addr.address, cityZip: addr.cityZip, country: addr.country, phone: addr.phone });
+        // 🔥 MAPEO CRÍTICO: Pasamos los datos que ya están en Supabase al Modal
+        setCurrentAddressData({ 
+            fullName: addr.fullName, 
+            address: addr.address, 
+            city: addr.city || '',    // Recuperamos la ciudad
+            state: addr.state || '',  // Recuperamos el estado
+            zip: addr.zip || '',      // Recuperamos el zip
+            cityZip: addr.cityZip, 
+            country: addr.country, 
+            phone: addr.phone 
+        });
         setIsAddressModalOpen(true);
     };
 
     const handleSaveAddress = async (data: any) => {
         try {
             const endpoint = editingAddressId ? '/api/user/addresses/update' : '/api/user/addresses/create';
+            // Al hacer {...data}, incluimos automáticamente city, state y zip en el envío a la API
             const payload = editingAddressId ? { ...data, id: editingAddressId } : data;
 
             const res = await fetch(endpoint, {
@@ -147,7 +168,6 @@ export default function AccountContent() {
                 setIsAddressModalOpen(false);
                 fetchAddresses(); 
                 router.refresh();
-                // 🔥 Abrimos el acordeón automáticamente si guardan una nueva dirección para que la vean
                 setIsAddressesExpanded(true);
             }
         } catch (error) { console.error("Error saving address", error); }
@@ -175,6 +195,7 @@ export default function AccountContent() {
     return (
         <div className="bg-gray-100 min-h-screen p-4 sm:p-6 lg:p-8 font-montserrat">
             <div className="max-w-2xl mx-auto">
+                {/* Cabecera, Perfil y Cuenta se mantienen igual que en tu archivo original */}
                 <div className="flex justify-center items-center mb-8">
                     <div className="flex items-center gap-3">
                         <div className="bg-white p-3 rounded-full text-gmc-dorado-principal shadow-sm border border-gray-100">
@@ -209,7 +230,6 @@ export default function AccountContent() {
                 
                 {/* 🔥 LIBRETA DE DIRECCIONES (MODO ACORDEÓN) 🔥 */}
                 <div className="bg-white p-6 rounded-xl shadow-md mb-6 transition-all duration-300">
-                    {/* 3. Cabecera clickeable */}
                     <div 
                         className="flex justify-between items-center cursor-pointer group"
                         onClick={() => setIsAddressesExpanded(!isAddressesExpanded)}
@@ -217,13 +237,11 @@ export default function AccountContent() {
                         <h2 className="text-xl font-bold text-gmc-gris-oscuro font-garamond flex items-center gap-2 group-hover:text-gmc-dorado-principal transition-colors">
                             <MapPin size={22}/> {t('sectionAddresses')}
                         </h2>
-                        {/* 4. Flechita que cambia si está abierto o cerrado */}
                         <button className="text-gray-400 group-hover:text-gmc-dorado-principal transition-all">
                             {isAddressesExpanded ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
                         </button>
                     </div>
 
-                    {/* 5. Contenido oculto/mostrado dinámicamente */}
                     {isAddressesExpanded && (
                         <div className="mt-6 border-t border-gray-100 pt-6 animate-in slide-in-from-top-2 fade-in duration-300">
                             {loadingAddresses ? (
@@ -287,7 +305,7 @@ export default function AccountContent() {
                 isOpen={isAddressModalOpen} 
                 onClose={() => setIsAddressModalOpen(false)} 
                 onSave={handleSaveAddress} 
-                currentData={currentAddressData} 
+                currentData={currentAddressData as any} 
             />
         </div>
     );

@@ -1,12 +1,16 @@
 "use client";
 
-import React, { useState, useEffect, Fragment, useMemo } from 'react';
+import React, { useState, useEffect, Fragment, useMemo, useRef } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { X, MapPin, Building2, Phone, Globe, Hash, User } from 'lucide-react';
 import { useTranslations } from 'next-intl'; 
 import { ALL_COUNTRIES } from '@/lib/countries';
+// 🔥 INTEGRACIÓN GOOGLE MAPS
+import { useJsApiLoader, Autocomplete } from '@react-google-maps/api';
 
 // --- CONSTANTES ---
+const GOOGLE_LIBRARIES: ("places")[] = ["places"];
+
 const US_STATES = [
   { code: 'AL', name: 'Alabama' }, { code: 'AK', name: 'Alaska' }, { code: 'AZ', name: 'Arizona' },
   { code: 'AR', name: 'Arkansas' }, { code: 'CA', name: 'California' }, { code: 'CO', name: 'Colorado' },
@@ -31,14 +35,42 @@ const US_STATES = [
 interface EditAddressModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (data: { fullName: string; address: string; cityZip: string; country: string; phone: string }) => void;
-  currentData: { fullName?: string; address: string; cityZip: string; country: string; phone: string };
+  // 🔥 ACTUALIZADO: Ahora onSave envía la estructura limpia
+  onSave: (data: { 
+    fullName: string; 
+    address: string; 
+    city: string;
+    state: string;
+    zip: string;
+    cityZip: string; 
+    country: string; 
+    phone: string 
+  }) => void;
+  // 🔥 ACTUALIZADO: Soporta datos estructurados existentes
+  currentData: { 
+    fullName?: string; 
+    address: string; 
+    city?: string;
+    state?: string;
+    zip?: string;
+    cityZip: string; 
+    country: string; 
+    phone: string 
+  };
 }
 
 export default function EditAddressModal({ isOpen, onClose, onSave, currentData }: EditAddressModalProps) {
   const t = useTranslations('EditAddressModal');
   const tProfile = useTranslations('ProfilePage'); 
   const [isLoading, setIsLoading] = useState(false);
+
+  // --- GOOGLE MAPS API LOADER ---
+  const { isLoaded } = useJsApiLoader({
+    id: 'google-map-script',
+    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY || "",
+    libraries: GOOGLE_LIBRARIES
+  });
+  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
 
   const [fullName, setFullName] = useState(''); 
   const [address, setAddress] = useState('');
@@ -60,6 +92,12 @@ export default function EditAddressModal({ isOpen, onClose, onSave, currentData 
         setAddress(currentData.address || '');
         setCountry(currentData.country ? currentData.country.toUpperCase() : 'US');
         
+        // Prioridad a campos estructurados si existen, si no, usamos el extractor de cityZip
+        if (currentData.city) setCity(currentData.city);
+        if (currentData.state) setState(currentData.state);
+        if (currentData.zip) setZip(currentData.zip);
+
+        // Lógica de teléfono original respetada 100%
         const rawPhone = currentData.phone || '';
         let extractedCountryCode = 'us';
         let extractedNumber = rawPhone;
@@ -82,27 +120,58 @@ export default function EditAddressModal({ isOpen, onClose, onSave, currentData 
         setPhoneCountryCode(extractedCountryCode);
         setPhoneNumber(extractedNumber);
 
-        const fullString = currentData.cityZip || '';
-        
-        const zipMatch = fullString.match(/\b\d{5}(?:-\d{4})?\b/);
-        const foundZip = zipMatch ? zipMatch[0] : '';
-        setZip(foundZip);
+        // Si NO hay campos estructurados, ejecutamos tu extractor de cityZip original
+        if (!currentData.city || !currentData.state || !currentData.zip) {
+            const fullString = currentData.cityZip || '';
+            const zipMatch = fullString.match(/\b\d{5}(?:-\d{4})?\b/);
+            const foundZip = zipMatch ? zipMatch[0] : '';
+            if (!currentData.zip) setZip(foundZip);
 
-        let remainder = fullString.replace(foundZip, '').trim().replace(/,$/, ''); 
-        
-        let foundState = '';
-        const parts = remainder.split(' ');
-        const lastPart = parts[parts.length - 1];
-        
-        if (lastPart && lastPart.length === 2 && lastPart === lastPart.toUpperCase()) {
-            foundState = lastPart;
-            remainder = remainder.substring(0, remainder.lastIndexOf(lastPart)).trim().replace(/,$/, '');
+            let remainder = fullString.replace(foundZip, '').trim().replace(/,$/, ''); 
+            let foundState = '';
+            const parts = remainder.split(' ');
+            const lastPart = parts[parts.length - 1];
+            
+            if (lastPart && lastPart.length === 2 && lastPart === lastPart.toUpperCase()) {
+                foundState = lastPart;
+                remainder = remainder.substring(0, remainder.lastIndexOf(lastPart)).trim().replace(/,$/, '');
+            }
+            
+            if (!currentData.state) setState(foundState);
+            if (!currentData.city) setCity(remainder);
         }
-        
-        setState(foundState);
-        setCity(remainder);
     }
   }, [isOpen, currentData, sortedCountries]);
+
+  // 🔥 DISECCIÓN DE LA DIRECCIÓN DE GOOGLE MAPS
+  const handlePlaceChanged = () => {
+    if (!autocompleteRef.current) return;
+    const place = autocompleteRef.current.getPlace();
+    if (!place || !place.address_components) return;
+
+    let streetNum = '';
+    let route = '';
+    let locality = '';
+    let adminArea = '';
+    let postalCode = '';
+    let countryCode = '';
+
+    place.address_components.forEach(component => {
+        const types = component.types;
+        if (types.includes('street_number')) streetNum = component.long_name;
+        if (types.includes('route')) route = component.long_name;
+        if (types.includes('locality') || types.includes('postal_town')) locality = component.long_name;
+        if (types.includes('administrative_area_level_1')) adminArea = component.short_name;
+        if (types.includes('postal_code')) postalCode = component.long_name;
+        if (types.includes('country')) countryCode = component.short_name;
+    });
+
+    setAddress(`${streetNum} ${route}`.trim() || place.name || '');
+    if (locality) setCity(locality);
+    if (adminArea) setState(adminArea);
+    if (postalCode) setZip(postalCode);
+    if (countryCode) setCountry(countryCode.toUpperCase());
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -118,6 +187,9 @@ export default function EditAddressModal({ isOpen, onClose, onSave, currentData 
       await onSave({
         fullName, 
         address,
+        city,   // 🔥 Nuevo campo limpio
+        state,  // 🔥 Nuevo campo limpio
+        zip,    // 🔥 Nuevo campo limpio
         cityZip: finalCityZip,
         country,
         phone: finalPhone
@@ -155,9 +227,9 @@ export default function EditAddressModal({ isOpen, onClose, onSave, currentData 
               leaveFrom="opacity-100 scale-100 translate-y-0"
               leaveTo="opacity-0 scale-95 translate-y-4"
             >
-              <Dialog.Panel className="w-full max-w-lg transform overflow-hidden rounded-[2rem] bg-white p-8 text-left align-middle shadow-2xl transition-all font-montserrat border border-gray-100">
+              <Dialog.Panel className="w-full max-w-lg transform overflow-hidden rounded-[2rem] bg-white p-8 text-left align-middle shadow-2xl transition-all font-montserrat border border-gray-100 overflow-visible">
                 
-                {/* Cabecera */}
+                {/* Cabecera original respetada */}
                 <div className="flex justify-between items-center mb-8">
                   <div>
                     <h3 className="text-2xl font-bold text-gmc-gris-oscuro font-garamond tracking-tight">
@@ -175,7 +247,7 @@ export default function EditAddressModal({ isOpen, onClose, onSave, currentData 
 
                 <form onSubmit={handleSubmit} className="space-y-6">
                   
-                  {/* FULL NAME */}
+                  {/* FULL NAME original */}
                   <div className="group">
                     <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 ml-1">
                         {tProfile('fullNameRecipient')}
@@ -195,29 +267,44 @@ export default function EditAddressModal({ isOpen, onClose, onSave, currentData 
                     </div>
                   </div>
 
-                  {/* Address Line 1 */}
+                  {/* Address Line 1 CON GOOGLE AUTOCOMPLETE */}
                   <div className="group">
                     <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 ml-1">
                         {t('labelAddress') || "Address Line 1"}
                     </label>
                     <div className="relative transition-all duration-300 group-focus-within:scale-[1.01]">
-                        <div className="absolute left-4 top-3.5 text-gray-300 group-focus-within:text-gmc-dorado-principal transition-colors">
+                        <div className="absolute left-4 top-3.5 text-gray-300 group-focus-within:text-gmc-dorado-principal transition-colors z-10">
                             <MapPin size={18} />
                         </div>
-                        <input
-                            type="text"
-                            required
-                            value={address}
-                            onChange={(e) => setAddress(e.target.value)}
-                            placeholder="123 Main St, Apt 4B"
-                            className="w-full pl-11 pr-4 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl text-gray-700 font-medium outline-none focus:bg-white focus:border-gmc-dorado-principal focus:ring-4 focus:ring-gmc-dorado-principal/10 transition-all shadow-sm placeholder:text-gray-300"
-                        />
+                        {isLoaded ? (
+                            <Autocomplete
+                                onLoad={(ref) => (autocompleteRef.current = ref)}
+                                onPlaceChanged={handlePlaceChanged}
+                            >
+                                <input
+                                    type="text"
+                                    required
+                                    value={address}
+                                    onChange={(e) => setAddress(e.target.value)}
+                                    placeholder="Start typing your address..."
+                                    className="w-full pl-11 pr-4 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl text-gray-700 font-medium outline-none focus:bg-white focus:border-gmc-dorado-principal focus:ring-4 focus:ring-gmc-dorado-principal/10 transition-all shadow-sm placeholder:text-gray-300"
+                                />
+                            </Autocomplete>
+                        ) : (
+                            <input
+                                type="text"
+                                required
+                                value={address}
+                                onChange={(e) => setAddress(e.target.value)}
+                                placeholder="Loading Maps..."
+                                className="w-full pl-11 pr-4 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl text-gray-700 font-medium outline-none transition-all shadow-sm"
+                            />
+                        )}
                     </div>
                   </div>
 
-                  {/* GRID: CITY | STATE | ZIP */}
+                  {/* GRID: CITY | STATE | ZIP respetado */}
                   <div className="grid grid-cols-12 gap-4">
-                      {/* CITY */}
                       <div className="col-span-12 sm:col-span-5 group">
                           <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 ml-1">City</label>
                           <div className="relative">
@@ -235,7 +322,6 @@ export default function EditAddressModal({ isOpen, onClose, onSave, currentData 
                           </div>
                       </div>
 
-                      {/* STATE */}
                       <div className="col-span-7 sm:col-span-4 group">
                           <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 ml-1">State</label>
                           <div className="relative">
@@ -255,7 +341,6 @@ export default function EditAddressModal({ isOpen, onClose, onSave, currentData 
                           </div>
                       </div>
 
-                      {/* ZIP */}
                       <div className="col-span-5 sm:col-span-3 group">
                           <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 ml-1">Zip</label>
                           <div className="relative">
@@ -266,16 +351,15 @@ export default function EditAddressModal({ isOpen, onClose, onSave, currentData 
                                 type="text"
                                 value={zip}
                                 onChange={(e) => setZip(e.target.value)} 
-                                placeholder="Optional"
+                                placeholder="Zip"
                                 className="w-full pl-9 pr-2 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl text-gray-700 font-medium outline-none focus:bg-white focus:border-gmc-dorado-principal focus:ring-4 focus:ring-gmc-dorado-principal/10 transition-all shadow-sm font-mono text-center placeholder:text-gray-300 placeholder:text-xs"
                             />
                           </div>
                       </div>
                   </div>
 
-                  {/* COUNTRY & PHONE GRID */}
+                  {/* COUNTRY & PHONE respetados */}
                   <div className="space-y-4">
-                    {/* COUNTRY */}
                     <div className="group">
                         <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 ml-1">
                             {t('labelCountry') || "Country"}
@@ -304,14 +388,11 @@ export default function EditAddressModal({ isOpen, onClose, onSave, currentData 
                         </div>
                     </div>
 
-                    {/* 🔥 PHONE DIVIDIDO 100% RESPONSIVE 🔥 */}
                     <div className="group">
                         <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 ml-1">
                             {t('labelPhone') || "Phone"}
                         </label>
                         <div className="flex gap-2">
-                            
-                            {/* Selector de Prefijo (Fijo para que no se apriete en móviles) */}
                             <div className="relative w-[120px] sm:w-[140px] shrink-0">
                                 <select 
                                     value={phoneCountryCode}
@@ -329,7 +410,6 @@ export default function EditAddressModal({ isOpen, onClose, onSave, currentData 
                                 </div>
                             </div>
                             
-                            {/* Input del Número (Ocupa el resto) */}
                             <div className="relative flex-1">
                                 <div className="absolute left-4 top-3.5 text-gray-300 group-focus-within:text-gmc-dorado-principal transition-colors">
                                     <Phone size={18} />
@@ -343,12 +423,11 @@ export default function EditAddressModal({ isOpen, onClose, onSave, currentData 
                                     className="w-full pl-11 pr-4 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl text-gray-700 font-medium outline-none focus:bg-white focus:border-gmc-dorado-principal focus:ring-4 focus:ring-gmc-dorado-principal/10 transition-all shadow-sm"
                                 />
                             </div>
-
                         </div>
                     </div>
                   </div>
 
-                  {/* BOTONES DE ACCIÓN */}
+                  {/* BOTONES DE ACCIÓN respetados */}
                   <div className="flex gap-4 pt-4 mt-2">
                     <button
                       type="button"
@@ -369,7 +448,6 @@ export default function EditAddressModal({ isOpen, onClose, onSave, currentData 
                       )}
                     </button>
                   </div>
-
                 </form>
               </Dialog.Panel>
             </Transition.Child>

@@ -127,11 +127,17 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
       fetchCards();
   }, []);
 
-  // OBTENER DIRECCIÓN ACTUAL SELECCIONADA
+  // 🔥 OBTENER DIRECCIÓN ACTUAL SELECCIONADA (VERSIÓN ENTERPRISE)
   const currentAddress = allAddresses.find((a) => a.id === selectedAddressId);
   const currentDestination = currentAddress ? {
     name: currentAddress.fullName,
     address: currentAddress.address,
+    
+    // 👇 ESTO ES EL "DISPARADOR" PARA QUE AURA RECONOZCA FLORIDA 👇
+    city: currentAddress.city || '', 
+    state: currentAddress.state || '', 
+    zip: currentAddress.zip || '',
+    
     cityZip: currentAddress.cityZip,
     countryCode: currentAddress.country, 
     countryName: currentAddress.country, 
