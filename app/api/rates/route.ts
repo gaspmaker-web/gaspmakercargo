@@ -1,14 +1,14 @@
 import { NextResponse } from 'next/server';
 import easypost from '@/lib/easypost';
+import { calculateAuraLocalDelivery, AuraBox } from '@/lib/aura-engine';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 // ==========================================
-// 🗺️ DICCIONARIO DE CAPITALES MAESTRO (ACTUALIZADO CON TODOS TUS PAÍSES)
+// 🗺️ DICCIONARIO DE CAPITALES MAESTRO
 // ==========================================
 const DEFAULT_CAPITALS: Record<string, { city: string, zip?: string, state?: string }> = {
-    // Norte y Centroamérica
     'US': { city: 'Miami', state: 'FL', zip: '33166' },
     'CA': { city: 'Toronto', zip: 'M5V 2T6', state: 'ON' },
     'MX': { city: 'Mexico City', zip: '06000', state: 'CMX' },
@@ -18,8 +18,6 @@ const DEFAULT_CAPITALS: Record<string, { city: string, zip?: string, state?: str
     'NI': { city: 'Managua', zip: '11001' },
     'CR': { city: 'San Jose', zip: '10101' },
     'PA': { city: 'Panama City', zip: '0801' },
-    
-    // Sudamérica
     'CO': { city: 'Bogota', zip: '110111' },
     'VE': { city: 'Caracas', zip: '1010' },
     'AR': { city: 'Buenos Aires', zip: 'C1000' },
@@ -30,8 +28,6 @@ const DEFAULT_CAPITALS: Record<string, { city: string, zip?: string, state?: str
     'PY': { city: 'Asuncion', zip: '1209' },
     'UY': { city: 'Montevideo', zip: '11000' },
     'BR': { city: 'Brasilia', zip: '70000-000' },
-
-    // Caribe (GMC Core)
     'DO': { city: 'Santo Domingo', zip: '10100' },
     'PR': { city: 'San Juan', state: 'PR', zip: '00901' },
     'JM': { city: 'Kingston', zip: '' },
@@ -60,8 +56,6 @@ const DEFAULT_CAPITALS: Record<string, { city: string, zip?: string, state?: str
     'VC': { city: 'Kingstown', zip: 'VC0100' },
     'SX': { city: 'Philipsburg', zip: '' },
     'TC': { city: 'Cockburn Town', zip: 'TKCA 1ZZ' },
-
-    // Europa y Resto del Mundo
     'ES': { city: 'Madrid', zip: '28001' },
     'GB': { city: 'London', zip: 'SW1A 1AA' },
     'FR': { city: 'Paris', zip: '75001' },
@@ -78,7 +72,7 @@ const DEFAULT_CAPITALS: Record<string, { city: string, zip?: string, state?: str
 };
 
 // ==========================================
-// 1. TARIFAS LOCALES
+// 1. TARIFAS LOCALES EXPORTACIÓN
 // ==========================================
 function calculateRate_TT(weight: number): number {
     if (weight <= 5) return 16.60;
@@ -126,9 +120,10 @@ function calculateRate_GD(weight: number): number {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { weight, weightLbs, dimensions, destination } = body;
+    // Extraemos distanceMiles y un posible arreglo de "boxes" si se envían múltiples
+    const { weight, weightLbs, dimensions, destination, distanceMiles, boxes } = body;
     
-    // --- 🛡️ SANITIZACIÓN ---
+    // --- 🛡️ SANITIZACIÓN BÁSICA ---
     let finalWeightLbs = parseFloat(weightLbs || weight);
     if (isNaN(finalWeightLbs) || finalWeightLbs <= 0) finalWeightLbs = 1;
 
@@ -137,27 +132,23 @@ export async function POST(req: Request) {
     const hgt = parseFloat(dimensions?.height) || undefined;
 
     // ================================================================
-    // 🔥 CÁLCULO DE PESO COBRABLE (Regla Aerolínea / 139)
+    // 🔥 CÁLCULO DE PESO COBRABLE AÉREO (Regla Aerolínea / 139)
     // ================================================================
-    // 1. Calculamos peso volumétrico si existen dimensiones
-    const volumetricWeight = (len && wid && hgt) 
+    const volumetricWeightAir = (len && wid && hgt) 
         ? (len * wid * hgt) / 139 
         : 0;
     
-    // 2. Definimos el Peso Cobrable (El mayor entre Real vs Volumétrico)
-    // Usamos Math.ceil para redondear hacia arriba (opcional, pero recomendado en logística)
-    const chargeableWeight = Math.max(finalWeightLbs, volumetricWeight);
-
-    // ================================================================
+    const chargeableWeight = Math.max(finalWeightLbs, volumetricWeightAir);
 
     // ==========================================
-    // 3. DETECCIÓN DE PAÍS OMNISCIENTE
+    // 3. DETECCIÓN DE PAÍS Y ESTADO OMNISCIENTE
     // ==========================================
     const c1 = (destination?.country || '').toUpperCase().trim();
     const c2 = (destination?.countryCode || '').toUpperCase().trim();
     const c3 = (destination?.countryName || '').toUpperCase().trim();
     const rawZip = destination?.zip || '';
     const rawCityInput = destination?.city || ''; 
+    const rawStateInput = (destination?.state || '').toUpperCase().trim(); // Novedad: Extraemos Estado
 
     let targetCountryCode = 'US'; 
 
@@ -182,10 +173,46 @@ export async function POST(req: Request) {
     const isStThomas = [c1, c2, c3].some(c => c === 'VI' || c.includes('VIRGIN')) || rawZip.startsWith('008');
     const easyPostCountryCode = isStThomas ? 'US' : targetCountryCode;
 
+    // 🔥 DETECCIÓN FLORIDA (Miami / Broward)
+    const isFloridaLocal = easyPostCountryCode === 'US' && (rawStateInput === 'FL' || rawStateInput === 'FLORIDA' || rawZip.startsWith('33'));
+
     let rawRates: any[] = [];
+    const gmcLogo = '/gaspmakercargoproject.png';
 
     // ==========================================
-    // 4. EASYPOST
+    // 4. MOTOR AURA (GASP MAKER LOCAL DELIVERY)
+    // ==========================================
+    if (isFloridaLocal) {
+        // Preparamos los datos para Aura
+        let auraBoxes: AuraBox[] = boxes || [];
+        
+        // Si no mandan array de cajas, adaptamos la cotización de caja única
+        if (auraBoxes.length === 0) {
+            auraBoxes = [{
+                length: len || 1,
+                width: wid || 1,
+                height: hgt || 1,
+                realWeight: finalWeightLbs
+            }];
+        }
+
+        const deliveryMiles = parseFloat(distanceMiles) || 0;
+        const auraResult = calculateAuraLocalDelivery(auraBoxes, deliveryMiles);
+
+        rawRates.push({
+            id: 'GMC-AURA-LOCAL',
+            carrier: 'Gasp Maker Cargo',
+            service: 'Local Delivery (Aura)',
+            price: parseFloat(auraResult.totalFare.toFixed(2)),
+            days: '1-2 days',
+            logo: gmcLogo,
+            // Opcional: Mandar detalles extra al frontend para transparencia
+            auraDetails: auraResult 
+        });
+    }
+
+    // ==========================================
+    // 5. EASYPOST (Para resto de USA / Exportaciones selectas)
     // ==========================================
     if (targetCountryCode !== 'CU') {
         try {
@@ -242,7 +269,6 @@ export async function POST(req: Request) {
                 phone: '555-555-5555'
             });
             
-            // Para EasyPost, enviamos el peso físico y dimensiones. Ellos calculan su propio peso dimensional según sus reglas.
             const parcelData: any = { weight: finalWeightLbs * 16 };
             if (len) parcelData.length = len;
             if (wid) parcelData.width = wid;
@@ -284,20 +310,8 @@ export async function POST(req: Request) {
     }
 
     // ==========================================
-    // 5. TARIFAS LOCALES (Gasp Maker Cargo)
-    // 🔥 USAMOS 'chargeableWeight' EN LUGAR DE 'finalWeightLbs'
+    // 6. TARIFAS LOCALES (EXPORTACIÓN CARIBE)
     // ==========================================
-    const gmcLogo = '/gaspmakercargoproject.png';
-
-    // 🔥 RUTA DE GRENADA DESACTIVADA TEMPORALMENTE
-    /*
-    if(targetCountryCode === 'GD') {
-        // Usa el mayor entre peso real y volumen
-        const gdPrice = calculateRate_GD(chargeableWeight);
-        rawRates.push({ id: 'GMC-GD', carrier: 'Gasp Maker Cargo', service: 'Grenada Direct', price: gdPrice, days: '4-5 days', logo: gmcLogo });
-    }
-    */
-
     if (targetCountryCode === 'BB') {
         rawRates.push({ id: 'GMC-BB', carrier: 'Gasp Maker Cargo', service: 'Barbados Direct', price: calculateRate_BB(chargeableWeight), days: '4-5 days', logo: gmcLogo });
     }
@@ -315,7 +329,7 @@ export async function POST(req: Request) {
     }
 
     // ==========================================
-    // 6. FILTRO Y LIMPIEZA FINAL
+    // 7. FILTRO Y LIMPIEZA FINAL
     // ==========================================
     rawRates = rawRates.filter(rate => {
         if (!rate.price || rate.price < 1) return false;
@@ -327,7 +341,6 @@ export async function POST(req: Request) {
 
     rawRates.sort((a, b) => a.price - b.price);
     
-    // Opcional: Devolvemos también el peso cobrable en la respuesta para depuración
     return NextResponse.json({ success: true, rates: rawRates, chargeableWeight });
 
   } catch (error: any) {
