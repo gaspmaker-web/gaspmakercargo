@@ -19,7 +19,7 @@ export interface AuraResult {
 
 /**
  * Motor principal de Aura para calcular costos de entrega local en Miami/Broward.
- * Considera peso volumétrico, límite de apilamiento (6 pies / 72 pulgadas) y millas.
+ * Implementa Lógica Híbrida: Pallets completos a $150 y sobrantes evaluados por tier.
  */
 export function calculateAuraLocalDelivery(
   boxes: AuraBox[],
@@ -27,64 +27,75 @@ export function calculateAuraLocalDelivery(
 ): AuraResult {
   let totalBillableWeight = 0;
   let currentPalletHeight = 0;
-  let palletCount = 1;
+  let palletWeights: number[] = [0]; // Rastreamos el peso acumulado de cada pallet físico
+  let palletIndex = 0;
 
-  // 1. ANÁLISIS DE CAJAS (Volumen vs Báscula y Límite de Apilamiento)
+  // 1. ANÁLISIS DE CAJAS (Límite de Apilamiento y Distribución de Pesos)
   boxes.forEach(box => {
-    // Si falta alguna medida en la base de datos, asumimos 1 para no romper la matemática
     const l = box.length || 1;
     const w = box.width || 1;
     const h = box.height || 1;
     const weight = box.realWeight || 1;
 
-    // A. Peso Cobrable (Volumen Terrestre Divisor 166 vs Peso Real)
+    // A. Peso Cobrable Individual (Divisor 166)
     const volWeight = (l * w * h) / 166;
     const billableWeight = Math.max(weight, volWeight);
     totalBillableWeight += billableWeight;
 
-    // B. Regla del Límite de 6 Pies (72 pulgadas por pallet)
+    // B. Lógica de Apilamiento (72 pulgadas)
     if (currentPalletHeight + h > 72) {
-      // Excede los 6 pies. Cerramos este pallet y abrimos uno nuevo.
-      palletCount++;
-      currentPalletHeight = h; // El nuevo pallet arranca con la altura de esta caja
+      // Excede los 6 pies. Cerramos este pallet y abrimos uno nuevo para el sobrante.
+      palletIndex++;
+      palletWeights[palletIndex] = billableWeight;
+      currentPalletHeight = h;
     } else {
-      // Aún cabe en el pallet actual
+      // Cabe en el bulto/pallet actual
+      palletWeights[palletIndex] += billableWeight;
       currentPalletHeight += h;
     }
   });
 
-  // 2. CLASIFICACIÓN DE TARIFA BASE (Protección de márgenes)
+  const palletCount = palletWeights.length;
   let baseFare = 0;
   let appliedStrategy = '';
 
+  // 2. CLASIFICACIÓN DE TARIFA BASE (Lógica Híbrida)
   if (totalBillableWeight > 2000) {
-    baseFare = totalBillableWeight * 0.35; // Carga Masiva a Granel (se anulan Tiers)
+    baseFare = totalBillableWeight * 0.35;
     appliedStrategy = 'BULK_RATE_0.35';
-  } else if (totalBillableWeight >= 151) {
-    baseFare = 150.00 * palletCount;       // Tarifa Tope Pallet/Pesada multiplicada por unidades
-    appliedStrategy = 'PALLET_MAX_150';
-  } else if (totalBillableWeight >= 51) {
-    baseFare = 85.00;                      // Paquete Grande
-    appliedStrategy = 'LARGE_PACKAGE_85';
-  } else if (totalBillableWeight >= 11) {
-    baseFare = 45.00;                      // Paquete Mediano
-    appliedStrategy = 'MEDIUM_PACKAGE_45';
   } else {
-    baseFare = 25.00;                      // Paquete Pequeño
-    appliedStrategy = 'SMALL_PACKAGE_25';
+    // Calculamos el costo de los pallets "completos" (todos menos el último) a $150 c/u
+    const fullPalletsCount = palletCount - 1;
+    const fullPalletsBasePrice = fullPalletsCount * 150.00;
+
+    // El último bulto (o el único) se cobra según su peso específico (Tier)
+    const lastPalletWeight = palletWeights[palletIndex];
+    let lastPalletFare = 0;
+
+    if (lastPalletWeight >= 151) {
+      lastPalletFare = 150.00;
+      appliedStrategy = palletCount > 1 ? 'HYBRID_FULL_OVERFLOW' : 'PALLET_MAX_150';
+    } else if (lastPalletWeight >= 51) {
+      lastPalletFare = 85.00;
+      appliedStrategy = palletCount > 1 ? 'HYBRID_LARGE_OVERFLOW' : 'LARGE_PACKAGE_85';
+    } else if (lastPalletWeight >= 11) {
+      lastPalletFare = 45.00;
+      appliedStrategy = palletCount > 1 ? 'HYBRID_MEDIUM_OVERFLOW' : 'MEDIUM_PACKAGE_45';
+    } else {
+      lastPalletFare = 25.00;
+      appliedStrategy = palletCount > 1 ? 'HYBRID_SMALL_OVERFLOW' : 'SMALL_PACKAGE_25';
+    }
+
+    baseFare = fullPalletsBasePrice + lastPalletFare;
   }
 
-  // 3. FACTOR DE MILLAJE LOCAL (Con radio base de 10 millas)
+  // 3. FACTOR DE MILLAJE LOCAL
   let distanceSurcharge = 0;
   const isHeavy = totalBillableWeight >= 151;
 
   if (distanceMiles > 10) {
     const extraMiles = distanceMiles - 10;
-    // La camioneta Transit cuesta $1.50/milla, el camión pesado $2.50/milla
     const ratePerMile = isHeavy ? 2.50 : 1.50;
-    
-    // NOTA: Asumimos que si era carga pesada (isHeavy), el cálculo de 'distanceMiles'
-    // que se le envía a este motor ya trae la suma del viaje redondo (ida y vuelta).
     distanceSurcharge = extraMiles * ratePerMile;
   }
 
