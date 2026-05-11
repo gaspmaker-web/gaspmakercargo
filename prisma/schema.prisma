@@ -270,6 +270,12 @@ model Address {
 
   fullName      String   // Para guardar "anto sol"
   address       String   // La calle
+
+// 🔥 NUEVOS CAMPOS ESTRUCTURADOS
+  city          String?  // Ej: "Medley"
+  state         String?  // Ej: "FL"
+  zip           String?  // Ej: "33178"
+
   cityZip       String   // La ciudad y código postal
   country       String   // El país
   countryCode   String?  // Código de 2 letras (US, TT, etc)
