@@ -604,44 +604,49 @@ export default function ClientDashboard({
         </div>
 
        {/* ===================================================================
-           BOTÓN FLOTANTE (BARRA DE ACCIÓN ENTERPRISE CON LOCAL DELIVERY SIEMPRE VISIBLE)
+           BOTÓN FLOTANTE (BARRA DE ACCIÓN ENTERPRISE CON RESPONSIVE MOBILE)
            =================================================================== */}
         {selectedPkgs.length > 0 && (
-            <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-gasp-maker-dark-gray text-white p-2 sm:px-5 sm:py-2.5 rounded-full shadow-2xl flex items-center gap-3 sm:gap-5 z-50 animate-in slide-in-from-bottom-6 border border-gray-700 w-[95%] sm:w-auto max-w-fit justify-between">
+            <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-gasp-maker-dark-gray text-white p-1.5 pl-4 sm:px-5 sm:py-2.5 rounded-full shadow-2xl flex items-center gap-2 sm:gap-5 z-50 animate-in slide-in-from-bottom-6 border border-gray-700 w-[95%] sm:w-auto max-w-fit justify-between">
                 
-                <div className="flex flex-col sm:flex-row sm:items-center pl-2 sm:pl-1">
-                    <span className="text-xs sm:text-sm font-bold whitespace-nowrap">
-                        {selectedPkgs.length} {t('selectedCount')}
+                {/* 1. SECCIÓN DE CANTIDAD Y PESO (Optimizada para móvil) */}
+                <div className="flex flex-col sm:flex-row sm:items-center pr-2 sm:pr-0 shrink-0">
+                    <span className="text-sm font-bold whitespace-nowrap">
+                        {/* Oculta la palabra "Seleccionados" en móvil, solo muestra el número */}
+                        {selectedPkgs.length} <span className="hidden sm:inline">{t('selectedCount')}</span>
                     </span>
                     <span className="text-[10px] sm:text-xs text-gmc-dorado-principal font-bold sm:ml-2 whitespace-nowrap">
                         ({totalSelectedWeight.toFixed(1)} lbs)
                     </span>
                 </div>
                 
-                <div className="h-5 w-px bg-gray-600 hidden sm:block"></div>
+                <div className="h-5 w-px bg-gray-600 hidden sm:block shrink-0"></div>
                 
-                <div className="flex items-center gap-2 pr-1">
+                {/* 2. SECCIÓN DE BOTONES (Deslizable en teléfonos pequeños) */}
+                <div className="flex items-center gap-1.5 sm:gap-2 pr-1 overflow-x-auto snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
+                    
                     <button 
                         onClick={handleOpenPickupModal}
                         disabled={isConsolidating}
-                        className="bg-gray-700 hover:bg-gray-600 text-white px-3 sm:px-4 py-2 rounded-full text-[10px] sm:text-xs font-bold transition-colors flex items-center gap-1.5 whitespace-nowrap"
+                        className="snap-start shrink-0 bg-gray-700 hover:bg-gray-600 text-white px-3 sm:px-4 py-2 rounded-full text-[10px] sm:text-xs font-bold transition-colors flex items-center gap-1.5 whitespace-nowrap"
                     >
                        <MapPin size={14}/> {t('btnPickup')}
                     </button>
 
-                    {/* 🔥 BOTÓN DE AURA LOCAL DELIVERY (Siempre visible) */}
+                    {/* 🔥 BOTÓN DE AURA LOCAL DELIVERY */}
                     <button 
                         onClick={() => handleConsolidateClick('LOCAL')}
                         disabled={isConsolidating}
-                        className="bg-black hover:bg-gray-800 border border-gray-600 text-white px-3 sm:px-4 py-2 rounded-full text-[10px] sm:text-xs font-bold transition-colors flex items-center gap-1.5 whitespace-nowrap"
+                        className="snap-start shrink-0 bg-black hover:bg-gray-800 border border-gray-600 text-white px-3 sm:px-4 py-2 rounded-full text-[10px] sm:text-xs font-bold transition-colors flex items-center gap-1.5 whitespace-nowrap"
                     >
                         <Truck size={14}/> {t.has('btnLocalDelivery') ? t('btnLocalDelivery') : 'LOCAL DELIVERY'}
                     </button>
 
+                    {/* 🔥 BOTÓN DE CONSOLIDACIÓN AÉREA */}
                     <button 
                         onClick={() => handleConsolidateClick('AERIAL')}
                         disabled={isConsolidating}
-                        className="bg-gmc-dorado-principal hover:bg-yellow-500 text-black px-3 sm:px-4 py-2 rounded-full text-[10px] sm:text-xs font-bold transition-colors flex items-center gap-1.5 disabled:opacity-70 disabled:cursor-not-allowed whitespace-nowrap"
+                        className="snap-start shrink-0 bg-gmc-dorado-principal hover:bg-yellow-500 text-black px-3 sm:px-4 py-2 rounded-full text-[10px] sm:text-xs font-bold transition-colors flex items-center gap-1.5 disabled:opacity-70 disabled:cursor-not-allowed whitespace-nowrap"
                     >
                         {isConsolidating ? <Loader2 className="animate-spin" size={14} /> : <Box size={14} />}
                         {isConsolidating ? '...' : t('btnConsolidate')}
