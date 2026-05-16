@@ -217,7 +217,13 @@
     "alertBusinessHours": "⚠️ Heures d'ouverture : 9h00 à 16h00.",
     "confirmPickup": "Confirmez-vous le rendez-vous et le débit sur votre compte ?",
     "successPickup": "✅ Rendez-vous planifié avec succès.\nUn ordre de paiement en attente a été généré.",
-    "physicalDocument": "Document Physique (Envoyé depuis la Boîte Postale)"
+    "physicalDocument": "Document Physique (Envoyé depuis la Boîte Postale)",
+    "alertAerialLimit": "⚠️ Limite aérienne dépassée.\nLe maximum international est de 150 lbs. Vous avez {weight} lbs.\n💡 Si vous êtes en Floride, utilisez le bouton 'Local Delivery'.",
+    "alertLocalHeightLimit": "⚠️ Limite d'empilement dépassée (Max 72\").\nVotre sélection totalise {height} pouces de hauteur et ne tiendra pas sur une seule palette de la camionnette.\n\n💡 Veuillez décocher certains colis et demander une livraison locale (Local Delivery) séparée pour ceux-ci.",
+    "alertLocalWeightLimit": "⚠️ Limite de camion dépassée.\nPour une livraison locale, le maximum est de 2 000 lbs. Vous avez {weight} lbs.",
+    "btnLocalDelivery": "LIVRAISON LOCALE",
+    "requestLocalDelivery": "Demander une Livraison Locale",
+    "selectedPackagesList": "COLIS SÉLECTIONNÉS :"
   },
   "Notifications": {
     "title": "Notifications",

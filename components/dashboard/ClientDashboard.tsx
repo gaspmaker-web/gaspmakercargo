@@ -7,13 +7,13 @@ import AddressCard from '@/components/AddressCard';
 import VirtualMailboxCard from '@/components/VirtualMailboxCard';
 import Link from 'next/link'; 
 import { useRouter } from 'next/navigation';
-import { useTranslations, useLocale } from 'next-intl'; // 🔥 Agregué useLocale para las rutas dinámicas
+import { useTranslations, useLocale } from 'next-intl'; 
 import { 
     Gift, ArrowRight, Truck, FileText, Package as PackageIcon, 
     CreditCard, CheckCircle, AlertCircle, ChevronRight, 
     UploadCloud, Box, Scale, Calendar, Loader2, ChevronDown, ChevronUp, FileCheck,
     MapPin, Clock, DollarSign, X, Lock, AlertTriangle,
-    ShoppingBag // 🔥 IMPORTAMOS EL ÍCONO DEL SHOPPER
+    ShoppingBag 
 } from 'lucide-react';
 
 // --- TIPO EXTENDIDO PARA LOS CÁLCULOS ---
@@ -45,7 +45,7 @@ interface ClientDashboardProps {
   hasMailbox?: boolean;
   needsKycUpload?: boolean;
   planType?: string | null;
-  savedCards?: any[]; // 🔥 AÑADIMOS LAS TARJETAS GUARDADAS
+  savedCards?: any[]; 
 }
 
 // 🔥 CONSTANTE DE HORARIOS
@@ -78,17 +78,20 @@ export default function ClientDashboard({
     hasMailbox = false,     
     needsKycUpload = false,
     planType = null,
-    savedCards = [] // 🔥 RECIBIMOS LAS TARJETAS
+    savedCards = [] 
 }: ClientDashboardProps) {
     
   // 1. Hook de Traducciones e Idioma
   const t = useTranslations('Dashboard'); 
-  const locale = useLocale(); // 🔥 Necesitamos el locale para el botón de Shopper
+  const locale = useLocale(); 
   const router = useRouter();
 
   const [selectedPkgs, setSelectedPkgs] = useState<string[]>([]);
   const [isConsolidating, setIsConsolidating] = useState(false);
   const [isExpanded, setIsExpanded] = useState(true);
+
+  // 🔥 NUEVO ESTADO: Distinguir Aura (LOCAL) de Aéreo (AERIAL)
+  const [consolidationType, setConsolidationType] = useState<'AERIAL' | 'LOCAL'>('AERIAL');
 
   // --- ESTADOS PARA MODALES ---
   const [isPickupModalOpen, setIsPickupModalOpen] = useState(false);
@@ -133,9 +136,9 @@ export default function ClientDashboard({
   const totalSelectedWeight = selectedPackagesData.reduce((acc, p) => acc + (Number(p.weightLbs) || 0), 0);
 
   // =========================================================================
-  // 🚚 ACCIÓN 1: CONSOLIDAR (VALIDACIÓN DE PESO Y APERTURA DE MODAL)
+  // 🚚 ACCIÓN 1: CONSOLIDAR / LOCAL DELIVERY (SIMULADOR 3D AURA EN FRONTEND)
   // =========================================================================
-  const handleConsolidateClick = () => {
+  const handleConsolidateClick = (type: 'AERIAL' | 'LOCAL') => {
       if (selectedPkgs.length === 0) return;
 
       if (selectedPkgs.length === 1) {
@@ -148,15 +151,93 @@ export default function ClientDashboard({
           return;
       }
 
-      if (totalSelectedWeight > 150) {
-          alert(`⚠️ Has alcanzado el límite de peso internacional por caja (150 lbs).\n\nTu selección actual pesa ${totalSelectedWeight.toFixed(2)} lbs.\nPor favor, deselecciona algunos paquetes para poder continuar.`);
-          return;
+      // 🔥 MINI-SIMULADOR AURA (Tetris 3D para la interfaz del cliente)
+      const calculatePalletsNeeded = (pkgs: any[]) => {
+          const PALLET_AREA = 48 * 40; // 1920 pulgadas cuadradas
+          const MAX_HEIGHT = 72;
+          let currentPalletHeight = 0;
+          let currentLayerArea = 0;
+          let currentLayerMaxHeight = 0;
+          let neededPallets = 1;
+
+          // 1. Ordenamos por volumen (Las grandes van primero)
+          const sorted = [...pkgs].sort((a, b) => {
+              const volA = (Number((a as any).lengthIn) || 12) * (Number((a as any).widthIn) || 12) * (Number((a as any).heightIn) || 10);
+              const volB = (Number((b as any).lengthIn) || 12) * (Number((b as any).widthIn) || 12) * (Number((b as any).heightIn) || 10);
+              return volB - volA;
+          });
+
+          // 2. Simulamos el empaquetado optimizando el piso y la rotación
+          sorted.forEach(p => {
+              const dims = [
+                  Number((p as any).lengthIn) || 12, 
+                  Number((p as any).widthIn) || 12, 
+                  Number((p as any).heightIn) || 10
+              ].sort((a, b) => a - b);
+              
+              // Usamos las dos dimensiones más pequeñas como base para optimizar el espacio
+              const boxArea = dims[0] * dims[1] * 1.15; // 15% margen de seguridad
+              const boxH = dims[2];
+
+              if (currentLayerArea + boxArea <= PALLET_AREA) {
+                  // Cabe en el mismo piso
+                  currentLayerArea += boxArea;
+                  currentLayerMaxHeight = Math.max(currentLayerMaxHeight, boxH);
+              } else {
+                  // Sube de piso
+                  currentPalletHeight += currentLayerMaxHeight;
+                  if (currentPalletHeight + boxH > MAX_HEIGHT) {
+                      neededPallets++; // Rompió el techo, necesita otro pallet
+                      currentPalletHeight = 0;
+                  }
+                  currentLayerArea = boxArea;
+                  currentLayerMaxHeight = boxH;
+              }
+          });
+
+          // Limpieza final
+          if (currentLayerMaxHeight > 0 && currentPalletHeight + currentLayerMaxHeight > MAX_HEIGHT) {
+              neededPallets++;
+          }
+          
+          return neededPallets;
+      };
+
+      const palletsNeeded = calculatePalletsNeeded(selectedPackagesData);
+
+      // 🔥 LÍMITES INTELIGENTES MULTILINGÜES
+      if (type === 'AERIAL') {
+          if (totalSelectedWeight > 150) {
+              const msg = t.has('alertAerialLimit') 
+                ? t('alertAerialLimit', { weight: totalSelectedWeight.toFixed(2) })
+                : `⚠️ Límite aéreo excedido.\nEl máximo internacional es 150 lbs. Tienes ${totalSelectedWeight.toFixed(2)} lbs.\n💡 Si estás en Florida, usa el botón "Local Delivery".`;
+              alert(msg);
+              return;
+          }
+      } else if (type === 'LOCAL') {
+          // Límite de Apilamiento Inteligente (Aura 3D)
+          if (palletsNeeded > 1) {
+              const msg = t.has('alertLocalHeightLimit')
+                ? t('alertLocalHeightLimit', { height: "72" })
+                : `⚠️ Límite de apilamiento excedido (Máx 72").\nTu selección de cajas es demasiado grande y requiere más de 1 pallet en la camioneta.\n\n💡 Por favor, desmarca algunos paquetes y solicita un Local Delivery separado para ellos.`;
+              alert(msg);
+              return;
+          }
+          
+          // Límite de Peso de Aura
+          if (totalSelectedWeight > 2000) {
+              const msg = t.has('alertLocalWeightLimit')
+                ? t('alertLocalWeightLimit', { weight: totalSelectedWeight.toFixed(2) })
+                : `⚠️ Límite de camión excedido.\nPara Local Delivery el máximo es 2,000 lbs. Tienes ${totalSelectedWeight.toFixed(2)} lbs.`;
+              alert(msg);
+              return;
+          }
       }
 
       // 🔥 VALIDACIÓN DE FACTURAS CORREGIDA PARA OMITIR SOBRES
       const packagesWithoutInvoice = selectedPackagesData.filter(p => {
           const isDocument = p.courier === 'Buzón Virtual' || (p.carrierTrackingNumber || '').startsWith('DOC-') || (p.gmcTrackingNumber || '').startsWith('GMC-DOC-');
-          return !p.invoiceUrl && !isDocument; // Solo bloquea si falta factura Y NO es documento
+          return !p.invoiceUrl && !isDocument; 
       });
 
       if (packagesWithoutInvoice.length > 0) {
@@ -165,10 +246,11 @@ export default function ClientDashboard({
           return; 
       }
 
+      setConsolidationType(type);
       setIsConsolidateModalOpen(true);
   };
 
-  // 🔥 LÓGICA REAL DE CONSOLIDACIÓN
+  // 🔥 LÓGICA REAL DE CONSOLIDACIÓN / ENVÍO
   const onConfirmConsolidation = async () => {
       setIsConsolidating(true);
       try {
@@ -261,17 +343,11 @@ export default function ClientDashboard({
   const totalStorageFee = selectedPackagesData.reduce((acc, p) => acc + (p.storageFee || 0), 0);
   
   const totalHandlingFee = selectedPackagesData.reduce((acc, p) => {
-      // Verificamos si es un documento del buzón virtual
       const isDocument = p.courier === 'Buzón Virtual' || (p.carrierTrackingNumber || '').startsWith('DOC-') || (p.gmcTrackingNumber || '').startsWith('GMC-DOC-');
-      
       if (isDocument) {
-          // 🔥 PRECIO DIFERENTE PARA PICKUP DE SOBRES/DOCUMENTOS
-          // Si cobran algo por recoger la carta en persona, cámbialo aquí. Si es gratis, déjalo en 0.
           const documentPickupFee = 0.00; 
           return acc + documentPickupFee;
       }
-      
-      // Si es un paquete normal, cobra el Handling estándar
       return acc + (p.pickupHandlingFee || 0);
   }, 0);
 
@@ -310,7 +386,6 @@ export default function ClientDashboard({
             
             <div className="lg:col-span-4 xl:col-span-3 flex">
                 <div className="w-full h-full">
-                  {/* 🔥 PASAMOS LAS TARJETAS AL COMPONENTE */}
                   <VirtualMailboxCard 
                     hasMailbox={hasMailbox} 
                     needsKycUpload={needsKycUpload} 
@@ -321,20 +396,15 @@ export default function ClientDashboard({
             </div>
         </div>
         
-        {/* ===================================================================
-           🔥 MENÚ DE ACCIONES MODIFICADO (AHORA SON 4 BOTONES)
-           Cambié de md:grid-cols-3 a grid-cols-2 md:grid-cols-4 para que el diseño no se rompa
-           =================================================================== */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-8">
             <Link href="/dashboard-cliente/pre-alerta" className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:shadow-md hover:border-blue-200 transition-all group flex flex-col justify-between h-full">
                 <div className="bg-blue-50 w-10 h-10 rounded-lg flex items-center justify-center text-blue-600 mb-3 group-hover:bg-blue-600 group-hover:text-white transition-colors"><PackageIcon size={20} /></div>
                 <div><h3 className="font-bold text-gray-800 text-sm mb-1 leading-tight">{t('actionPreAlert')}</h3><p className="text-[10px] text-gray-500 leading-snug">{t('descPreAlert')}</p></div>
             </Link>
             
-            {/* 🔥 NUEVO BOTÓN: PERSONAL SHOPPER */}
             <Link href={`/${locale}/dashboard-cliente/compras`} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:shadow-md hover:border-[#e6c200] transition-all group flex flex-col justify-between h-full">
                 <div className="bg-yellow-50 w-10 h-10 rounded-lg flex items-center justify-center text-[#e6c200] mb-3 group-hover:bg-[#e6c200] group-hover:text-black transition-colors"><ShoppingBag size={20} /></div>
-                <div><h3 className="font-bold text-gray-800 text-sm mb-1 leading-tight">Personal Shopper</h3><p className="text-[10px] text-gray-500 leading-snug">{t('personalShopperDesc')}</p></div>
+                <div><h3 className="font-bold text-gray-800 text-sm mb-1 leading-tight">Personal Shopper</h3><p className="text-[10px] text-gray-500 leading-snug">{t.has('personalShopperDesc') ? t('personalShopperDesc') : 'Compra en USA sin tarjeta'}</p></div>
             </Link>
 
             <Link href="/dashboard-cliente/solicitar-pickup" className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:shadow-md hover:border-orange-200 transition-all group flex flex-col justify-between h-full">
@@ -390,7 +460,6 @@ export default function ClientDashboard({
                             const isSelected = selectedPkgs.includes(pkg.id);
                             const isBlocked = pkg.isBlocked; 
                             
-                            // 🔥 IDENTIFICAR SI ES DOCUMENTO PARA OMITIR FACTURA
                             const isDocument = pkg.courier === 'Buzón Virtual' || (pkg.carrierTrackingNumber || '').startsWith('DOC-') || (pkg.gmcTrackingNumber || '').startsWith('GMC-DOC-');
                             const missingInvoice = !pkg.invoiceUrl && !isDocument; 
                             
@@ -471,7 +540,6 @@ export default function ClientDashboard({
                                             ) : missingInvoice ? (
                                                 <><AlertCircle size={14} /> {t('btnUploadInvoice')}</>
                                             ) : isDocument ? (
-                                                // 🔥 ETIQUETA EXCLUSIVA PARA DOCUMENTOS
                                                 <><FileCheck size={14} className="text-green-600"/> Documento OK</>
                                             ) : (
                                                 <><FileCheck size={14} className="text-green-600"/> {t('btnInvoiceOK')}</>
@@ -536,7 +604,7 @@ export default function ClientDashboard({
         </div>
 
        {/* ===================================================================
-           BOTÓN FLOTANTE (BARRA DE ACCIÓN)
+           BOTÓN FLOTANTE (BARRA DE ACCIÓN ENTERPRISE CON LOCAL DELIVERY SIEMPRE VISIBLE)
            =================================================================== */}
         {selectedPkgs.length > 0 && (
             <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-gasp-maker-dark-gray text-white p-2 sm:px-5 sm:py-2.5 rounded-full shadow-2xl flex items-center gap-3 sm:gap-5 z-50 animate-in slide-in-from-bottom-6 border border-gray-700 w-[95%] sm:w-auto max-w-fit justify-between">
@@ -561,8 +629,17 @@ export default function ClientDashboard({
                        <MapPin size={14}/> {t('btnPickup')}
                     </button>
 
+                    {/* 🔥 BOTÓN DE AURA LOCAL DELIVERY (Siempre visible) */}
                     <button 
-                        onClick={handleConsolidateClick}
+                        onClick={() => handleConsolidateClick('LOCAL')}
+                        disabled={isConsolidating}
+                        className="bg-black hover:bg-gray-800 border border-gray-600 text-white px-3 sm:px-4 py-2 rounded-full text-[10px] sm:text-xs font-bold transition-colors flex items-center gap-1.5 whitespace-nowrap"
+                    >
+                        <Truck size={14}/> {t.has('btnLocalDelivery') ? t('btnLocalDelivery') : 'LOCAL DELIVERY'}
+                    </button>
+
+                    <button 
+                        onClick={() => handleConsolidateClick('AERIAL')}
                         disabled={isConsolidating}
                         className="bg-gmc-dorado-principal hover:bg-yellow-500 text-black px-3 sm:px-4 py-2 rounded-full text-[10px] sm:text-xs font-bold transition-colors flex items-center gap-1.5 disabled:opacity-70 disabled:cursor-not-allowed whitespace-nowrap"
                     >
@@ -574,7 +651,7 @@ export default function ClientDashboard({
         )}
 
         {/* ===================================================================
-           MODAL DE CONSOLIDACIÓN
+           MODAL DE CONSOLIDACIÓN Y LOCAL DELIVERY
            =================================================================== */}
         {isConsolidateModalOpen && (
             <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in">
@@ -582,8 +659,12 @@ export default function ClientDashboard({
                     
                     <div className="bg-gray-50 p-4 border-b border-gray-100 flex justify-between items-center">
                         <h3 className="font-bold text-gray-800 flex items-center gap-2">
-                            <Box className="text-gmc-dorado-principal" size={20}/>
-                            {t('requestConsolidation')}
+                            {/* 🔥 CAMBIO DINÁMICO DE TÍTULO */}
+                            {consolidationType === 'LOCAL' ? (
+                                <><Truck className="text-black" size={20}/> {t.has('requestLocalDelivery') ? t('requestLocalDelivery') : 'Request Local Delivery'}</>
+                            ) : (
+                                <><Box className="text-gmc-dorado-principal" size={20}/> {t('requestConsolidation')}</>
+                            )}
                         </h3>
                         <button onClick={() => setIsConsolidateModalOpen(false)} className="text-gray-400 hover:text-red-500">
                             <X size={24} />
@@ -592,8 +673,11 @@ export default function ClientDashboard({
 
                     <div className="p-6">
                         <div className="text-center mb-6">
-                            <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-blue-100">
-                                <Box size={32} className="text-blue-600"/>
+                            <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 border ${consolidationType === 'LOCAL' ? 'bg-gray-100 border-gray-300' : 'bg-blue-50 border-blue-100'}`}>
+                                {consolidationType === 'LOCAL' 
+                                    ? <Truck size={32} className="text-black"/> 
+                                    : <Box size={32} className="text-blue-600"/>
+                                }
                             </div>
                             <h3 className="text-lg font-bold text-gray-800 mb-2">
                                 {t('confirmConsolidate', { count: selectedPkgs.length })}
@@ -609,7 +693,7 @@ export default function ClientDashboard({
                         </div>
 
                         <div className="bg-gray-50 rounded-xl p-3 border border-gray-100 max-h-40 overflow-y-auto mb-2">
-                            <p className="text-xs font-bold text-gray-400 uppercase mb-2 pl-1">Paquetes seleccionados:</p>
+                         <p className="text-xs font-bold text-gray-400 uppercase mb-2 pl-1">{t.has('selectedPackagesList') ? t('selectedPackagesList') : 'Paquetes seleccionados:'}</p>
                             <ul className="space-y-2">
                                 {selectedPackagesData.map((pkg, idx) => (
                                     <li key={pkg.id} className="flex items-center gap-2 text-xs text-gray-700">
@@ -632,7 +716,7 @@ export default function ClientDashboard({
                         <button 
                             onClick={onConfirmConsolidation}
                             disabled={isConsolidating}
-                            className="bg-gmc-dorado-principal hover:bg-yellow-500 text-black px-6 py-2 rounded-lg font-bold text-sm shadow-md flex items-center gap-2 disabled:opacity-70"
+                            className={`${consolidationType === 'LOCAL' ? 'bg-black text-white hover:bg-gray-800' : 'bg-gmc-dorado-principal text-black hover:bg-yellow-500'} px-6 py-2 rounded-lg font-bold text-sm shadow-md flex items-center gap-2 disabled:opacity-70`}
                         >
                             {isConsolidating ? <Loader2 className="animate-spin" size={16}/> : <CheckCircle size={16}/>}
                             {isConsolidating ? t('sendingRequest') : t('btnConsolidate')}
@@ -643,7 +727,7 @@ export default function ClientDashboard({
         )}
 
         {/* ===================================================================
-           MODAL DE PICKUP
+           MODAL DE PICKUP (Se mantiene igual)
            =================================================================== */}
         {isPickupModalOpen && (
             <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in">

@@ -214,7 +214,13 @@
     "alertBusinessHours": "⚠️ Horario de atención: 9:00 AM a 4:00 PM.",
     "confirmPickup": "¿Confirmas la cita y el cargo a tu cuenta?",
     "successPickup": "✅ Cita agendada exitosamente.\nSe ha generado una orden de pago pendiente.",
-    "physicalDocument": "Documento Físico (Enviado desde Buzón)"
+    "physicalDocument": "Documento Físico (Enviado desde Buzón)",
+    "alertAerialLimit": "⚠️ Límite aéreo excedido.\nEl máximo internacional es 150 lbs. Tienes {weight} lbs.\n💡 Si estás en Florida, usa el botón 'Local Delivery'.",
+    "alertLocalHeightLimit": "⚠️ Límite de apilamiento excedido (Máx 72\").\nTu selección suma {height} pulgadas de alto y no cabe en un solo pallet de la camioneta.\n\n💡 Por favor, desmarca algunos paquetes y solicita un Local Delivery separado para ellos.",
+    "alertLocalWeightLimit": "⚠️ Límite de camión excedido.\nPara Local Delivery el máximo es 2,000 lbs. Tienes {weight} lbs.",
+    "btnLocalDelivery": "ENTREGA LOCAL",
+    "requestLocalDelivery": "Solicitar Entrega Local",
+    "selectedPackagesList": "PAQUETES SELECCIONADOS:"
   },
 "Notifications": {
     "title": "Notificaciones",

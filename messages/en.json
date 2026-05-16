@@ -218,7 +218,13 @@
     "alertBusinessHours": "⚠️ Business hours: 9:00 AM to 4:00 PM.",
     "confirmPickup": "Do you confirm the appointment and charge to your account?",
     "successPickup": "✅ Appointment scheduled successfully.\nA pending payment order has been generated.",
-    "physicalDocument": "Physical Document (Forwarded from Mailbox)"
+    "physicalDocument": "Physical Document (Forwarded from Mailbox)",
+    "alertAerialLimit": "⚠️ Aerial limit exceeded.\nThe international maximum is 150 lbs. You have {weight} lbs.\n💡 If you are in Florida, use the 'Local Delivery' button.",
+    "alertLocalHeightLimit": "⚠️ Stacking limit exceeded (Max 72\").\nYour selection totals {height} inches in height and will not fit on a single pallet in the van.\n\n💡 Please uncheck some packages and request a separate Local Delivery for them.",
+    "alertLocalWeightLimit": "⚠️ Truck limit exceeded.\nFor Local Delivery the maximum is 2,000 lbs. You have {weight} lbs.",
+    "btnLocalDelivery": "LOCAL DELIVERY",
+    "requestLocalDelivery": "Request Local Delivery",
+    "selectedPackagesList": "SELECTED PACKAGES:"
   },
 "Notifications": {
     "title": "Notifications",
