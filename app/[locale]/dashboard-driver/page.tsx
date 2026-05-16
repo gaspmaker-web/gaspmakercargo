@@ -4,7 +4,8 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { 
   Truck, MapPin, Package, Globe, ArrowRight, 
-  User, ShieldAlert, Briefcase, Clock, Calendar, Box 
+  User, ShieldAlert, Briefcase, Clock, Calendar, Box,
+  Layers
 } from 'lucide-react';
 
 import AcceptTaskButton from '@/components/driver/AcceptTaskButton'; 
@@ -75,15 +76,39 @@ export default async function DriverDashboardPage(props: any) {
     orderBy: { pickupDate: 'asc' } 
   });
 
-  // 🔥 3. BUSCAR CONSOLIDACIONES REALES (Cajas Grandes)
+// =================================================================================
+  // 🔥 ENRUTADOR DINÁMICO UNIVERSAL (Arregla US, TT, BB, etc.)
+  // =================================================================================
+  
+  // 1️⃣ Reglas para PAQUETES SUELTOS (No tienen destinationCountryCode en Prisma)
+  const packageOrConditions: any[] = [
+      { shippingAddress: { contains: driverZone, mode: 'insensitive' } },
+      { user: { countryCode: driverZone } }
+  ];
+
+  // 🚀 REGLAS DE COURIER SERVICE (La llave maestra según la zona del chofer)
+  if (driverZone === 'US') {
+      packageOrConditions.push({ courierService: { contains: 'Local Delivery', mode: 'insensitive' } });
+  } else if (driverZone === 'TT') {
+      packageOrConditions.push({ courierService: { contains: 'Trinidad', mode: 'insensitive' } });
+  } else if (driverZone === 'BB') {
+      packageOrConditions.push({ courierService: { contains: 'Barbados', mode: 'insensitive' } });
+  } else if (driverZone === 'JM') {
+      packageOrConditions.push({ courierService: { contains: 'Jamaica', mode: 'insensitive' } });
+  }
+
+  // 2️⃣ Reglas para CONSOLIDADOS (Le sumamos destinationCountryCode porque Prisma sí lo tiene aquí)
+  const consolidationOrConditions: any[] = [
+      ...packageOrConditions,
+      { destinationCountryCode: driverZone }
+  ];
+
+  // 🔥 3. BUSCAR CONSOLIDACIONES (Acepta SHIPPING_INTL, CONSOLIDATION y LOCAL_DELIVERY)
   const activeConsolidations = await prisma.consolidatedShipment.findMany({
       where: {
           status: { in: ['EN_REPARTO', 'OUT_FOR_DELIVERY', 'EN_CAMINO', 'EN_RUTA'] },
-          serviceType: 'CONSOLIDATION', // Solo consolidaciones de verdad
-          OR: [
-              { shippingAddress: { contains: driverZone, mode: 'insensitive' } },
-              { user: { countryCode: driverZone } }
-          ],
+          serviceType: { in: ['CONSOLIDATION', 'LOCAL_DELIVERY', 'SHIPPING_INTL'] },
+          OR: consolidationOrConditions, // <--- Usamos la lista de Consolidados
           NOT: {
               OR: [
                   { selectedCourier: { contains: 'UPS', mode: 'insensitive' } },
@@ -94,28 +119,19 @@ export default async function DriverDashboardPage(props: any) {
       },
       include: {
           user: { select: { name: true, address: true, country: true, countryCode: true } },
-          packages: true // Traemos todos los paquetes que vienen dentro de la caja
+          packages: true 
       },
       orderBy: { updatedAt: 'desc' }
   });
 
-  // 🔥 4. BUSCAR PAQUETES SUELTOS (Corregido el error de sintaxis del doble OR)
+  // 🔥 4. BUSCAR PAQUETES SUELTOS
   const activePackages = await prisma.package.findMany({
       where: {
           status: { in: ['EN_REPARTO', 'OUT_FOR_DELIVERY', 'EN_CAMINO', 'EN_RUTA'] },
+          serviceType: { in: ['SHIPPING_INTL', 'PACKAGE', 'LOCAL_DELIVERY'] },
           AND: [
-              {
-                  OR: [
-                      { consolidatedShipmentId: null },
-                      { consolidatedShipment: { serviceType: { not: 'CONSOLIDATION' } } } 
-                  ]
-              },
-              {
-                  OR: [
-                      { shippingAddress: { contains: driverZone, mode: 'insensitive' } },
-                      { user: { countryCode: driverZone } }
-                  ]
-              }
+              { consolidatedShipmentId: null },
+              { OR: packageOrConditions } // <--- Usamos la lista de Paquetes Sueltos
           ],
           NOT: {
               OR: [
@@ -137,26 +153,36 @@ export default async function DriverDashboardPage(props: any) {
   // =========================================================
   const processedDeliveries: any[] = [];
 
-  // A. Agregamos las Cajas Consolidadas a la lista
   for (const cons of activeConsolidations) {
+      // Diferenciación visual en la app del chofer
+      const isAuraPallet = cons.courierService?.toLowerCase().includes('local delivery');
+      const isTrinidad = cons.courierService?.toLowerCase().includes('trinidad');
+
       processedDeliveries.push({
           id: cons.id, 
-          type: 'CONSOLIDATION',
+          // Si es Aura pintamos Negro, si no, es un consolidado/internacional Morado
+          type: isAuraPallet ? 'LOCAL_DELIVERY' : 'CONSOLIDATION',
           tracking: cons.gmcShipmentNumber || 'Consolidación',
-          user: cons.user,
+          userName: cons.user?.name || 'Cliente',
+          // ✅ FORZAMOS MOSTRAR LA DIRECCIÓN DE ENVÍO REAL
+          address: cons.shippingAddress || cons.user?.address || 'Dirección no especificada',
           count: cons.packages.length,
+          weightLbs: cons.weightLbs || 0, 
           childTrackings: cons.packages.map((p: any) => p.gmcTrackingNumber).filter((t: any) => t) 
       });
   }
 
-  // B. Agregamos los Paquetes Sueltos a la lista
   for (const pkg of activePackages) {
+      const isAuraPallet = pkg.courierService?.toLowerCase().includes('local delivery');
+      
       processedDeliveries.push({
           id: pkg.id, 
-          type: 'PACKAGE',
+          type: isAuraPallet ? 'LOCAL_DELIVERY' : 'PACKAGE',
           tracking: pkg.gmcTrackingNumber || pkg.carrierTrackingNumber || 'Paquete',
-          user: pkg.user,
+          userName: pkg.user?.name || 'Cliente',
+          address: pkg.shippingAddress || pkg.user?.address || 'Dirección no especificada',
           count: 1,
+          weightLbs: pkg.weightLbs || 0,
           childTrackings: []
       });
   }
@@ -296,7 +322,7 @@ export default async function DriverDashboardPage(props: any) {
                                 href={`/${locale}/dashboard-driver/entregas/${item.id}`}
                                 className="block bg-white p-4 rounded-xl shadow-sm border border-gray-100 active:scale-[0.98] transition-all hover:shadow-md relative overflow-hidden group z-0"
                             >
-                                <div className={`absolute top-0 bottom-0 left-0 w-1 ${item.type === 'CONSOLIDATION' ? 'bg-purple-600' : 'bg-blue-500'} group-hover:w-2 transition-all`}></div>
+                                <div className={`absolute top-0 bottom-0 left-0 w-1 ${item.type === 'LOCAL_DELIVERY' ? 'bg-black' : (item.type === 'CONSOLIDATION' ? 'bg-purple-600' : 'bg-blue-500')} group-hover:w-2 transition-all`}></div>
                                 
                                 <div className="flex justify-between items-start mb-2 pl-3">
                                     
@@ -305,19 +331,21 @@ export default async function DriverDashboardPage(props: any) {
                                             {item.tracking}
                                         </span>
                                         
-                                        {item.type === 'CONSOLIDATION' && item.childTrackings?.length > 0 && (
+                                        {(item.type === 'CONSOLIDATION' || item.type === 'LOCAL_DELIVERY') && item.childTrackings?.length > 0 && (
                                             <div className="flex flex-col mt-1 space-y-0.5">
-                                                {item.childTrackings.map((t: string) => (
-                                                    <span key={t} className="text-[9px] text-gray-400 font-mono flex items-center gap-1 leading-tight">
-                                                        <span className="w-1 h-1 bg-gray-300 rounded-full shrink-0"></span> {t}
-                                                    </span>
-                                                ))}
+                                                <span className="text-[9px] text-gray-400 font-mono flex items-center gap-1">
+                                                   <Layers size={10}/> Contiene {item.count} cajas
+                                                </span>
                                             </div>
                                         )}
                                     </div>
                                     
-                                    <div className="shrink-0">
-                                         {item.type === 'CONSOLIDATION' ? (
+                                    <div className="shrink-0 flex flex-col items-end gap-1">
+                                        {item.type === 'LOCAL_DELIVERY' ? (
+                                            <span className="bg-black text-white px-2 py-0.5 rounded text-[10px] font-bold flex items-center gap-1 border border-gray-800 shadow-sm">
+                                                <Truck size={10}/> PALLET AURA
+                                            </span>
+                                        ) : item.type === 'CONSOLIDATION' ? (
                                             <span className="bg-purple-100 text-purple-800 px-2 py-0.5 rounded text-[10px] font-bold flex items-center gap-1 border border-purple-200">
                                                 <Box size={10}/> {item.count} PACKS
                                             </span>
@@ -326,16 +354,23 @@ export default async function DriverDashboardPage(props: any) {
                                                 <Globe size={10}/> DELIVERY
                                             </span>
                                         )}
+
+                                        {item.weightLbs > 0 && (
+                                            <span className="text-[10px] font-bold text-gray-500 bg-gray-100 px-1.5 rounded">
+                                                {item.weightLbs.toFixed(1)} lbs
+                                            </span>
+                                        )}
                                     </div>
                                 </div>
                                 
                                 <div className="flex items-center gap-3 pl-3">
-                                    <div className={`p-2 rounded-lg ${item.type === 'CONSOLIDATION' ? 'bg-purple-50 text-purple-600' : 'bg-blue-50 text-blue-600'}`}>
-                                        {item.type === 'CONSOLIDATION' ? <Box size={18}/> : <Package size={18} />}
+                                    <div className={`p-2 rounded-lg ${item.type === 'LOCAL_DELIVERY' ? 'bg-gray-100 text-black' : (item.type === 'CONSOLIDATION' ? 'bg-purple-50 text-purple-600' : 'bg-blue-50 text-blue-600')}`}>
+                                        {item.type === 'LOCAL_DELIVERY' ? <Layers size={18}/> : (item.type === 'CONSOLIDATION' ? <Box size={18}/> : <Package size={18} />)}
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <p className="font-bold text-gray-800 text-sm truncate">{item.user?.name}</p>
-                                        <p className="text-xs text-gray-500 truncate">{item.user?.address}</p>
+                                        {/* 🔥 AHORA IMPRIME EL NOMBRE Y LA DIRECCIÓN EXACTA DEL ENVÍO */}
+                                        <p className="font-bold text-gray-800 text-sm truncate">{item.userName}</p>
+                                        <p className="text-xs text-gray-500 truncate mt-0.5">{item.address}</p>
                                     </div>
                                     <ArrowRight size={16} className="text-gray-300"/>
                                 </div>
