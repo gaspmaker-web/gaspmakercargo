@@ -148,7 +148,7 @@ export async function POST(req: Request) {
     const c3 = (destination?.countryName || '').toUpperCase().trim();
     const rawZip = destination?.zip || '';
     const rawCityInput = destination?.city || ''; 
-    const rawStateInput = (destination?.state || '').toUpperCase().trim(); // Novedad: Extraemos Estado
+    const rawStateInput = (destination?.state || '').toUpperCase().trim();
 
     let targetCountryCode = 'US'; 
 
@@ -180,13 +180,11 @@ export async function POST(req: Request) {
     const gmcLogo = '/gaspmakercargoproject.png';
 
     // ==========================================
-    // 4. MOTOR AURA (GASP MAKER LOCAL DELIVERY)
+    // 4. MOTOR AURA (GASP MAKER LOCAL DELIVERY) - CON GPS BACKEND
     // ==========================================
     if (isFloridaLocal) {
-        // Preparamos los datos para Aura
         let auraBoxes: AuraBox[] = boxes || [];
         
-        // Si no mandan array de cajas, adaptamos la cotización de caja única
         if (auraBoxes.length === 0) {
             auraBoxes = [{
                 length: len || 1,
@@ -196,17 +194,44 @@ export async function POST(req: Request) {
             }];
         }
 
-        const deliveryMiles = parseFloat(distanceMiles) || 0;
-        const auraResult = calculateAuraLocalDelivery(auraBoxes, deliveryMiles);
+        // 📍 Calcular la distancia real en el servidor
+        let calculatedMiles = parseFloat(distanceMiles) || 0;
+
+        // Si el frontend no nos mandó las millas (o mandó 0), las calculamos nosotros
+        if (calculatedMiles === 0 && rawCityInput && rawZip) {
+            try {
+                const GMC_WAREHOUSE_ADDRESS = "1861 NW 22nd St, Miami, FL 33142";
+                const destinationAddress = `${destination?.address || ''}, ${rawCityInput}, ${rawStateInput || 'FL'} ${rawZip}`.trim();
+                
+                const googleApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY;
+                
+                if (googleApiKey && destinationAddress.length > 10) {
+                    const mapUrl = `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${encodeURIComponent(GMC_WAREHOUSE_ADDRESS)}&destinations=${encodeURIComponent(destinationAddress)}&units=imperial&key=${googleApiKey}`;
+                    
+                    const mapRes = await fetch(mapUrl);
+                    const mapData = await mapRes.json();
+                    
+                    if (mapData.status === 'OK' && mapData.rows[0].elements[0].status === 'OK') {
+                        const distanceText = mapData.rows[0].elements[0].distance.text;
+                        calculatedMiles = parseFloat(distanceText.replace(/[^0-9.]/g, ''));
+                        console.log(`🗺️ Distancia GPS backend a ${rawCityInput}: ${calculatedMiles} millas`);
+                    }
+                }
+            } catch (error) {
+                console.warn("⚠️ Error calculando distancia con Google Maps API en el backend", error);
+            }
+        }
+
+        const safeDistanceMiles = Math.max(0, calculatedMiles);
+        const auraResult = calculateAuraLocalDelivery(auraBoxes, safeDistanceMiles);
 
         rawRates.push({
             id: 'GMC-AURA-LOCAL',
             carrier: 'Gasp Maker Cargo',
             service: 'Local Delivery (Aura)',
             price: parseFloat(auraResult.totalFare.toFixed(2)),
-            days: '1-2 days',
+            days: 'Same Day - 1 Day Delivery', 
             logo: gmcLogo,
-            // Opcional: Mandar detalles extra al frontend para transparencia
             auraDetails: auraResult 
         });
     }
@@ -313,19 +338,19 @@ export async function POST(req: Request) {
     // 6. TARIFAS LOCALES (EXPORTACIÓN CARIBE)
     // ==========================================
     if (targetCountryCode === 'BB') {
-        rawRates.push({ id: 'GMC-BB', carrier: 'Gasp Maker Cargo', service: 'Barbados Direct', price: calculateRate_BB(chargeableWeight), days: '4-5 days', logo: gmcLogo });
+        rawRates.push({ id: 'GMC-BB', carrier: 'Gasp Maker Cargo', service: 'Barbados Direct', price: calculateRate_BB(chargeableWeight), days: '3-5 days', logo: gmcLogo });
     }
     if (targetCountryCode === 'TT') {
         rawRates.push({ id: 'GMC-TT', carrier: 'Gasp Maker Cargo', service: 'Trinidad Direct', price: calculateRate_TT(chargeableWeight), days: '3-5 days', logo: gmcLogo });
     }
     if (targetCountryCode === 'JM') {
-        rawRates.push({ id: 'GMC-JM', carrier: 'Gasp Maker Cargo', service: 'Jamaica Direct', price: calculateRate_JM(chargeableWeight), days: '4-5 days', logo: gmcLogo });
+        rawRates.push({ id: 'GMC-JM', carrier: 'Gasp Maker Cargo', service: 'Jamaica Direct', price: calculateRate_JM(chargeableWeight), days: '3-5 days', logo: gmcLogo });
     }
     if (targetCountryCode === 'CU') {
         rawRates.push({ id: 'GMC-CU', carrier: 'Gasp Maker Cargo', service: 'Aerovaradero', price: calculateRate_CU(chargeableWeight), days: '15-21 days', logo: gmcLogo });
     }
     if (isStThomas) {
-        rawRates.push({ id: 'GMC-VI', carrier: 'Gasp Maker Cargo', service: 'St. Thomas Direct', price: calculateRate_VI(chargeableWeight), days: '4-5 days', logo: gmcLogo });
+        rawRates.push({ id: 'GMC-VI', carrier: 'Gasp Maker Cargo', service: 'St. Thomas Direct', price: calculateRate_VI(chargeableWeight), days: '3-5 days', logo: gmcLogo });
     }
 
     // ==========================================
