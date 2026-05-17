@@ -5,31 +5,24 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { 
     Truck, MapPin, Warehouse, CreditCard, Info, Loader2, Package, Check, 
-    ChevronDown, ChevronUp, Calendar, Phone, Weight, AlertTriangle, Clock
+    ChevronDown, ChevronUp, Calendar, Phone, Weight, AlertTriangle, Clock,
+    Car
 } from 'lucide-react';
 import { useJsApiLoader, Autocomplete } from '@react-google-maps/api';
 import { getProcessingFee } from '@/lib/stripeCalc';
 import { useTranslations } from 'next-intl';
 
-// --- CONFIGURACIÓN DE TARIFAS (HANDLING RATES) ---
-const FEE_MINI = 2.50;       // 0-10 lbs (Compite con iPostal1)
+// 🔥 IMPORTAMOS EL MOTOR AURA Y SU INTERFAZ
+import { calculateAuraLocalDelivery, AuraBox } from '@/lib/aura-engine';
+
+// --- CONFIGURACIÓN DE TARIFAS (HANDLING RATES SOLO PARA BODEGA) ---
+const FEE_MINI = 2.50;       // 0-10 lbs 
 const FEE_STANDARD = 5.00;   // 11-50 lbs
 const FEE_HEAVY = 12.50;     // 51-150 lbs
-const FEE_PALLET = 30.00;    // +150 lbs (Carga comercial)
+const FEE_PALLET = 30.00;    // +150 lbs 
 
-const BASE_MILES = 10;
 const GMC_WAREHOUSE_ADDRESS = "1861 NW 22nd St, Miami, FL 33142";
-
-// 🔥 TARIFAS DE DELIVERY / SHIPPING
-const MILE_RATE_STD = 1.50;      // Milla Estándar
-const MILE_RATE_TRUCK = 2.50;    // Milla Camión
-const HEAVY_RATE_STD = 0.55;     // Peso <= 1999 lbs
-const HEAVY_RATE_BULK = 0.35;    // Peso > 1999 lbs
-const FULL_FREIGHT_BASE = 250;   // Base Camión
-
-// 🔥 ZONAS PERMITIDAS (Aplica para Pickup y Dropoff)
 const ALLOWED_COUNTIES = ['Miami-Dade County', 'Broward County'];
-
 const GOOGLE_LIBRARIES: ("places")[] = ["places"];
 
 export default function SolicitarPickupPage() {
@@ -46,25 +39,46 @@ export default function SolicitarPickupPage() {
     libraries: GOOGLE_LIBRARIES
   });
 
+ // 🔥 MATRIZ DE PESO 100% MULTILINGÜE
   const WEIGHT_TIERS = [
-    { id: 'w_30', label: t('sizeSmall'), price: 30 },
-    { id: 'w_45', label: t('sizeMedium'), price: 45 },
-    { id: 'w_65', label: t('sizeLarge'), price: 65 },
-    { id: 'w_85', label: t('sizeXLarge'), price: 85 },
-    { id: 'w_heavy', label: t('sizeHeavy'), price: 0 }, 
+    { id: 'w_mini', label: t.has('sizeSmall') ? t('sizeSmall') : 'Ligero (0 - 10 Lbs)', estWeight: 10 }, 
+    { id: 'w_std', label: t.has('sizeMedium') ? t('sizeMedium') : 'Estándar (11 - 50 Lbs)', estWeight: 45 },
+    { id: 'w_hvy', label: t.has('sizeLarge') ? t('sizeLarge') : 'Pesado (51 - 150 Lbs)', estWeight: 140 },
+    { id: 'w_pallet', label: t.has('sizeHeavy') ? t('sizeHeavy') : 'Pallet (+151 Lbs)', estWeight: 0 }, 
   ];
 
-  const VOLUME_TIERS = [
-    { id: 'v_30', label: t('volLow'), price: 30 },
-    { id: 'v_55', label: t('volMed'), price: 55 },
-    { id: 'v_75', label: t('volHigh'), price: 75 },
-    { id: 'v_250', label: t('volFull'), price: 250 }, 
+ // 🔥 OPCIONES VISUALES DE VEHÍCULOS AUTOMATIZADAS (100% MULTILINGÜE)
+  const VEHICLE_OPTIONS = [
+    { 
+      id: 'v_30', 
+      title: t.has('volLow') ? t('volLow') : 'Auto / SUV', 
+      // ✅ AHORA SÍ LEE LA TRADUCCIÓN DEL JSON
+      desc: t.has('volLowDesc') ? t('volLowDesc') : 'Ideal para cajas pequeñas o documentos', 
+      icon: <Car size={26} className="text-gray-600 group-hover:text-gmc-dorado-principal transition-colors" />
+    },
+    { 
+      id: 'v_55', 
+      title: t.has('volMed') ? t('volMed') : 'Minivan / Transit Connect', 
+      desc: t.has('volMedDesc') ? t('volMedDesc', { height: 48 }) : 'Muebles pequeños o varias cajas medianas (Máx. 48" de altura)', 
+      icon: <Truck size={26} className="text-gray-600 group-hover:text-gmc-dorado-principal transition-colors" />
+    },
+    { 
+      id: 'v_75', 
+      title: t.has('volHigh') ? t('volHigh') : 'Cargo Van', 
+      desc: t.has('volHighDesc') ? t('volHighDesc', { height: 72 }) : 'Hasta 1 Pallet completo de mercancía (Máx. 72" de altura)', 
+      icon: <Warehouse size={26} className="text-gray-600 group-hover:text-gmc-dorado-principal transition-colors" />
+    },
+    { 
+      id: 'v_250', 
+      title: t.has('volFull') ? t('volFull') : 'Camión de Carga', 
+      // ✅ AHORA SÍ LEE LA TRADUCCIÓN DEL JSON
+      desc: t.has('volFullDesc') ? t('volFullDesc') : '2 Pallets o mercancía sobredimensionada', 
+      icon: <Package size={26} className="text-gray-600 group-hover:text-gmc-dorado-principal transition-colors" />
+    }
   ];
 
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
-  
-  // 🔥 ESCUDO ANTI-DOBLE-CLIC (Cerrojo Síncrono)
   const isPayingRef = useRef(false);
 
   const [serviceType, setServiceType] = useState<string | null>('PICKUP_WAREHOUSE'); 
@@ -85,14 +99,14 @@ export default function SolicitarPickupPage() {
   });
   
   const [orderId, setOrderId] = useState<string | null>(null);
-  
   const originRef = useRef<google.maps.places.Autocomplete | null>(null);
   const destRef = useRef<google.maps.places.Autocomplete | null>(null);
 
+  // Inicializamos con los IDs correctos (w_mini)
   const [formData, setFormData] = useState({
     originAddress: '', originCity: '', pickupDate: '', description: '', contactPhone: '',
     dropOffAddress: '', dropOffCity: '', dropOffContact: '', dropOffPhone: '',
-    weightTier: 'w_30', volumeTier: 'v_30', exactWeight: 0, termsAccepted: false
+    weightTier: 'w_mini', volumeTier: 'v_30', exactWeight: 0, termsAccepted: false
   });
 
   // --- 1. CARGAR DATOS ---
@@ -129,79 +143,86 @@ export default function SolicitarPickupPage() {
       }, 100);
   };
 
- // --- 3. CÁLCULOS ---
+ // --- 3. CÁLCULOS (POTENCIADOS POR AURA ENGINE) ---
   useEffect(() => {
     if (!isLoaded && serviceType !== 'PICKUP_WAREHOUSE') return;
+    
     const calculateTotal = () => {
         let subtotal = 0;
+        let baseFare = 0;
         let distanceSurcharge = 0;
 
+        // A. LÓGICA DE BODEGA (Retiro Personal - Handling Fee)
         if (serviceType === 'PICKUP_WAREHOUSE') {
-             // 🔥 NUEVA LÓGICA: Cobrar Handling Fee por cada paquete en la bodega
              let totalHandling = 0;
-             
              if (inventory && inventory.length > 0) {
                  inventory.forEach(pkg => {
-                     // Toma el peso del paquete. Si no tiene peso registrado, asume 1 lb por defecto (tarifa Mini).
                      const weight = pkg.weight || pkg.peso || 1; 
-                     
-                     if (weight <= 10) {
-                         totalHandling += FEE_MINI;       // + $2.50
-                     } else if (weight <= 50) {
-                         totalHandling += FEE_STANDARD;   // + $5.00
-                     } else if (weight <= 150) {
-                         totalHandling += FEE_HEAVY;      // + $12.50
-                     } else {
-                         totalHandling += FEE_PALLET;     // + $30.00
-                     }
+                     if (weight <= 10) totalHandling += FEE_MINI;       
+                     else if (weight <= 50) totalHandling += FEE_STANDARD;   
+                     else if (weight <= 150) totalHandling += FEE_HEAVY;      
+                     else totalHandling += FEE_PALLET;     
                  });
              }
-             
              subtotal = totalHandling; 
-        } else {
-            let tp = 0;
-            if (formData.weightTier === 'w_heavy') {
-                const weight = formData.exactWeight > 0 ? formData.exactWeight : 0;
-                const rate = weight > 1999 ? HEAVY_RATE_BULK : HEAVY_RATE_STD;
-                tp = weight * rate;
-            } else {
-                tp = WEIGHT_TIERS.find(t => t.id === formData.weightTier)?.price || 0;
+             baseFare = totalHandling;
+        } 
+        // B. LÓGICA DE CALLE (Pickup / Delivery con AURA)
+        else {
+            const selectedTier = WEIGHT_TIERS.find(t => t.id === formData.weightTier);
+            let calcWeight = formData.weightTier === 'w_pallet' ? formData.exactWeight : (selectedTier?.estWeight || 10);
+            if (calcWeight <= 0) calcWeight = 10;
+
+            // 2. MATRIZ DE TRADUCCIÓN EXACTA (De UI a Tetris 3D Aura)
+            let simulatedLength = 10, simulatedWidth = 10, simulatedHeight = 10;
+
+            switch (formData.volumeTier) {
+                case 'v_30': 
+                    // Auto/SUV -> Simula caja pequeña (Mantiene el peso volumétrico en ~9 lbs -> Cobra $25)
+                    simulatedLength = 15; simulatedWidth = 10; simulatedHeight = 10; 
+                    break;
+                case 'v_55': 
+                    // Minivan/Pickup -> Simula media carga (Mantiene el peso vol. en ~47 lbs -> Cobra $45)
+                    simulatedLength = 30; simulatedWidth = 20; simulatedHeight = 13; 
+                    break;
+                case 'v_75': 
+                    // Cargo Van -> Simula 1 Pallet Full (~832 lbs -> Cobra $150)
+                    simulatedLength = 40; simulatedWidth = 48; simulatedHeight = 72; 
+                    break;
+                case 'v_250': 
+                    // Camión -> Simula 2 Pallets (~1664 lbs -> Fuerza Lógica Multi-Pallet)
+                    simulatedLength = 80; simulatedWidth = 48; simulatedHeight = 72; 
+                    break;
             }
 
-            let baseFare = 0;
-            let mileRate = MILE_RATE_STD;
+            const simulatedBox: AuraBox = {
+                length: simulatedLength,
+                width: simulatedWidth,
+                height: simulatedHeight,
+                realWeight: calcWeight
+            };
 
-            if (formData.volumeTier === 'v_250') {
-                mileRate = MILE_RATE_TRUCK;
-                if (formData.weightTier === 'w_heavy') {
-                    baseFare = FULL_FREIGHT_BASE + tp;
-                } else {
-                    baseFare = FULL_FREIGHT_BASE;
-                }
-            } else {
-                const tv = VOLUME_TIERS.find(v => v.id === formData.volumeTier)?.price || 0;
-                baseFare = Math.max(tp, tv);
-                mileRate = MILE_RATE_STD;
-            }
+            // ¡LLAMAMOS A AURA! 
+            const auraQuote = calculateAuraLocalDelivery([simulatedBox], quote.distanceMiles);
 
-            if (quote.distanceMiles > BASE_MILES) {
-                distanceSurcharge = (quote.distanceMiles - BASE_MILES) * mileRate;
-            }
-            
-            subtotal = baseFare + distanceSurcharge;
+            baseFare = auraQuote.baseFare;
+            distanceSurcharge = auraQuote.distanceSurcharge;
+            subtotal = auraQuote.totalFare;
         }
         
         const fee = subtotal > 0 ? getProcessingFee(subtotal) : 0;
         
         setQuote(prev => ({ 
             ...prev, 
-            baseFare: subtotal - distanceSurcharge, 
+            baseFare, 
             distanceSurcharge, 
             subtotal, 
             processingFee: fee, 
-            total: subtotal + fee 
+            total: subtotal + fee,
+            appliedStrategy: serviceType === 'PICKUP_WAREHOUSE' ? 'HANDLING_FEE' : 'AURA_ENGINE'
         }));
     };
+    
     calculateTotal();
   }, [formData.weightTier, formData.volumeTier, formData.exactWeight, quote.distanceMiles, isLoaded, serviceType, inventory]);
 
@@ -301,8 +322,8 @@ export default function SolicitarPickupPage() {
         if (serviceType === 'SHIPPING') {
             const leg1 = await getLeg(GMC_WAREHOUSE_ADDRESS, origin); 
             
-            // 🔥 REGLA DE ORO: Solo Low Volume cobra 1 vía. El resto paga el regreso.
-            if (formData.volumeTier === 'v_30') {
+            // 🔥 REGLA DE ORO AURA: Cobra 1 vía (Bajo Volumen) o Circuito (Alto Volumen)
+            if (formData.volumeTier === 'v_30' || formData.volumeTier === 'v_55' || formData.volumeTier === 'v_75') {
                 totalMiles = leg1; 
             } else {
                 totalMiles = leg1 * 2; 
@@ -314,8 +335,7 @@ export default function SolicitarPickupPage() {
             const leg1 = await getLeg(GMC_WAREHOUSE_ADDRESS, origin); 
             const leg2 = await getLeg(origin, destination);           
             
-            // 🔥 REGLA DE ORO: Solo Low Volume cobra trayecto útil. El resto paga el circuito completo.
-            if (formData.volumeTier === 'v_30') {
+            if (formData.volumeTier === 'v_30' || formData.volumeTier === 'v_55' || formData.volumeTier === 'v_75') {
                 totalMiles = leg1 + leg2;
             } else {
                 const leg3 = await getLeg(destination, GMC_WAREHOUSE_ADDRESS); 
@@ -383,10 +403,7 @@ const handlePaymentAndSubmit = async () => {
         }
     }
 
-    // 🔥 1. EL ESCUDO: Si ya está pagando, rechazamos cualquier clic adicional al instante
     if (isPayingRef.current) return; 
-    
-    // 🔥 2. CERRAMOS EL CERROJO: Bloqueo instantáneo en memoria
     isPayingRef.current = true; 
 
     setIsLoading(true);
@@ -452,7 +469,6 @@ const handlePaymentAndSubmit = async () => {
 
     } catch (error: any) { alert(error.message || "Error inesperado."); } 
     finally { 
-        // 🔥 3. ABRIMOS EL CERROJO: Pase lo que pase, liberamos el botón
         setIsLoading(false); 
         isPayingRef.current = false;
     }
@@ -626,7 +642,9 @@ const handlePaymentAndSubmit = async () => {
                             <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm border border-gray-200">
                                 <h3 className="font-bold text-gmc-gris-oscuro text-sm uppercase mb-4">{t('loadDetailsTitle')}</h3>
                                 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                {/* 🔥 SECCIÓN PESO (AHORA EXACTA CON AURA) */}
+                                <div className="mb-4">
+                                    <label className="block text-xs font-bold text-gray-400 uppercase mb-2 ml-1">Rango de Peso</label>
                                     <div className="relative">
                                         <select 
                                             className="w-full p-3 pl-4 border border-gray-200 rounded-xl text-base bg-white appearance-none font-medium focus:ring-2 focus:ring-gmc-dorado-principal focus:border-transparent" 
@@ -637,21 +655,10 @@ const handlePaymentAndSubmit = async () => {
                                         </select>
                                         <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
                                     </div>
-
-                                    <div className="relative">
-                                        <select 
-                                            className="w-full p-3 pl-4 border border-gray-200 rounded-xl text-base bg-white appearance-none font-medium focus:ring-2 focus:ring-gmc-dorado-principal focus:border-transparent" 
-                                            onChange={e => setFormData({...formData, volumeTier: e.target.value})}
-                                            value={formData.volumeTier}
-                                        >
-                                            {VOLUME_TIERS.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
-                                        </select>
-                                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
-                                    </div>
                                 </div>
 
-                                {formData.weightTier === 'w_heavy' && (
-                                    <div className="mb-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                                {formData.weightTier === 'w_pallet' && (
+                                    <div className="mb-6 animate-in fade-in slide-in-from-top-2 duration-300">
                                         <div className="relative">
                                             <Weight className="absolute left-3 top-1/2 -translate-y-1/2 text-gmc-dorado-principal" size={18} />
                                             <input 
@@ -663,6 +670,39 @@ const handlePaymentAndSubmit = async () => {
                                         </div>
                                     </div>
                                 )}
+
+                                {/* 🚗 SELECTOR DE VEHÍCULOS (ESTILO UBER) */}
+                                <div className="mb-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 ml-1">
+                                        Tamaño del Vehículo
+                                    </label>
+                                    <div className="grid grid-cols-1 gap-3">
+                                        {VEHICLE_OPTIONS.map((veh) => (
+                                            <div 
+                                                key={veh.id}
+                                                onClick={() => setFormData({...formData, volumeTier: veh.id})}
+                                                className={`group relative flex items-center p-4 rounded-2xl cursor-pointer transition-all duration-300 border-2 ${
+                                                    formData.volumeTier === veh.id 
+                                                        ? 'border-gmc-dorado-principal bg-yellow-50/30 shadow-md scale-[1.01]' 
+                                                        : 'border-gray-100 bg-white hover:border-gray-200 hover:bg-gray-50'
+                                                }`}
+                                            >
+                                                {formData.volumeTier === veh.id && (
+                                                    <div className="absolute top-1/2 -translate-y-1/2 -left-3 w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center shadow-sm z-10">
+                                                        <Check size={14} strokeWidth={3} />
+                                                    </div>
+                                                )}
+                                                <div className="w-16 h-12 bg-gray-50 border border-gray-100 rounded-xl flex items-center justify-center mr-4 shrink-0 overflow-hidden relative">
+                                                    {veh.icon}
+                                                </div>
+                                                <div className="flex-1">
+                                                    <h4 className="font-bold text-gray-800 text-sm">{veh.title}</h4>
+                                                    <p className="text-xs text-gray-500 leading-tight mt-0.5">{veh.desc}</p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                     <div className="relative">

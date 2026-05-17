@@ -1,5 +1,3 @@
-// Archivo: lib/aura-engine.ts
-
 export interface AuraBox {
   length: number;
   width: number;
@@ -160,9 +158,26 @@ export function calculateAuraLocalDelivery(
     appliedStrategy = palletCount > 1 ? 'HYBRID_MIXED_DIMENSIONS' : 'STANDARD_MIXED_DIMENSIONS';
   }
 
-  // 4. FACTOR DE MILLAJE LOCAL
-  const isHeavy = totalBillableWeight >= 151;
-  const distanceSurcharge = distanceMiles > 10 ? (distanceMiles - 10) * (isHeavy ? 2.50 : 1.50) : 0;
+  // 🔥 4. FACTOR DE MILLAJE Y ZONA GEOGRÁFICA (Estrategia Corporativa)
+  // Ajustamos el umbral: Es pesado si pasa de 500 lbs o requiere más de 1 pallet de espacio
+  const isHeavy = totalBillableWeight >= 850 || palletCount > 1; 
+  let distanceSurcharge = 0;
+
+  // Radio Base: Las primeras 10 millas desde el almacén están cubiertas por la tarifa plana
+  if (distanceMiles > 10) {
+    const extraMilesOneWay = distanceMiles - 10;
+
+    if (isHeavy) {
+      // 🔄 LÓGICA DE CIRCUITO (Round Trip): Carga pesada o pallet desbordado
+      // Se calcula el millaje excedente de ida y vuelta para cubrir los costos de retorno del vehículo pesado
+      const roundTripExtraMiles = extraMilesOneWay * 2;
+      distanceSurcharge = roundTripExtraMiles * 2.50;
+    } else {
+      // ➡️ TRAYECTO SIMPLE: Bajo volumen (v_30)
+      // Solo se penaliza el trayecto de entrega por milla excedente
+      distanceSurcharge = extraMilesOneWay * 1.50;
+    }
+  }
 
   return {
     baseFare,

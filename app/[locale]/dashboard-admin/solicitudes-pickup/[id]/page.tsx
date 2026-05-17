@@ -11,6 +11,14 @@ import {
 // IMPORTAMOS EL COMPONENTE DE ACCIÓN
 import AdminPickupActions from '@/components/admin/AdminPickupActions';
 
+// 🔥 DICCIONARIO DE VEHÍCULOS PARA EL ADMIN
+const VEHICLE_NAMES: Record<string, string> = {
+    'v_30': 'Auto / SUV',
+    'v_55': 'Minivan / Transit Connect',
+    'v_75': 'Cargo Van',
+    'v_250': 'Camión de Carga'
+};
+
 export default async function PickupRequestDetailPage({ params }: { params: { id: string, locale: string } }) {
   const session = await auth();
   
@@ -47,12 +55,11 @@ export default async function PickupRequestDetailPage({ params }: { params: { id
             <div className="space-y-6 order-first lg:order-last lg:col-span-1 lg:sticky lg:top-6">
                 
                 {/* 1. BOTÓN DE ACCIÓN (Recepción en Almacén) */}
-                {/* Pasamos el serviceType para que sepa si ocultarse */}
                 <div className="bg-white p-1 rounded-xl border-2 border-gmc-dorado-principal shadow-lg">
                     <AdminPickupActions 
                         pickupId={req.id} 
                         status={req.status} 
-                        serviceType={req.serviceType || 'SHIPPING'} // ✅ CLAVE: Pasamos el tipo
+                        serviceType={req.serviceType || 'SHIPPING'} 
                     />
                 </div>
 
@@ -84,6 +91,14 @@ export default async function PickupRequestDetailPage({ params }: { params: { id
                             <span className="text-gray-500">Est. Peso</span>
                             <span className="font-medium text-gray-900">{req.weightInfo || 'N/A'}</span>
                         </div>
+                       {/* 🔥 NUEVA FILA: MOSTRAR VEHÍCULO SELECCIONADO */}
+<div className="flex justify-between items-center bg-blue-50/50 -mx-2 px-2 py-1 rounded">
+    <span className="text-gray-500">Vehículo Req.</span>
+    <span className="font-bold text-blue-700 bg-blue-100 px-2 py-0.5 rounded text-xs uppercase tracking-wide">
+        {/* Cambiamos volumeTier por volumeInfo para que lea tu BD correctamente */}
+        {VEHICLE_NAMES[req.volumeInfo as string] || req.volumeInfo || 'No especificado'}
+    </span>
+</div>
                         <div className="border-t border-gray-100 my-2 pt-2 flex justify-between">
                             <span className="font-bold text-gray-700">Total Pagado</span>
                             <span className="font-bold text-green-600">${req.totalPaid?.toFixed(2)}</span>

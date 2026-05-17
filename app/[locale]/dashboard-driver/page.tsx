@@ -13,6 +13,14 @@ import DriverLogoutButton from '@/components/DriverLogoutButton';
 
 export const dynamic = 'force-dynamic';
 
+// 🔥 DICCIONARIO DE VEHÍCULOS PARA EL CHOFER
+const VEHICLE_NAMES: Record<string, string> = {
+    'v_30': 'Auto / SUV',
+    'v_55': 'Minivan / Transit Connect',
+    'v_75': 'Cargo Van',
+    'v_250': 'Camión de Carga'
+};
+
 export default async function DriverDashboardPage(props: any) {
   const session = await auth();
   const params = await props.params;
@@ -108,7 +116,7 @@ export default async function DriverDashboardPage(props: any) {
       where: {
           status: { in: ['EN_REPARTO', 'OUT_FOR_DELIVERY', 'EN_CAMINO', 'EN_RUTA'] },
           serviceType: { in: ['CONSOLIDATION', 'LOCAL_DELIVERY', 'SHIPPING_INTL'] },
-          OR: consolidationOrConditions, // <--- Usamos la lista de Consolidados
+          OR: consolidationOrConditions, 
           NOT: {
               OR: [
                   { selectedCourier: { contains: 'UPS', mode: 'insensitive' } },
@@ -131,7 +139,7 @@ export default async function DriverDashboardPage(props: any) {
           serviceType: { in: ['SHIPPING_INTL', 'PACKAGE', 'LOCAL_DELIVERY'] },
           AND: [
               { consolidatedShipmentId: null },
-              { OR: packageOrConditions } // <--- Usamos la lista de Paquetes Sueltos
+              { OR: packageOrConditions } 
           ],
           NOT: {
               OR: [
@@ -154,17 +162,14 @@ export default async function DriverDashboardPage(props: any) {
   const processedDeliveries: any[] = [];
 
   for (const cons of activeConsolidations) {
-      // Diferenciación visual en la app del chofer
       const isAuraPallet = cons.courierService?.toLowerCase().includes('local delivery');
       const isTrinidad = cons.courierService?.toLowerCase().includes('trinidad');
 
       processedDeliveries.push({
           id: cons.id, 
-          // Si es Aura pintamos Negro, si no, es un consolidado/internacional Morado
           type: isAuraPallet ? 'LOCAL_DELIVERY' : 'CONSOLIDATION',
           tracking: cons.gmcShipmentNumber || 'Consolidación',
           userName: cons.user?.name || 'Cliente',
-          // ✅ FORZAMOS MOSTRAR LA DIRECCIÓN DE ENVÍO REAL
           address: cons.shippingAddress || cons.user?.address || 'Dirección no especificada',
           count: cons.packages.length,
           weightLbs: cons.weightLbs || 0, 
@@ -237,6 +242,11 @@ export default async function DriverDashboardPage(props: any) {
                                     <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${task.serviceType === 'DELIVERY' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
                                         {task.serviceType}
                                     </span>
+                                    {/* 🔥 ETIQUETA VISUAL DEL VEHÍCULO PARA NUEVAS OPORTUNIDADES */}
+                                    <span className="text-[9px] font-bold text-gray-600 bg-gray-100 px-2 py-0.5 rounded flex items-center gap-1 border border-gray-200">
+                                        <Truck size={10} className="text-gray-400"/> 
+                                        {VEHICLE_NAMES[(task as any).volumeInfo] || (task as any).volumeInfo || 'Vehículo N/A'}
+                                    </span>
                                 </div>
                                 
                                 <div className="pl-2 space-y-2 mb-4">
@@ -295,7 +305,14 @@ export default async function DriverDashboardPage(props: any) {
                                 <div className="absolute top-0 bottom-0 left-0 w-1 bg-gmc-dorado-principal group-hover:w-2 transition-all"></div>
                                 
                                 <div className="flex justify-between items-center mb-2 pl-3">
-                                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">#{task.id.slice(0,5)}</span>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">#{task.id.slice(0,5)}</span>
+                                        {/* 🔥 ETIQUETA VISUAL DEL VEHÍCULO EN "MI RUTA" */}
+                                        <span className="text-[9px] font-bold text-gray-500 bg-gray-50 border border-gray-200 px-1.5 py-0.5 rounded flex items-center gap-1 uppercase">
+                                            <Truck size={10} className="text-gray-400"/>
+                                            {VEHICLE_NAMES[(task as any).volumeInfo] || 'Vehículo N/A'}
+                                        </span>
+                                    </div>
                                     <span className="bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded text-[10px] font-bold flex items-center gap-1">
                                         <Clock size={10}/> EN PROCESO
                                     </span>
@@ -368,7 +385,6 @@ export default async function DriverDashboardPage(props: any) {
                                         {item.type === 'LOCAL_DELIVERY' ? <Layers size={18}/> : (item.type === 'CONSOLIDATION' ? <Box size={18}/> : <Package size={18} />)}
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        {/* 🔥 AHORA IMPRIME EL NOMBRE Y LA DIRECCIÓN EXACTA DEL ENVÍO */}
                                         <p className="font-bold text-gray-800 text-sm truncate">{item.userName}</p>
                                         <p className="text-xs text-gray-500 truncate mt-0.5">{item.address}</p>
                                     </div>
