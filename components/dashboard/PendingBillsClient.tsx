@@ -132,12 +132,9 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
   const currentDestination = currentAddress ? {
     name: currentAddress.fullName,
     address: currentAddress.address,
-    
-    // 👇 ESTO ES EL "DISPARADOR" PARA QUE AURA RECONOZCA FLORIDA 👇
     city: currentAddress.city || '', 
     state: currentAddress.state || '', 
     zip: currentAddress.zip || '',
-    
     cityZip: currentAddress.cityZip,
     countryCode: currentAddress.country, 
     countryName: currentAddress.country, 
@@ -1021,7 +1018,6 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                                             </div>
                                         </div>
                                     )}
-                                    {/* 👆 FIN DEL BLOQUE NUEVO 👆 */}
                                     {/* 👆 FIN DEL BLOQUE NUEVO 👆 */}
 
                                   <div className="pt-3 border-t border-gray-600 pb-4">

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Package, MapPin, Calendar, ArrowRight, X, Loader2, Box, Ruler, DollarSign } from 'lucide-react';
+import { Package, MapPin, Calendar, ArrowRight, X, Loader2, Box, Ruler, DollarSign, Truck, Plane } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 export default function ConsolidationCard({ request }: { request: any }) {
@@ -15,8 +15,11 @@ export default function ConsolidationCard({ request }: { request: any }) {
   const [finalWeight, setFinalWeight] = useState('');
   const [dims, setDims] = useState({ length: '', width: '', height: '' });
   
-  // 🔥 NUEVO: Estado para Valor Declarado
+  // Estado para Valor Declarado
   const [finalValue, setFinalValue] = useState('');
+
+  // 🔥 DETECCIÓN DEL SERVICIO DE SUPABASE
+  const isLocalDelivery = request.serviceType === 'LOCAL_DELIVERY';
 
   // Lógica para Procesar
   const handleProcess = async () => {
@@ -27,20 +30,17 @@ export default function ConsolidationCard({ request }: { request: any }) {
 
     setIsSaving(true);
     try {
-        // 🟢 CORRECCIÓN AQUÍ: Apuntamos a la ruta correcta 'consolidate-confirm'
         const res = await fetch('/api/admin/consolidate-confirm', { 
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 consolidationId: request.id, 
-                // Convertimos a números para que el backend no falle
                 finalWeight: parseFloat(finalWeight),
                 finalDimensions: {
                     length: parseFloat(dims.length),
                     width: parseFloat(dims.width),
                     height: parseFloat(dims.height)
                 },
-                // 🔥 ENVIAMOS EL VALOR DECLARADO
                 finalValue: parseFloat(finalValue) || 0
             })
         });
@@ -48,7 +48,7 @@ export default function ConsolidationCard({ request }: { request: any }) {
         const data = await res.json();
         
         if (res.ok) {
-            alert("✅ Consolidación procesada. El cliente ya puede pagar.");
+            alert(`✅ ${isLocalDelivery ? 'Pallet de Aura' : 'Consolidación'} procesada. El cliente ya puede pagar.`);
             setShowModal(false);
             router.refresh(); 
         } else {
@@ -65,31 +65,31 @@ export default function ConsolidationCard({ request }: { request: any }) {
   return (
     <>
       {/* --- TARJETA VISUAL --- */}
-      <div 
-        // 🟢 CORRECCIÓN VISUAL: Al hacer click aquí, ahora vamos a '/envios/'
-        // NOTA: Si quieres que toda la tarjeta sea cliqueable para ver detalle
-        // onClick={() => router.push(`/dashboard-admin/envios/${request.id}`)}
-        className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
-      >
+      <div className={`rounded-2xl shadow-sm border overflow-hidden hover:shadow-md transition-shadow cursor-pointer relative ${isLocalDelivery ? 'border-gray-800 bg-gray-50' : 'border-gray-200 bg-white'}`}>
         
-        {/* Cabecera */}
-        <div className="bg-gray-50 px-6 py-4 border-b border-gray-100 flex flex-wrap justify-between items-center gap-4">
+        {/* Cabecera Condicional según el tipo de Servicio */}
+        <div className={`px-6 py-4 border-b flex flex-wrap justify-between items-center gap-4 ${isLocalDelivery ? 'bg-black text-white border-gray-800' : 'bg-gray-50 border-gray-100'}`}>
             <div className="flex items-center gap-3">
-                <div className="h-10 w-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold">
+                <div className={`h-10 w-10 rounded-full flex items-center justify-center font-bold ${isLocalDelivery ? 'bg-gray-800 text-white' : 'bg-blue-100 text-blue-600'}`}>
                     {request.user?.name?.[0] || 'C'}
                 </div>
                 <div>
-                    <p className="font-bold text-gmc-gris-oscuro">{request.user?.name || 'Cliente'}</p>
-                    <p className="text-xs text-gray-500 font-mono">STE: {request.user?.suiteNo}</p>
+                    <p className={`font-bold ${isLocalDelivery ? 'text-white' : 'text-gmc-gris-oscuro'}`}>{request.user?.name || 'Cliente'}</p>
+                    <p className={`text-xs font-mono ${isLocalDelivery ? 'text-gray-400' : 'text-gray-500'}`}>STE: {request.user?.suiteNo}</p>
                 </div>
             </div>
-            <div className="flex items-center gap-4 text-sm text-gray-600">
-                <div className="flex items-center gap-1">
-                    <MapPin size={16} className="text-gmc-dorado-principal"/>
-                    <span className="font-bold">{request.destinationCountryCode}</span>
-                </div>
-                <div className="flex items-center gap-1">
-                    <Calendar size={16} />
+            <div className={`flex flex-col items-end text-sm ${isLocalDelivery ? 'text-gray-300' : 'text-gray-600'}`}>
+                {isLocalDelivery ? (
+                    <div className="flex items-center gap-1.5 font-bold text-white bg-gray-800 px-2 py-1 rounded text-xs">
+                        <Truck size={14} /> LOCAL (AURA)
+                    </div>
+                ) : (
+                    <div className="flex items-center gap-1.5 font-bold text-indigo-700 bg-indigo-100 px-2 py-1 rounded text-xs border border-indigo-200">
+                        <Plane size={14} /> {request.destinationCountryCode} (AÉREO)
+                    </div>
+                )}
+                <div className="flex items-center gap-1 mt-1 text-xs">
+                    <Calendar size={12} />
                     <span>{new Date(request.createdAt).toLocaleDateString()}</span>
                 </div>
             </div>
@@ -98,12 +98,12 @@ export default function ConsolidationCard({ request }: { request: any }) {
         {/* Cuerpo */}
         <div className="p-6">
             <h4 className="text-sm font-bold text-gray-400 uppercase mb-3 flex items-center gap-2">
-                <Package size={14} /> {request.packages?.length || 0} Paquetes a agrupar:
+                <Package size={14} /> {request.packages?.length || 0} Cajas a {isLocalDelivery ? 'Apilar (Pallet)' : 'Agrupar'}:
             </h4>
             
             <div className="space-y-2 mb-6 max-h-40 overflow-y-auto pr-2 custom-scrollbar">
                 {request.packages?.map((pkg: any) => (
-                    <div key={pkg.id} className="flex justify-between items-center bg-gray-50 p-3 rounded-lg border border-gray-100">
+                    <div key={pkg.id} className={`flex justify-between items-center p-3 rounded-lg border ${isLocalDelivery ? 'bg-white border-gray-200' : 'bg-gray-50 border-gray-100'}`}>
                         <div>
                             <p className="font-bold text-gmc-gris-oscuro text-sm">{pkg.description || 'Sin descripción'}</p>
                             <p className="text-xs text-gray-500 font-mono">{pkg.gmcTrackingNumber}</p>
@@ -117,15 +117,19 @@ export default function ConsolidationCard({ request }: { request: any }) {
             </div>
 
             {/* Footer: Botón de Acción */}
-            <div className="flex justify-end pt-4 border-t border-gray-100">
+            <div className={`flex justify-end pt-4 border-t ${isLocalDelivery ? 'border-gray-200' : 'border-gray-100'}`}>
                 <button 
                     onClick={(e) => {
-                        e.stopPropagation(); // Evitamos navegar si damos click al botón
+                        e.stopPropagation(); 
                         setShowModal(true);
                     }}
-                    className="bg-gmc-gris-oscuro text-white px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-black transition-colors flex items-center gap-2"
+                    className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-colors flex items-center gap-2 ${
+                        isLocalDelivery 
+                            ? 'bg-black text-white hover:bg-gray-800' 
+                            : 'bg-gmc-gris-oscuro text-white hover:bg-black'
+                    }`}
                 >
-                    Procesar Consolidación <ArrowRight size={16} />
+                    {isLocalDelivery ? 'Medir Pallet Aura' : 'Procesar Consolidación'} <ArrowRight size={16} />
                 </button>
             </div>
         </div>
@@ -134,14 +138,19 @@ export default function ConsolidationCard({ request }: { request: any }) {
       {/* --- MODAL DE PROCESAMIENTO --- */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in">
-            <div className="bg-white rounded-xl shadow-2xl max-w-sm w-full p-6 animate-in zoom-in-95">
+            <div className={`rounded-xl shadow-2xl max-w-sm w-full p-6 animate-in zoom-in-95 ${isLocalDelivery ? 'bg-gray-50' : 'bg-white'}`}>
                 <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-bold text-indigo-900">Datos Finales</h3>
+                    <h3 className={`text-lg font-bold ${isLocalDelivery ? 'text-black' : 'text-indigo-900'}`}>
+                        {isLocalDelivery ? 'Datos del Pallet' : 'Datos Finales'}
+                    </h3>
                     <button onClick={() => setShowModal(false)}><X size={20} className="text-gray-400 hover:text-red-500"/></button>
                 </div>
 
-                <div className="bg-indigo-50 p-4 rounded-lg mb-4 text-xs text-indigo-800">
-                    <p>📦 Estás consolidando <strong>{request.packages?.length} paquetes</strong>. Ingresa los datos finales.</p>
+                <div className={`p-4 rounded-lg mb-4 text-xs ${isLocalDelivery ? 'bg-white border border-gray-200 text-gray-800' : 'bg-indigo-50 text-indigo-800'}`}>
+                    <p>
+                        {isLocalDelivery ? <Truck size={14} className="inline mr-1"/> : '📦'} 
+                        Estás {isLocalDelivery ? 'preparando' : 'consolidando'} <strong>{request.packages?.length} paquetes</strong> para {isLocalDelivery ? 'AURA LOGISTICS' : 'ENVÍO INTERNACIONAL'}. Ingresa las medidas finales del bulto.
+                    </p>
                 </div>
 
                 {/* Input Peso */}
@@ -157,20 +166,22 @@ export default function ConsolidationCard({ request }: { request: any }) {
                     />
                 </div>
 
-                {/* 🔥 INPUT VALOR DECLARADO */}
-                <div className="mb-4">
-                    <label className="block text-xs font-bold text-blue-600 uppercase mb-1 flex items-center gap-1">
-                        <DollarSign size={12}/> Valor Declarado Total ($)
-                    </label>
-                    <input 
-                        type="number" 
-                        value={finalValue}
-                        onChange={(e) => setFinalValue(e.target.value)}
-                        placeholder="0.00"
-                        className="w-full border border-blue-200 bg-blue-50/30 rounded-lg p-3 font-bold text-blue-800 focus:ring-2 focus:ring-blue-500 outline-none placeholder-blue-300"
-                    />
-                    <p className="text-[10px] text-gray-400 mt-1">+ Seguro (3%) si {'>'} $100</p>
-                </div>
+                {/* INPUT VALOR DECLARADO */}
+                {!isLocalDelivery && (
+                    <div className="mb-4">
+                        <label className="block text-xs font-bold text-blue-600 uppercase mb-1 flex items-center gap-1">
+                            <DollarSign size={12}/> Valor Declarado Total ($)
+                        </label>
+                        <input 
+                            type="number" 
+                            value={finalValue}
+                            onChange={(e) => setFinalValue(e.target.value)}
+                            placeholder="0.00"
+                            className="w-full border border-blue-200 bg-blue-50/30 rounded-lg p-3 font-bold text-blue-800 focus:ring-2 focus:ring-blue-500 outline-none placeholder-blue-300"
+                        />
+                        <p className="text-[10px] text-gray-400 mt-1">+ Seguro (3%) si {'>'} $100</p>
+                    </div>
+                )}
 
                 {/* Inputs Dimensiones */}
                 <div className="grid grid-cols-3 gap-2 mb-6">
@@ -194,9 +205,13 @@ export default function ConsolidationCard({ request }: { request: any }) {
                 <button 
                     onClick={handleProcess} 
                     disabled={isSaving}
-                    className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 transition-all"
+                    className={`w-full text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 transition-all ${
+                        isLocalDelivery 
+                            ? 'bg-black hover:bg-gray-800' 
+                            : 'bg-indigo-600 hover:bg-indigo-700'
+                    }`}
                 >
-                    {isSaving ? <Loader2 className="animate-spin"/> : <Box size={18}/>}
+                    {isSaving ? <Loader2 className="animate-spin"/> : (isLocalDelivery ? <Truck size={18}/> : <Box size={18}/>)}
                     Guardar y Habilitar Pago
                 </button>
             </div>

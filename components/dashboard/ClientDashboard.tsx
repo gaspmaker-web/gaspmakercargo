@@ -90,7 +90,7 @@ export default function ClientDashboard({
   const [isConsolidating, setIsConsolidating] = useState(false);
   const [isExpanded, setIsExpanded] = useState(true);
 
-  // 🔥 NUEVO ESTADO: Distinguir Aura (LOCAL) de Aéreo (AERIAL)
+  // 🔥 ESTADO DE CONSOLIDACIÓN
   const [consolidationType, setConsolidationType] = useState<'AERIAL' | 'LOCAL'>('AERIAL');
 
   // --- ESTADOS PARA MODALES ---
@@ -153,21 +153,19 @@ export default function ClientDashboard({
 
       // 🔥 MINI-SIMULADOR AURA (Tetris 3D para la interfaz del cliente)
       const calculatePalletsNeeded = (pkgs: any[]) => {
-          const PALLET_AREA = 48 * 40; // 1920 pulgadas cuadradas
+          const PALLET_AREA = 48 * 40; 
           const MAX_HEIGHT = 72;
           let currentPalletHeight = 0;
           let currentLayerArea = 0;
           let currentLayerMaxHeight = 0;
           let neededPallets = 1;
 
-          // 1. Ordenamos por volumen (Las grandes van primero)
           const sorted = [...pkgs].sort((a, b) => {
               const volA = (Number((a as any).lengthIn) || 12) * (Number((a as any).widthIn) || 12) * (Number((a as any).heightIn) || 10);
               const volB = (Number((b as any).lengthIn) || 12) * (Number((b as any).widthIn) || 12) * (Number((b as any).heightIn) || 10);
               return volB - volA;
           });
 
-          // 2. Simulamos el empaquetado optimizando el piso y la rotación
           sorted.forEach(p => {
               const dims = [
                   Number((p as any).lengthIn) || 12, 
@@ -175,19 +173,16 @@ export default function ClientDashboard({
                   Number((p as any).heightIn) || 10
               ].sort((a, b) => a - b);
               
-              // Usamos las dos dimensiones más pequeñas como base para optimizar el espacio
-              const boxArea = dims[0] * dims[1] * 1.15; // 15% margen de seguridad
+              const boxArea = dims[0] * dims[1] * 1.15; 
               const boxH = dims[2];
 
               if (currentLayerArea + boxArea <= PALLET_AREA) {
-                  // Cabe en el mismo piso
                   currentLayerArea += boxArea;
                   currentLayerMaxHeight = Math.max(currentLayerMaxHeight, boxH);
               } else {
-                  // Sube de piso
                   currentPalletHeight += currentLayerMaxHeight;
                   if (currentPalletHeight + boxH > MAX_HEIGHT) {
-                      neededPallets++; // Rompió el techo, necesita otro pallet
+                      neededPallets++; 
                       currentPalletHeight = 0;
                   }
                   currentLayerArea = boxArea;
@@ -195,7 +190,6 @@ export default function ClientDashboard({
               }
           });
 
-          // Limpieza final
           if (currentLayerMaxHeight > 0 && currentPalletHeight + currentLayerMaxHeight > MAX_HEIGHT) {
               neededPallets++;
           }
@@ -215,7 +209,6 @@ export default function ClientDashboard({
               return;
           }
       } else if (type === 'LOCAL') {
-          // Límite de Apilamiento Inteligente (Aura 3D)
           if (palletsNeeded > 1) {
               const msg = t.has('alertLocalHeightLimit')
                 ? t('alertLocalHeightLimit', { height: "72" })
@@ -224,7 +217,6 @@ export default function ClientDashboard({
               return;
           }
           
-          // Límite de Peso de Aura
           if (totalSelectedWeight > 2000) {
               const msg = t.has('alertLocalWeightLimit')
                 ? t('alertLocalWeightLimit', { weight: totalSelectedWeight.toFixed(2) })
@@ -254,12 +246,16 @@ export default function ClientDashboard({
   const onConfirmConsolidation = async () => {
       setIsConsolidating(true);
       try {
-          const res = await fetch('/api/shipments/create', {
+          // 💥 AQUÍ ESTÁ LA MAGIA: Enviamos el tipo exacto según el botón pulsado
+          const dynamicServiceType = consolidationType === 'LOCAL' ? 'LOCAL_DELIVERY' : 'CONSOLIDATION';
+
+          const res = await fetch('/api/shipments/create', { // o '/api/consolidate' dependiendo del wrapper que uses
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                   packageIds: selectedPkgs,
-                  type: 'CONSOLIDATION'
+                  type: dynamicServiceType, // Envía 'LOCAL_DELIVERY' o 'CONSOLIDATION'
+                  serviceType: dynamicServiceType // Enviamos ambas keys para que no falle ninguna API
               })
           });
 
@@ -339,7 +335,6 @@ export default function ClientDashboard({
       }
   };
 
-  // 🔥 CÁLCULO DE FEES CON EXCEPCIÓN PARA DOCUMENTOS EN PICKUP
   const totalStorageFee = selectedPackagesData.reduce((acc, p) => acc + (p.storageFee || 0), 0);
   
   const totalHandlingFee = selectedPackagesData.reduce((acc, p) => {
@@ -609,10 +604,8 @@ export default function ClientDashboard({
         {selectedPkgs.length > 0 && (
             <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-gasp-maker-dark-gray text-white p-1.5 pl-4 sm:px-5 sm:py-2.5 rounded-full shadow-2xl flex items-center gap-2 sm:gap-5 z-50 animate-in slide-in-from-bottom-6 border border-gray-700 w-[95%] sm:w-auto max-w-fit justify-between">
                 
-                {/* 1. SECCIÓN DE CANTIDAD Y PESO (Optimizada para móvil) */}
                 <div className="flex flex-col sm:flex-row sm:items-center pr-2 sm:pr-0 shrink-0">
                     <span className="text-sm font-bold whitespace-nowrap">
-                        {/* Oculta la palabra "Seleccionados" en móvil, solo muestra el número */}
                         {selectedPkgs.length} <span className="hidden sm:inline">{t('selectedCount')}</span>
                     </span>
                     <span className="text-[10px] sm:text-xs text-gmc-dorado-principal font-bold sm:ml-2 whitespace-nowrap">
@@ -622,7 +615,6 @@ export default function ClientDashboard({
                 
                 <div className="h-5 w-px bg-gray-600 hidden sm:block shrink-0"></div>
                 
-                {/* 2. SECCIÓN DE BOTONES (Deslizable en teléfonos pequeños) */}
                 <div className="flex items-center gap-1.5 sm:gap-2 pr-1 overflow-x-auto snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
                     
                     <button 
@@ -664,7 +656,6 @@ export default function ClientDashboard({
                     
                     <div className="bg-gray-50 p-4 border-b border-gray-100 flex justify-between items-center">
                         <h3 className="font-bold text-gray-800 flex items-center gap-2">
-                            {/* 🔥 CAMBIO DINÁMICO DE TÍTULO */}
                             {consolidationType === 'LOCAL' ? (
                                 <><Truck className="text-black" size={20}/> {t.has('requestLocalDelivery') ? t('requestLocalDelivery') : 'Request Local Delivery'}</>
                             ) : (

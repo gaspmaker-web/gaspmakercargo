@@ -8,7 +8,9 @@ import {
   PackageOpen,
   CheckCircle,
   FileWarning,
-  ChevronRight
+  ChevronRight,
+  Plane,
+  MapPin
 } from 'lucide-react';
 import MenuAccionesConsolidacion from '@/components/admin/MenuAccionesConsolidacion';
 import ConsolidationCard from '@/components/admin/ConsolidationCard'; 
@@ -26,11 +28,9 @@ export default async function ConsolidacionesPage({
 }) {
   const query = searchParams?.q || '';
   
- // 1. TRAEMOS TODO (PERO IGNORAMOS LOS DOCUMENTOS DE ORIGEN)
   const consolidacionesDB = await prisma.consolidatedShipment.findMany({
     where: {
-        // 🔥 Solo traemos Consolidación y Envíos Internacionales (Ignora DOCUMENT)
-        serviceType: { in: ['CONSOLIDATION', 'SHIPPING_INTL'] },
+        serviceType: { in: ['CONSOLIDATION', 'SHIPPING_INTL', 'LOCAL_DELIVERY'] },
         ...(query ? {
             OR: [
                 { user: { name: { contains: query, mode: 'insensitive' } } },
@@ -46,23 +46,14 @@ export default async function ConsolidacionesPage({
     orderBy: { updatedAt: 'desc' } 
   });
 
-  // 👇 🔥 FILTRO MAESTRO: EXPULSAMOS TODOS LOS ENVÍOS INDIVIDUALES 👇
   const consolidaciones = consolidacionesDB.filter(c => {
-      // ¿Cuántos paquetes hay metidos en esta supuesta consolidación?
       const cantidadDePaquetes = c.packages?.length || 0;
-
-      // 🧠 LÓGICA IMPLACABLE: 
-      // Si tiene 1 paquete o ninguno, NO es una consolidación. Lo expulsamos de esta pantalla.
-      // (Se mostrará exclusivamente en la pantalla de "Paquetes Activos").
       if (cantidadDePaquetes <= 1) {
           return false; 
       }
-      
-      // Si tiene 2 o más, es una consolidación real y se queda.
       return true; 
   });
 
-  // 2. CLASIFICACIÓN
   const listosParaDespachar = consolidaciones.filter(c => {
     const s = c.status;
     const isPaidState = s === 'PAGADO' || s === 'POR_ENVIAR' || s === 'PAID' || s === 'LISTO_PARA_ENVIO' || s === 'LISTO PARA ENVIO';
@@ -84,10 +75,8 @@ export default async function ConsolidacionesPage({
     if (s === 'PENDIENTE_PAGO') return false;
     if (isPaidState && !isZeroMoney) return false; 
     
-    // 🔥 CORRECCIÓN: Agregamos EN_RUTA y EN_TRANSITO al filtro para que no regresen a esta columna
     if (s === 'ENVIADO' || s === 'ENTREGADO' || s === 'CANCELADO' || s === 'EN_REPARTO' || s === 'EN_ALMACEN_DESTINO' || s === 'EN_RUTA' || s === 'EN_TRANSITO') return false;
     
-    // Si no tiene paquetes (por error de BD), lo dejamos aquí solo si es un "Zero Error" para que lo puedas borrar o corregir
     if ((!c.packages || c.packages.length <= 1) && !isZeroError(c)) return false; 
 
     return true;
@@ -149,21 +138,32 @@ export default async function ConsolidacionesPage({
                         <Clock className="text-yellow-500"/> Esperando Pago ({esperandoPago.length})
                     </h2>
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                         {esperandoPago.map((envio) => (
-                            <div key={envio.id} className="p-4 rounded-xl border border-gray-200 flex justify-between items-center bg-gray-50">
-                                <div>
-                                    <span className="text-xs font-bold bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded">PENDIENTE PAGO</span>
-                                    <h3 className="font-bold mt-1 text-gray-800 line-clamp-1">{envio.user?.name}</h3>
-                                    <p className="text-sm text-gray-500 font-mono">
-                                        {envio.weightLbs} lb • {envio.gmcShipmentNumber}
-                                    </p>
+                         {esperandoPago.map((envio) => {
+                             const isLocalDelivery = envio.serviceType === 'LOCAL_DELIVERY' || envio.courierService?.toLowerCase().includes('local delivery');
+
+                             return (
+                                <div key={envio.id} className="p-4 rounded-xl border border-gray-200 flex justify-between items-center bg-gray-50">
+                                    <div>
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <span className="text-[10px] font-bold bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded">PENDIENTE</span>
+                                            {isLocalDelivery ? (
+                                                <span className="text-[10px] font-bold bg-black text-white px-2 py-0.5 rounded flex items-center gap-1"><MapPin size={10}/> LOCAL</span>
+                                            ) : (
+                                                <span className="text-[10px] font-bold bg-purple-100 text-purple-700 px-2 py-0.5 rounded flex items-center gap-1"><Plane size={10}/> AÉREO</span>
+                                            )}
+                                        </div>
+                                        <h3 className="font-bold text-gray-800 line-clamp-1">{envio.user?.name}</h3>
+                                        <p className="text-sm text-gray-500 font-mono">
+                                            {envio.weightLbs} lb • {envio.gmcShipmentNumber}
+                                        </p>
+                                    </div>
+                                    <div className="text-right shrink-0 ml-2">
+                                         <p className="text-lg font-bold text-gray-800">${envio.totalAmount?.toFixed(2)}</p>
+                                         <p className="text-[10px] text-gray-400 uppercase">Por Cobrar</p>
+                                    </div>
                                 </div>
-                                <div className="text-right shrink-0 ml-2">
-                                     <p className="text-lg font-bold text-gray-800">${envio.totalAmount?.toFixed(2)}</p>
-                                     <p className="text-[10px] text-gray-400 uppercase">Por Cobrar</p>
-                                </div>
-                            </div>
-                        ))}
+                             )
+                         })}
                     </div>
                 </div>
             )}
@@ -176,33 +176,50 @@ export default async function ConsolidacionesPage({
                     </h2>
                     <div className="grid gap-4">
                         {listosParaDespachar.map((envio) => {
-                            // Validar si es envío interno o externo
                             const courier = envio.selectedCourier?.toLowerCase() || '';
+                            const service = envio.courierService?.toLowerCase() || '';
                             const esGaspMaker = courier.includes('gasp') || courier.includes('maritimo');
+                            
+                            const isLocalDelivery = envio.serviceType === 'LOCAL_DELIVERY' || service.includes('local delivery');
 
                             return (
-                                <div key={envio.id} className="bg-green-50/50 p-4 rounded-xl border border-green-200 flex flex-col md:flex-row justify-between items-center gap-4">
-                                    <div>
+                                // 🔥 AQUÍ ESTÁ LA CORRECCIÓN: Le quitamos "overflow-hidden" a esta tarjeta principal
+                                <div key={envio.id} className="bg-green-50/50 p-4 rounded-xl border border-green-200 flex flex-col md:flex-row justify-between items-center gap-4 relative group">
+                                    
+                                    {/* 🔥 AQUÍ ESTÁ LA CORRECCIÓN: Le agregamos "rounded-l-xl" a la rayita */}
+                                    <div className={`absolute top-0 bottom-0 left-0 w-1.5 rounded-l-xl ${isLocalDelivery ? 'bg-black' : 'bg-purple-500'}`}></div>
+
+                                    <div className="pl-3 w-full md:w-auto flex-1">
                                         <div className="flex items-center gap-2 mb-1">
-                                            <span className="bg-green-600 text-white px-2 py-0.5 rounded text-[10px] font-bold uppercase">PAGADO & LISTO</span>
-                                            <span className="text-xs text-gray-500 font-mono">#{envio.gmcShipmentNumber}</span>
+                                            <span className="bg-green-600 text-white px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide">PAGADO & LISTO</span>
+                                            
+                                            {isLocalDelivery ? (
+                                                <span className="bg-black text-white px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide flex items-center gap-1 border border-gray-800">
+                                                    <Truck size={10}/> DELIVERY LOCAL
+                                                </span>
+                                            ) : (
+                                                <span className="bg-purple-100 text-purple-800 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide flex items-center gap-1 border border-purple-200">
+                                                    <Plane size={10}/> INT. / AÉREO
+                                                </span>
+                                            )}
+
+                                            <span className="text-xs text-gray-500 font-mono ml-2">#{envio.gmcShipmentNumber}</span>
                                         </div>
-                                        <h3 className="font-bold text-lg">{envio.user?.name}</h3>
+                                        <h3 className="font-bold text-lg text-gray-900">{envio.user?.name}</h3>
                                         <div className="flex gap-4 text-sm text-gray-600 mt-1">
-                                        <span>⚖️ {envio.weightLbs} lb</span>
-                                        <span>📦 {envio.packages?.length || 0} Paquetes</span>
-                                        <span className="font-bold text-purple-700 uppercase">
-                                            {envio.selectedCourier || 'Sin Courier'}
-                                        </span>
+                                            <span>⚖️ {envio.weightLbs} lb</span>
+                                            <span>📦 {envio.packages?.length || 0} Cajas</span>
+                                            <span className={`font-bold uppercase ${isLocalDelivery ? 'text-gray-800' : 'text-purple-700'}`}>
+                                                {envio.selectedCourier || 'Sin Courier'}
+                                            </span>
                                         </div>
                                     </div>
-                                    <div className="flex items-center gap-4">
+                                    <div className="flex items-center gap-4 w-full md:w-auto justify-end">
                                         <div className="text-right mr-2">
-                                            <p className="text-xs text-gray-400 uppercase font-bold">Total Pagado</p>
-                                            <p className="font-bold text-green-700 text-lg">${envio.totalAmount?.toFixed(2)}</p>
+                                            <p className="text-xs text-gray-400 uppercase font-bold tracking-wide">Total Pagado</p>
+                                            <p className="font-bold text-green-700 text-xl">${envio.totalAmount?.toFixed(2)}</p>
                                         </div>
                                         
-                                        {/* 👇 AQUÍ ESTÁ LA LÓGICA: Si no es GaspMaker, mostramos el botón de API */}
                                         {!esGaspMaker && (
                                             <BotonComprarLabelConsolidado consolidationId={envio.id} />
                                         )}

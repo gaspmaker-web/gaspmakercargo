@@ -9,11 +9,9 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
   try {
-    // 👇 VACUNA: Imports dentro de la función (Lazy Loading)
     const prisma = (await import("@/lib/prisma")).default;
     const { auth } = await import("@/auth");
     
-    // 🔥 IMPORTAMOS LAS NOTIFICACIONES CORRECTAS Y EL TRADUCTOR
     const { 
         sendPaymentReceiptEmail, 
         sendConsolidationRequestEmail, 
@@ -29,7 +27,7 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { 
         packageIds, 
-        type, // 'WAREHOUSE_PICKUP', 'CONSOLIDATION', o 'SHIPPING_INTL'
+        type, 
         scheduledDate, scheduledTime,
         selectedCourier, courierService, totalWeight, subtotal, processingFee, totalPaid, stripePaymentId, 
         shippingAddress 
@@ -69,12 +67,10 @@ export async function POST(req: Request) {
         packages.forEach(pkg => {
             const now = new Date();
             
-            // 🔥 DETECTAR SI ES DOCUMENTO PARA EXIMIRLO DE LA TARIFA DE HANDLING
             const isDocument = pkg.courier === 'Buzón Virtual' || (pkg.carrierTrackingNumber || '').startsWith('DOC-') || (pkg.gmcTrackingNumber || '').startsWith('GMC-DOC-') || pkg.description === "Documento Físico (Enviado desde Buzón)";
             
             let handling = 0;
             if (!isDocument) {
-                // 🔥 LA TABLA MAESTRA IN-OUT DE GASP MAKER (El fin del fantasma)
                 const w = pkg.weightLbs || 1;
                 if (w <= 10) handling = 2.50;
                 else if (w <= 50) handling = 5.00;
@@ -113,11 +109,11 @@ export async function POST(req: Request) {
                 userId: session.user.id,
                 gmcShipmentNumber: `PICKUP-${Date.now().toString().slice(-6)}`,
                 status: 'PENDIENTE_PAGO',
-                destinationCountryCode: 'USA',
-                serviceType: 'PICKUP', // 🔥 ACTUALIZAMOS EL SERVICIO
+                destinationCountryCode: 'USA', // Un pickup siempre es en Miami
+                serviceType: 'PICKUP', 
                 courierService: `Cita: ${scheduledDate} ${scheduledTime}`,
                 totalAmount: parseFloat(calculatedTotal.toFixed(2)),
-                subtotalAmount: parseFloat(calculatedTotal.toFixed(2)), // Guardamos el subtotal limpio
+                subtotalAmount: parseFloat(calculatedTotal.toFixed(2)), 
                 weightLbs: packages.reduce((acc, p) => acc + (p.weightLbs || 0), 0),
                 packages: { connect: packageIds.map((id: string) => ({ id })) }
             }
@@ -136,10 +132,9 @@ export async function POST(req: Request) {
     }
 
     // =======================================================================
-    // ✈️ CASO 2: CONSOLIDACIÓN / ENVÍO
+    // ✈️ CASO 2: CONSOLIDACIÓN / ENVÍO INT. / LOCAL DELIVERY
     // =======================================================================
     
-    // 🔥 1. REGLA DE NEGOCIO: CONSOLIDACIÓN DE DOCUMENTOS GRATIS
     const packagesToConsolidate = await prisma.package.findMany({ 
         where: { id: { in: packageIds }, userId: session.user.id } 
     });
@@ -148,7 +143,6 @@ export async function POST(req: Request) {
     let documentsCount = 0;
 
     packagesToConsolidate.forEach(pkg => {
-        // Detectamos si es un documento legal/físico
         const isDocument = pkg.courier === 'Buzón Virtual' || 
                            (pkg.carrierTrackingNumber || '').startsWith('DOC-') || 
                            (pkg.gmcTrackingNumber || '').startsWith('GMC-DOC-') ||
@@ -162,12 +156,32 @@ export async function POST(req: Request) {
     });
 
     const shipmentNumber = `GMC-SHIP-${Math.floor(100000 + Math.random() * 900000)}`;
-    const finalServiceType = (type === 'CONSOLIDATION' || packageIds.length > 1) ? 'CONSOLIDATION' : 'SHIPPING_INTL';
-    const initialStatus = type === 'CONSOLIDATION' ? 'SOLICITUD_CONSOLIDACION' : 'PAGADO';
+    
+    // 💥 ARQUITECTURA ENTERPRISE: Identidad separada de la Operación
+    let finalServiceType = 'SHIPPING_INTL';
+    let initialStatus = 'PAGADO'; 
 
-    // 🔥 2. ETIQUETA INTELIGENTE PARA EL ADMINISTRADOR
+    if (type === 'LOCAL_DELIVERY') {
+        finalServiceType = 'LOCAL_DELIVERY'; // <- Le dice al chofer y al Admin qué hacer
+        initialStatus = 'SOLICITUD_CONSOLIDACION'; 
+    } else if (type === 'CONSOLIDATION' || packageIds.length > 1) {
+        finalServiceType = 'CONSOLIDATION';
+        initialStatus = 'SOLICITUD_CONSOLIDACION'; 
+    }
+
+    const user = await prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: { countryCode: true }
+    });
+
+    // 1. IDENTIDAD DEL CLIENTE: Intacta (Mantiene TT, INTL, etc.)
+    const finalCountryCode = user?.countryCode || 'INTL';
+
+    // 2. OPERACIÓN: Etiqueta inteligente para el equipo de almacén
     let smartCourierService = courierService;
-    if (type === 'CONSOLIDATION') {
+    if (finalServiceType === 'LOCAL_DELIVERY') {
+         smartCourierService = "LOCAL DELIVERY (AURA)"; 
+    } else if (finalServiceType === 'CONSOLIDATION') {
         if (normalBoxesCount === 0 && documentsCount > 0) {
             smartCourierService = "SOLO DOCUMENTOS (CONSOLIDACIÓN GRATIS)";
         } else if (documentsCount > 0) {
@@ -180,15 +194,14 @@ export async function POST(req: Request) {
             userId: session.user.id,
             gmcShipmentNumber: shipmentNumber,
             status: initialStatus,
-            destinationCountryCode: 'INTL', 
-            serviceType: finalServiceType,
+            destinationCountryCode: finalCountryCode, // <-- ¡Respeta si Nelsom es de Trinidad!
+            serviceType: finalServiceType,            // <-- ¡Pero la operación se maneja como Aura Local!
             
             subtotalAmount: subtotal,
             processingFee: processingFee,
             totalAmount: totalPaid,
             paymentId: stripePaymentId,
             selectedCourier,
-            // 🔥 Inyectamos la instrucción automática al Admin
             courierService: smartCourierService || null, 
             weightLbs: totalWeight,
             shippingAddress: shippingAddress || null,
@@ -197,7 +210,9 @@ export async function POST(req: Request) {
     });
 
     // Actualizamos paquetes
-    const newPackageStatus = type === 'CONSOLIDATION' ? 'EN_PROCESO_CONSOLIDACION' : 'EN_PROCESO_ENVIO';
+    const newPackageStatus = (finalServiceType === 'CONSOLIDATION' || finalServiceType === 'LOCAL_DELIVERY') 
+        ? 'EN_PROCESO_CONSOLIDACION' 
+        : 'EN_PROCESO_ENVIO';
 
     await prisma.package.updateMany({
         where: { id: { in: packageIds } },
@@ -215,8 +230,8 @@ export async function POST(req: Request) {
     try {
         const userLang = (session.user as any).language || 'en';
         
-        if (type === 'CONSOLIDATION') {
-            console.log("🔄 Enviando email de Solicitud de Consolidación...");
+        if (finalServiceType === 'CONSOLIDATION' || finalServiceType === 'LOCAL_DELIVERY') {
+            console.log("🔄 Enviando email de Solicitud de Consolidación / Delivery...");
             
             await sendConsolidationRequestEmail(
                 session.user.email || '', 
