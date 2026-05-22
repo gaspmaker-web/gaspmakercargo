@@ -548,24 +548,31 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                        bill.description?.toLowerCase().includes('consolid') ||
                        (bill.packages && bill.packages.length > 1);
 
-// 🔥 NUEVA LÓGICA VISUAL PARA LA ETIQUETA DE LA TARJETA
-    let effectiveHandling = 0;
-     if (isConsolidated) {
-    if (!bill.packages || bill.packages.length === 0) {
-        effectiveHandling = 1 * 0.60;
-    } else {
-        let chargeableCount = 0;
-        bill.packages.forEach((pkg: any) => {
-            const isDocument = pkg.courier === 'Buzón Virtual' || 
-                               (pkg.carrierTrackingNumber || '').toUpperCase().includes('DOC-') || 
-                               (pkg.gmcTrackingNumber || '').toUpperCase().includes('GMC-DOC-') ||
-                               (pkg.description && pkg.description.toLowerCase().includes('documento f'));
-            
-            if (!isDocument) chargeableCount++;
-        });
-        effectiveHandling = chargeableCount * 0.60;
-    }
-   }
+// 🔥 Detectamos visualmente si eligió Aura
+                                    const isVisualLocalAura = selectedRate && 
+                                                              selectedRate.carrier === 'Gasp Maker Cargo' && 
+                                                              selectedRate.service === 'Local Delivery (Aura)';
+
+                                    // 🔥 NUEVA LÓGICA VISUAL PARA LA ETIQUETA DE LA TARJETA
+                                    let effectiveHandling = 0;
+                                    
+                                    // 👈 Solo mostramos el fee visual si NO es Local Aura
+                                    if (isConsolidated && !isVisualLocalAura) { 
+                                        if (!bill.packages || bill.packages.length === 0) {
+                                            effectiveHandling = 1 * 0.60;
+                                        } else {
+                                            let chargeableCount = 0;
+                                            bill.packages.forEach((pkg: any) => {
+                                                const isDocument = pkg.courier === 'Buzón Virtual' || 
+                                                                   (pkg.carrierTrackingNumber || '').toUpperCase().includes('DOC-') || 
+                                                                   (pkg.gmcTrackingNumber || '').toUpperCase().includes('GMC-DOC-') ||
+                                                                   (pkg.description && pkg.description.toLowerCase().includes('documento f'));
+                                                
+                                                if (!isDocument) chargeableCount++;
+                                            });
+                                            effectiveHandling = chargeableCount * 0.60;
+                                        }
+                                    }
 
                                     const val = Number(bill.declaredValue) || 0;
                                     const ins = val > 100 ? val * 0.03 : 0;
