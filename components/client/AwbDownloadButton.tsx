@@ -3,13 +3,18 @@
 import React, { useState, useEffect } from 'react';
 import { FileText, X, ExternalLink, Download, Loader2 } from 'lucide-react';
 import { createPortal } from 'react-dom';
+// 🔥 1. Importar el hook de traducciones
+import { useTranslations } from 'next-intl';
 
 interface AwbDownloadButtonProps {
   url?: string | null;
-  fileName?: string; // Opcional: Nombre del archivo al descargar
+  fileName?: string;
+  label?: string; // 🔥 2. Nueva propiedad 'label' para recibir el texto traducido
 }
 
-export default function AwbDownloadButton({ url, fileName = "AWB_Document.pdf" }: AwbDownloadButtonProps) {
+export default function AwbDownloadButton({ url, fileName = "AWB_Document.pdf", label }: AwbDownloadButtonProps) {
+  const t = useTranslations('Dashboard'); // Usaremos el diccionario 'Dashboard' o puedes cambiarlo al que prefieras
+  
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isDownloading, setIsDownloading] = useState(false);
@@ -23,7 +28,7 @@ export default function AwbDownloadButton({ url, fileName = "AWB_Document.pdf" }
 
   if (!url) return null;
 
-  // 🔥 FUNCIÓN DE DESCARGA ENTERPRISE (Fuerza la descarga incluso entre dominios)
+  // FUNCIÓN DE DESCARGA ENTERPRISE
   const handleDownload = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -36,14 +41,13 @@ export default function AwbDownloadButton({ url, fileName = "AWB_Document.pdf" }
       
       const link = document.createElement('a');
       link.href = blobUrl;
-      link.download = fileName; // Forzamos el nombre del archivo
+      link.download = fileName;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(blobUrl);
     } catch (error) {
       console.error("Error downloading file:", error);
-      // Fallback: abrir en nueva pestaña si falla el fetch
       window.open(url, '_blank');
     } finally {
       setIsDownloading(false);
@@ -68,18 +72,21 @@ export default function AwbDownloadButton({ url, fileName = "AWB_Document.pdf" }
                 <FileText size={22} className="text-red-500" />
             </div>
             <div>
-                <h3 className="font-bold text-gray-900 text-sm md:text-lg leading-none font-garamond tracking-tight">Document Viewer</h3>
-                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-[0.2em] mt-1.5">Official AWB Document</p>
+                <h3 className="font-bold text-gray-900 text-sm md:text-lg leading-none font-garamond tracking-tight">
+                    {t.has('docViewerTitle') ? t('docViewerTitle') : 'Document Viewer'}
+                </h3>
+                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-[0.2em] mt-1.5">
+                    {t.has('docViewerSubtitle') ? t('docViewerSubtitle') : 'Official Document'}
+                </p>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
-            {/* 🔥 BOTÓN DE DESCARGA REPARADO */}
             <button 
               onClick={handleDownload}
               disabled={isDownloading}
               className="p-3 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-2xl transition-all disabled:opacity-50"
-              title="Descargar PDF"
+              title={t.has('downloadPdf') ? t('downloadPdf') : 'Download PDF'}
             >
               {isDownloading ? <Loader2 size={22} className="animate-spin" /> : <Download size={22} />}
             </button>
@@ -89,7 +96,7 @@ export default function AwbDownloadButton({ url, fileName = "AWB_Document.pdf" }
               target="_blank" 
               rel="noopener noreferrer"
               className="p-3 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-2xl transition-all"
-              title="Abrir en pestaña nueva"
+              title={t.has('openNewTab') ? t('openNewTab') : 'Open in new tab'}
             >
               <ExternalLink size={22} />
             </a>
@@ -107,7 +114,9 @@ export default function AwbDownloadButton({ url, fileName = "AWB_Document.pdf" }
           {isLoading && (
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-50 z-20">
               <Loader2 className="animate-spin text-blue-500 mb-3" size={40} strokeWidth={3} />
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Cargando Vista Previa...</p>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                  {t.has('loadingPreview') ? t('loadingPreview') : 'Loading Preview...'}
+              </p>
             </div>
           )}
           <iframe 
@@ -119,7 +128,7 @@ export default function AwbDownloadButton({ url, fileName = "AWB_Document.pdf" }
 
         <div className="md:hidden p-5 bg-white border-t border-gray-100">
             <button onClick={handleClose} className="w-full py-4 bg-slate-900 text-white text-sm font-black uppercase tracking-widest rounded-2xl active:scale-95 transition-transform">
-                Cerrar Visor
+                {t.has('closeViewer') ? t('closeViewer') : 'Close Viewer'}
             </button>
         </div>
       </div>
@@ -133,7 +142,8 @@ export default function AwbDownloadButton({ url, fileName = "AWB_Document.pdf" }
         className="mt-3 flex items-center justify-center gap-2.5 w-full py-3.5 px-5 bg-slate-50 border border-slate-200 text-slate-700 text-[11px] font-black rounded-2xl hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200 transition-all group shadow-sm active:scale-[0.98] tracking-widest uppercase"
       >
         <FileText size={16} className="text-slate-400 group-hover:text-blue-600 transition-colors" />
-        <span>Ver Documento Aduanal</span>
+        {/* 🔥 3. Usamos 'label' si lo recibimos, sino un fallback traducido */}
+        <span>{label || (t.has('viewCustomsDoc') ? t('viewCustomsDoc') : 'VER DOCUMENTO ADUANAL')}</span>
       </button>
 
       {isOpen && typeof document !== 'undefined' && createPortal(<ModalPortal />, document.body)}

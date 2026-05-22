@@ -21,6 +21,7 @@ export default function PackageStatusManager({ pkg, isConsolidation = false }: {
       const res = await fetch('/api/admin/packages/update-status', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        // 🔥 EL ÚNICO CAMBIO REAL: Le pasamos la bandera isConsolidation al backend
         body: JSON.stringify({ 
             packageId: pkg.id, 
             newStatus,
@@ -52,6 +53,7 @@ export default function PackageStatusManager({ pkg, isConsolidation = false }: {
                 </div>
             </div>
             <button 
+                // ✅ VUELVE A TU LÓGICA ORIGINAL: EN_TRANSITO
                 onClick={() => changeStatus('EN_TRANSITO')} 
                 disabled={loading} 
                 className="w-full sm:w-auto bg-blue-600 text-white px-6 py-3 rounded-lg font-bold text-sm hover:bg-blue-700 transition flex items-center justify-center gap-2 shadow-md"
@@ -75,8 +77,7 @@ export default function PackageStatusManager({ pkg, isConsolidation = false }: {
                 </div>
             </div>
             <button 
-                // 🔥 SOLUCIÓN: Volvemos al estado oficial 'EN_REPARTO'. 
-                // El Admin ya no se confundirá, y el Chofer lo seguirá viendo.
+                // ✅ VUELVE A TU LÓGICA ORIGINAL: EN_REPARTO
                 onClick={() => changeStatus('EN_REPARTO')} 
                 disabled={loading} 
                 className="w-full sm:w-auto bg-purple-600 text-white px-6 py-3 rounded-lg font-bold text-sm hover:bg-purple-700 transition flex items-center justify-center gap-2 shadow-md"

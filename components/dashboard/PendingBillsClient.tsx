@@ -70,7 +70,7 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
   const router = useRouter();
   const paymentSectionRef = useRef<HTMLDivElement>(null);
 
-  // Estado de Datos
+ // Estado de Datos
   const [bills, setBills] = useState<any[]>(initialBills || []);
   const [cards, setCards] = useState<any[]>([]);
   const [selectedCardId, setSelectedCardId] = useState<string>('');
@@ -78,17 +78,20 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
   // ESTADO DE DIRECCIONES
   const [selectedAddressId, setSelectedAddressId] = useState<string>('');
 
-// Estado de Proceso
+  // Estado de Proceso
   const [isProcessing, setIsProcessing] = useState(false);
   const [loadingRatesId, setLoadingRatesId] = useState<string | null>(null);
   
-  // 🔥 ESCUDO ANTI-DOBLE-CLIC (Cerrojo Síncrono)
+  // 🔥 ESCUDO ANTI-DOBLE-CLIC (Cerrojo Síncrono en Memoria)
   const isPayingRef = useRef(false);
+  
+  // 🔥 LLAVE MAESTRA ANTI-DOBLE-COBRO (Para Stripe)
+  const [idempotencyKey, setIdempotencyKey] = useState(() => Math.random().toString(36).substring(2) + Date.now().toString(36));
   
   // Estado de Selección y Tarifas
   const [selectedBillIds, setSelectedBillIds] = useState<string[]>([]);
   const [ratesMap, setRatesMap] = useState<Record<string, Rate[]>>({}); 
-  const [selectedRateMap, setSelectedRateMap] = useState<Record<string, Rate>>({}); 
+  const [selectedRateMap, setSelectedRateMap] = useState<Record<string, Rate>>({});
 
   // UX
   const [isBillsOpen, setIsBillsOpen] = useState(true);
@@ -208,10 +211,17 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                                      bill.description?.toLowerCase().includes('consolid') ||
                                      (bill.packages && bill.packages.length > 1);
               
-              // 🔥 NUEVA LÓGICA: Excluir documentos de la cuenta para cobrar consolidación
+             // 🔥 NUEVA LÓGICA: Excluir documentos y hacer GRATIS "Local Delivery (Aura)"
               let billHandlingFee = 0;
+              const rate = selectedRateMap[id]; // Leemos qué servicio escogió el cliente
               
-              if (isConsolidated) {
+              // Detectamos si eligió la entrega local de Aura
+              const isLocalAura = rate && 
+                                  rate.carrier === 'Gasp Maker Cargo' && 
+                                  rate.service === 'Local Delivery (Aura)';
+
+              // Solo sumamos los $0.60 si está consolidado Y NO es envío local por Aura
+              if (isConsolidated && !isLocalAura) { 
                   if (!bill.packages || bill.packages.length === 0) {
                       billHandlingFee = 1 * 0.60; 
                   } else {
@@ -239,7 +249,7 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
               insuranceSubtotal += ins;
 
               let itemServicePrice = 0;
-              const rate = selectedRateMap[id];
+            
               
               if (rate) {
                   itemServicePrice = rate.price;
@@ -443,7 +453,7 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
               amountNet: totals.total,
               paymentMethodId: selectedCardId,
               serviceType: 'BILL_PAYMENT',
-              packageServiceType: packageServiceType, // 🔥 4. NUEVO: Le enviamos la etiqueta explícita al backend
+              packageServiceType: packageServiceType, 
               description: `Pago Envíos (${totals.count}) ${discount > 0 ? "(Promo Applied)" : ""}`,
               packageIds: allPackageIds,
               billDetails: billsPayload, 
@@ -453,6 +463,8 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
               discountApplied: discount,
               shippingAddress: finalShippingAddress,
               walletDiscount: useWallet ? totals.appliedWallet : 0,
+              // 🔥 ENVIAMOS LA LLAVE A STRIPE
+              idempotencyKey: idempotencyKey 
           };
 
           const payRes = await fetch('/api/payments/charge', {
@@ -476,6 +488,8 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
 
       } catch (e: any) { 
           alert(e.message); 
+          // 🔥 Regeneramos la llave si falló, para que pueda intentar de nuevo
+          setIdempotencyKey(Math.random().toString(36).substring(2) + Date.now().toString(36));
       }
       finally { 
           // 🔥 3. ABRIMOS EL CERROJO: Pase lo que pase (éxito o error), liberamos el botón

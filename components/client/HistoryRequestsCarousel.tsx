@@ -6,9 +6,10 @@ import {
   Truck, MapPin, CheckCircle, Clock, Package, Plane, 
   Warehouse, DollarSign, Box, Camera, ArrowLeft, 
   ChevronDown, ChevronUp, Calendar, Search, FileText,
-  ShoppingBag, Store, Mailbox // 🔥 Nuevos íconos agregados
+  ShoppingBag, Store, Mailbox 
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { useSearchParams } from 'next/navigation';
 
 // 🔥 1. AGREGAMOS LOS 3 NUEVOS SERVICIOS CON SUS COLORES Y ESTILOS
 const TYPE_STYLES: Record<string, { icon: React.ElementType, color: string, badgeBg: string }> = {
@@ -76,77 +77,101 @@ const HistoryGroup = ({ type, requests }: { type: string, requests: any[] }) => 
             {isOpen && (
                 <div className="border-t border-gray-100 bg-gray-50/30 p-0 md:p-6 pb-8">
                     <div className="flex overflow-x-auto gap-5 px-4 md:px-0 py-2 scrollbar-hide snap-x snap-mandatory">
-                        {requests.map((req) => (
-                            <div 
-                                key={req.id} 
-                                className="min-w-[85vw] sm:min-w-[380px] md:min-w-[400px] bg-white rounded-[1.5rem] border border-gray-100 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] snap-center flex flex-col justify-between relative overflow-hidden transition-transform duration-300 hover:-translate-y-1 hover:shadow-lg"
-                            >
-                                <div className="bg-slate-50/80 backdrop-blur-sm p-4 border-b border-gray-100 flex justify-between items-center">
-                                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1">
-                                        <Calendar size={12}/> {new Date(req.createdAt).toLocaleDateString()}
-                                    </span>
-                                    <StatusBadge status={req.status} />
-                                </div>
+                        {requests.map((req) => {
+                          // 🔥 INTERCEPTOR MULTILINGÜE PARA TÍTULOS DE TARJETAS
+                            const rawTitle = req.description || req.planName || req.gmcShipmentNumber || 'Operación sin título';
+                            const upperTitle = rawTitle.toUpperCase();
+                            let cardTitle = rawTitle;
 
-                                <div className="p-5 flex flex-col gap-4 flex-1">
-                                    <div>
-                                        <h4 className="font-bold text-gray-800 text-lg leading-tight mb-1 line-clamp-2">
-                                            {req.description || req.planName || req.gmcShipmentNumber || 'Operación sin título'}
-                                        </h4>
-                                        <p className="text-[10px] text-gray-400 font-mono bg-gray-50 inline-block px-2 py-0.5 rounded border border-gray-100">
-                                            ID: {(req.id || '').slice(0,8).toUpperCase()}
-                                        </p>
+                            if (upperTitle.includes('ENVÍO INTERNACIONAL') || upperTitle.includes('ENVIO INTERNACIONAL') || (upperTitle.includes('INTERNACIONAL') && type !== 'DELIVERY')) {
+                                cardTitle = t.has('intlEnvioInternacional') ? t('intlEnvioInternacional') : 'Envío Internacional (Gasp Maker Cargo)';
+                            } else if (upperTitle.includes('ENTREGA LOCAL') || type === 'DELIVERY') {
+                                cardTitle = t.has('intlEntregaLocal') ? t('intlEntregaLocal') : 'Entrega Local (Aura)';
+                            } else if (upperTitle.includes('ALMACENAJE') || upperTitle.includes('RETIRO EN BODEGA')) {
+                                cardTitle = t.has('intlPagoAlmacenaje') ? t('intlPagoAlmacenaje') : 'Pago de almacenaje';
+                            } else if (upperTitle.includes('ESCANEO DE DOCUMENTO') || upperTitle.includes('DOCUMENTO')) {
+                                cardTitle = t.has('intlEscaneoDocumento') ? t('intlEscaneoDocumento') : 'ESCANEO DE DOCUMENTO';
+                            } else if (upperTitle.includes('PERSONAL SHOPPER')) {
+                                cardTitle = t.has('intlPersonalShopper') ? t('intlPersonalShopper') : 'Personal Shopper';
+                            } else if (upperTitle.includes('BUZÓN BÁSICO') || upperTitle.includes('BUZON BASICO')) {
+                                cardTitle = t.has('intlBuzonBasico') ? t('intlBuzonBasico') : 'SUSCRIPCIÓN BUZÓN BÁSICO';
+                            } else if (upperTitle.includes('BUZÓN PREMIUM') || upperTitle.includes('BUZON PREMIUM')) {
+                                cardTitle = t.has('intlBuzonPremium') ? t('intlBuzonPremium') : 'SUSCRIPCIÓN BUZÓN PREMIUM';
+                            }
+
+                            return (
+                                <div 
+                                    key={req.id} 
+                                    className="min-w-[85vw] sm:min-w-[380px] md:min-w-[400px] bg-white rounded-[1.5rem] border border-gray-100 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] snap-center flex flex-col justify-between relative overflow-hidden transition-transform duration-300 hover:-translate-y-1 hover:shadow-lg"
+                                >
+                                    <div className="bg-slate-50/80 backdrop-blur-sm p-4 border-b border-gray-100 flex justify-between items-center">
+                                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1">
+                                            <Calendar size={12}/> {new Date(req.createdAt).toLocaleDateString()}
+                                        </span>
+                                        <StatusBadge status={req.status} />
                                     </div>
 
-                                    <div className="text-xs text-gray-600 space-y-2.5 bg-gray-50/50 p-3.5 rounded-xl border border-gray-100/80">
-                                        {(req.originAddress) ? (
-                                            <>
-                                                <div className="flex items-start gap-2.5">
-                                                    <div className="min-w-[16px] mt-0.5"><MapPin size={14} className="text-orange-500"/></div>
-                                                    <span className="break-words leading-tight text-gray-700"><strong className="text-gray-900 block text-[10px] uppercase text-gray-400 mb-0.5">{t('origin')}</strong> {req.originAddress}</span>
+                                    <div className="p-5 flex flex-col gap-4 flex-1">
+                                        <div>
+                                            <h4 className="font-bold text-gray-800 text-lg leading-tight mb-1 line-clamp-2">
+                                                {/* 🔥 AQUÍ INYECTAMOS EL TÍTULO TRADUCIDO */}
+                                                {cardTitle}
+                                            </h4>
+                                            <p className="text-[10px] text-gray-400 font-mono bg-gray-50 inline-block px-2 py-0.5 rounded border border-gray-100">
+                                                ID: {(req.id || '').slice(0,8).toUpperCase()}
+                                            </p>
+                                        </div>
+
+                                        <div className="text-xs text-gray-600 space-y-2.5 bg-gray-50/50 p-3.5 rounded-xl border border-gray-100/80">
+                                            {(req.originAddress) ? (
+                                                <>
+                                                    <div className="flex items-start gap-2.5">
+                                                        <div className="min-w-[16px] mt-0.5"><MapPin size={14} className="text-orange-500"/></div>
+                                                        <span className="break-words leading-tight text-gray-700"><strong className="text-gray-900 block text-[10px] uppercase text-gray-400 mb-0.5">{t('origin')}</strong> {req.originAddress}</span>
+                                                    </div>
+                                                    <div className="w-full h-px bg-gray-200/50 my-1"></div>
+                                                    <div className="flex items-start gap-2.5">
+                                                        <div className="min-w-[16px] mt-0.5"><MapPin size={14} className="text-blue-500"/></div>
+                                                        <span className="break-words leading-tight text-gray-700"><strong className="text-gray-900 block text-[10px] uppercase text-gray-400 mb-0.5">{t('dest')}</strong> {req.dropOffAddress}</span>
+                                                    </div>
+                                                </>
+                                            ) : (
+                                                <div className="flex items-center gap-2 text-gray-500 italic">
+                                                    <Package size={14}/> <span>{t('internalMgmt') || 'Gestión Interna / Servicio'}</span>
                                                 </div>
-                                                <div className="w-full h-px bg-gray-200/50 my-1"></div>
-                                                <div className="flex items-start gap-2.5">
-                                                    <div className="min-w-[16px] mt-0.5"><MapPin size={14} className="text-blue-500"/></div>
-                                                    <span className="break-words leading-tight text-gray-700"><strong className="text-gray-900 block text-[10px] uppercase text-gray-400 mb-0.5">{t('dest')}</strong> {req.dropOffAddress}</span>
+                                            )}
+                                        </div>
+
+                                        {/* 🔥 Solo mostramos fotos si realmente existen */}
+                                        {!isInternationalGroup && type !== 'STORAGE_FEE' && (req.photoPickupUrl || req.photoDeliveryUrl) && (
+                                            <div className="mt-1">
+                                                <p className="text-[9px] font-bold text-gray-400 uppercase mb-2 flex items-center gap-1 tracking-wider"><Camera size={10}/> {t('evidence')}</p>
+                                                <div className="flex gap-3">
+                                                    {req.photoPickupUrl && (
+                                                        <a href={req.photoPickupUrl} target="_blank" className="relative w-16 h-12 rounded-lg overflow-hidden border border-gray-200 group">
+                                                            <Image src={req.photoPickupUrl} alt="Pickup" fill className="object-cover transition-transform group-hover:scale-110"/>
+                                                        </a>
+                                                    )}
+                                                    
+                                                    {req.photoDeliveryUrl && (
+                                                        <a href={req.photoDeliveryUrl} target="_blank" className="relative w-16 h-12 rounded-lg overflow-hidden border border-gray-200 group">
+                                                            <Image src={req.photoDeliveryUrl} alt="Delivery" fill className="object-cover transition-transform group-hover:scale-110"/>
+                                                        </a>
+                                                    )}
                                                 </div>
-                                            </>
-                                        ) : (
-                                            <div className="flex items-center gap-2 text-gray-500 italic">
-                                                <Package size={14}/> <span>{t('internalMgmt') || 'Gestión Interna / Servicio'}</span>
                                             </div>
                                         )}
                                     </div>
 
-                                    {/* 🔥 Solo mostramos fotos si realmente existen (para no mostrar cuadros vacíos en servicios digitales) */}
-                                    {!isInternationalGroup && type !== 'STORAGE_FEE' && (req.photoPickupUrl || req.photoDeliveryUrl) && (
-                                        <div className="mt-1">
-                                            <p className="text-[9px] font-bold text-gray-400 uppercase mb-2 flex items-center gap-1 tracking-wider"><Camera size={10}/> {t('evidence')}</p>
-                                            <div className="flex gap-3">
-                                                {req.photoPickupUrl && (
-                                                    <a href={req.photoPickupUrl} target="_blank" className="relative w-16 h-12 rounded-lg overflow-hidden border border-gray-200 group">
-                                                        <Image src={req.photoPickupUrl} alt="Pickup" fill className="object-cover transition-transform group-hover:scale-110"/>
-                                                    </a>
-                                                )}
-                                                
-                                                {req.photoDeliveryUrl && (
-                                                    <a href={req.photoDeliveryUrl} target="_blank" className="relative w-16 h-12 rounded-lg overflow-hidden border border-gray-200 group">
-                                                        <Image src={req.photoDeliveryUrl} alt="Delivery" fill className="object-cover transition-transform group-hover:scale-110"/>
-                                                    </a>
-                                                )}
-                                            </div>
-                                        </div>
-                                    )}
+                                    <div className="p-4 bg-gray-50 border-t border-gray-100 flex justify-between items-center mt-auto">
+                                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t('totalPaid')}</span>
+                                        <span className="text-xl font-bold text-gray-800 flex items-baseline">
+                                            <span className="text-sm text-gray-400 mr-0.5">$</span>{(req.totalPaid || req.totalAmount || req.amountNet || 0).toFixed(2)}
+                                        </span>
+                                    </div>
                                 </div>
-
-                                <div className="p-4 bg-gray-50 border-t border-gray-100 flex justify-between items-center mt-auto">
-                                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t('totalPaid')}</span>
-                                    <span className="text-xl font-bold text-gray-800 flex items-baseline">
-                                        <span className="text-sm text-gray-400 mr-0.5">$</span>{(req.totalPaid || req.totalAmount || req.amountNet || 0).toFixed(2)}
-                                    </span>
-                                </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 </div>
             )}
@@ -156,9 +181,15 @@ const HistoryGroup = ({ type, requests }: { type: string, requests: any[] }) => 
 
 export default function HistoryRequestsCarousel({ requests }: { requests: any[] }) {
   const t = useTranslations('HistoryPage'); 
-  // 🔥 3. AGREGAMOS LA NUEVA PESTAÑA 'SERVICES'
-  const [activeTab, setActiveTab] = useState<'LOCAL' | 'INTERNATIONAL' | 'PAYMENTS' | 'SERVICES'>('LOCAL');
-  const [searchTerm, setSearchTerm] = useState('');
+  const searchParams = useSearchParams(); // 🔥 Lector de URL
+  
+  // Extraemos las instrucciones de la URL (si existen)
+  const urlTab = searchParams.get('tab') as 'LOCAL' | 'INTERNATIONAL' | 'PAYMENTS' | 'SERVICES';
+  const urlSearch = searchParams.get('search') || '';
+
+  // 🔥 Inicializamos los estados con los datos de la URL
+  const [activeTab, setActiveTab] = useState<'LOCAL' | 'INTERNATIONAL' | 'PAYMENTS' | 'SERVICES'>(urlTab || 'LOCAL');
+  const [searchTerm, setSearchTerm] = useState(urlSearch);
 
   // 🔥 4. NORMALIZAMOS LOS TIPOS DE SERVICIO QUE VIENEN DE LA BASE DE DATOS
   const getServiceType = (req: any) => {
@@ -172,7 +203,6 @@ export default function HistoryRequestsCarousel({ requests }: { requests: any[] 
       }
       
       // 🔥 2. DETECCIÓN INTELIGENTE BASADA EN TU PRISMA SCHEMA
-      // Si tiene 'gmcShopperFee' o 'itemsSubtotal', es 100% un Personal Shopper
       if (req.gmcShopperFee !== undefined || req.itemsSubtotal !== undefined) {
           return 'PERSONAL_SHOPPER';
       }
@@ -199,7 +229,7 @@ export default function HistoryRequestsCarousel({ requests }: { requests: any[] 
           if (activeTab === 'LOCAL') matchTab = ['SHIPPING', 'DELIVERY', 'STORAGE'].includes(type);
           else if (activeTab === 'INTERNATIONAL') matchTab = ['CONSOLIDATION', 'SHIPPING_INTL'].includes(type);
           else if (activeTab === 'PAYMENTS') matchTab = ['STORAGE_FEE'].includes(type); 
-          else if (activeTab === 'SERVICES') matchTab = ['PERSONAL_SHOPPER', 'STORE_PICKUP', 'MAILBOX'].includes(type); // 👈 Asignación
+          else if (activeTab === 'SERVICES') matchTab = ['PERSONAL_SHOPPER', 'STORE_PICKUP', 'MAILBOX'].includes(type);
           
           if (!matchTab) return false;
 

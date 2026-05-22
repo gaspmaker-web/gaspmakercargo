@@ -22,7 +22,7 @@ export async function POST(req: Request) {
 
     console.log(`🔄 Actualizando estado: ${packageId} -> ${newStatus}`);
 
-    // 1. INTENTO A: Actualizar como Consolidación (Devuelve un contador 'count')
+    // 1. INTENTO A: ¿Es este ID una Consolidación Máster?
     const consolidationResult = await prisma.consolidatedShipment.updateMany({
         where: { id: packageId },
         data: { status: newStatus, updatedAt: new Date() }
@@ -30,17 +30,44 @@ export async function POST(req: Request) {
 
     // Si encontró y actualizó alguna consolidación (count > 0)
     if (consolidationResult.count > 0) {
-        // Actualizamos también sus paquetes hijos
+        // Actualizamos también TODOS sus paquetes hijos
         await prisma.package.updateMany({
             where: { consolidatedShipmentId: packageId },
             data: { status: newStatus, updatedAt: new Date() }
         });
         
-        return NextResponse.json({ success: true, message: "Consolidación actualizada" });
+        return NextResponse.json({ success: true, message: "Consolidación y paquetes hijos actualizados" });
     }
 
-    // 2. INTENTO B: Si count fue 0, intentamos actualizar como Paquete Suelto
-    // (Esto devuelve un objeto completo, no un count)
+    // 2. INTENTO B: Si no fue consolidación, es un Paquete.
+    // Primero averiguamos si este paquete pertenece a una Consolidación Padre.
+    const pkg = await prisma.package.findUnique({
+        where: { id: packageId },
+        select: { consolidatedShipmentId: true }
+    });
+
+    if (!pkg) {
+        return NextResponse.json({ message: "ID no encontrado en el sistema" }, { status: 404 });
+    }
+
+    // 🔥 LA MAGIA DE LA TRANSACCIÓN: Si el paquete tiene un Padre, sincronizamos a toda la familia
+    if (pkg.consolidatedShipmentId) {
+        await prisma.$transaction([
+            // Actualiza el Padre
+            prisma.consolidatedShipment.update({
+                where: { id: pkg.consolidatedShipmentId },
+                data: { status: newStatus, updatedAt: new Date() }
+            }),
+            // Actualiza al paquete y a todos sus hermanos para evitar desincronización
+            prisma.package.updateMany({
+                where: { consolidatedShipmentId: pkg.consolidatedShipmentId },
+                data: { status: newStatus, updatedAt: new Date() }
+            })
+        ]);
+        return NextResponse.json({ success: true, message: "Paquete hijo actualizado y Consolidación Padre sincronizada" });
+    }
+
+    // Si el paquete es verdaderamente suelto (no tiene padre), lo actualizamos normalmente
     const packageResult = await prisma.package.update({
         where: { id: packageId },
         data: { status: newStatus, updatedAt: new Date() }

@@ -228,7 +228,7 @@
     "emptyTitle": "Sin notificaciones",
     "emptyDesc": "Estás al día con tus envíos.",
     "viewDetails": "Ver detalles",
-    "titleDelivery": "¡Entrega Completada!",
+    "titleDelivery": "¡Entrega Completada! 🏁",
     "msgConsolidation": "Tu Consolidación ha sido completada exitosamente.",
     "msgLocalDelivery": "Tu Entrega Local ha sido completada exitosamente.",
     "titlePickup": "Paquete Recogido",
@@ -248,7 +248,14 @@
     "additionalRejectedDesc": "Los documentos de tu persona adicional ({name}) fueron rechazados. Motivo: {reason}.",
     "vaciar": "Eliminar todas",
     "shopperQuoteTitle": "🛍️ Cotización Lista",
-    "shopperQuoteMsg": "Tu orden ha sido cotizada. Ve a la pestaña 'Mis Cotizaciones' para revisar el total y pagar."
+    "shopperQuoteMsg": "Tu orden ha sido cotizada. Ve a la pestaña 'Mis Cotizaciones' para revisar el total y pagar.",
+    
+    "newPackageTitle": "Nuevo Paquete en Miami",
+    "newPackageBody": "Hemos recibido un paquete (Tracking: {tracking})",
+    "packageDispatchedTitle": "¡Paquete Despachado! ✈️",
+    "packageDispatchedBody": "Tu paquete ha salido de nuestra bodega y está en camino a su destino. (Tracking #: {tracking})",
+    "pickupConfirmedTitle": "Pickup Confirmado",
+    "pickupConfirmedBody": "Tu solicitud de recolección para el {date} ha sido recibida."
 },
   "AddressCard": {
     "title": "Tu Dirección en Miami (Casillero)",
@@ -729,7 +736,14 @@
     "tabServices": "Servicios",
     "labelPersonalShopper": "Personal Shopper",
     "labelStorePickup": "Retiro en Tienda",
-    "labelMailbox": "Buzón Virtual"
+    "labelMailbox": "Buzón Virtual",
+    "intlEnvioInternacional": "Envío Internacional (Gasp Maker Cargo)",
+    "intlPagoAlmacenaje": "Pago de almacenaje",
+    "intlEscaneoDocumento": "ESCANEO DE DOCUMENTO",
+    "intlPersonalShopper": "Personal Shopper",
+    "intlEntregaLocal": "Entrega Local (Aura)",
+    "intlBuzonBasico": "SUSCRIPCIÓN BUZÓN BÁSICO",
+    "intlBuzonPremium": "SUSCRIPCIÓN BUZÓN PREMIUM"
   },
 "StorageLock": {
     "title": "Paquete Bloqueado",
@@ -759,7 +773,17 @@
  "InTransitPage": {
     "title": "En Tránsito",
     "subtitle": "Desliza para ver tus paquetes en camino",
-    "trackPackage": "Rastrear Paquete"
+    "trackPackage": "Rastrear Paquete",
+    "enRuta": "EN RUTA",
+"enviado": "ENVIADO",
+"enTransito": "EN TRÁNSITO",
+"listoParaEnvio": "LISTO PARA ENVÍO",
+"viewCustomsDoc": "VER DOCUMENTO ADUANAL",
+"viewPackages": "VER PAQUETES",
+"noActiveShipments": "No hay envíos activos",
+"noTransitMsg": "No tienes paquetes en tránsito en este momento.",
+"transitAppearMsg": "Tus envíos aparecerán aquí cuando salgan de Miami.",
+"enReparto": "EN REPARTO"
   },
  "DeliveredPage": {
     "title": "En Destino (Historial)",
@@ -769,8 +793,13 @@
     "viewProof": "Ver Prueba de Entrega",
     "noDeliveries": "No se encontraron entregas",
     "trySearch": "Intenta con otro término de búsqueda.",
-    "trackPackage": "Rastrear Paquete"
-  },
+    "trackPackage": "Rastrear Paquete",
+    "viewCustomsDoc": "Ver Documento Aduanal",
+    "containsPackages": "Contiene {count} paquetes",
+    "consolidated": "Consolidado",
+    "viewPackages": "VER PAQUETES",
+    "hidePackages": "OCULTAR PAQUETES"
+},
   "ChangePasswordModal": {
     "title": "Cambiar Contraseña",
     "currentLabel": "Contraseña Actual",
@@ -958,7 +987,16 @@
     "processedTitle": "Procesado en Miami",
     "processedDesc": "Gasp Maker Cargo HQ",
     "receivedTitle": "Recibido en Almacén",
-    "receivedDesc": "Ingresado al sistema"
+    "receivedDesc": "Ingresado al sistema",
+    "status_PROCESADO": "Procesado",
+  "status_PAGADO": "Pagado",
+  "status_RECIBIDO_MIAMI": "Recibido en Miami",
+  "status_EN_ALMACEN": "En Almacén",
+  "status_LISTO_PARA_ENVIO": "Listo para Envío",
+  "status_EN_TRANSITO": "En Tránsito",
+  "status_ENVIADO": "Enviado",
+  "status_EN_REPARTO": "En Reparto",
+  "status_ENTREGADO": "Entregado"
   },
 "MailboxSetup": {
     "backButton": "Atrás",

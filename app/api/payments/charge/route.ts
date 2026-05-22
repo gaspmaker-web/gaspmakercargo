@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { revalidatePath } from "next/cache"; // 🔥 EL LIMPIADOR DE PANTALLA
+import { revalidatePath } from "next/cache"; 
 
 // 👇 VACUNA 1: Forzar modo dinámico (Vital para transacciones financieras)
 export const dynamic = 'force-dynamic';
@@ -33,8 +33,8 @@ export async function POST(req: Request) {
         shopperOrderId,
         walletDiscount, 
         discountApplied,
-        packageServiceType // 🔥 1. NUEVO: Atrapamos la variable
-
+        packageServiceType,
+        idempotencyKey // 🔥 RECIBIMOS LA LLAVE DEL FRONTEND
     } = await req.json();
 
     if (!amountNet || !paymentMethodId) {
@@ -67,7 +67,6 @@ export async function POST(req: Request) {
     const requestedWalletDiscount = walletDiscount ? Number(walletDiscount) : 0;
     
     if (requestedWalletDiscount > 0 && user.walletBalance > 0) {
-        // Stripe exige un cargo mínimo de $0.50 centavos
         appliedWallet = Math.min(requestedWalletDiscount, user.walletBalance, totalToCharge - 0.50);
         if (appliedWallet < 0) appliedWallet = 0;
         
@@ -88,7 +87,6 @@ export async function POST(req: Request) {
     // =========================================================================
     const GMC_TTD_EXCHANGE_RATE = 7.30; 
     
-    // 🕵️‍♂️ EL SECRETO: Leemos el país DIRECTAMENTE desde Stripe usando el ID guardado
     const stripePaymentMethod = await stripe.paymentMethods.retrieve(savedCard.stripePaymentMethodId);
     const isCardFromTrinidad = stripePaymentMethod.card?.country?.toUpperCase() === 'TT';
 
@@ -103,12 +101,24 @@ export async function POST(req: Request) {
         console.log(`🇺🇸 Tarjeta de ${stripePaymentMethod.card?.country || 'USA'} detectada. Cobrando en USD normal.`);
     }
 
-    // =========================================================================
+   // =========================================================================
     // 2. COBRAR EN STRIPE
     // =========================================================================
+    
+    // 🔥 BÓVEDA DB: Verificamos que no esté pagado ya en la base de datos
+    if (billIds) {
+        const billsArr = Array.isArray(billIds) ? billIds : billIds.split(',');
+        const pagados = await prisma.consolidatedShipment.count({
+            where: { id: { in: billsArr }, status: 'PAGADO' }
+        });
+        if (pagados > 0) {
+            return NextResponse.json({ message: "¡Esta factura ya fue procesada! Recarga tu página." }, { status: 400 });
+        }
+    }
+
     const paymentIntent = await stripe.paymentIntents.create({
         amount: amountInCents,
-        currency: chargeCurrency, // 🔥 Aquí usamos la moneda dinámica (usd o ttd)
+        currency: chargeCurrency, 
         customer: user.stripeCustomerId,
         payment_method: savedCard.stripePaymentMethodId,
         off_session: true,
@@ -117,11 +127,14 @@ export async function POST(req: Request) {
         metadata: {
             userId: user.id,
             serviceType: serviceType,
-            totalAmountUSD: totalToCharge.toFixed(2), // Guardamos el equivalente en USD para tu contabilidad
+            totalAmountUSD: totalToCharge.toFixed(2), 
             currencyCharged: chargeCurrency,
             walletApplied: appliedWallet.toFixed(2), 
             billIds: billIds ? (Array.isArray(billIds) ? billIds.join(',') : billIds) : null 
         }
+    }, {
+        // 🔥 EL ESCUDO DE STRIPE: Evita cobros dobles si el cliente hace 5 clics al mismo tiempo
+        idempotencyKey: idempotencyKey || undefined
     });
 
     if (paymentIntent.status !== 'succeeded') {
@@ -201,7 +214,7 @@ export async function POST(req: Request) {
     console.log(`----------------------------------\n`);
 
     // =========================================================================
-    // 4. NOTIFICACIONES (Soporte Multilingüe Completo: ES, EN, FR, PT)
+    // 4. NOTIFICACIONES & ENLACES INTELIGENTES
     // =========================================================================
     const getLanguage = (code: string | null) => {
         if (!code) return 'en'; 
@@ -218,10 +231,9 @@ export async function POST(req: Request) {
         
         return 'en'; 
     };
+const userLang = getLanguage(user.countryCode) || 'en';
 
-    const userLang = getLanguage(user.countryCode);
-    const t = getT(userLang);
-
+    // 1. Alerta al administrador
     await sendAdminPaymentAlert(
         user.name || 'Cliente Desconocido',
         totalToCharge,
@@ -229,22 +241,38 @@ export async function POST(req: Request) {
         paymentIntent.id
     );
 
-    // Ajustamos el mensaje para que el cliente sepa que pagó en su moneda
-    let successMessage = `${t.paymentBody} $${totalToCharge.toFixed(2)} USD.`;
-    if (chargeCurrency === 'ttd') {
-        successMessage = `Payment successful! Your bank was charged in TTD to avoid limits. (Equivalent: $${totalToCharge.toFixed(2)} USD).`;
-    }
-    if (appliedWallet > 0) {
-        successMessage += ` Ahorraste $${appliedWallet.toFixed(2)} USD usando tu billetera.`;
-    }
+    // =========================================================================
+    // 🔥 2. GENERACIÓN DEL ENLACE INTELIGENTE
+    // =========================================================================
+    let targetId = '';
+    if (packageIds) targetId = Array.isArray(packageIds) ? packageIds[0] : packageIds.split(',')[0];
+    else if (billIds) targetId = Array.isArray(billIds) ? billIds[0] : billIds.split(',')[0];
+    else if (shopperOrderId) targetId = shopperOrderId;
+    else if (pickupId) targetId = pickupId;
+    
+    // Pasamos el ID completo sin recortarlo para que el buscador lo encuentre exactamente
+const searchParam = targetId || '';
 
+    let targetTab = 'LOCAL';
+    const evalType = (packageServiceType || serviceType || '').toUpperCase();
+    
+    if (evalType === 'CONSOLIDATION' || evalType === 'SHIPPING_INTL' || evalType === 'DOCUMENT') targetTab = 'INTERNATIONAL';
+    else if (evalType === 'MAILBOXSUBSCRIPTION' || planName || evalType === 'PERSONAL_SHOPPER' || evalType === 'STORE_PICKUP') targetTab = 'SERVICES';
+    else if (evalType === 'STORAGE_FEE' || evalType === 'PICKUP') targetTab = 'PAYMENTS';
+    else if (evalType === 'DELIVERY' || evalType === 'SHIPPING') targetTab = 'LOCAL';
+
+   const exactHref = `/${userLang}/dashboard-cliente/historial-solicitudes?tab=${targetTab}&search=${searchParam}`;
+
+    // =========================================================================
+    // 🌍 3. ENVÍO DE NOTIFICACIÓN EN FORMATO JSON (MULTILINGÜE DINÁMICO)
+    // =========================================================================
     await sendNotification({
         userId: user.id,
-        title: chargeCurrency === 'ttd' ? "Payment Successful (TTD) ✅" : t.paymentTitle,
-        message: successMessage,
-        type: "SUCCESS"
+        title: JSON.stringify({ key: "paymentSuccessTitle" }),
+        message: JSON.stringify({ key: "paymentSuccessDesc", amount: totalToCharge.toFixed(2) }),
+        type: "SUCCESS",
+        href: exactHref
     });
-
 // =========================================================================
     // 5. 💾 ACTUALIZACIÓN DE BASE DE DATOS (Versión Limpia)
     // =========================================================================
@@ -257,13 +285,13 @@ export async function POST(req: Request) {
         const cleanFee = Number((feeAmount / count).toFixed(2));
 
         await Promise.all(billDetails.map(async (detail: any) => {
-            const targetId = detail.id || detail.shipmentId || detail.billId;
+            const currentTargetId = detail.id || detail.shipmentId || detail.billId;
 
-            if (!targetId) return;
+            if (!currentTargetId) return;
 
             // 🕵️‍♂️ PASO 1: Analizamos el shipment antes de actualizar
             const currentShipment = await prisma.consolidatedShipment.findUnique({
-                where: { id: targetId },
+                where: { id: currentTargetId },
                 include: { _count: { select: { packages: true } } } // Contamos los paquetes
             });
 
@@ -279,7 +307,7 @@ export async function POST(req: Request) {
 
             // 🚀 PASO 3: Actualización con el tipo de servicio correcto
             await prisma.consolidatedShipment.update({
-                where: { id: targetId },
+                where: { id: currentTargetId },
                 data: {
                     status: 'PAGADO', 
                     paymentId: paymentIntent.id,
@@ -297,19 +325,17 @@ export async function POST(req: Request) {
                 }
             });
 
-            // (El resto de la actualización de childPackagesCount sigue igual debajo...)
             const childPackagesCount = await prisma.package.count({
-                where: { consolidatedShipmentId: targetId }
+                where: { consolidatedShipmentId: currentTargetId }
             });
             
-
             if (childPackagesCount > 0) {
                 const pkgTotal = Number((cleanTotal / childPackagesCount).toFixed(2));
                 const pkgSub = Number((cleanSubtotal / childPackagesCount).toFixed(2));
                 const pkgFee = Number((cleanFee / childPackagesCount).toFixed(2));
 
                 await prisma.package.updateMany({
-                    where: { consolidatedShipmentId: targetId },
+                    where: { consolidatedShipmentId: currentTargetId },
                     data: {
                         status: nextStatus, 
                         stripePaymentId: paymentIntent.id,

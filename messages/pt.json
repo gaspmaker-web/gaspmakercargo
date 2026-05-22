@@ -251,7 +251,14 @@
     "additionalRejectedDesc": "Os documentos da sua pessoa adicional ({name}) foram rejeitados. Motivo: {reason}.",
     "vaciar": "Excluir todas",
     "shopperQuoteTitle": "🛍️ Cotação Pronta",
-    "shopperQuoteMsg": "Seu pedido foi cotado. Vá para a aba 'Minhas Cotações' para ver o total e pagar."
+    "shopperQuoteMsg": "Seu pedido foi cotado. Vá para a aba 'Minhas Cotações' para ver o total e pagar.",
+    
+    "newPackageTitle": "Novo Pacote em Miami",
+    "newPackageBody": "Recebemos um pacote (Rastreamento: {tracking})",
+    "packageDispatchedTitle": "Pacote Despachado! ✈️",
+    "packageDispatchedBody": "O seu pacote saiu do nosso armazém e está a caminho do destino. (Rastreamento nº: {tracking})",
+    "pickupConfirmedTitle": "Recolha Confirmada",
+    "pickupConfirmedBody": "O seu pedido de recolha para {date} foi recebido."
   },
   "AddressCard": {
     "title": "Seu Endereço em Miami (Locker)",
@@ -711,7 +718,14 @@
     "tabServices": "Serviços",
     "labelPersonalShopper": "Comprador Pessoal",
     "labelStorePickup": "Retirada na Loja",
-    "labelMailbox": "Caixa Postal Virtual"
+    "labelMailbox": "Caixa Postal Virtual",
+    "intlEnvioInternacional": "Envio Internacional (Gasp Maker Cargo)",
+    "intlPagoAlmacenaje": "Pagamento de Armazenamento",
+    "intlEscaneoDocumento": "DIGITALIZAÇÃO DE DOCUMENTO",
+    "intlPersonalShopper": "Personal Shopper",
+    "intlEntregaLocal": "Entrega Local (Aura)",
+    "intlBuzonBasico": "ASSINATURA DE CAIXA POSTAL BÁSICA",
+    "intlBuzonPremium": "ASSINATURA DE CAIXA POSTAL PREMIUM"
   },
 "StorageLock": {
     "title": "Pacote Bloqueado",
@@ -741,7 +755,17 @@
   "InTransitPage": {
     "title": "Em Trânsito",
     "subtitle": "Deslize para ver seus pacotes a caminho",
-    "trackPackage": "Rastrear Pacote"
+    "trackPackage": "Rastrear Pacote",
+    "enRuta": "EM ROTA",
+"enviado": "ENVIADO",
+"enTransito": "EM TRÂNSITO",
+"listoParaEnvio": "PRONTO PARA ENVIO",
+"viewCustomsDoc": "VER DOCUMENTO ADUANEIRO",
+"viewPackages": "VER PACOTES",
+"noActiveShipments": "Sem envios ativos",
+"noTransitMsg": "Você não tem pacotes em trânsito no momento.",
+"transitAppearMsg": "Seus envios aparecerão aqui quando saírem de Miami.",
+"enReparto": "SAIU PARA ENTREGA"
   },
  "DeliveredPage": {
     "title": "Entregue (Histórico)",
@@ -751,7 +775,12 @@
     "viewProof": "Ver Comprovante de Entrega",
     "noDeliveries": "Nenhuma entrega encontrada",
     "trySearch": "Tente outro termo de pesquisa.",
-    "trackPackage": "Rastrear Pacote"
+    "trackPackage": "Rastrear Pacote",
+    "viewCustomsDoc": "Ver Documento Aduaneiro",
+  "containsPackages": "Contém {count} pacotes",
+  "consolidated": "Consolidado",
+    "viewPackages": "VER PACOTES",
+    "hidePackages": "OCULTAR PACOTES"
   },
   "ChangePasswordModal": {
     "title": "Alterar Senha",
@@ -940,7 +969,16 @@
     "processedTitle": "Processado em Miami",
     "processedDesc": "Gasp Maker Cargo HQ",
     "receivedTitle": "Recebido no Armazém",
-    "receivedDesc": "Inserido no sistema"
+    "receivedDesc": "Inserido no sistema",
+    "status_PROCESADO": "Processado",
+  "status_PAGADO": "Pago",
+  "status_RECIBIDO_MIAMI": "Recebido em Miami",
+  "status_EN_ALMACEN": "No Armazém",
+  "status_LISTO_PARA_ENVIO": "Pronto para Envio",
+  "status_EN_TRANSITO": "Em Trânsito",
+  "status_ENVIADO": "Enviado",
+  "status_EN_REPARTO": "Saiu para Entrega",
+  "status_ENTREGADO": "Entregue"
   },
 "MailboxSetup": {
     "backButton": "Voltar",

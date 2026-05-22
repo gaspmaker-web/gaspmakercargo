@@ -21,24 +21,25 @@ export async function POST(req: Request) {
         return NextResponse.json({ message: "Falta ID" }, { status: 400 });
     }
 
-    // 1. Actualizamos el Shipment (La caja padre)
-    const updatedShipment = await prisma.consolidatedShipment.update({
-        where: { id: shipmentId },
-        data: {
-            status: 'EN_REPARTO', // O 'EN_ALMACEN_DESTINO' según tu lógica
-            updatedAt: new Date()
-        }
-    });
-
-    // 2. Actualizamos TODOS los paquetes hijos
-    // Esto es vital para que el cliente vea que sus paquetes individuales avanzaron
-    await prisma.package.updateMany({
-        where: { consolidatedShipmentId: shipmentId },
-        data: {
-            status: 'EN_REPARTO',
-            updatedAt: new Date()
-        }
-    });
+    // 🔥 TRANSACCIÓN DE PRISMA: Escudo de Sincronización Total (Todo o Nada)
+    await prisma.$transaction([
+        // 1. Actualizamos el Shipment (La caja padre)
+        prisma.consolidatedShipment.update({
+            where: { id: shipmentId },
+            data: {
+                status: 'EN_REPARTO', 
+                updatedAt: new Date()
+            }
+        }),
+        // 2. Actualizamos TODOS los paquetes hijos al mismo tiempo
+        prisma.package.updateMany({
+            where: { consolidatedShipmentId: shipmentId },
+            data: {
+                status: 'EN_REPARTO',
+                updatedAt: new Date()
+            }
+        })
+    ]);
 
     return NextResponse.json({ success: true });
 

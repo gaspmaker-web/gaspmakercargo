@@ -18,92 +18,136 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { packageId, finalTrackingNumber, type, courierName } = body; // Agregamos courierName si viene del front
+    const { packageId, finalTrackingNumber, type, courierName } = body; 
 
     if (!packageId || !finalTrackingNumber) {
       return NextResponse.json({ message: "Faltan datos (ID o Tracking Final)" }, { status: 400 });
     }
 
-    // Usamos 'any' para facilitar el acceso a propiedades comunes
     let updatedRecord: any;
     let shipmentId: string = "";
     let finalCourier: string = courierName || "Transportista Externo";
 
-    // 👇 LÓGICA DE BIFURCACIÓN (Switch)
+    // 👇 LÓGICA DE BIFURCACIÓN OPTIMIZADA CON TRANSACCIONES
     if (type === 'CONSOLIDATION') {
-      // OPCIÓN A: ES UNA CONSOLIDACIÓN
+      // =========================================================================
+      // OPCIÓN A: ES UNA CONSOLIDACIÓN MÁSTER
+      // =========================================================================
       console.log("🚚 Despachando Consolidación:", packageId);
       
-      updatedRecord = await prisma.consolidatedShipment.update({
-        where: { id: packageId },
-        data: {
-          status: 'ENVIADO',
-          finalTrackingNumber: finalTrackingNumber,
-          // Si el admin seleccionó courier en el despacho, podrías actualizarlo aquí también
-          updatedAt: new Date()
-        },
-        include: { user: true } // Vital para el correo
-      });
+      // Envolvemos en transacción para asegurar sincronización atómica
+      const [resShipment] = await prisma.$transaction([
+        prisma.consolidatedShipment.update({
+          where: { id: packageId },
+          data: {
+            status: 'ENVIADO',
+            finalTrackingNumber: finalTrackingNumber,
+            updatedAt: new Date()
+          },
+          include: { user: true } 
+        }),
+        prisma.package.updateMany({
+          where: { consolidatedShipmentId: packageId },
+          data: { status: 'ENVIADO', updatedAt: new Date() }
+        })
+      ]);
 
-      // Actualizamos paquetes hijos
-      await prisma.package.updateMany({
-        where: { consolidatedShipmentId: packageId },
-        data: { status: 'ENVIADO', updatedAt: new Date() }
-      });
-
+      updatedRecord = resShipment;
       shipmentId = updatedRecord.gmcShipmentNumber;
-      // Intentamos obtener el courier guardado, o usamos el fallback
       finalCourier = updatedRecord.selectedCourier || updatedRecord.courierService || finalCourier;
 
     } else {
-      // OPCIÓN B: ES UN PAQUETE INDIVIDUAL
+      // =========================================================================
+      // OPCIÓN B: ES UN PAQUETE INDIVIDUAL (¡Aquí estaba la fuga!)
+      // =========================================================================
       console.log("📦 Despachando Paquete Individual:", packageId);
 
-      updatedRecord = await prisma.package.update({
+      // 1. Buscamos si este paquete pertenece a una Consolidación Padre
+      const existingPackage = await prisma.package.findUnique({
         where: { id: packageId },
-        data: {
-          status: 'ENVIADO',
-          gmcTrackingNumber: finalTrackingNumber, // Guardamos el tracking final
-          updatedAt: new Date()
-        },
-        include: { user: true } // Vital para el correo
+        select: { consolidatedShipmentId: true }
       });
 
+      if (!existingPackage) {
+        return NextResponse.json({ message: "No se encontró el envío (ID incorrecto)" }, { status: 404 });
+      }
+
+      // 2. Si tiene un padre asignado, sincronizamos a toda la familia bajo transacción
+      if (existingPackage.consolidatedShipmentId) {
+        console.log(`🔗 El paquete pertenece a la consolidación: ${existingPackage.consolidatedShipmentId}. Sincronizando grupo...`);
+        
+        const [_, resPackage] = await prisma.$transaction([
+          // Actualizamos la caja máster padre
+          prisma.consolidatedShipment.update({
+            where: { id: existingPackage.consolidatedShipmentId },
+            data: {
+              status: 'ENVIADO',
+              finalTrackingNumber: finalTrackingNumber, // Hereda el tracking de salida para el rastreo del carrusel
+              updatedAt: new Date()
+            }
+          }),
+          // Actualizamos el paquete en cuestión (incluyendo la relación del usuario para las alertas)
+          prisma.package.update({
+            where: { id: packageId },
+            data: {
+              status: 'ENVIADO',
+              gmcTrackingNumber: finalTrackingNumber, 
+              updatedAt: new Date()
+            },
+            include: { user: true }
+          }),
+          // Actualizamos a los paquetes hermanos que viajen dentro del mismo contenedor
+          prisma.package.updateMany({
+            where: { 
+              consolidatedShipmentId: existingPackage.consolidatedShipmentId,
+              id: { not: packageId }
+            },
+            data: { status: 'ENVIADO', updatedAt: new Date() }
+          })
+        ]);
+
+        updatedRecord = resPackage;
+      } else {
+        // Si el paquete está completamente suelto (sin padre), se procesa de forma individual estándar
+        updatedRecord = await prisma.package.update({
+          where: { id: packageId },
+          data: {
+            status: 'ENVIADO',
+            gmcTrackingNumber: finalTrackingNumber,
+            updatedAt: new Date()
+          },
+          include: { user: true }
+        });
+      }
+
       shipmentId = updatedRecord.gmcTrackingNumber;
-      // En paquetes individuales, a veces no hay courier seleccionado previamente
       finalCourier = updatedRecord.carrierTrackingNumber ? "Courier Original" : finalCourier;
     }
 
     // =========================================================================
-    // 🔔 NOTIFICACIONES AL CLIENTE (MULTILINGÜE 🌍)
+    // 🔔 NOTIFICACIONES AL CLIENTE (MULTILINGÜE 🌍) - Mantenido Intacto
     // =========================================================================
-    
     if (updatedRecord && updatedRecord.user && updatedRecord.user.email) {
       try {
-        // 1. Detectar idioma del usuario (Fallback: Inglés)
-        // Usamos 'any' porque Prisma puede no tener tipado estricto en el campo language si es nuevo
         const userLang = (updatedRecord.user as any).language || 'en';
         const t = getT(userLang);
 
         console.log(`📧 Enviando notificación de despacho a ${updatedRecord.user.email} (${userLang})...`);
 
-        // 2. Enviar Email con Plantilla HTML (Tu Carga va en Camino)
         await sendShipmentDispatchedEmail(
           updatedRecord.user.email,
           updatedRecord.user.name || 'Cliente',
-          shipmentId,        // ID Interno
-          finalCourier,      // Courier
-          finalTrackingNumber, // Tracking Real
-          userLang           // 👈 Pasamos el idioma para que el email salga traducido
+          shipmentId,        
+          finalCourier,      
+          finalTrackingNumber, 
+          userLang           
         );
 
-        // 3. Enviar Notificación a la Campana (Dashboard)
-        // Construimos el mensaje usando el diccionario traducido
         const dashMessage = `${t.dispatchedBody} (${t.tracking}: ${finalTrackingNumber})`;
 
         await sendNotification({
             userId: updatedRecord.userId,
-            title: t.dispatchedTitle, // Ej: "Package Dispatched!"
+            title: t.dispatchedTitle, 
             message: dashMessage,
             type: "SUCCESS",
             href: `/dashboard-cliente/rastreo/${shipmentId}`
@@ -122,11 +166,9 @@ export async function POST(req: Request) {
 
   } catch (error: any) {
     console.error("🔥 Error dispatching:", error);
-    
     if (error.code === 'P2025') {
       return NextResponse.json({ message: "No se encontró el envío (ID incorrecto)" }, { status: 404 });
     }
-    
     return NextResponse.json({ message: error.message }, { status: 500 });
   }
 }

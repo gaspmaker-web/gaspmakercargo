@@ -10,61 +10,41 @@ export const revalidate = 0;
 
 export default async function EnDestinoPage({ params: { locale } }: { params: { locale: string } }) {
   const session = await auth();
-  
   const t = await getTranslations('DeliveredPage');
 
   if (!session?.user) {
     redirect('/login-cliente');
   }
 
-  const deliveredPackages = await prisma.package.findMany({
+  // 🔥 1. BUSCAMOS LAS CONSOLIDACIONES MÁSTER ENTREGADAS
+  const deliveredConsolidations = await prisma.consolidatedShipment.findMany({
     where: {
       userId: session.user.id,
       status: { in: ['ENTREGADO', 'DELIVERED', 'COMPLETADO'] },
+      serviceType: { notIn: ['STORAGE_FEE', 'PICKUP', 'Recogida en Tienda'] }
+    },
+    include: {
+      packages: true // Anidamos los paquetes hijos dentro del padre
+    },
+    orderBy: { updatedAt: 'desc' }
+  });
+
+  // 🔥 2. BUSCAMOS LOS PAQUETES SUELTOS (Sin consolidación)
+  const deliveredLoosePackages = await prisma.package.findMany({
+    where: {
+      userId: session.user.id,
+      status: { in: ['ENTREGADO', 'DELIVERED', 'COMPLETADO'] },
+      consolidatedShipmentId: null, // Solo los que viajaron sueltos
       NOT: {
           OR: [
               { selectedCourier: 'CLIENTE_RETIRO' },
               { deliverySignature: 'ENTREGA_TIENDA' },
-              { courierService: { contains: 'Cita', mode: 'insensitive' } }
+              { courierService: { contains: 'Cita', mode: 'insensitive' } },
+              { courierService: { contains: 'Recogida', mode: 'insensitive' } },
+              { courierService: { contains: 'Tienda', mode: 'insensitive' } },
+              { courierService: { contains: 'Pickup', mode: 'insensitive' } }
           ]
-      },
-      OR: [
-          {
-              AND: [
-                  { consolidatedShipmentId: null },
-                  {
-                      NOT: {
-                          OR: [
-                              { courierService: { contains: 'Recogida', mode: 'insensitive' } },
-                              { courierService: { contains: 'Tienda', mode: 'insensitive' } },
-                              { courierService: { contains: 'Pickup', mode: 'insensitive' } }
-                          ]
-                      }
-                  }
-              ]
-          },
-          {
-              consolidatedShipment: {
-                  serviceType: {
-                      notIn: ['STORAGE_FEE', 'PICKUP', 'Recogida en Tienda']
-                  }
-              }
-          }
-      ]
-    },
-   include: {
-        user: {
-            select: { country: true }
-        },
-        consolidatedShipment: {
-            select: {
-                id: true,
-                gmcShipmentNumber: true, 
-                finalTrackingNumber: true,
-                serviceType: true,
-                awbDocumentUrl: true // 🔥 AGREGAMOS ESTO: Para asegurar que baje el PDF del Master
-            }
-        }
+      }
     },
     orderBy: { updatedAt: 'desc' }
   });
@@ -87,8 +67,10 @@ export default async function EnDestinoPage({ params: { locale } }: { params: { 
           </div>
         </div>
 
+        {/* Le pasamos ambas listas estructuradas al Carrusel */}
         <DeliveredPackagesCarousel 
-            packages={deliveredPackages} 
+            consolidations={deliveredConsolidations}
+            loosePackages={deliveredLoosePackages} 
             userCountryCode={session.user.countryCode?.toUpperCase() || ''}
         />
 

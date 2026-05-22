@@ -182,14 +182,36 @@ export default function NotificationsPage() {
     }).format(date);
   };
 
+  // 🔥 INTERCEPTOR JSON PARA TRADUCCIONES INTELIGENTES 🔥
   const getTranslatedText = (text: string) => {
     if (!text) return "";
-    const cleanText = text.trim();
-    /* @ts-ignore */
-    if (t.has(cleanText)) { return t(cleanText); }
-    return text;
-  };
+    let cleanText = text.trim();
 
+    // 1. Escáner: ¿Es esto un objeto JSON disfrazado de texto?
+    if (cleanText.startsWith('{') && cleanText.endsWith('}')) {
+        try {
+            const parsedData = JSON.parse(cleanText);
+            // Si tiene una "key" (Ej: "mailboxApprovedDesc")
+            if (parsedData.key) {
+                // @ts-ignore
+                if (t.has(parsedData.key)) {
+                    // Traducimos y le pasamos los datos extra (Ej: { suite: "99771" })
+                    // @ts-ignore
+                    return t(parsedData.key, parsedData);
+                }
+            }
+        } catch (e) {
+            // Si el JSON falla, no pasa nada, continuamos.
+        }
+    }
+
+    // 2. Si no es JSON o falló, hacemos la traducción normal
+    // @ts-ignore
+    if (t.has(cleanText)) { return t(cleanText); }
+    
+    // 3. Fallback final: Devolvemos el texto original
+    return cleanText;
+  };
   const getSmartUrl = (notif: Notification) => {
     if (notif.href && notif.href.trim() !== "") {
       return notif.href;

@@ -72,10 +72,8 @@ export default async function RastreoPage({ params }: { params: { trackingNumber
   const h = Number(itemData.heightIn) || 0;
 
   if (l > 0 && w > 0 && h > 0) {
-      // Si la caja (o consolidación) tiene sus propias medidas, calculamos normal
       volume = (l * w * h) / 1728;
   } else if (isConsolidated && itemData.packages?.length > 0) {
-      // Si es una consolidación que no tiene medidas globales aún, sumamos las de sus paquetes
       let totalVol = 0;
       let totalWt = 0;
       itemData.packages.forEach((pkg: any) => {
@@ -145,6 +143,7 @@ export default async function RastreoPage({ params }: { params: { trackingNumber
                     {uiStatus.icon}
                 </div>
                 <div>
+                    {/* ✅ LECTURA DESDE EL JSON (Punto Parpadeante) */}
                     <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${uiStatus.bgL} ${uiStatus.text} uppercase tracking-wide mb-2`}>
                         {status !== 'ENTREGADO' && (
                             <span className="relative flex h-2 w-2">
@@ -152,7 +151,8 @@ export default async function RastreoPage({ params }: { params: { trackingNumber
                                 <span className={`relative inline-flex rounded-full h-2 w-2 ${uiStatus.color}`}></span>
                             </span>
                         )}
-                        {status.replace(/_/g, ' ')}
+                        {/* Aquí hace la magia: Intenta traducir, si no encuentra la llave, limpia el texto original */}
+                        {t.has(`status_${status}`) ? t(`status_${status}`) : status.replace(/_/g, ' ')}
                     </span>
                     <h2 className="text-2xl font-black text-gray-900 tracking-tight">
                         {uiStatus.title}
@@ -189,7 +189,6 @@ export default async function RastreoPage({ params }: { params: { trackingNumber
                 <div className="space-y-3">
                     <div className="flex justify-between items-center text-sm">
                         <span className="text-gray-500 flex items-center gap-2"><Box size={16}/> {t('volume')}</span>
-                        {/* 🔥 SE MUESTRA EL VOLUMEN SI ES MAYOR A 0 */}
                         <span className="font-semibold text-gray-900">{volume > 0 ? volume.toFixed(2) : '--'} ft³</span>
                     </div>
                     <div className="w-full h-px bg-gray-100"></div>
@@ -200,7 +199,6 @@ export default async function RastreoPage({ params }: { params: { trackingNumber
                     <div className="w-full h-px bg-gray-100"></div>
                     <div className="flex justify-between items-center text-sm">
                         <span className="text-gray-500 flex items-center gap-2">⚖️ {t('weight')}</span>
-                        {/* 🔥 SE MUESTRA EL PESO REAL SI ES MAYOR A 0 */}
                         <span className="font-semibold text-gray-900">{actualWeight > 0 ? `${actualWeight.toFixed(2)} lbs` : '--'}</span>
                     </div>
                 </div>
@@ -218,7 +216,10 @@ export default async function RastreoPage({ params }: { params: { trackingNumber
                         {uiStatus.icon}
                     </div>
                     <div className={`${uiStatus.bgL} border ${uiStatus.color.replace('bg-', 'border-').replace('600', '200')} p-4 rounded-xl`}>
-                        <p className={`text-sm font-black ${uiStatus.text}`}>{t('currentStatus')} {status.replace(/_/g, ' ')}</p>
+                        {/* ✅ LECTURA DESDE EL JSON (Historial) */}
+                        <p className={`text-sm font-black ${uiStatus.text}`}>
+                            {t('currentStatus')} {t.has(`status_${status}`) ? t(`status_${status}`) : status.replace(/_/g, ' ')}
+                        </p>
                         <p className="text-xs text-gray-600 mt-1 opacity-80">{t('lastUpdate')}</p>
                     </div>
                 </div>

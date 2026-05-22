@@ -30,7 +30,17 @@ export async function GET() {
         orderBy: { createdAt: 'desc' }
     });
 
-    // 🔥 3. NUEVO: Shopper Orders (Compras)
+    // 🔥 3. NUEVO: Paquetes Individuales Pagados (AQUÍ ESTÁ TU PAQUETE 51265DFF)
+    const singlePackages = await prisma.package.findMany({
+        where: { 
+            userId, 
+            stripePaymentId: { not: null }, 
+            consolidatedShipmentId: null // Solo los que viajaron solos
+        },
+        orderBy: { createdAt: 'desc' }
+    });
+
+    // 4. Shopper Orders (Compras)
     const shopperOrders = await prisma.shopperOrder.findMany({
         where: { 
             userId,
@@ -40,7 +50,7 @@ export async function GET() {
         orderBy: { createdAt: 'desc' }
     });
 
-    // 🔥 4. NUEVO: Mailbox Transactions (Buzón Virtual)
+    // 5. Mailbox Transactions (Buzón Virtual)
     const mailboxTransactions = await prisma.mailboxTransaction.findMany({
         where: { userId },
         orderBy: { createdAt: 'desc' }
@@ -66,13 +76,17 @@ export async function GET() {
     }));
 
     const normalizedIntl = internationalShipments.map(ship => {
-        // 🔥 CLASIFICACIÓN ESTRICTA QUE RESPETA EL NUEVO ESQUEMA ENTERPRISE
+        // 🔥 ESCÁNER DE DESTINO PARA CONSOLIDADOS
+        const addr = (typeof ship.shippingAddress === 'string' ? ship.shippingAddress : JSON.stringify(ship.shippingAddress || '')).toUpperCase();
+        const courierSvc = (ship.courierService || '').toUpperCase();
+        
+        const isLocal = addr.includes('MIAMI') || addr.includes('FL') || addr.includes('DORAL') || addr.includes('MEDLEY') || addr.includes('AURA') || courierSvc.includes('AURA') || courierSvc.includes('LOCAL');
+
         const isStorage = ship.serviceType === 'STORAGE_FEE';
         const isStorePickup = ship.serviceType === 'STORE_PICKUP';
         
-        const finalType = isStorePickup ? 'STORE_PICKUP' : (isStorage ? 'STORAGE_FEE' : 'SHIPPING_INTL'); 
+        const finalType = isLocal ? 'DELIVERY' : (isStorePickup ? 'STORE_PICKUP' : (isStorage ? 'STORAGE_FEE' : 'SHIPPING_INTL')); 
         
-        // Generamos un string con los nombres de los paquetes
         const packageContent = ship.packages.length > 0
             ? ship.packages.map(p => p.description || p.gmcTrackingNumber || 'Paquete').join(', ')
             : 'Sin detalle de contenido';
@@ -86,10 +100,10 @@ export async function GET() {
             // EL TÍTULO
             description: isStorage 
                 ? `Retiro en Bodega` 
-                : (isStorePickup ? `Retiro en Tienda (${ship.selectedCourier || 'GMC'})` : `Envío Internacional (${ship.selectedCourier || 'GMC'})`),
+                : (isLocal ? `Entrega Local (Aura)` : (isStorePickup ? `Retiro en Tienda (${ship.selectedCourier || 'GMC'})` : `Envío Internacional (${ship.selectedCourier || 'GMC'})`)),
             
             totalPaid: ship.totalAmount,
-            courier: ship.selectedCourier,
+            courier: ship.selectedCourier || ship.courierService,
 
             // EL DETALLE
             service: isStorage 
@@ -101,7 +115,31 @@ export async function GET() {
         };
     });
 
-    // 🔥 NORMALIZAR SHOPPER
+    // 🔥 NORMALIZAR PAQUETES INDIVIDUALES
+    const normalizedSinglePackages = singlePackages.map(pkg => {
+        const addr = (typeof pkg.shippingAddress === 'string' ? pkg.shippingAddress : JSON.stringify(pkg.shippingAddress || '')).toUpperCase();
+        const courierSvc = (pkg.courierService || '').toUpperCase();
+        
+        // 🕵️‍♂️ LECTURA DE LA CASILLA COURIER SERVICE QUE MENCIONASTE
+        const isLocal = addr.includes('MIAMI') || addr.includes('FL') || addr.includes('DORAL') || addr.includes('MEDLEY') || addr.includes('AURA') || courierSvc.includes('AURA') || courierSvc.includes('LOCAL');
+        
+        const finalType = isLocal ? 'DELIVERY' : (pkg.serviceType || 'SHIPPING_INTL');
+
+        return {
+            id: pkg.id,
+            createdAt: pkg.createdAt,
+            status: pkg.status,
+            serviceType: finalType, // Si es Local, el frontend lo enviará a la pestaña DELIVERY
+            description: isLocal ? `Entrega Local (Aura)` : (pkg.description || `Envío Individual`),
+            totalPaid: pkg.shippingTotalPaid || 0,
+            courier: pkg.courierService || pkg.selectedCourier,
+            service: pkg.description || pkg.gmcTrackingNumber,
+            tracking: pkg.finalTrackingNumber || pkg.gmcTrackingNumber,
+            packagesCount: 1
+        };
+    });
+
+    // NORMALIZAR SHOPPER
     const normalizedShopper = shopperOrders.map(order => ({
         id: order.id,
         createdAt: order.createdAt,
@@ -112,12 +150,12 @@ export async function GET() {
         service: order.items.length > 0 ? order.items.map(i => i.name).join(', ') : 'Compra Asistida'
     }));
 
-    // 🔥 NORMALIZAR MAILBOX
+    // NORMALIZAR MAILBOX
     const normalizedMailbox = mailboxTransactions.map(tx => ({
         id: tx.id,
         createdAt: tx.createdAt,
         status: tx.status,
-        serviceType: 'MAILBOX', // El Frontend lo acomodará en 'Services' con el ícono de Buzón
+        serviceType: 'MAILBOX', 
         description: tx.description || 'Suscripción Buzón Virtual',
         totalPaid: tx.amount,
         service: 'Gestión Interna / Servicio'
@@ -130,6 +168,7 @@ export async function GET() {
     const allRequests = [
         ...normalizedLocal, 
         ...normalizedIntl,
+        ...normalizedSinglePackages, // 🔥 Inyectamos los paquetes individuales
         ...normalizedShopper,
         ...normalizedMailbox
     ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());

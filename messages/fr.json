@@ -225,7 +225,7 @@
     "requestLocalDelivery": "Demander une Livraison Locale",
     "selectedPackagesList": "COLIS SÉLECTIONNÉS :"
   },
-  "Notifications": {
+"Notifications": {
     "title": "Notifications",
     "markRead": "Marquer comme lu",
     "emptyTitle": "Pas de notifications",
@@ -251,7 +251,14 @@
     "additionalRejectedDesc": "Les documents de votre personne supplémentaire ({name}) ont été rejetés. Motif : {reason}.",
     "vaciar": "Tout effacer",
     "shopperQuoteTitle": "🛍️ Devis Prêt",
-    "shopperQuoteMsg": "Votre commande a été devisée. Allez dans l'onglet 'Mes Devis' pour vérifier le total et payer."
+    "shopperQuoteMsg": "Votre commande a été devisée. Allez dans l'onglet 'Mes Devis' pour vérifier le total et payer.",
+    
+    "newPackageTitle": "Nouveau Colis à Miami",
+    "newPackageBody": "Nous avons reçu un colis (Suivi : {tracking})",
+    "packageDispatchedTitle": "Colis Expédié ! ✈️",
+    "packageDispatchedBody": "Votre colis a quitté notre entrepôt et est en route vers sa destination. (Suivi n° : {tracking})",
+    "pickupConfirmedTitle": "Ramassage Confirmé",
+    "pickupConfirmedBody": "Votre demande de ramassage pour le {date} a été reçue."
   },
   "AddressCard": {
     "title": "Votre Adresse à Miami (Casier)",
@@ -711,7 +718,14 @@
     "tabServices": "Services",
     "labelPersonalShopper": "Acheteur Personnel",
     "labelStorePickup": "Retrait en Magasin",
-    "labelMailbox": "Boîte Postale Virtuelle"
+    "labelMailbox": "Boîte Postale Virtuelle",
+    "intlEnvioInternacional": "Expédition Internationale (Gasp Maker Cargo)",
+    "intlPagoAlmacenaje": "Paiement de Stockage",
+    "intlEscaneoDocumento": "NUMÉRISATION DE DOCUMENTS",
+    "intlPersonalShopper": "Personal Shopper",
+    "intlEntregaLocal": "Livraison Locale (Aura)",
+    "intlBuzonBasico": "ABONNEMENT BOÎTE AUX LETTRES DE BASE",
+    "intlBuzonPremium": "ABONNEMENT BOÎTE AUX LETTRES PREMIUM"
   },
  "StorageLock": {
     "title": "Colis Bloqué",
@@ -741,7 +755,17 @@
   "InTransitPage": {
     "title": "En Transit",
     "subtitle": "Glissez pour voir vos colis en route",
-    "trackPackage": "Suivre le Colis"
+    "trackPackage": "Suivre le Colis",
+    "enRuta": "EN ROUTE",
+"enviado": "EXPÉDIÉ",
+"enTransito": "EN TRANSIT",
+"listoParaEnvio": "PRÊT À EXPÉDIER",
+"viewCustomsDoc": "VOIR LE DOCUMENT DOUANIER",
+"viewPackages": "VOIR LES COLIS",
+"noActiveShipments": "Aucun envoi actif",
+"noTransitMsg": "Vous n'avez aucun colis en transit pour le moment.",
+"transitAppearMsg": "Vos envois apparaîtront ici lorsqu'ils quitteront Miami.",
+"enReparto": "EN COURS DE LIVRAISON"
   },
  "DeliveredPage": {
     "title": "Livré (Historique)",
@@ -751,7 +775,12 @@
     "viewProof": "Voir Preuve de Livraison",
     "noDeliveries": "Aucune livraison trouvée",
     "trySearch": "Essayez un autre terme de recherche.",
-    "trackPackage": "Suivre le Colis"
+    "trackPackage": "Suivre le Colis",
+    "viewCustomsDoc": "Voir le document douanier",
+  "containsPackages": "Contient {count} paquets",
+  "consolidated": "Consolidé",
+    "viewPackages": "VOIR LES PAQUETS",
+    "hidePackages": "MASQUER LES PAQUETS"
   },
   "ChangePasswordModal": {
     "title": "Changer le mot de passe",
@@ -940,7 +969,16 @@
     "processedTitle": "Traité à Miami",
     "processedDesc": "Gasp Maker Cargo HQ",
     "receivedTitle": "Reçu à l'Entrepôt",
-    "receivedDesc": "Entré dans le système"
+    "receivedDesc": "Entré dans le système",
+    "status_PROCESADO": "Traité",
+  "status_PAGADO": "Payé",
+  "status_RECIBIDO_MIAMI": "Reçu à Miami",
+  "status_EN_ALMACEN": "En Entrepôt",
+  "status_LISTO_PARA_ENVIO": "Prêt pour l'expédition",
+  "status_EN_TRANSITO": "En Transit",
+  "status_ENVIADO": "Expédié",
+  "status_EN_REPARTO": "En Livraison",
+  "status_ENTREGADO": "Livré"
   },
 "MailboxSetup": {
     "backButton": "Retour",

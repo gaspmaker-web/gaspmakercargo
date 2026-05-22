@@ -75,7 +75,7 @@ export default async function DriverDashboardPage(props: any) {
   }
 
   // 2. MIS TAREAS ACTIVAS (Pickups)
-  const myPickupTasks = await prisma.pickupRequest.findMany({
+  const myPickupTasksRaw = await prisma.pickupRequest.findMany({
     where: { 
         driverId: driverId,
         status: { in: ['ACEPTADO', 'EN_CAMINO', 'EN_REPARTO', 'EN_RUTA'] },
@@ -84,17 +84,33 @@ export default async function DriverDashboardPage(props: any) {
     orderBy: { pickupDate: 'asc' } 
   });
 
-// =================================================================================
+  // 🔥 ESCUDO GEOGRÁFICO CONTRA ERRORES DE ASIGNACIÓN MANUAL 🔥
+  const myPickupTasks = myPickupTasksRaw.filter(task => {
+      // Si el chofer es de Miami, ve todo lo que le asignen
+      if (isMiamiDriver) return true; 
+
+      // Si el chofer es de otro país (Ej: BB, TT), bloqueamos si la tarea es de Florida
+      const addressDump = `${task.originAddress} ${task.originCity} ${task.dropOffAddress} ${task.dropOffCity}`.toUpperCase();
+      const isMiamiTask = addressDump.includes('MIAMI') || 
+                          addressDump.includes('FLORIDA') || 
+                          addressDump.includes(', FL') || 
+                          addressDump.includes('COLLINS') || 
+                          addressDump.includes('NW ') || 
+                          addressDump.includes('SW ');
+
+      return !isMiamiTask;
+  });
+
+  // =================================================================================
   // 🔥 ENRUTADOR DINÁMICO UNIVERSAL (Arregla US, TT, BB, etc.)
   // =================================================================================
   
-  // 1️⃣ Reglas para PAQUETES SUELTOS (No tienen destinationCountryCode en Prisma)
+  // 1️⃣ Reglas para PAQUETES SUELTOS
   const packageOrConditions: any[] = [
       { shippingAddress: { contains: driverZone, mode: 'insensitive' } },
       { user: { countryCode: driverZone } }
   ];
 
-  // 🚀 REGLAS DE COURIER SERVICE (La llave maestra según la zona del chofer)
   if (driverZone === 'US') {
       packageOrConditions.push({ courierService: { contains: 'Local Delivery', mode: 'insensitive' } });
   } else if (driverZone === 'TT') {
@@ -105,13 +121,13 @@ export default async function DriverDashboardPage(props: any) {
       packageOrConditions.push({ courierService: { contains: 'Jamaica', mode: 'insensitive' } });
   }
 
-  // 2️⃣ Reglas para CONSOLIDADOS (Le sumamos destinationCountryCode porque Prisma sí lo tiene aquí)
+  // 2️⃣ Reglas para CONSOLIDADOS
   const consolidationOrConditions: any[] = [
       ...packageOrConditions,
       { destinationCountryCode: driverZone }
   ];
 
-  // 🔥 3. BUSCAR CONSOLIDACIONES (Acepta SHIPPING_INTL, CONSOLIDATION y LOCAL_DELIVERY)
+  // 3. BUSCAR CONSOLIDACIONES
   const activeConsolidations = await prisma.consolidatedShipment.findMany({
       where: {
           status: { in: ['EN_REPARTO', 'OUT_FOR_DELIVERY', 'EN_CAMINO', 'EN_RUTA'] },
@@ -132,7 +148,7 @@ export default async function DriverDashboardPage(props: any) {
       orderBy: { updatedAt: 'desc' }
   });
 
-  // 🔥 4. BUSCAR PAQUETES SUELTOS
+  // 4. BUSCAR PAQUETES SUELTOS
   const activePackages = await prisma.package.findMany({
       where: {
           status: { in: ['EN_REPARTO', 'OUT_FOR_DELIVERY', 'EN_CAMINO', 'EN_RUTA'] },
@@ -155,7 +171,6 @@ export default async function DriverDashboardPage(props: any) {
       orderBy: { updatedAt: 'desc' }
   });
 
-
   // =========================================================
   // 📦 UNIFICACIÓN DE LA VISTA DEL CHOFER
   // =========================================================
@@ -163,7 +178,6 @@ export default async function DriverDashboardPage(props: any) {
 
   for (const cons of activeConsolidations) {
       const isAuraPallet = cons.courierService?.toLowerCase().includes('local delivery');
-      const isTrinidad = cons.courierService?.toLowerCase().includes('trinidad');
 
       processedDeliveries.push({
           id: cons.id, 
@@ -242,7 +256,6 @@ export default async function DriverDashboardPage(props: any) {
                                     <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${task.serviceType === 'DELIVERY' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
                                         {task.serviceType}
                                     </span>
-                                    {/* 🔥 ETIQUETA VISUAL DEL VEHÍCULO PARA NUEVAS OPORTUNIDADES */}
                                     <span className="text-[9px] font-bold text-gray-600 bg-gray-100 px-2 py-0.5 rounded flex items-center gap-1 border border-gray-200">
                                         <Truck size={10} className="text-gray-400"/> 
                                         {VEHICLE_NAMES[(task as any).volumeInfo] || (task as any).volumeInfo || 'Vehículo N/A'}
@@ -307,7 +320,6 @@ export default async function DriverDashboardPage(props: any) {
                                 <div className="flex justify-between items-center mb-2 pl-3">
                                     <div className="flex items-center gap-2">
                                         <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">#{task.id.slice(0,5)}</span>
-                                        {/* 🔥 ETIQUETA VISUAL DEL VEHÍCULO EN "MI RUTA" */}
                                         <span className="text-[9px] font-bold text-gray-500 bg-gray-50 border border-gray-200 px-1.5 py-0.5 rounded flex items-center gap-1 uppercase">
                                             <Truck size={10} className="text-gray-400"/>
                                             {VEHICLE_NAMES[(task as any).volumeInfo] || 'Vehículo N/A'}

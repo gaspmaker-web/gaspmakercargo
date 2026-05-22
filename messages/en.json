@@ -252,7 +252,14 @@
     "additionalRejectedDesc": "The documents for your additional person ({name}) were rejected. Reason: {reason}.",
     "vaciar": "Clear all",
     "shopperQuoteTitle": "🛍️ Quote Ready",
-    "shopperQuoteMsg": "Your order has been quoted. Go to the 'My Quotes' tab to check the total and pay."
+    "shopperQuoteMsg": "Your order has been quoted. Go to the 'My Quotes' tab to check the total and pay.",
+    
+    "newPackageTitle": "New Package in Miami",
+    "newPackageBody": "We have received a package (Tracking: {tracking})",
+    "packageDispatchedTitle": "Package Dispatched! ✈️",
+    "packageDispatchedBody": "Your package has left our warehouse and is on its way to its destination. (Tracking #: {tracking})",
+    "pickupConfirmedTitle": "Pickup Confirmed",
+    "pickupConfirmedBody": "Your pickup request for {date} has been received."
   },
   "AddressCard": {
     "title": "Your Miami Address (Locker)",
@@ -688,7 +695,14 @@
     "tabServices": "Services",
     "labelPersonalShopper": "Personal Shopper",
     "labelStorePickup": "Store Pickup",
-    "labelMailbox": "Virtual Mailbox"
+    "labelMailbox": "Virtual Mailbox",
+    "intlEnvioInternacional": "International Shipping (Gasp Maker Cargo)",
+    "intlPagoAlmacenaje": "Storage Fee Payment",
+    "intlEscaneoDocumento": "DOCUMENT SCAN",
+    "intlPersonalShopper": "Personal Shopper",
+    "intlEntregaLocal": "Local Delivery (Aura)",
+    "intlBuzonBasico": "BASIC MAILBOX SUBSCRIPTION",
+    "intlBuzonPremium": "PREMIUM MAILBOX SUBSCRIPTION"
   },
   "StorageLock": {
     "title": "Package Locked",
@@ -718,7 +732,17 @@
   "InTransitPage": {
     "title": "In Transit",
     "subtitle": "Swipe to see your packages on the way",
-    "trackPackage": "Track Package"
+    "trackPackage": "Track Package",
+    "enRuta": "ON ROUTE",
+"enviado": "SHIPPED",
+"enTransito": "IN TRANSIT",
+"listoParaEnvio": "READY TO SHIP",
+"viewCustomsDoc": "VIEW CUSTOMS DOCUMENT",
+"viewPackages": "VIEW PACKAGES",
+"noActiveShipments": "No active shipments",
+"noTransitMsg": "You don't have any packages in transit right now.",
+"transitAppearMsg": "Your shipments will appear here when they leave Miami.",
+"enReparto": "OUT FOR DELIVERY"
   },
  "DeliveredPage": {
     "title": "Delivered (History)",
@@ -728,7 +752,12 @@
     "viewProof": "View Proof of Delivery",
     "noDeliveries": "No deliveries found",
     "trySearch": "Try another search term.",
-    "trackPackage": "Track Package"
+    "trackPackage": "Track Package",
+    "viewCustomsDoc": "View Customs Document",
+  "containsPackages": "Contains {count} packages",
+  "consolidated": "Consolidated",
+    "viewPackages": "VIEW PACKAGES",
+    "hidePackages": "HIDE PACKAGES"
   },
   "ChangePasswordModal": {
     "title": "Change Password",
@@ -917,7 +946,16 @@
     "processedTitle": "Processed in Miami",
     "processedDesc": "Gasp Maker Cargo HQ",
     "receivedTitle": "Received at Warehouse",
-    "receivedDesc": "Entered into the system"
+    "receivedDesc": "Entered into the system",
+    "status_PROCESADO": "Processed",
+  "status_PAGADO": "Paid",
+  "status_RECIBIDO_MIAMI": "Received in Miami",
+  "status_EN_ALMACEN": "In Warehouse",
+  "status_LISTO_PARA_ENVIO": "Ready for Shipping",
+  "status_EN_TRANSITO": "In Transit",
+  "status_ENVIADO": "Shipped",
+  "status_EN_REPARTO": "Out for Delivery",
+  "status_ENTREGADO": "Delivered"
   },
 "MailboxSetup": {
     "backButton": "Back",

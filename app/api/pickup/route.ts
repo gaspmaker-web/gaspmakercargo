@@ -68,15 +68,20 @@ export async function POST(request: Request) {
             newRequest.id
         );
 
-        // C. Notificación en el Dashboard del Cliente (Campanita)
+        // =========================================================================
+        // 🔥 C. Notificación Multilingüe en el Dashboard del Cliente (Campanita)
+        // =========================================================================
+        const formattedDate = new Date(body.pickupDate).toLocaleDateString();
+
         await sendNotification({
             userId: session.user.id,
-            title: "Pickup Confirmado",
-            message: `Tu solicitud de recolección para el ${new Date(body.pickupDate).toLocaleDateString()} ha sido recibida.`,
+            // 🌍 Enviamos la llave JSON en lugar de texto quemado
+            title: JSON.stringify({ key: "pickupConfirmedTitle" }),
+            message: JSON.stringify({ key: "pickupConfirmedBody", date: formattedDate }),
             type: "SUCCESS"
         });
 
-        // Log para depuración (opcional, respetando tu estilo)
+        // Log para depuración
         if ((emailResult as any)?.error) {
             console.error("❌ ERROR RESEND:", (emailResult as any).error);
         }
