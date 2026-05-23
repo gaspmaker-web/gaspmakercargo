@@ -112,7 +112,7 @@ export async function POST(req: Request) {
         r.carrier.toLowerCase().includes(courierName)
     );
 
-    if (carrierRates.length > 0) {
+   if (carrierRates.length > 0) {
         if (pkg.courierService) {
             selectedRate = carrierRates.find((r: any) => r.service === pkg.courierService);
         }
@@ -126,6 +126,23 @@ export async function POST(req: Request) {
     if (!selectedRate) {
         return NextResponse.json({ error: `No hay tarifa para ${pkg.selectedCourier}.` }, { status: 400 });
     }
+
+    // ====================================================================
+    // 🔥 BÓVEDA DE SEGURIDAD (CANDADO ANTI-PÉRDIDAS + 30% MARGEN) 🔥
+    // ====================================================================
+    const costOfLabel = parseFloat(selectedRate.rate);
+    const amountPaidByClient = pkg.shippingTotalPaid ? parseFloat(pkg.shippingTotalPaid as any) : 0;
+
+    // Calculamos cuánto debió pagar el cliente para cubrir la etiqueta + tu 30% de ganancia
+    const requiredMinimumPaid = costOfLabel * 1.30;
+
+    // Le damos un margen de $1 dólar por pequeñas variaciones de impuestos o centavos en la API
+    if (amountPaidByClient < (requiredMinimumPaid - 1)) {
+        return NextResponse.json({ 
+            error: `⚠️ BLOQUEO FINANCIERO: La etiqueta cuesta $${costOfLabel.toFixed(2)}. Para mantener el 30% de ganancia, el cliente debió pagar mínimo $${requiredMinimumPaid.toFixed(2)}, pero solo pagó $${amountPaidByClient.toFixed(2)}. Faltan $${(requiredMinimumPaid - amountPaidByClient).toFixed(2)}.` 
+        }, { status: 400 });
+    }
+    // ====================================================================
 
     const boughtShipment = await easypost.Shipment.buy(shipment.id, selectedRate.id);
 
