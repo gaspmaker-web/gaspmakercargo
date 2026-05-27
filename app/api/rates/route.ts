@@ -146,7 +146,7 @@ export async function POST(req: Request) {
     const c1 = (destination?.country || '').toUpperCase().trim();
     const c2 = (destination?.countryCode || '').toUpperCase().trim();
     const c3 = (destination?.countryName || '').toUpperCase().trim();
-    const rawZip = destination?.zip || '';
+    const rawZip = destination?.zip || destination?.postalCode || '';
     const rawCityInput = destination?.city || ''; 
     const rawStateInput = (destination?.state || '').toUpperCase().trim();
 
