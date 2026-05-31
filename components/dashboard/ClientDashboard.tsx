@@ -136,20 +136,26 @@ export default function ClientDashboard({
   const totalSelectedWeight = selectedPackagesData.reduce((acc, p) => acc + (Number(p.weightLbs) || 0), 0);
 
   // =========================================================================
-  // 🚚 ACCIÓN 1: CONSOLIDAR / LOCAL DELIVERY (SIMULADOR 3D AURA EN FRONTEND)
-  // =========================================================================
-  const handleConsolidateClick = (type: 'AERIAL' | 'LOCAL') => {
-      if (selectedPkgs.length === 0) return;
+      // 🚚 ACCIÓN 1: CONSOLIDAR / LOCAL DELIVERY (SIMULADOR 3D AURA EN FRONTEND)
+      // =========================================================================
+      const handleConsolidateClick = (type: 'AERIAL' | 'LOCAL') => {
+          if (selectedPkgs.length === 0) return;
 
-      if (selectedPkgs.length === 1) {
-          alert(t('alertConsolidateOne')); 
-          return;
-      }
+          if (selectedPkgs.length === 1) {
+              alert(t('alertConsolidateOne')); 
+              return;
+          }
 
-      if (selectedPkgs.length > 15) {
-          alert(t('alertConsolidateLimit', { count: selectedPkgs.length }) || `El límite máximo es de 15 paquetes. Tienes ${selectedPkgs.length} seleccionados.`); 
-          return;
-      }
+          // 🔥 REGLAS SEPARADAS: Límite aduanal para Aéreo, límite físico alto para Aura (Local)
+          if (type === 'AERIAL' && selectedPkgs.length > 15) {
+              alert(t('alertConsolidateLimit', { count: selectedPkgs.length }) || `Para envíos internacionales el límite es de 15 paquetes por regulaciones de aduana. Tienes ${selectedPkgs.length} seleccionados.`); 
+              return;
+          }
+
+          if (type === 'LOCAL' && selectedPkgs.length > 100) {
+              alert(`Para Local Delivery el límite por solicitud es de 100 paquetes. Tienes ${selectedPkgs.length} seleccionados.`); 
+              return;
+          }
 
       // 🔥 MINI-SIMULADOR AURA (Tetris 3D para la interfaz del cliente)
       const calculatePalletsNeeded = (pkgs: any[]) => {
