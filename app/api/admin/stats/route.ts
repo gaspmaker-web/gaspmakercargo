@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server';
 
-export const dynamic = 'force-dynamic';
+// 🔥 ARQUITECTURA ENTERPRISE: Caché de Segmento
+// Reemplazamos 'force-dynamic' por 'revalidate'. 
+// Vercel calculará esta súper-consulta 1 vez y la guardará en memoria por 5 minutos (300 segundos).
+// Si tu equipo entra 100 veces en esos 5 minutos, el costo de CPU será 0.
+export const revalidate = 300;
 
 export async function GET() {
   try {

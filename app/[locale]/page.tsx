@@ -1,4 +1,4 @@
-"use client";
+// 🔥 ELIMINAMOS "use client" para convertirla en un Server Component de alto rendimiento
 
 import React from 'react';
 import Link from 'next/link';
@@ -11,6 +11,11 @@ import {
 } from 'lucide-react';
 
 import RecommendedStores from '@/components/RecommendedStores';
+
+// 🔥 ARQUITECTURA ENTERPRISE: Incremental Static Regeneration (ISR)
+// Vercel compilará esta página 1 sola vez y la guardará en su CDN mundial.
+// Se regenerará sola cada 3600 segundos (1 hora) sin consumir CPU.
+export const revalidate = 3600;
 
 export default function HomePage() {
   const t = useTranslations('HomePage');
