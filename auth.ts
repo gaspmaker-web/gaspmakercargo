@@ -36,7 +36,13 @@ export const { handlers, signIn, signOut, auth } = (NextAuth as any)({
         // ✅ CORRECCIÓN FINAL: Ya no existe 'password_hash'.
         // Ahora validamos directamente contra 'user.password' que contiene el hash.
         if (!user || !user.password) {
-          return null;
+          return null; // O throw new Error("Credenciales inválidas");
+        }
+
+        // 🛡️ BLOQUEO DE SEGURIDAD CRÍTICO: VALIDACIÓN DE EMAIL
+        // Si la columna emailVerified está vacía (null), rechazamos el inicio de sesión
+        if (!user.emailVerified) {
+          throw new Error("Debes verificar tu correo electrónico antes de acceder. Por favor, revisa tu bandeja de entrada.");
         }
 
         const isPasswordValid = await bcrypt.compare(
@@ -64,7 +70,7 @@ export const { handlers, signIn, signOut, auth } = (NextAuth as any)({
           };
         }
 
-        return null;
+        return null; // O throw new Error("Contraseña incorrecta");
       },
     }),
   ],

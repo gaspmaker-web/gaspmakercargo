@@ -21,6 +21,7 @@ model User {
 
   // ✅ EMAIL (Único)
   email                 String                @unique
+  emailVerified         DateTime?             // 🔄 VERIFICACIÓN DE EMAIL (Auth.js)
   
   // 🔐 AUTENTICACIÓN (CORREGIDO)
   password              String?
@@ -471,4 +472,12 @@ model AmazonProduct {
   updatedAt    DateTime @updatedAt
 
   @@index([category])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
 }

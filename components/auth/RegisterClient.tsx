@@ -1,10 +1,14 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ALL_COUNTRIES, Country } from '@/lib/countries';
 import { useTranslations } from 'next-intl';
+
+// 🔥 Importaciones de seguridad y backend
+import { Turnstile, TurnstileInstance } from '@marsidev/react-turnstile';
+import { registrarUsuario } from '@/app/actions/auth';
 
 // 🔥 1. Definimos los props para aceptar el código que viene de la URL
 interface RegisterClientProps {
@@ -41,6 +45,10 @@ export default function RegisterClient({ initialReferralCode }: RegisterClientPr
     const [dobMonth, setDobMonth] = useState('');
     const [dobYear, setDobYear] = useState('');
     
+    // 🔥 2. Estados y referencias de seguridad
+    const [turnstileToken, setTurnstileToken] = useState<string>('');
+    const turnstileRef = useRef<TurnstileInstance>(null);
+
     const sortedCountries = useMemo(() => {
         return [...ALL_COUNTRIES].sort((a, b) => a.name.localeCompare(b.name));
     }, []);
@@ -58,8 +66,11 @@ export default function RegisterClient({ initialReferralCode }: RegisterClientPr
     // Fallback para el código de área si no está definido
     const displayDialCode = selectedCountry?.dial_code || '+1';
 
-    const handleFormSubmit = async (e: React.FormEvent) => {
+    const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        
+        // 🔥 SOLUCIÓN AL ERROR DE NULL: Guardamos la referencia del formulario antes del await
+        const form = e.currentTarget; 
         
         if (email !== emailConfirm) {
             alert(t('alertEmailMismatch'));
@@ -85,6 +96,12 @@ export default function RegisterClient({ initialReferralCode }: RegisterClientPr
             return;
         }
 
+        // 🔥 Verificación de CAPTCHA
+        if (!turnstileToken) {
+            alert("Por favor, completa la verificación de seguridad para continuar.");
+            return;
+        }
+
         // 2. CONSTRUCCIÓN DE LA FECHA SEGURA (ISO 8601)
         const formattedYear = dobYear;
         const formattedMonth = String(dobMonth).padStart(2, '0');
@@ -97,34 +114,40 @@ export default function RegisterClient({ initialReferralCode }: RegisterClientPr
         setIsLoading(true);
 
         try {
-            const response = await fetch('/api/auth/register', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                name: `${firstName} ${lastName}`,
-                email: email,
-                password: password,
-                countryCode: selectedCountry.code, 
-                phone: fullPhoneNumber,
-                dateOfBirth: isoDateOfBirth,
-                // 🔥 2. ENVIAMOS EL CÓDIGO INVISIBLE AL SERVIDOR
-                referredBy: initialReferralCode 
-              }),
-            });
-    
-            if (!response.ok) {
-              const errorData = await response.json();
-              throw new Error(errorData.message || 'Algo salió mal durante el registro');
+            // 🔥 Transición de JSON a FormData para Next.js Server Actions
+            const formData = new FormData(form);
+            formData.append('name', `${firstName} ${lastName}`);
+            formData.append('email', email);
+            formData.append('password', password);
+            formData.append('countryCode', selectedCountry.code);
+            formData.append('phone', fullPhoneNumber);
+            formData.append('dateOfBirth', isoDateOfBirth);
+            formData.append('turnstileToken', turnstileToken);
+            
+            if (initialReferralCode) {
+                formData.append('referredBy', initialReferralCode);
             }
-    
-            // Redirección limpia e inmediata
-            router.push('/login-cliente');
+
+            // Llamada directa y segura a la Server Action en lugar del fetch
+            const resultado = await registrarUsuario(formData);
+
+            if (resultado.error) {
+                // Respetamos el uso de alert para los errores
+                alert(resultado.error);
+                turnstileRef.current?.reset();
+                setTurnstileToken('');
+            } else if (resultado.success) {
+                // Alerta de éxito, limpieza de formulario y redirección original
+                alert(resultado.message!);
+                form.reset(); 
+                router.push('/login-cliente');
+            }
     
         } catch (error: any) {
             console.error(error);
             alert(`${t('alertError')} ${error.message}`);
+            turnstileRef.current?.reset();
+            setTurnstileToken('');
         } finally {
             setIsLoading(false);
         }
@@ -150,6 +173,12 @@ export default function RegisterClient({ initialReferralCode }: RegisterClientPr
 
                 <form onSubmit={handleFormSubmit}>
                     
+                    {/* 🔥 CAMPO TRAMPA HONEYPOT */}
+                    <div style={{ display: 'none', position: 'absolute', left: '-9999px' }} aria-hidden="true">
+                        <label htmlFor="address-field">Por favor, ignora este campo si eres un usuario real:</label>
+                        <input type="text" id="address-field" name="address-field" tabIndex={-1} autoComplete="off" />
+                    </div>
+
                     <div className="mb-4">
                         <label htmlFor="country-select" className="sr-only">{t('selectCountry')}</label>
                         <div className="relative">
@@ -257,6 +286,15 @@ export default function RegisterClient({ initialReferralCode }: RegisterClientPr
                         <label htmlFor="subscribe" className="ml-2 text-sm text-gray-600">
                             {t('subscribeText')}
                         </label>
+                    </div>
+
+                    {/* 🔥 RENDERIZADO DEL CAPTCHA DE CLOUDFLARE */}
+                    <div className="flex justify-center mb-6">
+                        <Turnstile
+                            ref={turnstileRef}
+                            siteKey={process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY!}
+                            onSuccess={(token) => setTurnstileToken(token)}
+                        />
                     </div>
 
                     <button 

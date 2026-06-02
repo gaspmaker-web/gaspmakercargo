@@ -1310,27 +1310,38 @@
     "footerDesc": "Al registrarte en cualquiera de nuestros planes, nuestro sistema te guiará de forma sencilla para completar el Formulario 1583 requerido por el Servicio Postal de los Estados Unidos. Si eliges el plan Premium para tu negocio, te indicaremos exactamente cómo llenar la sección de tipo de servicio e información de la empresa."
   },
 "MiamiLocker": {
-  "hero_title_part1": "Tu Casillero en",
-  "hero_title_part2": "Miami",
-  "hero_subtitle": "Obtén tu dirección física gratuita en Estados Unidos. Compra online y nosotros consolidamos y enviamos tus paquetes.",
-  "instruction_badge": "Cómo funciona",
-  "instruction_title": "Configura tu envío en 3 pasos",
-  "step_1": "Copia esta dirección exacta en tu cuenta de Amazon, eBay o cualquier tienda.",
-  "step_2": "Asegúrate de incluir tu número de Suite para identificar tu carga rápidamente.",
-  "step_3": "Realiza tu compra. Nosotros recibiremos el paquete y te notificaremos al instante.",
-  "address_title": "Dirección de Envío",
-  "address_name": "Nombre completo",
-  "address_line1": "Dirección",
-  "address_line2": "Suite No.",
-  "address_city": "Ciudad",
-  "address_state": "Estado",
-  "address_phone": "Teléfono",
-  "hook_title": "¿No sabes qué traer? Mira lo que están comprando los profesionales.",
-  "hook_subtitle": "Herramientas, tecnología y artículos recomendados en Amazon con envío directo a tu Locker.",
-  "grid_products_count": "Artículos",
-  "empty_title": "Preparando el catálogo...",
-  "empty_subtitle": "Pronto verás aquí nuestras mejores recomendaciones de Amazon.",
-  "default_category": "Recomendado GMC",
-  "btn_amazon": "Comprar en Amazon"
-}
+    "hero_title_part1": "Tu Casillero en",
+    "hero_title_part2": "Miami",
+    "hero_subtitle": "Obtén tu dirección física gratuita en Estados Unidos. Compra online y nosotros consolidamos y enviamos tus paquetes.",
+    "instruction_badge": "Cómo funciona",
+    "instruction_title": "Configura tu envío en 3 pasos",
+    "step_1": "Copia esta dirección exacta en tu cuenta de Amazon, eBay o cualquier tienda.",
+    "step_2": "Asegúrate de incluir tu número de Suite para identificar tu carga rápidamente.",
+    "step_3": "Realiza tu compra. Nosotros recibiremos el paquete y te notificaremos al instante.",
+    "address_title": "Dirección de Envío",
+    "address_name": "Nombre completo",
+    "address_line1": "Dirección",
+    "address_line2": "Suite No.",
+    "address_city": "Ciudad",
+    "address_state": "Estado",
+    "address_phone": "Teléfono",
+    "hook_title": "¿No sabes qué traer? Mira lo que están comprando los profesionales.",
+    "hook_subtitle": "Herramientas, tecnología y artículos recomendados en Amazon con envío directo a tu Locker.",
+    "grid_products_count": "Artículos",
+    "empty_title": "Preparando el catálogo...",
+    "empty_subtitle": "Pronto verás aquí nuestras mejores recomendaciones de Amazon.",
+    "default_category": "Recomendado GMC",
+    "btn_amazon": "Comprar en Amazon",
+    "official_catalog": "Catálogo Oficial",
+    "categories": {
+      "Scanner": "ESCÁNER",
+      "Battery": "BATERÍA",
+      "Diagnostic": "DIAGNÓSTICO"
+    },
+    "products": {
+      "ancel_ad310": "Escáner Universal OBD II ANCEL AD310 Lector de Códigos de Falla de Motor",
+      "ancel_ba101": "Probador de Batería de Coche ANCEL BA101, Herramienta de Diagnóstico Multímetro de Alternador Automotriz 12V",
+      "borescope": "Boroscopio Articulado de 6.6FT, Endoscopio de Sonda Fina de 0.22in Bidireccional de 210° con Luces LED de Alto Brillo"
+    }
+  }
 }
