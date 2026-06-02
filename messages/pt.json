@@ -1286,5 +1286,29 @@
   "btnPremium": "Escolher Premium",
   "footerTitle": "Certificados pelo USPS",
   "footerDesc": "Ao registrar-se em qualquer um de nossos planos, nosso sistema o guiará facilmente para preencher o Formulário 1583 exigido pelo USPS. Se você escolher o plano Premium para o seu negócio, indicaremos exatamente como preencher a seção de tipo de serviço e informações da empresa."
+},
+"MiamiLocker": {
+  "hero_title_part1": "Seu Armário em",
+  "hero_title_part2": "Miami",
+  "hero_subtitle": "Obtenha seu endereço físico gratuito nos EUA. Compre online e nós consolidamos e enviamos seus pacotes.",
+  "instruction_badge": "Como funciona",
+  "instruction_title": "Configure seu envio em 3 passos",
+  "step_1": "Copie este endereço exato na sua conta da Amazon, eBay ou qualquer loja.",
+  "step_2": "Certifique-se de incluir o número da sua Suite para identificar sua carga rapidamente.",
+  "step_3": "Faça sua compra. Receberemos o pacote e notificaremos você instantaneamente.",
+  "address_title": "Endereço de Entrega",
+  "address_name": "Nome completo",
+  "address_line1": "Endereço",
+  "address_line2": "Suite No.",
+  "address_city": "Cidade",
+  "address_state": "Estado",
+  "address_phone": "Telefone",
+  "hook_title": "Não sabe o que trazer? Veja o que os profissionais estão comprando.",
+  "hook_subtitle": "Ferramentas, tecnologia e itens recomendados na Amazon com envio direto para o seu Locker.",
+  "grid_products_count": "Itens",
+  "empty_title": "Preparando o catálogo...",
+  "empty_subtitle": "Em breve você verá aqui nossas melhores recomendações da Amazon.",
+  "default_category": "Recomendado GMC",
+  "btn_amazon": "Comprar na Amazon"
 }
 }

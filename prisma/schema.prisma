@@ -453,3 +453,22 @@ model MailPickupRequest {
   createdAt     DateTime   @default(now())
   completedAt   DateTime?
 }
+
+// ==========================================
+// 📦 MÓDULO: MIAMI LOCKER (PRODUCTOS AFILIADOS)
+// ==========================================
+
+model AmazonProduct {
+  id           String   @id @default(uuid())
+  title        String   // Nombre del producto
+  price        String   // Precio (ej. "$29.99")
+  imageUrl     String   // Link de la imagen de SiteStripe
+  affiliateUrl String   // Tu link con el tag gaspmakercarg-20
+  category     String?  // Para filtrar por nichos luego
+  isActive     Boolean  @default(true) // Para ocultar productos sin borrarlos
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([category])
+}

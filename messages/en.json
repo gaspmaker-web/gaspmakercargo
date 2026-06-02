@@ -1263,5 +1263,29 @@
     "btnPremium": "Choose Premium",
     "footerTitle": "USPS Certified",
     "footerDesc": "By registering for any of our plans, our system will guide you easily to complete Form 1583 required by the United States Postal Service. If you choose the Premium plan for your business, we will show you exactly how to fill out the type of service and company information section."
-  }
+  },
+ "MiamiLocker": {
+  "hero_title_part1": "Your Locker in",
+  "hero_title_part2": "Miami",
+  "hero_subtitle": "Get your free physical US address. Shop online and we will consolidate and ship your packages.",
+  "instruction_badge": "How it works",
+  "instruction_title": "Set up your shipping in 3 steps",
+  "step_1": "Copy this exact address into your Amazon, eBay, or store account.",
+  "step_2": "Make sure to include your Suite Number to identify your cargo quickly.",
+  "step_3": "Place your order. We will receive the package and notify you instantly.",
+  "address_title": "Shipping Address",
+  "address_name": "Full Name",
+  "address_line1": "Address",
+  "address_line2": "Suite No.",
+  "address_city": "City",
+  "address_state": "State",
+  "address_phone": "Phone Number",
+  "hook_title": "Don't know what to bring? See what the pros are buying.",
+  "hook_subtitle": "Tools, tech, and top-rated items on Amazon shipped directly to your Locker.",
+  "grid_products_count": "Items",
+  "empty_title": "Preparing catalog...",
+  "empty_subtitle": "Check back soon for our best Amazon recommendations.",
+  "default_category": "GMC Recommended",
+  "btn_amazon": "Buy on Amazon"
+}
 }

@@ -2,17 +2,20 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { useTranslations } from 'next-intl';
+// 🔥 1. IMPORTAMOS useLocale PARA SABER EL IDIOMA ACTUAL
+import { useTranslations, useLocale } from 'next-intl'; 
 import { 
     MapPin, Layers, Truck, Building2, 
     ArrowRight, CheckCircle, ShieldCheck, Globe, Info, Mail 
-} from 'lucide-react'; // 🔥 IMPORTAMOS EL ÍCONO 'Mail'
+} from 'lucide-react'; 
 
 // 🛡️ ESCUDO NUCLEAR: Evita errores de generación estática
 export const dynamic = 'force-dynamic';
 
 export default function ServicesPage() {
     const t = useTranslations('ServicesPage');
+    // 🔥 2. CAPTURAMOS EL IDIOMA (es, en, pt, fr)
+    const locale = useLocale(); 
 
     const services = [
         {
@@ -21,7 +24,9 @@ export default function ServicesPage() {
             title: t('lockerTitle'),
             desc: t('lockerDesc'),
             color: 'bg-blue-50 text-blue-600',
-            borderColor: 'group-hover:border-blue-200'
+            borderColor: 'group-hover:border-blue-200',
+            // 🔥 3. LE AGREGAMOS EL ENLACE A ESTA TARJETA
+            href: `/${locale}/miami-locker` 
         },
         {
             id: 'consolidation',
@@ -79,9 +84,8 @@ export default function ServicesPage() {
             <div className="max-w-7xl mx-auto px-4 -mt-20 relative z-20 mb-20">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     
-                   {/* 🔥 LA NUEVA TARJETA DEL EMBUDO (Buzón Virtual) 🔥 */}
+                   {/* LA NUEVA TARJETA DEL EMBUDO (Buzón Virtual) */}
                     <div className="bg-white rounded-2xl p-8 shadow-2xl hover:-translate-y-2 transition-all duration-300 border-2 border-gmc-dorado-principal relative group flex flex-col">
-                        {/* Etiqueta de Nuevo Servicio */}
                         <div className="absolute top-4 right-4 bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider shadow-sm">
                             {t('mailboxBadgeNew')}
                         </div>
@@ -100,9 +104,9 @@ export default function ServicesPage() {
                             {t('mailboxDesc')}
                         </p>
                         
-                      {/* 🔥 BOTÓN CON RUTA CORREGIDA 🔥 */}
+                        {/* NOTA: También le agregué el locale dinámico a tu botón de buzón para que no pierdan el idioma */}
                         <Link 
-                            href="/mailbox" 
+                            href={`/${locale}/mailbox`} 
                             className="w-full text-center py-3 rounded-xl bg-gmc-gris-oscuro text-white font-bold hover:bg-gmc-dorado-principal hover:text-black transition-colors shadow-md flex justify-center items-center gap-2 mt-auto"
                         >
                             {t('mailboxBtn')} <ArrowRight size={16}/>
@@ -110,54 +114,81 @@ export default function ServicesPage() {
                     </div>
 
                     {/* LAS DEMÁS TARJETAS DE SERVICIOS */}
-                    {services.map((service) => (
-                        <div 
-                            key={service.id} 
-                            className={`
-                                bg-white rounded-2xl p-8 shadow-xl hover:shadow-2xl 
-                                transition-all duration-300 hover:-translate-y-2 
-                                border border-gray-100 ${service.borderColor} group flex flex-col
-                            `}
-                        >
-                            <div className="flex justify-between items-start mb-6">
-                                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${service.color} group-hover:scale-110 transition-transform duration-300 shadow-sm`}>
-                                    <service.icon size={28} />
+                    {services.map((service) => {
+                        // Construimos el contenido de la tarjeta para no repetir código
+                        const CardContent = (
+                            <>
+                                <div className="flex justify-between items-start mb-6">
+                                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${service.color} group-hover:scale-110 transition-transform duration-300 shadow-sm`}>
+                                        <service.icon size={28} />
+                                    </div>
+                                    <div className="text-gray-200 group-hover:text-gmc-dorado-principal transition-colors">
+                                        <ArrowRight size={20} className="transform -rotate-45 group-hover:rotate-0 transition-transform duration-300"/>
+                                    </div>
                                 </div>
-                                <div className="text-gray-200 group-hover:text-gmc-dorado-principal transition-colors">
-                                    <ArrowRight size={20} className="transform -rotate-45 group-hover:rotate-0 transition-transform duration-300"/>
-                                </div>
-                            </div>
-                            
-                            <h3 className="text-xl font-bold text-gray-800 mb-3 font-garamond group-hover:text-gmc-dorado-principal transition-colors">
-                                {service.title}
-                            </h3>
-                            
-                            <p className="text-gray-500 text-sm leading-relaxed mb-6 flex-grow">
-                                {service.desc}
-                            </p>
+                                
+                                <h3 className="text-xl font-bold text-gray-800 mb-3 font-garamond group-hover:text-gmc-dorado-principal transition-colors">
+                                    {service.title}
+                                </h3>
+                                
+                                <p className="text-gray-500 text-sm leading-relaxed mb-6 flex-grow">
+                                    {service.desc}
+                                </p>
 
-                            {/* Alerta Visual Consolidation */}
-                            {service.id === 'consolidation' && (
-                                <div className="mb-6 p-3 bg-amber-50 border border-amber-100 rounded-xl flex gap-3 items-start animate-in fade-in slide-in-from-bottom-2">
-                                    <Info className="text-amber-600 shrink-0 mt-0.5" size={16} />
-                                    <p className="text-xs font-bold text-amber-800 leading-snug">
-                                        {t('consolidationNote')}
-                                    </p>
-                                </div>
-                            )}
+                                {/* Alerta Visual Consolidation */}
+                                {service.id === 'consolidation' && (
+                                    <div className="mb-6 p-3 bg-amber-50 border border-amber-100 rounded-xl flex gap-3 items-start animate-in fade-in slide-in-from-bottom-2">
+                                        <Info className="text-amber-600 shrink-0 mt-0.5" size={16} />
+                                        <p className="text-xs font-bold text-amber-800 leading-snug">
+                                            {t('consolidationNote')}
+                                        </p>
+                                    </div>
+                                )}
 
-                            <div className="pt-6 border-t border-gray-50 space-y-3 mt-auto">
-                                <div className="flex items-center gap-2 text-xs text-gray-600 font-medium">
-                                    <CheckCircle size={14} className="text-green-500" /> 
-                                    <span>{t('tagFast')}</span>
+                                <div className="pt-6 border-t border-gray-50 space-y-3 mt-auto">
+                                    <div className="flex items-center gap-2 text-xs text-gray-600 font-medium">
+                                        <CheckCircle size={14} className="text-green-500" /> 
+                                        <span>{t('tagFast')}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-xs text-gray-600 font-medium">
+                                        <ShieldCheck size={14} className="text-blue-500" /> 
+                                        <span>{t('tagGuarantee')}</span>
+                                    </div>
                                 </div>
-                                <div className="flex items-center gap-2 text-xs text-gray-600 font-medium">
-                                    <ShieldCheck size={14} className="text-blue-500" /> 
-                                    <span>{t('tagGuarantee')}</span>
-                                </div>
+                            </>
+                        );
+
+                        // 🔥 4. SI EL SERVICIO TIENE UN ENLACE, LO ENVOLVEMOS EN <Link>
+                        if (service.href) {
+                            return (
+                                <Link 
+                                    key={service.id} 
+                                    href={service.href}
+                                    className={`
+                                        block bg-white rounded-2xl p-8 shadow-xl hover:shadow-2xl 
+                                        transition-all duration-300 hover:-translate-y-2 cursor-pointer
+                                        border border-gray-100 ${service.borderColor} group flex flex-col
+                                    `}
+                                >
+                                    {CardContent}
+                                </Link>
+                            );
+                        }
+
+                        // SI NO TIENE ENLACE, LO DEJAMOS COMO <div> NORMAL
+                        return (
+                            <div 
+                                key={service.id} 
+                                className={`
+                                    bg-white rounded-2xl p-8 shadow-xl hover:shadow-2xl 
+                                    transition-all duration-300 hover:-translate-y-2 
+                                    border border-gray-100 ${service.borderColor} group flex flex-col
+                                `}
+                            >
+                                {CardContent}
                             </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             </div>
 

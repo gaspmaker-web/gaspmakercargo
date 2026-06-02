@@ -1286,5 +1286,29 @@
   "btnPremium": "Choisir Premium",
   "footerTitle": "Certifiés par l'USPS",
   "footerDesc": "Lors de votre inscription à l'un de nos forfaits, notre système vous guidera facilement pour remplir le Formulaire 1583 requis par l'USPS. Si vous choisissez le forfait Premium pour votre entreprise, nous vous indiquerons exactement comment remplir la section type de service et informations sur l'entreprise."
+},
+"MiamiLocker": {
+  "hero_title_part1": "Votre Casier à",
+  "hero_title_part2": "Miami",
+  "hero_subtitle": "Obtenez votre adresse physique gratuite aux États-Unis. Achetez en ligne et nous consolidons et expédions vos colis.",
+  "instruction_badge": "Comment ça marche",
+  "instruction_title": "Configurez votre expédition en 3 étapes",
+  "step_1": "Copiez cette adresse exacte dans votre compte Amazon, eBay ou toute boutique.",
+  "step_2": "Assurez-vous d'inclure votre numéro de suite pour identifier rapidement votre cargaison.",
+  "step_3": "Passez votre commande. Nous recevrons le colis et vous informerons instantanément.",
+  "address_title": "Adresse de Livraison",
+  "address_name": "Nom complet",
+  "address_line1": "Adresse",
+  "address_line2": "Suite No.",
+  "address_city": "Ville",
+  "address_state": "État",
+  "address_phone": "Numéro de téléphone",
+  "hook_title": "Vous ne savez pas quoi ramener ? Voyez ce que les professionnels achètent.",
+  "hook_subtitle": "Outils, technologie et articles recommandés sur Amazon expédiés directement vers votre casier.",
+  "grid_products_count": "Articles",
+  "empty_title": "Préparation du catalogue...",
+  "empty_subtitle": "Vous verrez bientôt ici nos meilleures recommandations Amazon.",
+  "default_category": "Recommandé GMC",
+  "btn_amazon": "Acheter sur Amazon"
 }
 }
