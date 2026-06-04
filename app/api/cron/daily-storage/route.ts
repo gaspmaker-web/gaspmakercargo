@@ -14,15 +14,17 @@ export async function GET(req: Request) {
   }
 
   try {
-    // 2. Configuración de Tarifas
+    // 2. Configuración de Tarifas y Límites
     const FREE_DAYS = 30;
     const PRICE_PER_CUBIC_FOOT = 2.25; // Precio mensual
     const PRICE_PER_DAY = PRICE_PER_CUBIC_FOOT / 30; // Precio diario (~$0.075)
+    
+    // 🔥 LÓGICA ENTERPRISE: Límite para bloqueo
+    const ENTERPRISE_LIMIT = 1.00; 
 
     // 3. Buscar paquetes "En Almacén" que NO hayan sido entregados
     const packages = await prisma.package.findMany({
       where: {
-        // ✅ CORREGIDO: Ahora incluimos "RECIBIDO_MIAMI" que es tu estado real
         status: { in: ["RECIBIDO", "EN_ALMACEN", "RECIBIDO_MIAMI"] }, 
       }
     });
@@ -40,8 +42,7 @@ export async function GET(req: Request) {
       // Si ya pasó los días gratis... COBRAR
       if (daysInWarehouse > FREE_DAYS) {
         
-        // Calcular Volumen (Pies Cúbicos) = (L x W x H) / 1728
-        // Si faltan medidas, asumimos mínimo 1 pie cúbico
+        // Calcular Volumen (Pies Cúbicos)
         const l = pkg.lengthIn || 12;
         const w = pkg.widthIn || 12;
         const h = pkg.heightIn || 12;
@@ -50,11 +51,19 @@ export async function GET(req: Request) {
         // Costo del día de hoy
         const dailyFee = cubicFeet * PRICE_PER_DAY;
 
-        // Actualizar la deuda en la BD
+        // 🔥 CALCULAMOS LA NUEVA DEUDA EXACTA
+        const currentDebt = pkg.storageDebt || 0;
+        const newTotalDebt = currentDebt + dailyFee;
+
+        // 🔥 DECISIÓN DE BLOQUEO: Solo si supera o iguala $1.00
+        const shouldBlock = newTotalDebt >= ENTERPRISE_LIMIT;
+
+        // Actualizar la base de datos
         await prisma.package.update({
           where: { id: pkg.id },
           data: { 
-            storageDebt: { increment: dailyFee } // Sumar al saldo existente
+            storageDebt: newTotalDebt, // Actualizamos con el nuevo saldo
+            isBlocked: shouldBlock     // El paquete permanece libre si es menor a $1.00
           }
         });
         
@@ -64,7 +73,7 @@ export async function GET(req: Request) {
 
     return NextResponse.json({ 
       success: true, 
-      message: `Auditoría finalizada. ${updatedCount} paquetes actualizados con deuda.` 
+      message: `Auditoría finalizada. ${updatedCount} paquetes procesados.` 
     });
 
   } catch (error) {

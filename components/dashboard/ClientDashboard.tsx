@@ -518,7 +518,8 @@ export default function ClientDashboard({
                                             </div>
                                         </div>
                                         
-                                        {(pkg.storageFee || 0) > 0 && (
+                                       {/* 🔥 LÓGICA ENTERPRISE: Ocultamos visualmente deudas menores a $1.00 */}
+                                        {(pkg.storageFee || 0) >= 1.00 && (
                                             <div className="bg-red-50 px-3 py-2 rounded text-xs text-red-600 font-bold flex justify-between items-center border border-red-100">
                                                 <span className="flex items-center gap-1"><AlertTriangle size={12}/> {t('storageFee')} ({pkg.daysInWarehouse} {t('days')})</span>
                                                 <span>${pkg.storageFee?.toFixed(2)}</span>
