@@ -118,7 +118,7 @@ export default async function PackageDetailPage({ params }: Props) {
       }
   }
 
-  if (storageDebt > 0.01) { 
+  if (storageDebt >= 1.00) { 
       return (
         <StorageLockScreen 
             pkg={pkg}
