@@ -76,8 +76,7 @@ function calculateFees(pkg: any, t: any) {
     return {
         ...pkg,
         carrierTrackingNumber: pkg.carrierTrackingNumber || pkg.gmcTrackingNumber,
-
-        // 🔥 INTERCEPTOR MULTILINGÜE
+// 🔥 INTERCEPTOR MULTILINGÜE
         description: pkg.description === "Documento Físico (Enviado desde Buzón)" 
                      ? t('physicalDocument') 
                      : (pkg.description || (pkg.gmcTrackingNumber?.startsWith('GMC') ? 'Pickup Procesado' : t('noDescription'))),
@@ -86,7 +85,9 @@ function calculateFees(pkg: any, t: any) {
         pickupHandlingFee: parseFloat(handlingFee.toFixed(2)), 
         storageDebt: parseFloat(storageFee.toFixed(2)), 
         volumeCft: parseFloat(volumeCft.toFixed(2)),
-        isBlocked: storageFee > 0.01 
+        
+        // 🔥 LÓGICA ENTERPRISE CORREGIDA: Solo bloquea si es mayor o igual a $1.00
+        isBlocked: storageFee >= 1.00 
     };
 }
 

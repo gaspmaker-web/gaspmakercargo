@@ -728,6 +728,7 @@
     "alertSuccess": "✅ Payment successful! The package has been released.",
     "alertError": "❌ Error processing payment.",
     "alertConnection": "Connection error."
+    
   },
   "InTransitPage": {
     "title": "In Transit",
