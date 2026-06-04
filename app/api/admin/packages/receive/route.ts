@@ -15,14 +15,17 @@ export async function POST(req: Request) {
     
     const { 
         packageId, 
-        // 👇 Mapeamos ambas opciones por seguridad (frontend suele enviar 'weight' a veces)
         weightLbs, weight,
         lengthIn, length,
         widthIn, width,
         heightIn, height,
         warehouseLocation,
         carrierTrackingNumber,
-        receiptUrl
+        receiptUrl,
+        // 🔥 AHORA SÍ EXTRAEMOS LA FACTURA, LA FOTO Y LAS NOTAS DEL FRONTEND
+        invoiceUrl,
+        photoUrlMiami,
+        description
     } = body;
 
     // Calculamos valores finales asegurando números
@@ -41,8 +44,14 @@ export async function POST(req: Request) {
         widthIn: finalWidth,
         heightIn: finalHeight,
         receiptUrl: receiptUrl || null, 
-        // Solo sobrescribimos descripción si hay una ubicación nueva, si no, lo dejamos undefined para no borrar lo que había
-        description: warehouseLocation ? `(Loc: ${warehouseLocation})` : undefined, 
+        
+        // 🔥 GUARDAMOS LA FACTURA Y LA FOTO DE EVIDENCIA 🔥
+        invoiceUrl: invoiceUrl !== undefined ? invoiceUrl : undefined,
+        photoUrlMiami: photoUrlMiami !== undefined ? photoUrlMiami : undefined,
+
+        // Integramos las notas internas del formulario sin perder la ubicación
+        description: description !== undefined ? description : (warehouseLocation ? `(Loc: ${warehouseLocation})` : undefined), 
+        
         updatedAt: new Date()
       }
     });

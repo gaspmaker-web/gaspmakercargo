@@ -60,8 +60,9 @@ export async function POST(req: Request) {
             description: description || undefined, // Actualizamos notas/descripción en texto
             photoUrlMiami: photoUrl || undefined,  // Actualizamos la foto del paquete
             
-            // 👇 GUARDAMOS LA FACTURA (Si se subió alguna)
-            invoiceUrl: invoiceUrl || undefined,
+        // Si invoiceUrl viene en el body, lo usamos. 
+        // Si no viene, dejamos el valor que ya tenga en la base de datos.
+        invoiceUrl: invoiceUrl !== undefined ? invoiceUrl : undefined,
             
             // Confirmamos el estado (ej: 'EN_ALMACEN')
             status: status || 'EN_ALMACEN' 
