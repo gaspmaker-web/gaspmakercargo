@@ -55,15 +55,11 @@ export async function GET(req: Request) {
         const currentDebt = pkg.storageDebt || 0;
         const newTotalDebt = currentDebt + dailyFee;
 
-        // 🔥 DECISIÓN DE BLOQUEO: Solo si supera o iguala $1.00
-        const shouldBlock = newTotalDebt >= ENTERPRISE_LIMIT;
-
-        // Actualizar la base de datos
+       // Actualizar la base de datos
         await prisma.package.update({
           where: { id: pkg.id },
           data: { 
-            storageDebt: newTotalDebt, // Actualizamos con el nuevo saldo
-            isBlocked: shouldBlock     // El paquete permanece libre si es menor a $1.00
+            storageDebt: newTotalDebt // Actualizamos con el nuevo saldo
           }
         });
         
