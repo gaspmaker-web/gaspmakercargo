@@ -75,10 +75,7 @@ const DEFAULT_CAPITALS: Record<string, { city: string, zip?: string, state?: str
 // 1. TARIFAS LOCALES EXPORTACIÓN
 // ==========================================
 function calculateRate_TT(weight: number): number {
-    if (weight <= 5) return 16.60;
-    if (weight <= 11) return 35.32;
-    if (weight <= 17) return 54.04;
-    if (weight <= 23) return 72.76;
+    if (weight <= 10) return 85.00;
     if (weight <= 44) return 110.00;
     return weight * 3.00; 
 }
