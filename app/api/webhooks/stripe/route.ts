@@ -15,7 +15,12 @@ export async function POST(req: Request) {
       apiVersion: '2023-10-16' as any, // Verifica que coincida con tu versión en package.json
     });
 
-    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
+   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+if (!webhookSecret) {
+  console.error("⚠️ CRÍTICO: Falta la variable de entorno STRIPE_WEBHOOK_SECRET en Vercel");
+  return new NextResponse("Webhook secret missing", { status: 500 });
+}
 
     const body = await req.text();
     const signature = headers().get('Stripe-Signature') as string;
