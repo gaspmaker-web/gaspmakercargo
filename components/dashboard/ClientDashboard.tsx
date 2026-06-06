@@ -157,50 +157,87 @@ export default function ClientDashboard({
               return;
           }
 
-      // 🔥 MINI-SIMULADOR AURA (Tetris 3D para la interfaz del cliente)
+     // 🔥 MINI-SIMULADOR AURA CORREGIDO (Frontend)
       const calculatePalletsNeeded = (pkgs: any[]) => {
           const PALLET_AREA = 48 * 40; 
           const MAX_HEIGHT = 72;
-          let currentPalletHeight = 0;
-          let currentLayerArea = 0;
-          let currentLayerMaxHeight = 0;
-          let neededPallets = 1;
+          // Inicializamos el primer pallet
+          let pallets = [{ layers: [] as any[], totalHeight: 0 }];
 
+          // 1. Ordenamos de mayor a menor volumen
           const sorted = [...pkgs].sort((a, b) => {
               const volA = (Number((a as any).lengthIn) || 12) * (Number((a as any).widthIn) || 12) * (Number((a as any).heightIn) || 10);
               const volB = (Number((b as any).lengthIn) || 12) * (Number((b as any).widthIn) || 12) * (Number((b as any).heightIn) || 10);
               return volB - volA;
           });
 
+          // 2. Evaluamos cada caja con rotación
           sorted.forEach(p => {
-              const dims = [
+              const d = [
                   Number((p as any).lengthIn) || 12, 
                   Number((p as any).widthIn) || 12, 
                   Number((p as any).heightIn) || 10
-              ].sort((a, b) => a - b);
-              
-              const boxArea = dims[0] * dims[1] * 1.15; 
-              const boxH = dims[2];
+              ];
 
-              if (currentLayerArea + boxArea <= PALLET_AREA) {
-                  currentLayerArea += boxArea;
-                  currentLayerMaxHeight = Math.max(currentLayerMaxHeight, boxH);
-              } else {
-                  currentPalletHeight += currentLayerMaxHeight;
-                  if (currentPalletHeight + boxH > MAX_HEIGHT) {
-                      neededPallets++; 
-                      currentPalletHeight = 0;
+              // Extraer las 3 orientaciones posibles
+              const orientations = [
+                  { baseL: d[0], baseW: d[1], h: d[2] },
+                  { baseL: d[0], baseW: d[2], h: d[1] },
+                  { baseL: d[1], baseW: d[2], h: d[0] }
+              ];
+
+              let currentPallet = pallets[pallets.length - 1];
+              let boxPlaced = false;
+
+              // Intentar ubicar en capas existentes
+              for (let layer of currentPallet.layers) {
+                  let bestOri = null;
+                  let minHeightIncrease = Infinity;
+
+                  for (let ori of orientations) {
+                      const boxArea = ori.baseL * ori.baseW * 1.15; // 15% margen de seguridad
+                      if (layer.areaUsed + boxArea <= PALLET_AREA) {
+                          let heightIncrease = Math.max(0, ori.h - layer.maxHeight);
+                          if (currentPallet.totalHeight + heightIncrease <= MAX_HEIGHT) {
+                              if (heightIncrease < minHeightIncrease) {
+                                  minHeightIncrease = heightIncrease;
+                                  bestOri = { ...ori, boxArea };
+                              }
+                          }
+                      }
                   }
-                  currentLayerArea = boxArea;
-                  currentLayerMaxHeight = boxH;
+
+                  if (bestOri) {
+                      layer.areaUsed += bestOri.boxArea;
+                      if (minHeightIncrease > 0) {
+                          layer.maxHeight += minHeightIncrease;
+                          currentPallet.totalHeight += minHeightIncrease;
+                      }
+                      boxPlaced = true;
+                      break;
+                  }
+              }
+
+              // Crear nueva capa si no cupo
+              if (!boxPlaced) {
+                  // Buscamos la orientación más plana (menor altura) para abrir el nuevo piso
+                  let bestOri = orientations.sort((a, b) => a.h - b.h)[0];
+                  const boxArea = bestOri.baseL * bestOri.baseW * 1.15;
+
+                  if (currentPallet.totalHeight + bestOri.h <= MAX_HEIGHT) {
+                      currentPallet.layers.push({ areaUsed: boxArea, maxHeight: bestOri.h });
+                      currentPallet.totalHeight += bestOri.h;
+                  } else {
+                      // 🚨 Se llenó el pallet, abrimos uno nuevo
+                      pallets.push({
+                          layers: [{ areaUsed: boxArea, maxHeight: bestOri.h }],
+                          totalHeight: bestOri.h
+                      });
+                  }
               }
           });
 
-          if (currentLayerMaxHeight > 0 && currentPalletHeight + currentLayerMaxHeight > MAX_HEIGHT) {
-              neededPallets++;
-          }
-          
-          return neededPallets;
+          return pallets.length;
       };
 
       const palletsNeeded = calculatePalletsNeeded(selectedPackagesData);
