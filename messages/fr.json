@@ -106,7 +106,7 @@
     "lockerDesc": "Votre adresse physique aux USA pour recevoir vos achats Amazon, eBay, Shein, etc.",
     "consolidationTitle": "Consolidation de Colis",
     "consolidationDesc": "Achetez dans plusieurs magasins, attendez tout, et expédiez en une seule boîte pour économiser.",
-    "consolidationNote": "Combinez jusqu'à 15 colis multiples pour économiser sur les coûts.",
+    "consolidationNote": "Combinez plusieurs colis pour économiser sur les coûts.",
     "pickupTitle": "Ramassage et Livraison",
     "pickupDesc": "Service de transport local à Miami et livraison porte-à-porte dans votre pays.",
     "corporateTitle": "Fret Commercial",
@@ -223,7 +223,13 @@
     "alertLocalWeightLimit": "⚠️ Limite de camion dépassée.\nPour une livraison locale, le maximum est de 2 000 lbs. Vous avez {weight} lbs.",
     "btnLocalDelivery": "LIVRAISON LOCALE",
     "requestLocalDelivery": "Demander une Livraison Locale",
-    "selectedPackagesList": "COLIS SÉLECTIONNÉS :"
+    "selectedPackagesList": "COLIS SÉLECTIONNÉS :",
+    "palletLimitTitle": "Limite de capacité atteinte",
+    "palletLimitDesc": "Vous avez {count} colis dans l'entrepôt de Miami. Le moteur d'arrimage a détecté que votre charge a atteint la limite physique d'une palette sécurisée. Vous devez expédier pour libérer de l'espace.",
+    "palletLimitBtn": "Consolider la Palette",
+    "aerialReadyTitle": "Cargaison prête para Consolidation Aérienne",
+    "aerialReadyDesc": "Vous avez <strong>{count} colis</strong> ({weight} lbs) prêts dans l'entrepôt. N'oubliez pas que la limite internationale pour une expédition aérienne est de 150 lbs.",
+    "aerialReadyBtn": "Consolider l'Expédition Aérienne"
   },
 "Notifications": {
     "title": "Notifications",

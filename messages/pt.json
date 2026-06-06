@@ -106,7 +106,7 @@
     "lockerDesc": "Seu endereço físico nos EUA para receber compras da Amazon, eBay, Shein e mais.",
     "consolidationTitle": "Consolidação de Pacotes",
     "consolidationDesc": "Compre em várias lojas, espere que todos cheguem e envie-os em uma única caixa para economizar.",
-    "consolidationNote": "Combine até 15 pacotes múltiplos para economizar nos custos.",
+    "consolidationNote": "Combine vários pacotes para economizar custos.",
     "pickupTitle": "Coleta e Entrega",
     "pickupDesc": "Serviço de transporte local em Miami e entrega porta a porta no seu país.",
     "corporateTitle": "Carga Comercial",
@@ -223,7 +223,13 @@
     "alertLocalWeightLimit": "⚠️ Limite do caminhão excedido.\nPara Local Delivery o máximo é 2.000 lbs. Você tem {weight} lbs.",
     "btnLocalDelivery": "ENTREGA LOCAL",
     "requestLocalDelivery": "Solicitar Entrega Local",
-    "selectedPackagesList": "PACOTES SELECIONADOS:"
+    "selectedPackagesList": "PACOTES SELECIONADOS:",
+    "palletLimitTitle": "Limite de capacidade atingido",
+    "palletLimitDesc": "Você tem {count} pacotes no armazém de Miami. O motor de estiva detectou que sua carga atingiu o limite físico de um palete seguro. Você deve despachar para liberar espaço.",
+    "palletLimitBtn": "Consolidar Palete",
+    "aerialReadyTitle": "Carga pronta para Consolidação Aérea",
+    "aerialReadyDesc": "Você tem <strong>{count} pacotes</strong> ({weight} lbs) prontos no armazém. Lembre-se de que o limite internacional para um envio aéreo é de 150 lbs.",
+    "aerialReadyBtn": "Consolidar Envio Aéreo"
   },
 "Notifications": {
     "title": "Notificações",

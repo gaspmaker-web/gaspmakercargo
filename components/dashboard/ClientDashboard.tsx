@@ -118,6 +118,97 @@ export default function ClientDashboard({
   );
   const hasPendingAction = pendingBillsCount > 0;
 
+  // =========================================================================
+  // 🚀 MOTOR AURA (EVALUACIÓN EN TIEMPO REAL AL CARGAR DASHBOARD)
+  // =========================================================================
+  const calculatePalletsNeeded = (pkgs: any[]) => {
+      const PALLET_AREA = 48 * 40; 
+      const MAX_HEIGHT = 72;
+      let pallets = [{ layers: [] as any[], totalHeight: 0 }];
+
+      const sorted = [...pkgs].sort((a, b) => {
+          const volA = (Number((a as any).lengthIn) || 12) * (Number((a as any).widthIn) || 12) * (Number((a as any).heightIn) || 10);
+          const volB = (Number((b as any).lengthIn) || 12) * (Number((b as any).widthIn) || 12) * (Number((b as any).heightIn) || 10);
+          return volB - volA;
+      });
+
+      sorted.forEach(p => {
+          const d = [
+              Number((p as any).lengthIn) || 12, 
+              Number((p as any).widthIn) || 12, 
+              Number((p as any).heightIn) || 10
+          ];
+
+          const orientations = [
+              { baseL: d[0], baseW: d[1], h: d[2] },
+              { baseL: d[0], baseW: d[2], h: d[1] },
+              { baseL: d[1], baseW: d[2], h: d[0] }
+          ];
+
+          let currentPallet = pallets[pallets.length - 1];
+          let boxPlaced = false;
+
+          for (let layer of currentPallet.layers) {
+              let bestOri = null;
+              let minHeightIncrease = Infinity;
+
+              for (let ori of orientations) {
+                  const boxArea = ori.baseL * ori.baseW * 1.15; 
+                  if (layer.areaUsed + boxArea <= PALLET_AREA) {
+                      let heightIncrease = Math.max(0, ori.h - layer.maxHeight);
+                      if (currentPallet.totalHeight + heightIncrease <= MAX_HEIGHT) {
+                          if (heightIncrease < minHeightIncrease) {
+                              minHeightIncrease = heightIncrease;
+                              bestOri = { ...ori, boxArea };
+                          }
+                      }
+                  }
+              }
+
+              if (bestOri) {
+                  layer.areaUsed += bestOri.boxArea;
+                  if (minHeightIncrease > 0) {
+                      layer.maxHeight += minHeightIncrease;
+                      currentPallet.totalHeight += minHeightIncrease;
+                  }
+                  boxPlaced = true;
+                  break;
+              }
+          }
+
+          if (!boxPlaced) {
+              let bestOri = orientations.sort((a, b) => a.h - b.h)[0];
+              const boxArea = bestOri.baseL * bestOri.baseW * 1.15;
+
+              if (currentPallet.totalHeight + bestOri.h <= MAX_HEIGHT) {
+                  currentPallet.layers.push({ areaUsed: boxArea, maxHeight: bestOri.h });
+                  currentPallet.totalHeight += bestOri.h;
+              } else {
+                  pallets.push({
+                      layers: [{ areaUsed: boxArea, maxHeight: bestOri.h }],
+                      totalHeight: bestOri.h
+                  });
+              }
+          }
+      });
+
+      return pallets.length;
+  };
+
+// 📏 EVALUACIÓN CRÍTICA AUTOMÁTICA DEL ALMACÉN (LOCAL DELIVERY)
+  const currentPalletsCount = calculatePalletsNeeded(displayPackages);
+  
+  const totalVolumeInWarehouse = displayPackages.reduce((acc, p) => {
+      return acc + ((Number((p as any).lengthIn) || 12) * (Number((p as any).widthIn) || 12) * (Number((p as any).heightIn) || 10));
+  }, 0);
+
+  const isPalletReady = currentPalletsCount > 1 || totalVolumeInWarehouse >= 85000;
+
+  // ✈️ NUEVA EVALUACIÓN AUTOMÁTICA PARA SERVICIO AÉREO (CONSOLIDATION)
+  const totalWeightInWarehouse = displayPackages.reduce((acc, p) => acc + (Number(p.weightLbs) || 0), 0);
+
+// Se activa proactivamente si el cliente acumula un peso considerable (ej. 100+ lbs) cercano al límite aéreo
+  const isAerialReady = totalWeightInWarehouse >= 100;
   // --- LÓGICA DE SELECCIÓN ---
   const togglePackage = (id: string, isBlocked?: boolean) => {
       if (isBlocked) {
@@ -136,110 +227,27 @@ export default function ClientDashboard({
   const totalSelectedWeight = selectedPackagesData.reduce((acc, p) => acc + (Number(p.weightLbs) || 0), 0);
 
   // =========================================================================
-      // 🚚 ACCIÓN 1: CONSOLIDAR / LOCAL DELIVERY (SIMULADOR 3D AURA EN FRONTEND)
-      // =========================================================================
-      const handleConsolidateClick = (type: 'AERIAL' | 'LOCAL') => {
-          if (selectedPkgs.length === 0) return;
+  // 🚚 ACCIÓN 1: CONSOLIDAR / LOCAL DELIVERY 
+  // =========================================================================
+  const handleConsolidateClick = (type: 'AERIAL' | 'LOCAL') => {
+      if (selectedPkgs.length === 0) return;
 
-          if (selectedPkgs.length === 1) {
-              alert(t('alertConsolidateOne')); 
-              return;
-          }
+      if (selectedPkgs.length === 1) {
+          alert(t('alertConsolidateOne')); 
+          return;
+      }
 
-          // 🔥 REGLAS SEPARADAS: Límite aduanal para Aéreo, límite físico alto para Aura (Local)
-          if (type === 'AERIAL' && selectedPkgs.length > 15) {
-              alert(t('alertConsolidateLimit', { count: selectedPkgs.length }) || `Para envíos internacionales el límite es de 15 paquetes por regulaciones de aduana. Tienes ${selectedPkgs.length} seleccionados.`); 
-              return;
-          }
+      if (type === 'AERIAL' && selectedPkgs.length > 15) {
+          alert(t('alertConsolidateLimit', { count: selectedPkgs.length }) || `Para envíos internacionales el límite es de 15 paquetes por regulaciones de aduana. Tienes ${selectedPkgs.length} seleccionados.`); 
+          return;
+      }
 
-          if (type === 'LOCAL' && selectedPkgs.length > 100) {
-              alert(`Para Local Delivery el límite por solicitud es de 100 paquetes. Tienes ${selectedPkgs.length} seleccionados.`); 
-              return;
-          }
+      if (type === 'LOCAL' && selectedPkgs.length > 100) {
+          alert(`Para Local Delivery el límite por solicitud es de 100 paquetes. Tienes ${selectedPkgs.length} seleccionados.`); 
+          return;
+      }
 
-     // 🔥 MINI-SIMULADOR AURA CORREGIDO (Frontend)
-      const calculatePalletsNeeded = (pkgs: any[]) => {
-          const PALLET_AREA = 48 * 40; 
-          const MAX_HEIGHT = 72;
-          // Inicializamos el primer pallet
-          let pallets = [{ layers: [] as any[], totalHeight: 0 }];
-
-          // 1. Ordenamos de mayor a menor volumen
-          const sorted = [...pkgs].sort((a, b) => {
-              const volA = (Number((a as any).lengthIn) || 12) * (Number((a as any).widthIn) || 12) * (Number((a as any).heightIn) || 10);
-              const volB = (Number((b as any).lengthIn) || 12) * (Number((b as any).widthIn) || 12) * (Number((b as any).heightIn) || 10);
-              return volB - volA;
-          });
-
-          // 2. Evaluamos cada caja con rotación
-          sorted.forEach(p => {
-              const d = [
-                  Number((p as any).lengthIn) || 12, 
-                  Number((p as any).widthIn) || 12, 
-                  Number((p as any).heightIn) || 10
-              ];
-
-              // Extraer las 3 orientaciones posibles
-              const orientations = [
-                  { baseL: d[0], baseW: d[1], h: d[2] },
-                  { baseL: d[0], baseW: d[2], h: d[1] },
-                  { baseL: d[1], baseW: d[2], h: d[0] }
-              ];
-
-              let currentPallet = pallets[pallets.length - 1];
-              let boxPlaced = false;
-
-              // Intentar ubicar en capas existentes
-              for (let layer of currentPallet.layers) {
-                  let bestOri = null;
-                  let minHeightIncrease = Infinity;
-
-                  for (let ori of orientations) {
-                      const boxArea = ori.baseL * ori.baseW * 1.15; // 15% margen de seguridad
-                      if (layer.areaUsed + boxArea <= PALLET_AREA) {
-                          let heightIncrease = Math.max(0, ori.h - layer.maxHeight);
-                          if (currentPallet.totalHeight + heightIncrease <= MAX_HEIGHT) {
-                              if (heightIncrease < minHeightIncrease) {
-                                  minHeightIncrease = heightIncrease;
-                                  bestOri = { ...ori, boxArea };
-                              }
-                          }
-                      }
-                  }
-
-                  if (bestOri) {
-                      layer.areaUsed += bestOri.boxArea;
-                      if (minHeightIncrease > 0) {
-                          layer.maxHeight += minHeightIncrease;
-                          currentPallet.totalHeight += minHeightIncrease;
-                      }
-                      boxPlaced = true;
-                      break;
-                  }
-              }
-
-              // Crear nueva capa si no cupo
-              if (!boxPlaced) {
-                  // Buscamos la orientación más plana (menor altura) para abrir el nuevo piso
-                  let bestOri = orientations.sort((a, b) => a.h - b.h)[0];
-                  const boxArea = bestOri.baseL * bestOri.baseW * 1.15;
-
-                  if (currentPallet.totalHeight + bestOri.h <= MAX_HEIGHT) {
-                      currentPallet.layers.push({ areaUsed: boxArea, maxHeight: bestOri.h });
-                      currentPallet.totalHeight += bestOri.h;
-                  } else {
-                      // 🚨 Se llenó el pallet, abrimos uno nuevo
-                      pallets.push({
-                          layers: [{ areaUsed: boxArea, maxHeight: bestOri.h }],
-                          totalHeight: bestOri.h
-                      });
-                  }
-              }
-          });
-
-          return pallets.length;
-      };
-
+      // Usamos la función global Aura para los paquetes seleccionados
       const palletsNeeded = calculatePalletsNeeded(selectedPackagesData);
 
       // 🔥 LÍMITES INTELIGENTES MULTILINGÜES
@@ -289,16 +297,15 @@ export default function ClientDashboard({
   const onConfirmConsolidation = async () => {
       setIsConsolidating(true);
       try {
-          // 💥 AQUÍ ESTÁ LA MAGIA: Enviamos el tipo exacto según el botón pulsado
           const dynamicServiceType = consolidationType === 'LOCAL' ? 'LOCAL_DELIVERY' : 'CONSOLIDATION';
 
-          const res = await fetch('/api/shipments/create', { // o '/api/consolidate' dependiendo del wrapper que uses
+          const res = await fetch('/api/shipments/create', { 
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                   packageIds: selectedPkgs,
-                  type: dynamicServiceType, // Envía 'LOCAL_DELIVERY' o 'CONSOLIDATION'
-                  serviceType: dynamicServiceType // Enviamos ambas keys para que no falle ninguna API
+                  type: dynamicServiceType, 
+                  serviceType: dynamicServiceType 
               })
           });
 
@@ -461,7 +468,108 @@ export default function ClientDashboard({
           
           <div className="lg:col-span-2 space-y-4">
 
-             <div className="flex justify-between items-center px-1 cursor-pointer select-none" onClick={() => setIsExpanded(!isExpanded)}>
+            {/* 🚨 ALERTA CRÍTICA ENTERPRISE: LÍMITE DE PALLET ALCANZADO (Traducción Nativa desde JSON) */}
+            {isPalletReady && displayPackages.length > 0 && (
+                <div className="bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500 rounded-2xl p-0.5 mb-6 animate-in slide-in-from-top duration-500 shadow-xl">
+                    <div className="bg-white/95 backdrop-blur-md rounded-xl p-5 md:p-6 flex flex-col lg:flex-row items-center justify-between gap-5">
+                        <div className="flex items-start gap-4 text-center lg:text-left flex-col sm:flex-row sm:items-center lg:items-start w-full">
+                            <div className="bg-red-100 p-3 rounded-full text-red-600 shrink-0 shadow-md border border-red-200 mx-auto sm:mx-0 animate-pulse">
+                                <AlertTriangle size={28} />
+                            </div>
+                            <div className="flex-1">
+                                <h3 className="text-lg font-bold text-gray-900 flex items-center justify-center sm:justify-start gap-2">
+                                    {t('palletLimitTitle')}
+                                </h3>
+                                <p className="text-sm text-gray-600 mt-1 leading-relaxed">
+                                    {t.rich('palletLimitDesc', {
+                                        count: displayPackages.length,
+                                        strong: (chunks) => <strong className="text-red-600 font-mono font-bold text-base mx-1">{chunks}</strong>
+                                    })}
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <button
+                            onClick={() => {
+                                // Seleccionamos cajas hasta llenar exactamente 1 pallet
+                                const clearPackages = displayPackages.filter(p => !p.isBlocked);
+                                let selectedIds: string[] = [];
+                                let currentSelectedData: any[] = [];
+                                
+                                for (let p of clearPackages) {
+                                    currentSelectedData.push(p);
+                                    if (calculatePalletsNeeded(currentSelectedData) > 1) {
+                                        break; 
+                                    }
+                                    selectedIds.push(p.id);
+                                }
+                                
+                                setSelectedPkgs(selectedIds);
+                                setTimeout(() => handleConsolidateClick('LOCAL'), 50); 
+                            }}
+                            className="w-full lg:w-auto bg-black text-white hover:bg-gray-900 px-6 py-3.5 rounded-xl font-bold text-sm transition-all shadow-md flex items-center justify-center gap-2 shrink-0 transform hover:-translate-y-0.5"
+                        >
+                            <Truck size={18} className="animate-bounce" />
+                            {t('palletLimitBtn')}
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* ✈️ ALERTA PROACTIVA: CONSOLIDACIÓN AÉREA LISTA (Fricción Cero) */}
+            {isAerialReady && displayPackages.length > 0 && !isPalletReady && (
+                <div className="bg-gradient-to-r from-blue-500 via-indigo-500 to-gmc-dorado-principal rounded-2xl p-0.5 mb-6 animate-in slide-in-from-top duration-500 shadow-xl">
+                    <div className="bg-white/95 backdrop-blur-md rounded-xl p-5 md:p-6 flex flex-col lg:flex-row items-center justify-between gap-5">
+                        <div className="flex items-start gap-4 text-center lg:text-left flex-col sm:flex-row sm:items-center lg:items-start w-full">
+                            <div className="bg-blue-100 p-3 rounded-full text-blue-600 shrink-0 shadow-md border border-blue-200 mx-auto sm:mx-0">
+                                <Box size={28} />
+                            </div>
+                            <div className="flex-1">
+                                <h3 className="text-lg font-bold text-gray-900 flex items-center justify-center sm:justify-start gap-2">
+                                    {t('aerialReadyTitle')}
+                                </h3>
+                                <p className="text-sm text-gray-600 mt-1 leading-relaxed">
+                                    {t.rich('aerialReadyDesc', {
+                                        count: displayPackages.length,
+                                        weight: totalWeightInWarehouse.toFixed(1),
+                                        strong: (chunks) => <strong className="text-blue-600 font-mono font-bold text-base mx-1">{chunks}</strong>
+                                    })}
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <button
+                            onClick={() => {
+                                const clearPackages = displayPackages.filter(p => !p.isBlocked);
+                                let selectedIds: string[] = [];
+                                let accumulatedWeight = 0;
+                                
+                                // ... código anterior ...
+for (let p of clearPackages) {
+    // Validación lógica: El único límite real para el envío aéreo es el peso (150 lbs)
+    if ((accumulatedWeight + (Number(p.weightLbs) || 0)) > 150) {
+        break; 
+    }
+    selectedIds.push(p.id);
+    accumulatedWeight += Number(p.weightLbs) || 0;
+}
+// ... código siguiente ...
+                                
+                                setSelectedPkgs(selectedIds);
+                                setConsolidationType('AERIAL');
+                                setTimeout(() => handleConsolidateClick('AERIAL'), 50); 
+                            }}
+                            className="w-full lg:w-auto bg-gmc-dorado-principal text-black hover:bg-yellow-500 px-6 py-3.5 rounded-xl font-bold text-sm transition-all shadow-md flex items-center justify-center gap-2 shrink-0 transform hover:-translate-y-0.5"
+                        >
+                            <UploadCloud size={18} />
+                            {t('aerialReadyBtn')}
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* ACORDEÓN DE PAQUETES (INICIO) */}
+            <div className="flex justify-between items-center px-1 cursor-pointer select-none" onClick={() => setIsExpanded(!isExpanded)}>
                 <div className="flex items-center gap-3">
                     <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
                         <Box className="text-gmc-dorado-principal" size={20}/> {t('packagesInWarehouse')}

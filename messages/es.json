@@ -220,7 +220,13 @@
     "alertLocalWeightLimit": "⚠️ Límite de camión excedido.\nPara Local Delivery el máximo es 2,000 lbs. Tienes {weight} lbs.",
     "btnLocalDelivery": "ENTREGA LOCAL",
     "requestLocalDelivery": "Solicitar Entrega Local",
-    "selectedPackagesList": "PAQUETES SELECCIONADOS:"
+    "selectedPackagesList": "PAQUETES SELECCIONADOS:",
+    "palletLimitTitle": "Límite de capacidad alcanzado",
+    "palletLimitDesc": "Tienes {count} paquetes en el almacén de Miami. El motor de estiba detectó que tu carga ha llenado el límite físico de un pallet seguro. Debes despachar para liberar espacio.",
+    "palletLimitBtn": "Consolidar Pallet",
+    "aerialReadyTitle": "Carga lista para Consolidación Aérea",
+    "aerialReadyDesc": "Tienes <strong>{count} paquetes</strong> ({weight} lbs) listos en el almacén. Recuerda que el límite internacional para un despacho aéreo es de 150 lbs.",
+    "aerialReadyBtn": "Consolidar Envío Aéreo"
   },
 "Notifications": {
     "title": "Notificaciones",
@@ -548,7 +554,7 @@
     "lockerDesc": "Tu dirección física en USA para recibir compras de Amazon, eBay, Shein y más.",
     "consolidationTitle": "Consolidación de Paquetes",
     "consolidationDesc": "Compra en varias tiendas, espera que lleguen todos y envíalos en una sola caja para ahorrar.",
-    "consolidationNote": "Combina hasta 15 paquetes múltiples para ahorrar costos.",
+    "consolidationNote": "Combina múltiples paquetes para ahorrar costos.",
     "pickupTitle": "Recogida y Delivery",
     "pickupDesc": "Servicio de transporte local en Miami y entregas puerta a puerta en tu país.",
     "corporateTitle": "Carga Comercial",

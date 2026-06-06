@@ -107,7 +107,7 @@
     "lockerDesc": "Your physical US address to receive purchases from Amazon, eBay, Shein, and more.",
     "consolidationTitle": "Package Consolidation",
     "consolidationDesc": "Shop at multiple stores, wait for all to arrive, and ship them in one box to save money.",
-    "consolidationNote": "Combine up to 15 multiple packages to save on costs.",
+    "consolidationNote": "Combine multiple packages to save costs.",
     "pickupTitle": "Pickup & Delivery",
     "pickupDesc": "Local transport service in Miami and door-to-door delivery in your country.",
     "corporateTitle": "Commercial Cargo",
@@ -224,7 +224,13 @@
     "alertLocalWeightLimit": "⚠️ Truck limit exceeded.\nFor Local Delivery the maximum is 2,000 lbs. You have {weight} lbs.",
     "btnLocalDelivery": "LOCAL DELIVERY",
     "requestLocalDelivery": "Request Local Delivery",
-    "selectedPackagesList": "SELECTED PACKAGES:"
+    "selectedPackagesList": "SELECTED PACKAGES:",
+    "palletLimitTitle": "Capacity Limit Reached",
+    "palletLimitDesc": "You have {count} packages in the Miami warehouse. The stowage engine detected that your load has reached the physical limit of a secure pallet. You must dispatch to free up space.",
+    "palletLimitBtn": "Consolidate Pallet",
+    "aerialReadyTitle": "Load Ready for Air Consolidation",
+    "aerialReadyDesc": "You have <strong>{count} packages</strong> ({weight} lbs) ready in the warehouse. Remember that the international limit for an air shipment is 150 lbs.",
+    "aerialReadyBtn": "Consolidate Air Shipment"
   },
 "Notifications": {
     "title": "Notifications",
