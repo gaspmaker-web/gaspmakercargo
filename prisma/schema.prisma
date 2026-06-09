@@ -31,6 +31,9 @@ model User {
   resetTokenExpiry      DateTime? 
 
   role                  String                @default("CLIENTE")
+
+// 🔥 PLAN CORPORATIVO / VIP (AÑADIR ESTA LÍNEA)
+  planType              String?               @default("STANDARD")
   createdAt             DateTime              @default(now())
 
   // Campos de Perfil
