@@ -118,7 +118,7 @@ export default function ClientDashboard({
   );
   const hasPendingAction = pendingBillsCount > 0;
 
-  // =========================================================================
+// =========================================================================
   // 🚀 MOTOR AURA (EVALUACIÓN EN TIEMPO REAL AL CARGAR DASHBOARD)
   // =========================================================================
   const calculatePalletsNeeded = (pkgs: any[]) => {
@@ -153,7 +153,8 @@ export default function ClientDashboard({
               let minHeightIncrease = Infinity;
 
               for (let ori of orientations) {
-                  const boxArea = ori.baseL * ori.baseW * 1.15; 
+                  // 🔥 SE ELIMINÓ EL MULTIPLICADOR 1.15 PARA USAR EL 100% DEL ÁREA FÍSICA
+                  const boxArea = ori.baseL * ori.baseW; 
                   if (layer.areaUsed + boxArea <= PALLET_AREA) {
                       let heightIncrease = Math.max(0, ori.h - layer.maxHeight);
                       if (currentPallet.totalHeight + heightIncrease <= MAX_HEIGHT) {
@@ -178,7 +179,8 @@ export default function ClientDashboard({
 
           if (!boxPlaced) {
               let bestOri = orientations.sort((a, b) => a.h - b.h)[0];
-              const boxArea = bestOri.baseL * bestOri.baseW * 1.15;
+              // 🔥 SE ELIMINÓ EL MULTIPLICADOR 1.15 AQUÍ TAMBIÉN
+              const boxArea = bestOri.baseL * bestOri.baseW;
 
               if (currentPallet.totalHeight + bestOri.h <= MAX_HEIGHT) {
                   currentPallet.layers.push({ areaUsed: boxArea, maxHeight: bestOri.h });

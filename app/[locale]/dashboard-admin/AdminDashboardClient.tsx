@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useSession } from 'next-auth/react'; 
 import { 
   Package, Users, Truck, MapPin, PlusCircle, Layers, 
-  Activity, DollarSign, ClipboardList, Car, Loader2, TrendingUp, Container, Store, ShieldAlert, Mailbox, FileSearch, Archive, ShoppingBag, Gift 
+  Activity, DollarSign, ClipboardList, Car, Loader2, TrendingUp, Container, Store, ShieldAlert, Mailbox, FileSearch, Archive, ShoppingBag, Gift, ShoppingCart 
 } from 'lucide-react'; 
 
 export default function AdminDashboardClient({ locale }: { locale: string }) {
@@ -182,6 +182,20 @@ export default function AdminDashboardClient({ locale }: { locale: string }) {
                   </div>
                   <div className="bg-pink-50 p-2 rounded-lg text-pink-600 group-hover:bg-pink-100 transition-colors border border-pink-100">
                     <ShoppingBag size={20} strokeWidth={2} />
+                  </div>
+                </div>
+              </Link>
+
+              {/* 🔥 NUEVA TARJETA: CATÁLOGO AMAZON 🔥 */}
+              <Link href={`/${locale}/dashboard-admin/catalogo`} 
+                className="group bg-white p-5 rounded-xl border border-gray-200 hover:border-yellow-500 hover:shadow-md transition-all cursor-pointer block relative">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h3 className="text-base font-bold text-gmc-gris-oscuro group-hover:text-yellow-600 transition-colors">Catálogo Amazon</h3>
+                    <p className="text-xs text-gray-500 mt-1 font-medium">Gestionar productos del Miami Locker.</p>
+                  </div>
+                  <div className="bg-yellow-50 p-2 rounded-lg text-yellow-600 group-hover:bg-yellow-100 transition-colors border border-yellow-100">
+                    <ShoppingCart size={20} strokeWidth={2} />
                   </div>
                 </div>
               </Link>

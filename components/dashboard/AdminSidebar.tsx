@@ -112,7 +112,7 @@ export default function AdminSidebar() {
     }
   }, [pathname]);
 
-  const menuItems = [
+ const menuItems = [
     { name: "Dashboard", href: `/${currentLocale}/dashboard-admin`, icon: LayoutDashboard, roles: ["ADMIN"] },
     { name: "Paquetes", href: `/${currentLocale}/dashboard-admin/paquetes`, icon: Package, roles: ["ADMIN", "WAREHOUSE"] },
     { name: "Crear Envío", href: `/${currentLocale}/dashboard-admin/crear-envio`, icon: Truck, roles: ["ADMIN", "WAREHOUSE"] },
@@ -150,6 +150,9 @@ export default function AdminSidebar() {
         { name: "Inventario Físico", href: `/${currentLocale}/dashboard-admin/inventario-buzones`, count: expiredCount } 
       ]
     },
+
+    // 🔥 NUEVO BOTÓN: CATÁLOGO AMAZON 🔥
+    { name: "Catálogo Amazon", href: `/${currentLocale}/dashboard-admin/catalogo`, icon: ShoppingBag, roles: ["ADMIN"] },
 
     { name: "Clientes", href: `/${currentLocale}/dashboard-admin/clientes`, icon: Users, roles: ["ADMIN"] },
     { name: "Finanzas", href: `/${currentLocale}/dashboard-admin/finanzas`, icon: DollarSign, roles: ["ADMIN"] },

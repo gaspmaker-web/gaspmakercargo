@@ -29,6 +29,7 @@ interface PalletSimulator {
 /**
  * Motor principal de Aura - Enterprise 3D Bin Packing Heuristic
  * Optimiza cajas de múltiples dimensiones rotándolas y agrupándolas por capas.
+ * 🔥 VERSIÓN OPTIMIZADA: Área 100% real sin margen de seguridad.
  */
 export function calculateAuraLocalDelivery(
   boxes: AuraBox[],
@@ -82,7 +83,8 @@ export function calculateAuraLocalDelivery(
       let minHeightIncrease = Infinity;
 
       for (let ori of orientations) {
-        const boxArea = ori.baseL * ori.baseW * 1.15; // 15% margen de seguridad (abombamiento)
+        // 🔥 CAMBIO: Área de la caja al 100% (se eliminó el * 1.15)
+        const boxArea = ori.baseL * ori.baseW; 
         
         if (layer.areaUsed + boxArea <= PALLET_AREA) {
           // La caja cabe en el piso. ¿Afecta la altura?
@@ -115,7 +117,8 @@ export function calculateAuraLocalDelivery(
     if (!boxPlaced) {
       // Buscamos la rotación que ocupe menos altura para la nueva capa
       let bestOri = orientations.sort((a, b) => a.h - b.h)[0]; 
-      const boxArea = bestOri.baseL * bestOri.baseW * 1.15;
+      // 🔥 CAMBIO: Área de la caja al 100% (se eliminó el * 1.15)
+      const boxArea = bestOri.baseL * bestOri.baseW;
 
       if (currentPallet.totalHeight + bestOri.h <= MAX_HEIGHT) {
         // Cabe en el pallet actual como un piso nuevo
