@@ -243,12 +243,7 @@ export default function ClientDashboard({
      // ✅ CÓDIGO CORREGIDO (Lee directamente la variable correcta)
         const isVip = planType === 'VIP_WHOLESALE';
 
-      // El límite de 15 paquetes se omite si es VIP
-      if (type === 'AERIAL' && selectedPkgs.length > 15 && !isVip) {
-          alert(t('alertConsolidateLimit', { count: selectedPkgs.length }) || `Para envíos internacionales el límite es de 15 paquetes por regulaciones de aduana. Tienes ${selectedPkgs.length} seleccionados.`); 
-          return;
-      }
-
+      
       if (type === 'LOCAL' && selectedPkgs.length > 100) {
           alert(`Para Local Delivery el límite por solicitud es de 100 paquetes. Tienes ${selectedPkgs.length} seleccionados.`); 
           return;
