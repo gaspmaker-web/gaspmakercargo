@@ -39,7 +39,7 @@ export async function GET(req: Request) {
   return NextResponse.json({ cards: cardsWithCountry });
 }
 
-// POST: Guardar referencia de tarjeta nueva
+// POST: Guardar referencia de tarjeta nueva y forzarla para los cobros automáticos de la suscripción
 export async function POST(req: Request) {
   try {
     // 👇 VACUNA 2: Imports dentro de la función
@@ -59,11 +59,43 @@ export async function POST(req: Request) {
         throw new Error("Método de pago inválido");
     }
 
-    // 2. Verificar si es la primera tarjeta (para hacerla default)
-    const count = await prisma.paymentMethod.count({ where: { userId: session.user.id } });
-    const isFirst = count === 0;
+    // 2. Extraer datos del usuario y su suscripción en la BD
+    const user = await prisma.user.findUnique({ where: { id: session.user.id } });
+    const activeSub = await prisma.mailboxSubscription.findUnique({
+        where: { userId: session.user.id }
+    });
 
-    // 3. Guardar en Base de Datos
+    // 3. 🛡️ OPERACIÓN MAESTRA EN STRIPE 🛡️
+    if (user?.stripeCustomerId) {
+        try {
+            // A. Vincular la tarjeta al perfil del cliente
+            await stripe.paymentMethods.attach(paymentMethod.id, { customer: user.stripeCustomerId });
+        } catch (attachError: any) {
+            if (attachError.code !== 'resource_already_exists') {
+                console.error("Error al adjuntar tarjeta:", attachError);
+            }
+        }
+
+        // B. Hacer que sea la tarjeta por defecto del cliente
+        await stripe.customers.update(user.stripeCustomerId, {
+            invoice_settings: { default_payment_method: paymentMethod.id }
+        });
+
+        // C. Si tiene suscripción activa, ordenarle al contrato que use esta tarjeta
+        if (activeSub?.stripeSubscriptionId?.startsWith('sub_')) {
+            await stripe.subscriptions.update(activeSub.stripeSubscriptionId, {
+                default_payment_method: paymentMethod.id
+            });
+        }
+    }
+
+    // 4. Quitar el estado 'Default' a las tarjetas anteriores en la BD local
+    await prisma.paymentMethod.updateMany({
+        where: { userId: session.user.id },
+        data: { isDefault: false }
+    });
+
+    // 5. Guardar la nueva tarjeta como Default absoluto en BD local
     const newCard = await prisma.paymentMethod.create({
         data: {
             userId: session.user.id,
@@ -72,20 +104,10 @@ export async function POST(req: Request) {
             last4: paymentMethod.card.last4,
             expMonth: paymentMethod.card.exp_month,
             expYear: paymentMethod.card.exp_year,
-            isDefault: isFirst, // Si es la primera, es default
+            isDefault: true, // Siempre es verdadera para la nueva
             isBackup: false
         }
     });
-
-    // Opcional: Si es default, marcarla como default en el Customer de Stripe también
-    if (isFirst) {
-        const user = await prisma.user.findUnique({ where: { id: session.user.id } });
-        if (user?.stripeCustomerId) {
-            await stripe.customers.update(user.stripeCustomerId, {
-                invoice_settings: { default_payment_method: paymentMethod.id }
-            });
-        }
-    }
 
     return NextResponse.json({ success: true, card: newCard });
 

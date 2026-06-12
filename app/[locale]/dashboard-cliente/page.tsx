@@ -102,7 +102,7 @@ export default async function DashboardPage({ params: { locale } }: Props) {
     redirect('/login-cliente');
   }
 
-  // -------------------------------------------------------------------------
+ // -------------------------------------------------------------------------
   // 🔥 NUEVA LÓGICA: VERIFICACIÓN DEL BUZÓN VIRTUAL (MAILBOX) Y KYC
   // -------------------------------------------------------------------------
   const mailboxSubscription = await prisma.mailboxSubscription.findUnique({
@@ -114,11 +114,22 @@ export default async function DashboardPage({ params: { locale } }: Props) {
   const isKycMissing = mailboxSubscription?.status === 'PENDING_USPS' && !mailboxSubscription.uspsForm1583Url;
   const isKycRejected = mailboxSubscription?.status === 'REJECTED';
   
-  // Extraemos el plan para el Upselling
+  // ✅ ESTO SE QUEDA INTACTO (Para el Buzón Virtual)
   const planType = mailboxSubscription?.planType || null; 
 
-  // Combinamos si falta KYC o si fue rechazado (ambos requieren subir archivos)
   const needsKycUpload = isKycMissing || isKycRejected;
+
+  // 🔥 👇 SOLO AGREGAMOS ESTO (Para el Rango VIP) 👇 🔥
+  const dbUser = await prisma.user.findUnique({
+    where: { id: session.user.id }
+  });
+
+  // Extraemos el plan ignorando la advertencia estricta de TypeScript
+  const userPlan = (dbUser as any)?.planType;
+
+  // Combinamos ambos mundos: Si es VIP_WHOLESALE, tiene prioridad para el botón amarillo. 
+  // Si no es VIP, pasamos el plan normal del buzón virtual para que no se rompa el upselling.
+  const resolvedPlanType = userPlan === 'VIP_WHOLESALE' ? 'VIP_WHOLESALE' : planType;
 
   // 🔥 1. BUSCAMOS LAS TARJETAS GUARDADAS DEL CLIENTE
   const savedCards = await prisma.paymentMethod.findMany({
@@ -256,7 +267,7 @@ export default async function DashboardPage({ params: { locale } }: Props) {
                 enDestinoCount={enDestinoCount}
                 hasMailbox={hasMailbox}
                 needsKycUpload={needsKycUpload}
-                planType={planType} 
+                planType={resolvedPlanType} // 👈 USAMOS LA VARIABLE COMBINADA
                 // 🔥 2. LE PASAMOS LAS TARJETAS AL DASHBOARD
                 savedCards={savedCards}
             />

@@ -34,6 +34,33 @@ if (!webhookSecret) {
       return new NextResponse(`Webhook Error: ${error.message}`, { status: 400 });
     }
 
+// ==================================================================
+    // 🚀 NUEVO: EVENTO DE RENOVACIÓN AUTOMÁTICA MENSUAL ($29.99)
+    // ==================================================================
+    if (event.type === 'invoice.payment_succeeded') {
+      const invoice = event.data.object as any; // 👈 Bypass de TS
+      const subscriptionId = invoice.subscription as string;
+
+      if (subscriptionId) {
+        try {
+          // Calculamos el vencimiento (30 días a partir de ahora si no viene en invoice)
+          const nextPeriodEnd = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+          
+          await prisma.mailboxSubscription.updateMany({
+            where: { stripeSubscriptionId: subscriptionId },
+            data: { 
+                status: 'ACTIVE', 
+                currentPeriodEnd: nextPeriodEnd, 
+                updatedAt: new Date() 
+            }
+          });
+          console.log(`✅ Renovación VIP automática exitosa para suscripción: ${subscriptionId}`);
+        } catch (dbError) {
+          console.error('❌ Error actualizando la suscripción mensual:', dbError);
+        }
+      }
+    }
+
     const session = event.data.object as Stripe.Checkout.Session;
 
     // Solo procesamos si el pago se completó
@@ -101,6 +128,35 @@ if (!webhookSecret) {
               }
           });
           console.log(`✅ Deuda de almacenaje eliminada para ${ids.length} paquetes.`);
+        }
+
+        // ==================================================================
+        // ESCENARIO D: NUEVA SUSCRIPCIÓN VIP (PAGO POR LINK)
+        // ==================================================================
+        else if (session.mode === 'subscription' && session.subscription) {
+          const subscriptionId = session.subscription as string;
+          const customerEmail = session.customer_details?.email;
+
+          if (customerEmail) {
+            const user = await prisma.user.findUnique({ where: { email: customerEmail } });
+            if (user) {
+              await prisma.mailboxSubscription.upsert({
+                where: { userId: user.id },
+                update: {
+                  stripeSubscriptionId: subscriptionId,
+                  status: 'ACTIVE',
+                  planType: 'MONTHLY_2999' // Se mantiene el plan
+                },
+                create: {
+                  userId: user.id,
+                  stripeSubscriptionId: subscriptionId,
+                  status: 'ACTIVE',
+                  planType: 'MONTHLY_2999'
+                }
+              });
+              console.log(`🏆 Nueva suscripción VIP registrada para: ${customerEmail}`);
+            }
+          }
         }
 
         // ==================================================================

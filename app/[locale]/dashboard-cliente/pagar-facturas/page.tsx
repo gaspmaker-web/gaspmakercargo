@@ -14,22 +14,14 @@ export default async function PagarFacturasPage({ params: { locale } }: { params
     redirect('/login-cliente');
   }
 
-  // 1. Obtener Perfil Viejo (Respaldo) + 🔥 CAMPOS DE RECOMPENSAS
+ // 1. Obtener Perfil Viejo (Respaldo) + 🔥 CAMPOS DE RECOMPENSAS Y VIP
+  // Quitamos el "select" estricto para evitar el error de TypeScript
   const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: {
-      name: true,
-      address: true,
-      cityZip: true,
-      countryCode: true,
-      country: true,
-      phone: true,
-      // 👇 ¡AQUÍ ESTÁ LA MAGIA QUE FALTABA!
-      referredBy: true,          
-      referralRewardPaid: true,  
-      walletBalance: true,
-    }
+    where: { id: session.user.id }
   });
+
+  // Extraemos el plan ignorando la advertencia estricta
+  const userPlan = (user as any)?.planType;
 
   // 🔥 NUEVO: Traemos TODAS las direcciones de la nueva libreta, ordenando la DEFAULT primero
   const userAddresses = await prisma.address.findMany({
@@ -157,14 +149,15 @@ export default async function PagarFacturasPage({ params: { locale } }: { params
     walletBalance: user?.walletBalance || 0,
   };
 
-  return (
+return (
     <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8 font-montserrat">
         <PendingBillsClient 
             bills={bills} 
             locale={locale} 
             userProfile={userProfile} 
-            // 🔥 Le mandamos la libreta completa a la pantalla para crear el menú desplegable
             allAddresses={userAddresses} 
+            // 👇 ¡AQUÍ INYECTAMOS EL PASE VIP SIN ERRORES!
+            planType={userPlan}
         />
     </div>
   );

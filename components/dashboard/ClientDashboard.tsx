@@ -228,7 +228,7 @@ export default function ClientDashboard({
   const selectedPackagesData = packages.filter(p => selectedPkgs.includes(p.id));
   const totalSelectedWeight = selectedPackagesData.reduce((acc, p) => acc + (Number(p.weightLbs) || 0), 0);
 
-  // =========================================================================
+ // =========================================================================
   // 🚚 ACCIÓN 1: CONSOLIDAR / LOCAL DELIVERY 
   // =========================================================================
   const handleConsolidateClick = (type: 'AERIAL' | 'LOCAL') => {
@@ -239,7 +239,12 @@ export default function ClientDashboard({
           return;
       }
 
-      if (type === 'AERIAL' && selectedPkgs.length > 15) {
+      // 🔥 IDENTIFICAMOS AL CLIENTE VIP
+     // ✅ CÓDIGO CORREGIDO (Lee directamente la variable correcta)
+        const isVip = planType === 'VIP_WHOLESALE';
+
+      // El límite de 15 paquetes se omite si es VIP
+      if (type === 'AERIAL' && selectedPkgs.length > 15 && !isVip) {
           alert(t('alertConsolidateLimit', { count: selectedPkgs.length }) || `Para envíos internacionales el límite es de 15 paquetes por regulaciones de aduana. Tienes ${selectedPkgs.length} seleccionados.`); 
           return;
       }
@@ -254,7 +259,8 @@ export default function ClientDashboard({
 
       // 🔥 LÍMITES INTELIGENTES MULTILINGÜES
       if (type === 'AERIAL') {
-          if (totalSelectedWeight > 150) {
+          // El límite de 150 lbs se omite si es VIP
+          if (!isVip && totalSelectedWeight > 150) {
               const msg = t.has('alertAerialLimit') 
                 ? t('alertAerialLimit', { weight: totalSelectedWeight.toFixed(2) })
                 : `⚠️ Límite aéreo excedido.\nEl máximo internacional es 150 lbs. Tienes ${totalSelectedWeight.toFixed(2)} lbs.\n💡 Si estás en Florida, usa el botón "Local Delivery".`;
@@ -540,22 +546,24 @@ export default function ClientDashboard({
                             </div>
                         </div>
                         
-                        <button
+       <button
                             onClick={() => {
                                 const clearPackages = displayPackages.filter(p => !p.isBlocked);
                                 let selectedIds: string[] = [];
                                 let accumulatedWeight = 0;
                                 
-                                // ... código anterior ...
-for (let p of clearPackages) {
-    // Validación lógica: El único límite real para el envío aéreo es el peso (150 lbs)
-    if ((accumulatedWeight + (Number(p.weightLbs) || 0)) > 150) {
-        break; 
-    }
-    selectedIds.push(p.id);
-    accumulatedWeight += Number(p.weightLbs) || 0;
-}
-// ... código siguiente ...
+                                // 🔥 IDENTIFICAMOS AL CLIENTE VIP
+                                // ✅ CÓDIGO CORREGIDO (Lee directamente la variable correcta)
+                                const isVip = planType === 'VIP_WHOLESALE';
+                                
+                                for (let p of clearPackages) {
+                                    // 🔥 Si es VIP, no hay límite de 150 lbs
+                                    if (!isVip && (accumulatedWeight + (Number(p.weightLbs) || 0)) > 150) {
+                                        break; 
+                                    }
+                                    selectedIds.push(p.id);
+                                    accumulatedWeight += Number(p.weightLbs) || 0;
+                                }
                                 
                                 setSelectedPkgs(selectedIds);
                                 setConsolidationType('AERIAL');

@@ -334,11 +334,19 @@ export async function POST(req: Request) {
     // ==========================================
     // 6. TARIFAS LOCALES (EXPORTACIÓN CARIBE)
     // ==========================================
+    const isVipWholesale = body.isVip || false;
+
     if (targetCountryCode === 'BB') {
-        rawRates.push({ id: 'GMC-BB', carrier: 'Gasp Maker Cargo', service: 'Barbados Direct', price: calculateRate_BB(chargeableWeight), days: '3-5 days', logo: gmcLogo });
+        const price = (isVipWholesale && chargeableWeight >= 230) 
+            ? chargeableWeight * 2.80 
+            : calculateRate_BB(chargeableWeight);
+        rawRates.push({ id: 'GMC-BB', carrier: 'Gasp Maker Cargo', service: 'Barbados Direct', price, days: '3-5 days', logo: gmcLogo });
     }
     if (targetCountryCode === 'TT') {
-        rawRates.push({ id: 'GMC-TT', carrier: 'Gasp Maker Cargo', service: 'Trinidad Direct', price: calculateRate_TT(chargeableWeight), days: '3-5 days', logo: gmcLogo });
+        const price = (isVipWholesale && chargeableWeight >= 230) 
+            ? chargeableWeight * 2.80 
+            : calculateRate_TT(chargeableWeight);
+        rawRates.push({ id: 'GMC-TT', carrier: 'Gasp Maker Cargo', service: 'Trinidad Direct', price, days: '3-5 days', logo: gmcLogo });
     }
     if (targetCountryCode === 'JM') {
         rawRates.push({ id: 'GMC-JM', carrier: 'Gasp Maker Cargo', service: 'Jamaica Direct', price: calculateRate_JM(chargeableWeight), days: '3-5 days', logo: gmcLogo });
