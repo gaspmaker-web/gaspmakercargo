@@ -15,12 +15,10 @@ export default async function PagarFacturasPage({ params: { locale } }: { params
   }
 
  // 1. Obtener Perfil Viejo (Respaldo) + 🔥 CAMPOS DE RECOMPENSAS Y VIP
-  // Quitamos el "select" estricto para evitar el error de TypeScript
   const user = await prisma.user.findUnique({
     where: { id: session.user.id }
   });
 
-  // Extraemos el plan ignorando la advertencia estricta
   const userPlan = (user as any)?.planType;
 
   // 🔥 NUEVO: Traemos TODAS las direcciones de la nueva libreta, ordenando la DEFAULT primero
@@ -32,11 +30,9 @@ export default async function PagarFacturasPage({ params: { locale } }: { params
     ]
   });
 
-  // Definimos la dirección principal
   const defaultAddress = userAddresses.length > 0 ? userAddresses[0] : null;
 
   // 2. BUSCAR CONSOLIDACIONES PENDIENTES
-  // ⚠️ Nota: Asegúrate que los status coincidan con lo que guarda tu Admin API
   const pendingShipments = await prisma.consolidatedShipment.findMany({
     where: {
       userId: session.user.id,
@@ -52,7 +48,7 @@ export default async function PagarFacturasPage({ params: { locale } }: { params
   const bills = pendingShipments.map(s => {
     
     // =========================================================================
-    // 🛡️ LÓGICA BLINDADA: SEPARAR PICKUP, STORAGE Y ENVÍO
+    // 🛡️ LÓGICA BLINDADA: SEPARAR PICKUP, STORAGE, AURA Y ENVÍO
     // =========================================================================
     
     let type = 'CONSOLIDATION';
@@ -60,20 +56,19 @@ export default async function PagarFacturasPage({ params: { locale } }: { params
     let handlingFee = 0;
     let finalSubtotal = s.subtotalAmount || 0;
 
-   // 1. Identificadores
+    // 1. Identificadores
     const isIdPickup = s.gmcShipmentNumber?.toUpperCase().startsWith('PICKUP');
     const isServicePickup = s.serviceType === 'PICKUP' || s.courierService?.toLowerCase().includes('pickup') || s.courierService?.toLowerCase().includes('cita');
-    
-    // 🚨 CRÍTICO: Detectar si es un cobro de Almacenaje (Storage)
     const isStorage = s.serviceType === 'STORAGE_FEE' || s.serviceType?.includes('STORAGE');
+    
+    // 🚀 NUEVO: Detectar si es Aura (Local Delivery)
+    const isLocalDelivery = s.serviceType === 'LOCAL_DELIVERY';
 
-    // 🔥 LA SOLUCIÓN: Evaluamos PRIMERO si el ID o el Servicio indican que es un Retiro.
     if (isIdPickup || isServicePickup) {
-        // 🏬 ESCENARIO 1: RETIRO EN BODEGA (Imagen op39 y op43)
+        // 🏬 ESCENARIO 1: RETIRO EN BODEGA
         type = 'WAREHOUSE_PICKUP';
         displayService = 'Retiro en Bodega';
 
-        // Aplicamos la tabla In-Out por paquete
         let totalHandlingForPickup = 0;
         if (s.packages && s.packages.length > 0) {
             s.packages.forEach(pkg => {
@@ -87,18 +82,23 @@ export default async function PagarFacturasPage({ params: { locale } }: { params
             });
         }
         
-        finalSubtotal = 0; // El flete es 0 porque vienen a buscarlo
+        finalSubtotal = 0; 
         handlingFee = totalHandlingForPickup;
         
     } else if (isStorage) {
-        // 📦 ESCENARIO 2: PAGO DE ALMACENAJE (Llega aquí solo si no es un Pickup real)
+        // 📦 ESCENARIO 2: PAGO DE ALMACENAJE
         type = 'STORAGE';
         displayService = 'Cargo por Almacenaje';
-        // Se respeta intacto el finalSubtotal que viene de la BD
         handlingFee = 0; 
         
+    } else if (isLocalDelivery) {
+        // 🚚 ESCENARIO 3: AURA LOCAL DELIVERY (NUEVO)
+        type = 'LOCAL_DELIVERY';
+        displayService = 'Entrega Local (Aura)';
+        handlingFee = 0;
+
     } else {
-        // ✈️ ESCENARIO 3: ENVÍO INTERNACIONAL / CONSOLIDACIÓN
+        // ✈️ ESCENARIO 4: ENVÍO INTERNACIONAL / CONSOLIDACIÓN
         type = 'CONSOLIDATION';
         handlingFee = 0;
     }
@@ -111,10 +111,11 @@ export default async function PagarFacturasPage({ params: { locale } }: { params
     let typeLabel = 'Consolidación';
     if (type === 'WAREHOUSE_PICKUP') typeLabel = 'Solicitud de Retiro';
     if (type === 'STORAGE') typeLabel = 'Cargo por Almacenaje';
+    if (type === 'LOCAL_DELIVERY') typeLabel = 'Consolidación Local (Aura)'; // 🔥 Etiqueta bonita
 
     return {
       id: s.id,
-      type: type,
+      type: type, 
       description: `${typeLabel} #${labelId}`,
       gmcShipmentNumber: s.gmcShipmentNumber,
       createdAt: s.createdAt,
@@ -130,20 +131,22 @@ export default async function PagarFacturasPage({ params: { locale } }: { params
       widthIn: s.widthIn || 0,
       heightIn: s.heightIn || 0,
       
+      // 🚀 ¡LOS DATOS CRUCIALES PARA AURA! (Las líneas que agregaste)
+      serviceType: s.serviceType,
+      auraDetails: s.auraDetails, 
+
       packages: s.packages,
       selectedCourier: s.selectedCourier,
       courierService: displayService 
     };
   });
 
-  // 🔥 DATOS LIMPIOS: Priorizamos la nueva libreta, si está vacía usamos el perfil viejo
   const userProfile = {
     name: defaultAddress?.fullName || user?.name || '',
     address: defaultAddress?.address || user?.address || '',
     cityZip: defaultAddress?.cityZip || user?.cityZip || '',
     countryCode: defaultAddress?.country || user?.country || user?.countryCode || 'US', 
     phone: defaultAddress?.phone || user?.phone || '',
-    // 👇 ¡PASANDO LOS DATOS DE RECOMPENSA AL FRONTEND!
     referredBy: user?.referredBy || null,
     referralRewardPaid: user?.referralRewardPaid || false,
     walletBalance: user?.walletBalance || 0,
@@ -156,7 +159,6 @@ return (
             locale={locale} 
             userProfile={userProfile} 
             allAddresses={userAddresses} 
-            // 👇 ¡AQUÍ INYECTAMOS EL PASE VIP SIN ERRORES!
             planType={userPlan}
         />
     </div>

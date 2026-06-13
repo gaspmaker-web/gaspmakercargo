@@ -117,8 +117,8 @@ function calculateRate_GD(weight: number): number {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    // Extraemos distanceMiles y un posible arreglo de "boxes" si se envían múltiples
-    const { weight, weightLbs, dimensions, destination, distanceMiles, boxes } = body;
+    // Extraemos distanceMiles y el arreglo de pallets de Aura
+    const { weight, weightLbs, dimensions, destination, distanceMiles, auraDetails } = body;
     
     // --- 🛡️ SANITIZACIÓN BÁSICA ---
     let finalWeightLbs = parseFloat(weightLbs || weight);
@@ -176,13 +176,23 @@ export async function POST(req: Request) {
     let rawRates: any[] = [];
     const gmcLogo = '/gaspmakercargoproject.png';
 
-    // ==========================================
+ // ==========================================
     // 4. MOTOR AURA (GASP MAKER LOCAL DELIVERY) - CON GPS BACKEND
     // ==========================================
     if (isFloridaLocal) {
-        let auraBoxes: AuraBox[] = boxes || [];
+        let auraBoxes: AuraBox[] = [];
         
-        if (auraBoxes.length === 0) {
+        // 🔥 TRADUCTOR DE PALLETS: Convertimos lo que manda el frontend al formato de tu motor
+        if (auraDetails && Array.isArray(auraDetails) && auraDetails.length > 0) {
+            auraBoxes = auraDetails.map((b: any) => ({
+                length: parseFloat(b.length) || 1,
+                width: parseFloat(b.width) || 1,
+                height: parseFloat(b.height) || 1,
+                // El frontend envía "weight", el motor espera "realWeight"
+                realWeight: parseFloat(b.weight || b.realWeight) || 1
+            }));
+        } else {
+            // Si por alguna razón no hay pallets, asume 1 solo paquete global
             auraBoxes = [{
                 length: len || 1,
                 width: wid || 1,

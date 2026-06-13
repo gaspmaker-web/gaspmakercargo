@@ -160,12 +160,15 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
       setUseWallet(false);
   };
 
- // 2. OBTENER TARIFAS (Cotizar)
+// 2. OBTENER TARIFAS (Cotizar)
   const handleGetRates = async (bill: any) => {
       if (!currentHasAddress) { alert("⚠️ " + t('errorAddress')); return; }
       
       setLoadingRatesId(bill.id);
       try {
+          // 🔥 NUEVO: Nos aseguramos de parsear correctamente si viene como string
+          const auraPieces = typeof bill.auraDetails === 'string' ? JSON.parse(bill.auraDetails) : bill.auraDetails;
+
           const res = await fetch('/api/rates', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -175,8 +178,10 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                       length: bill.lengthIn || 10, width: bill.widthIn || 10, height: bill.heightIn || 10 
                   },
                   destination: currentDestination,
-                  // 🔥 2. CORREGIDO: USAMOS LA VARIABLE CORRECTA
-                  isVip: planType === 'VIP_WHOLESALE'
+                  isVip: planType === 'VIP_WHOLESALE',
+                  // 🚀 NUEVOS CAMPOS: Enviamos el tipo de servicio y el desglose de piezas
+                  serviceType: bill.type,
+                  auraDetails: auraPieces
               })
           });
           
@@ -189,10 +194,12 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
           } else {
               alert(t('errorGeneric') || "No rates found.");
           }
-      } catch (e) { alert(t('errorConnection') || "Connection Error"); } 
-      finally { setLoadingRatesId(null); }
+      } catch (e) { 
+          alert(t('errorConnection') || "Connection Error"); 
+      } finally { 
+          setLoadingRatesId(null); 
+      }
   };
-
   // 3. SELECCIONAR TARIFA
   const handleSelectRate = (billId: string, rate: Rate) => {
       setSelectedRateMap(prev => ({ ...prev, [billId]: rate }));
@@ -272,9 +279,9 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
               let itemServicePrice = 0;
               const weight = Number(bill.weightLbs) || 0;
               
-              // ✈️ CÁLCULO DE FLETE ($2.80 FLAT SI CUMPLE REGLAS)
+           // ✈️ CÁLCULO DE FLETE ($2.80 FLAT SI CUMPLE REGLAS Y NO ES AURA)
               if (rate) {
-                  if (isVip && weight >= 230) {
+                  if (isVip && weight >= 230 && !isLocalAura) {
                       itemServicePrice = weight * 2.80;
                   } else {
                       itemServicePrice = rate.price;
@@ -284,7 +291,7 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                   if (isRetiroOAlmacenaje) {
                       itemServicePrice = bill.totalAmount || 0;
                   } else {
-                      if (isVip && weight >= 230) {
+                      if (isVip && weight >= 230 && !isLocalAura) {
                           itemServicePrice = weight * 2.80;
                       } else {
                           const totalFromServer = bill.totalAmount || 0;
@@ -298,14 +305,29 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
           }
       });
 
-      const taxableAmount = serviceSubtotal + handlingSubtotal + insuranceSubtotal;
+     const taxableAmount = serviceSubtotal + handlingSubtotal + insuranceSubtotal;
       
-      // 💳 ELIMINAR EL FEE DE LA PASARELA PARA CUENTAS VIP
-      const fee = isVip ? 0 : getProcessingFee(taxableAmount);
+      // 🔥 ESCUDO AURA: Verificamos si en este pago hay algún servicio de Local Delivery
+      let isPayingAura = false;
+      selectedBillIds.forEach(id => {
+          const currentBill = bills.find(b => b.id === id);
+          const currentRate = selectedRateMap[id];
+          
+          const hasAuraBolsillo = currentBill?.auraDetails && Array.isArray(currentBill.auraDetails) && currentBill.auraDetails.length > 0;
+          if (
+              currentBill?.type === 'LOCAL_DELIVERY' || 
+              hasAuraBolsillo || 
+              (currentRate && currentRate.service?.toLowerCase().includes('aura'))
+          ) {
+              isPayingAura = true;
+          }
+      });
+
+      // 💳 ELIMINAR EL FEE DE LA PASARELA PARA VIPs (EXCEPTO SI ES AURA)
+      const fee = (isVip && !isPayingAura) ? 0 : getProcessingFee(taxableAmount);
       
       let finalTotal = Math.max(0, taxableAmount + fee - discount);
       let appliedWallet = 0;
-
       if (useWallet && walletBalance > 0) {
           appliedWallet = Math.min(walletBalance, finalTotal - 0.50);
           if (appliedWallet < 0) appliedWallet = 0;
@@ -626,20 +648,19 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                                     const ins = val > 100 ? val * 0.03 : 0;
                                     const visualWeight = Number(bill.weightLbs) || 0;
 
-                                    // ✈️ Lógica de visualización del precio con tarifa VIP ($2.80) incluida
+                                 // ✈️ Lógica de visualización del precio con tarifa VIP ($2.80) (EXCEPTO AURA)
                                     let baseDisplayPrice = bill.totalAmount || 0;
                                     if (selectedRate) {
-                                        if (isVipVisual && visualWeight >= 230) {
+                                        if (isVipVisual && visualWeight >= 230 && !isVisualLocalAura) {
                                             baseDisplayPrice = visualWeight * 2.80;
                                         } else {
                                             baseDisplayPrice = selectedRate.price;
                                         }
                                     } else {
-                                        if (isVipVisual && visualWeight >= 230) {
+                                        if (isVipVisual && visualWeight >= 230 && !isVisualLocalAura) {
                                             baseDisplayPrice = visualWeight * 2.80;
                                         }
                                     }
-
                                     const displayPrice = baseDisplayPrice + effectiveHandling + ins;
 
                                     const isPickup = bill.serviceType === 'PICKUP' || 
@@ -675,14 +696,38 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                                                 </div>
                                             </div>
 
-                                            <div className="flex gap-3 mb-5 pl-10">
-                                                <span className="inline-flex items-center gap-1 bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg text-xs font-bold border border-gray-200">
-                                                    <Scale size={12}/> {bill.weightLbs} lb
-                                                </span>
-                                                <span className="inline-flex items-center gap-1 bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg text-xs font-bold border border-gray-200">
-                                                    <Ruler size={12}/> {bill.lengthIn}x{bill.widthIn}x{bill.heightIn}
-                                                </span>
-                                            </div>
+                                          {/* 🔥 NUEVO: DESGLOSE VISUAL DE PALLETS AURA 🔥 */}
+                                            {(() => {
+                                                // Convertimos los datos si vienen como texto desde Supabase
+                                                const auraList = typeof bill.auraDetails === 'string' ? JSON.parse(bill.auraDetails) : bill.auraDetails;
+                                                const isAuraDetails = Array.isArray(auraList) && auraList.length > 0;
+
+                                                if (isAuraDetails) {
+                                                    return (
+                                                        <div className="mb-5 pl-10 flex flex-col gap-2">
+                                                            {auraList.map((bulto: any, idx: number) => (
+                                                                <div key={idx} className="inline-flex items-center gap-2 bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg text-xs font-bold border border-gray-200 w-fit">
+                                                                    <span className="text-gray-800">#{idx + 1}</span>
+                                                                    <Scale size={12} className="text-gray-500"/> {bulto.weight} lb
+                                                                    <span className="text-gray-300">|</span>
+                                                                    <Ruler size={12} className="text-gray-500"/> {bulto.length}x{bulto.width}x{bulto.height}
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    );
+                                                }
+
+                                                return (
+                                                    <div className="flex gap-3 mb-5 pl-10">
+                                                        <span className="inline-flex items-center gap-1 bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg text-xs font-bold border border-gray-200">
+                                                            <Scale size={12}/> {bill.weightLbs} lb
+                                                        </span>
+                                                        <span className="inline-flex items-center gap-1 bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg text-xs font-bold border border-gray-200">
+                                                            <Ruler size={12}/> {bill.lengthIn}x{bill.widthIn}x{bill.heightIn}
+                                                        </span>
+                                                    </div>
+                                                );
+                                            })()}
 
                                             <div className="pl-0 sm:pl-2">
                                                 {needsQuote && !rates ? (

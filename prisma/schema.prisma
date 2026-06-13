@@ -190,6 +190,9 @@ model ConsolidatedShipment {
   // 🔥 NUEVO: Para guardar la tabla detallada de aduanas de cajas agrupadas
   customsItems           Json?    
 
+  // 🚀 NUEVO: Aquí se guardará el arreglo con Pallet 1, Pallet 2, etc.
+  auraDetails            Json?    
+
   subtotalAmount         Float?   @default(0.0) 
   processingFee          Float?   @default(0.0) 
   totalAmount            Float?

@@ -137,49 +137,37 @@ export function calculateAuraLocalDelivery(
     }
   });
 
-  // 3. FACTURACIÓN Y CLASIFICACIÓN DE TARIFA (Lógica Híbrida)
+// 3. FACTURACIÓN LINEAL (Cobro estricto por pallet)
   const palletCount = pallets.length;
   let baseFare = 0;
   let appliedStrategy = '';
 
-  if (totalBillableWeight > 2000) {
-    baseFare = totalBillableWeight * 0.35;
-    appliedStrategy = 'BULK_RATE_0.35';
-  } else {
-    // Cobramos los pallets completos a tarifa máxima
-    const fullPalletsCost = (palletCount - 1) * 150.00;
-    
-    // El último pallet (Sobrante) se cobra por su peso exacto
-    const lastPalletWeight = pallets[palletCount - 1].billableWeight;
-    let lastFare = 0;
-    if (lastPalletWeight >= 151) lastFare = 150.00;
-    else if (lastPalletWeight >= 51) lastFare = 85.00;
-    else if (lastPalletWeight >= 11) lastFare = 45.00;
-    else lastFare = 25.00;
+  // 🔥 ELIMINADO EL COBRO POR LIBRA: Ahora cobramos siempre los pallets a tarifa máxima ($150)
+  const fullPalletsCost = (palletCount - 1) * 150.00;
+  
+  // El último pallet (Sobrante) se cobra por su peso exacto
+  const lastPalletWeight = pallets[palletCount - 1].billableWeight;
+  let lastFare = 0;
+  if (lastPalletWeight >= 151) lastFare = 150.00;
+  else if (lastPalletWeight >= 51) lastFare = 85.00;
+  else if (lastPalletWeight >= 11) lastFare = 45.00;
+  else lastFare = 25.00;
 
-    baseFare = fullPalletsCost + lastFare;
-    appliedStrategy = palletCount > 1 ? 'HYBRID_MIXED_DIMENSIONS' : 'STANDARD_MIXED_DIMENSIONS';
-  }
+  baseFare = fullPalletsCost + lastFare;
+  appliedStrategy = palletCount > 1 ? 'LINEAR_PER_PALLET' : 'STANDARD_MIXED_DIMENSIONS';
 
-  // 🔥 4. FACTOR DE MILLAJE Y ZONA GEOGRÁFICA (Estrategia Corporativa)
-  // Ajustamos el umbral: Es pesado si pasa de 500 lbs o requiere más de 1 pallet de espacio
+  // 🔥 4. FACTOR DE MILLAJE (Lineal y proporcional por pallet)
   const isHeavy = totalBillableWeight >= 850 || palletCount > 1; 
   let distanceSurcharge = 0;
 
-  // Radio Base: Las primeras 10 millas desde el almacén están cubiertas por la tarifa plana
+  // Radio Base: Las primeras 10 millas desde el almacén son GRATIS
   if (distanceMiles > 10) {
     const extraMilesOneWay = distanceMiles - 10;
 
-    if (isHeavy) {
-      // 🔄 LÓGICA DE CIRCUITO (Round Trip): Carga pesada o pallet desbordado
-      // Se calcula el millaje excedente de ida y vuelta para cubrir los costos de retorno del vehículo pesado
-      const roundTripExtraMiles = extraMilesOneWay * 2;
-      distanceSurcharge = roundTripExtraMiles * 2.50;
-    } else {
-      // ➡️ TRAYECTO SIMPLE: Bajo volumen (v_30)
-      // Solo se penaliza el trayecto de entrega por milla excedente
-      distanceSurcharge = extraMilesOneWay * 1.50;
-    }
+    // ➡️ TRAYECTO SIMPLE MULTIPLICADO: 
+    // Multiplicamos la tarifa base de millaje ($1.50) por el número de pallets.
+    // Así, 1 pallet paga $13.95 de millaje, y 3 pallets pagan $41.85 exactos.
+    distanceSurcharge = extraMilesOneWay * 1.50 * palletCount;
   }
 
   return {
