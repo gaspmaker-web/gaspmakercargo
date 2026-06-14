@@ -736,21 +736,24 @@
     "alertConnection": "Connection error."
     
   },
-  "InTransitPage": {
+"InTransitPage": {
     "title": "In Transit",
     "subtitle": "Swipe to see your packages on the way",
     "trackPackage": "Track Package",
-    "enRuta": "ON ROUTE",
-"enviado": "SHIPPED",
-"enTransito": "IN TRANSIT",
-"listoParaEnvio": "READY TO SHIP",
-"viewCustomsDoc": "VIEW CUSTOMS DOCUMENT",
-"viewPackages": "VIEW PACKAGES",
-"noActiveShipments": "No active shipments",
-"noTransitMsg": "You don't have any packages in transit right now.",
-"transitAppearMsg": "Your shipments will appear here when they leave Miami.",
-"enReparto": "OUT FOR DELIVERY"
-  },
+    "enRuta": "EN ROUTE",
+    "enviado": "SHIPPED",
+    "enTransito": "IN TRANSIT",
+    "listoParaEnvio": "READY FOR SHIPPING",
+    "viewCustomsDoc": "VIEW CUSTOMS DOC",
+    "viewPackages": "VIEW PACKAGES",
+    "noActiveShipments": "No active shipments",
+    "noTransitMsg": "You have no packages in transit at the moment.",
+    "transitAppearMsg": "Your shipments will appear here once they leave Miami.",
+    "enReparto": "OUT FOR DELIVERY",
+    "pagado": "PAID",
+    "paqueteConsolidado": "Consolidated Package",
+    "paquetesConsolidados": "Consolidated Packages"
+},
  "DeliveredPage": {
     "title": "Delivered (History)",
     "subtitle": "Archive of delivered packages.",

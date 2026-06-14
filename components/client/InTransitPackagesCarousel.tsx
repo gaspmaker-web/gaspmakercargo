@@ -30,10 +30,15 @@ export default function InTransitPackagesCarousel({ packages, userCountryCode }:
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  const getStatusLabel = (status: string, isLocal: boolean) => {
+ const getStatusLabel = (status: string, isLocal: boolean) => {
     if (!status) return 'PROCESANDO...';
     const upperStatus = status.toUpperCase();
     
+    // 🔥 NUEVO GATILLO: CAPTURA DE "PAGADO"
+    if (upperStatus === 'PAGADO' || upperStatus === 'PAID') {
+        return tPage.has('pagado') ? tPage('pagado') : 'PAGADO';
+    }
+
     if (upperStatus === 'EN_TRANSITO' || upperStatus === 'IN_TRANSIT') {
         return isLocal ? (tPage.has('enRuta') ? tPage('enRuta') : 'EN RUTA') : (tPage.has('enTransito') ? tPage('enTransito') : 'EN TRÁNSITO');
     }
@@ -44,7 +49,6 @@ export default function InTransitPackagesCarousel({ packages, userCountryCode }:
         return tPage.has('listoParaEnvio') ? tPage('listoParaEnvio') : 'LISTO PARA ENVÍO';
     }
     
-    // 🔥 NUEVO GATILLO: CAPTURA EN REPARTO MULTILINGÜE
     if (upperStatus === 'EN_REPARTO' || upperStatus === 'OUT_FOR_DELIVERY') {
         return tPage.has('enReparto') ? tPage('enReparto') : 'EN REPARTO';
     }
@@ -235,7 +239,11 @@ export default function InTransitPackagesCarousel({ packages, userCountryCode }:
 
                             <div>
                                 <h3 className="font-bold text-gray-800 text-lg line-clamp-1 mb-1 capitalize">
-                                    {isMaster ? `${item.children.length} Paquetes Consolidados` : (pkg.description || t('noDescription'))}
+                                    {isMaster 
+                                        ? `${item.children.length} ${item.children.length === 1 
+                                            ? (tPage.has('paqueteConsolidado') ? tPage('paqueteConsolidado') : 'Paquete Consolidado') 
+                                            : (tPage.has('paquetesConsolidados') ? tPage('paquetesConsolidados') : 'Paquetes Consolidados')}` 
+                                        : (pkg.description || t('noDescription'))}
                                 </h3>
                                 <div className="flex items-center gap-2">
                                     {isMaster && (

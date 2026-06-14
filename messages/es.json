@@ -776,21 +776,24 @@
     "alertError": "❌ Error al procesar el pago.",
     "alertConnection": "Error de conexión."
   },
- "InTransitPage": {
+"InTransitPage": {
     "title": "En Tránsito",
     "subtitle": "Desliza para ver tus paquetes en camino",
     "trackPackage": "Rastrear Paquete",
     "enRuta": "EN RUTA",
-"enviado": "ENVIADO",
-"enTransito": "EN TRÁNSITO",
-"listoParaEnvio": "LISTO PARA ENVÍO",
-"viewCustomsDoc": "VER DOCUMENTO ADUANAL",
-"viewPackages": "VER PAQUETES",
-"noActiveShipments": "No hay envíos activos",
-"noTransitMsg": "No tienes paquetes en tránsito en este momento.",
-"transitAppearMsg": "Tus envíos aparecerán aquí cuando salgan de Miami.",
-"enReparto": "EN REPARTO"
-  },
+    "enviado": "ENVIADO",
+    "enTransito": "EN TRÁNSITO",
+    "listoParaEnvio": "LISTO PARA ENVÍO",
+    "viewCustomsDoc": "VER DOCUMENTO ADUANAL",
+    "viewPackages": "VER PAQUETES",
+    "noActiveShipments": "No hay envíos activos",
+    "noTransitMsg": "No tienes paquetes en tránsito en este momento.",
+    "transitAppearMsg": "Tus envíos aparecerán aquí cuando salgan de Miami.",
+    "enReparto": "EN REPARTO",
+    "pagado": "PAGADO",
+    "paqueteConsolidado": "Paquete Consolidado",
+    "paquetesConsolidados": "Paquetes Consolidados"
+},
  "DeliveredPage": {
     "title": "En Destino (Historial)",
     "subtitle": "Archivo de paquetes entregados.",
