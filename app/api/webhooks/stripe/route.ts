@@ -130,7 +130,7 @@ if (!webhookSecret) {
           console.log(`✅ Deuda de almacenaje eliminada para ${ids.length} paquetes.`);
         }
 
-        // ==================================================================
+       // ==================================================================
         // ESCENARIO D: NUEVA SUSCRIPCIÓN VIP (PAGO POR LINK)
         // ==================================================================
         else if (session.mode === 'subscription' && session.subscription) {
@@ -159,6 +159,40 @@ if (!webhookSecret) {
           }
         }
 
+        // ==================================================================
+        // 🚨 NUEVO: GATILLO GLOBAL PARA CORREOS DE LOCAL DELIVERY
+        // Funciona tanto para Consolidaciones como para Paquetes Individuales
+        // ==================================================================
+        const isLocalDelivery = description?.toUpperCase().includes('LOCAL DELIVERY') || 
+                                type?.toUpperCase().includes('LOCAL');
+
+        if (isLocalDelivery) {
+          try {
+            const { sendAdminLocalDeliveryAlert } = await import('@/lib/notifications');
+            const clientName = session.customer_details?.name || "Cliente Registrado";
+            
+            // Toma el ID de la Consolidación. Si no existe, toma el del Paquete.
+            const trackingNumber = shipmentId || packageId || "ID_NO_ENCONTRADO";
+            
+            await sendAdminLocalDeliveryAlert(
+              clientName,
+              amount,
+              trackingNumber,
+              stripePaymentId
+            );
+            console.log(`✉️ Alerta Admin enviada para Local Delivery (Tracking/ID: ${trackingNumber})`);
+          } catch (emailErr) {
+            console.error('⚠️ Error al enviar alerta de correo de local delivery:', emailErr);
+          }
+        }
+
+        // ==================================================================
+        // 2. REGISTRO DE TRANSACCIÓN
+        // ==================================================================
+        if (userId) {
+          console.log(`📝 Pago completado (Transaction omitida por falta de modelo)`);
+        }
+        
         // ==================================================================
         // 2. REGISTRO DE TRANSACCIÓN
         // ==================================================================

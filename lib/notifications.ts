@@ -482,3 +482,30 @@ export const sendPayAndGoReceiptEmail = async (
   );
   try { return await resend.emails.send({ from: EMAIL_FROM, to: email, subject: `🧾 ${title}`, html }); } catch (e) { return { error: e }; }
 };
+export const sendAdminLocalDeliveryAlert = async (clientName: string, amount: number, trackingNumber: string, orderId: string) => {
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.gaspmakercargo.com';
+    await resend.emails.send({
+      from: EMAIL_FROM,
+      to: ADMIN_EMAIL,
+      subject: `🚨 LOCAL DELIVERY PAGADO: $${amount.toFixed(2)} - ${clientName}`,
+      html: baseTemplate(
+        "Alerta: Pago de Entrega Local Confirmado",
+        `<p>El cliente <strong>${clientName}</strong> ha completado el pago de un servicio de <strong>Local Delivery</strong>.</p>
+         <div class="info-box" style="border-left: 5px solid #000; background: #f8fafc;">
+            <div class="info-row"><span class="label">Cliente:</span><br><span class="value">${clientName}</span></div>
+            <div class="info-row"><span class="label">Tracking / Guía:</span><br><span class="value" style="font-family:monospace; font-size:16px; color:#2563eb;">${trackingNumber}</span></div>
+            <div class="info-row"><span class="label">Monto Liquidado:</span><br><span class="value" style="color: #059669; font-size: 16px;">$${amount.toFixed(2)} USD</span></div>
+            <div class="info-row"><span class="label">Orden ID:</span><br><span class="value">#${orderId.slice(0, 8).toUpperCase()}</span></div>
+         </div>
+         <p><strong>Acción requerida:</strong> Verificar la asignación de camión o chofer en el panel administrativo para coordinar la ruta de entrega hoy mismo.</p>`,
+        "Admin Notification - Local Delivery",
+        `${baseUrl}/es/dashboard-admin/paquetes`, 
+        "Gestionar Ruta en Panel Admin"
+      )
+    });
+    console.log("✅ [Resend] Alerta de Local Delivery enviada exitosamente al administrador.");
+  } catch (error) { 
+    console.error("❌ Error enviando la alerta admin de local delivery:", error); 
+  }
+};
