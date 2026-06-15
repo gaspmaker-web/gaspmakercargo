@@ -23,8 +23,20 @@ export default async function MiamiLockerPage() {
       case 'Scanner':
       case 'OBDII Scanners':
         return 'bg-amber-50 text-amber-600';
+      // 🔥 Nuevas Categorías Comerciales 🔥
+      case 'DashCam':
+        return 'bg-slate-50 text-slate-600'; 
+      case 'JumpStarter':
+        return 'bg-orange-50 text-orange-600'; 
+      case 'TireCare':
+        return 'bg-cyan-50 text-cyan-600'; 
+      case 'CarCare':
+        return 'bg-teal-50 text-teal-600'; 
+      case 'Electronics':
+        return 'bg-indigo-50 text-indigo-600'; 
+      case 'Lighting':
+        return 'bg-yellow-50 text-yellow-600'; 
       case 'Automotive':
-        return 'bg-blue-50 text-blue-600';
       default:
         return 'bg-blue-50 text-blue-600';
     }
@@ -137,7 +149,7 @@ export default async function MiamiLockerPage() {
         <div className="flex items-center justify-between mb-8 bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
           <span className="text-sm font-bold text-gray-500 flex items-center gap-2">
              <ShoppingCart size={18} className="text-blue-500" />
-             Catálogo Oficial
+             {t('official_catalog')}
           </span>
           <span className="text-xs font-bold text-white bg-gray-900 px-3 py-1.5 rounded-md shadow-sm">
             {products.length} {t('grid_products_count')}
@@ -163,16 +175,17 @@ export default async function MiamiLockerPage() {
                     className="max-w-full max-h-full object-contain group-hover:scale-110 transition-transform duration-500"
                   />
                 </div>
-<div className="p-6 flex-1 flex flex-col">
+
+                <div className="p-6 flex-1 flex flex-col">
                   
-                  {/* Contenedor fijo para la Etiqueta */}
+                  {/* 🔥 TRADUCCIÓN DINÁMICA DE LA CATEGORÍA 🔥 */}
                   <div className="mb-3 flex-shrink-0">
                     <span className={`text-[10px] uppercase font-bold tracking-wider inline-block px-2 py-1 rounded w-max ${getCategoryStyles(product.category)}`}>
-                      {product.category || t('default_category')}
+                      {product.category ? t(`categories.${product.category}`) : t('default_category')}
                     </span>
                   </div>
                   
-                  {/* 🔥 CAJA RÍGIDA PARA EL TÍTULO (Alineación infalible) 🔥 */}
+                  {/* CAJA RÍGIDA PARA EL TÍTULO (Alineación infalible) */}
                   <div className="h-[72px] mb-4 overflow-hidden">
                     <h3 className="font-bold text-gray-800 text-sm line-clamp-3 leading-relaxed" title={product.title || ''}>
                       {product.title}

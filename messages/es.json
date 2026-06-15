@@ -1345,7 +1345,13 @@
     "categories": {
       "Scanner": "ESCÁNER",
       "Battery": "BATERÍA",
-      "Diagnostic": "DIAGNÓSTICO"
+      "Diagnostic": "DIAGNÓSTICO",
+      "DashCam": "CÁMARA DE AUTO",
+      "JumpStarter": "ARRANCADOR",
+      "TireCare": "NEUMÁTICOS",
+      "CarCare": "CUIDADO DEL AUTO",
+      "Electronics": "ELECTRÓNICA",
+      "Lighting": "ILUMINACIÓN"
     },
     "products": {
       "ancel_ad310": "Escáner Universal OBD II ANCEL AD310 Lector de Códigos de Falla de Motor",
