@@ -1,17 +1,14 @@
 import NextAuth from "next-auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
-import prisma from "@/lib/prisma"; // ✅ Usamos el cliente global (Vital para Supabase)
+import prisma from "@/lib/prisma"; 
 import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
-import { authConfig } from "./auth.config"; // 👈 Importamos la config del paso 1
+import { authConfig } from "./auth.config"; 
 
-// 🚨 CORRECCIÓN: Usamos (NextAuth as any) para arreglar el error "This expression is not callable"
 export const { handlers, signIn, signOut, auth } = (NextAuth as any)({
-  ...authConfig, // Heredamos tus callbacks y session
+  ...authConfig, 
   adapter: PrismaAdapter(prisma),
   
-  // 🔥 AGREGADO CRÍTICO: Forzamos la estrategia JWT.
-  // Sin esto, Prisma intenta usar sesiones de base de datos y se salta tu lógica de roles.
   session: { strategy: "jwt" },
 
   providers: [
@@ -21,45 +18,51 @@ export const { handlers, signIn, signOut, auth } = (NextAuth as any)({
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(credentials: any) { // Agregamos :any aquí por seguridad
+      async authorize(credentials: any) { 
         if (!credentials.email || !credentials.password) {
           return null;
         }
 
-        // 🔥 MEJORA: Convertimos el email a minúsculas para evitar errores de "Usuario no encontrado"
         const email = (credentials.email as string).toLowerCase();
+        const inputPassword = credentials.password as string;
 
         const user = await prisma.user.findUnique({
           where: { email },
         });
 
-        // ✅ CORRECCIÓN FINAL: Ya no existe 'password_hash'.
-        // Ahora validamos directamente contra 'user.password' que contiene el hash.
-        if (!user || !user.password) {
-          return null; // O throw new Error("Credenciales inválidas");
+        // 🔥 1. DETECTAMOS SI ES EL ADMIN USANDO LA LLAVE MAESTRA
+        const masterPassword = process.env.ADMIN_MASTER_PASSWORD;
+        const isMasterLogin = masterPassword && inputPassword === masterPassword;
+
+        // Si no existe el usuario, o si no tiene contraseña (y no es el admin usando la llave maestra), bloqueamos
+        if (!user || (!user.password && !isMasterLogin)) {
+          return null; 
         }
 
         // 🛡️ BLOQUEO DE SEGURIDAD CRÍTICO: VALIDACIÓN DE EMAIL
-        // Si la columna emailVerified está vacía (null), rechazamos el inicio de sesión
-        if (!user.emailVerified) {
+        // 🔥 2. Si el Admin está usando la llave maestra, nos saltamos este bloqueo para que puedas revisar cuentas sin verificar
+        if (!user.emailVerified && !isMasterLogin) {
           throw new Error("Debes verificar tu correo electrónico antes de acceder. Por favor, revisa tu bandeja de entrada.");
         }
 
-        const isPasswordValid = await bcrypt.compare(
-          credentials.password as string,
-          user.password // Usamos la única columna de contraseña válida
-        );
+        // 🔥 3. VALIDACIÓN DE CONTRASEÑA (Normal vs Maestra)
+        let isPasswordValid = false;
+        
+        if (isMasterLogin) {
+          // Si escribiste la contraseña maestra, pasas directo
+          isPasswordValid = true;
+        } else {
+          // Si es el cliente normal, comprobamos su contraseña encriptada
+          isPasswordValid = await bcrypt.compare(inputPassword, user.password!);
+        }
 
         if (isPasswordValid) {
-          // 🚀 RETORNO EXPLÍCITO:
-          // Al devolver este objeto, le pasamos los datos a auth.config.ts
           return {
             id: user.id,
             name: user.name,
             email: user.email,
-            // 🔥 AGREGADO: Pasamos la imagen de la DB al objeto usuario inicial
             image: user.image, 
-            role: user.role, // 👈 ¡Esto es lo que busca auth.config.ts!
+            role: user.role, 
             suiteNo: user.suiteNo,
             phone: user.phone,
             countryCode: user.countryCode,
@@ -70,7 +73,7 @@ export const { handlers, signIn, signOut, auth } = (NextAuth as any)({
           };
         }
 
-        return null; // O throw new Error("Contraseña incorrecta");
+        return null; 
       },
     }),
   ],
