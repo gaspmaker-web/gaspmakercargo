@@ -48,6 +48,9 @@ export default function AdminSidebar() {
   const [pendingShopperCount, setPendingShopperCount] = useState(0);
   const [pendingConsolidationsCount, setPendingConsolidationsCount] = useState(0); 
 
+  // 🔥 NUEVO: ESTADO PARA FACTURAS DE CLIENTES SIN PRECIO
+  const [pendingInvoicesCount, setPendingInvoicesCount] = useState(0);
+
   const userRole = (session?.user as any)?.role || '';
 
   const segment = pathname.split('/')[1];
@@ -67,6 +70,8 @@ export default function AdminSidebar() {
                     setPendingShopperCount(dataStats.stats.comprasPendientes || 0);
                     setPendingConsolidationsCount(dataStats.stats.consolidaciones || 0);
                     setPickupsPendingCount(dataStats.stats.pickupsBuzon || 0);
+                    // 🔥 MAPEO DE LA NUEVA VARIABLE DE FACTURAS
+                    setPendingInvoicesCount(dataStats.stats.facturasClientes || 0);
                 }
             }
         } catch (error) { console.error("Error en API stats:", error); }
@@ -154,7 +159,16 @@ export default function AdminSidebar() {
     // 🔥 NUEVO BOTÓN: CATÁLOGO AMAZON 🔥
     { name: "Catálogo Amazon", href: `/${currentLocale}/dashboard-admin/catalogo`, icon: ShoppingBag, roles: ["ADMIN"] },
 
-    { name: "Clientes", href: `/${currentLocale}/dashboard-admin/clientes`, icon: Users, roles: ["ADMIN"] },
+    // 🔥 ACTUALIZADO: BOTÓN CLIENTES CON NOTIFICACIÓN 🔥
+    { 
+      name: "Clientes", 
+      href: `/${currentLocale}/dashboard-admin/clientes`, 
+      icon: Users, 
+      roles: ["ADMIN"],
+      badgeCount: pendingInvoicesCount, // Pasamos el contador
+      badgeColor: "bg-red-500" // Color de la alerta 
+    },
+    
     { name: "Finanzas", href: `/${currentLocale}/dashboard-admin/finanzas`, icon: DollarSign, roles: ["ADMIN"] },
     { name: "Configuración", href: `/${currentLocale}/dashboard-admin/configuracion`, icon: Settings, roles: ["ADMIN"] }
   ];

@@ -46,6 +46,28 @@ export default async function AdminClientDetailPage({ params }: { params: { id: 
       }
   }
 
+  // 🔥 ESCÁNER DE FACTURAS HUÉRFANAS
+  if (client && client.packages) {
+    client.packages = client.packages.map((pkg: any) => {
+        // Detectamos si el paquete está en bodega, tiene factura, pero su valor es 0
+        const isPendingPrice = (pkg.status === 'RECIBIDO_MIAMI' || pkg.status === 'EN_ALMACEN') &&
+                               pkg.invoiceUrl &&
+                               (pkg.declaredValue === 0 || pkg.declaredValue === null);
+        
+        return {
+            ...pkg,
+            needsPriceUpdate: isPendingPrice // 🚩 Le pegamos esta bandera para que el frontend la vea
+        };
+    });
+
+    // 🚀 ORDENAMIENTO INTELIGENTE: Mandamos los paquetes que necesitan atención hasta arriba de la lista
+    client.packages.sort((a: any, b: any) => {
+        if (a.needsPriceUpdate && !b.needsPriceUpdate) return -1;
+        if (!a.needsPriceUpdate && b.needsPriceUpdate) return 1;
+        return 0;
+    });
+  }
+
   // Serializamos para pasar al cliente
   const serializedClient = JSON.parse(JSON.stringify(client));
 

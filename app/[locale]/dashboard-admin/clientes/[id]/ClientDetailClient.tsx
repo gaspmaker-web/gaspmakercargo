@@ -10,7 +10,9 @@ import {
   FileText, 
   AlertCircle, 
   ExternalLink, 
-  Image as ImageIcon 
+  Image as ImageIcon,
+  AlertTriangle,
+  Edit
 } from 'lucide-react';
 
 export default function ClientDetailClient({ client, locale }: { client: any, locale: string }) {
@@ -63,18 +65,38 @@ export default function ClientDetailClient({ client, locale }: { client: any, lo
                                 <th className="p-4 border-b">Descripción</th>
                                 <th className="p-4 border-b">Estado</th>
                                 <th className="p-4 border-b text-center">Documento</th>
-                                <th className="p-4 border-b text-right">Peso</th>
+                                <th className="p-4 border-b text-center">Valor</th>
+                                <th className="p-4 border-b text-right">Acción</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
                             {client.packages.map((pkg: any) => {
                                 const hasInvoice = !!pkg.invoiceUrl;
                                 const isPdf = pkg.invoiceUrl?.toLowerCase().includes('pdf');
+                                // Identificamos si el servidor marcó este paquete como "Huérfano de precio"
+                                const needsPrice = pkg.needsPriceUpdate;
 
                                 return (
-                                    <tr key={pkg.id} className="hover:bg-gray-50 transition-colors">
-                                        <td className="p-4 font-mono font-bold text-gmc-gris-oscuro">{pkg.gmcTrackingNumber}</td>
+                                    <tr 
+                                        key={pkg.id} 
+                                        className={`transition-colors ${needsPrice ? 'bg-red-50/40 hover:bg-red-50/80' : 'hover:bg-gray-50'}`}
+                                    >
+                                        <td className="p-4">
+                                            <div className="flex flex-col gap-1.5 items-start">
+                                                <span className="font-mono font-bold text-gmc-gris-oscuro">
+                                                    {pkg.gmcTrackingNumber}
+                                                </span>
+                                                {/* 🔥 ALERTA VISUAL DE PRECIO FALTANTE */}
+                                                {needsPrice && (
+                                                    <span className="bg-red-500 text-white text-[9px] px-2 py-0.5 rounded-full font-bold animate-pulse flex items-center gap-1 shadow-sm uppercase tracking-wider">
+                                                        <AlertTriangle size={10} /> Falta Precio
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </td>
+                                        
                                         <td className="p-4 text-sm text-gray-600">{pkg.description || '-'}</td>
+                                        
                                         <td className="p-4">
                                             <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-blue-50 text-blue-600 border border-blue-200">
                                                 {pkg.status.replace(/_/g, ' ')}
@@ -87,7 +109,11 @@ export default function ClientDetailClient({ client, locale }: { client: any, lo
                                                     href={pkg.invoiceUrl!} 
                                                     target="_blank" 
                                                     rel="noopener noreferrer"
-                                                    className="inline-flex items-center gap-2 bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-blue-100 transition-colors border border-blue-200 shadow-sm"
+                                                    className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors border shadow-sm ${
+                                                        needsPrice 
+                                                            ? 'bg-yellow-100 text-yellow-800 border-yellow-300 hover:bg-yellow-200' 
+                                                            : 'bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200'
+                                                    }`}
                                                 >
                                                     {isPdf ? <FileText size={14} /> : <ImageIcon size={14} />}
                                                     {isPdf ? "Ver PDF" : "Ver Imagen"}
@@ -100,7 +126,26 @@ export default function ClientDetailClient({ client, locale }: { client: any, lo
                                             )}
                                         </td>
 
-                                        <td className="p-4 text-right font-mono text-sm">{pkg.weightLbs} Lbs</td>
+                                        {/* 🔥 NUEVA COLUMNA: MUESTRA EL VALOR DECLARADO */}
+                                        <td className="p-4 text-center">
+                                            <span className={`font-mono font-bold text-sm ${needsPrice ? 'text-red-500' : 'text-gray-600'}`}>
+                                                ${(pkg.declaredValue || 0).toFixed(2)}
+                                            </span>
+                                        </td>
+
+                                        {/* 🔥 ACCIÓN RÁPIDA: IR A EDITAR EL PAQUETE */}
+                                        <td className="p-4 text-right">
+                                            <Link 
+                                                href={`/${locale}/dashboard-admin/paquetes/${pkg.id}`}
+                                                className={`inline-flex items-center gap-1.5 text-xs font-bold px-3 py-2 rounded-lg transition-all border ${
+                                                    needsPrice 
+                                                        ? 'bg-red-600 text-white hover:bg-red-700 border-red-700 shadow-md'
+                                                        : 'bg-white text-gray-600 hover:bg-gray-50 border-gray-200'
+                                                }`}
+                                            >
+                                                <Edit size={14} /> {needsPrice ? 'Poner Precio' : 'Editar'}
+                                            </Link>
+                                        </td>
                                     </tr>
                                 );
                             })}

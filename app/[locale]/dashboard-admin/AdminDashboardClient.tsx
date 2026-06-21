@@ -22,7 +22,9 @@ export default function AdminDashboardClient({ locale }: { locale: string }) {
     ventas: 0,
     kycPendientes: 0,
     tareasBuzon: 0, 
-    comprasPendientes: 0 
+    comprasPendientes: 0,
+    // 🔥 Añadido para que el componente sepa que existe
+    facturasClientes: 0 
   });
 
   useEffect(() => {
@@ -332,8 +334,16 @@ export default function AdminDashboardClient({ locale }: { locale: string }) {
                 </div>
               </Link>
 
+              {/* 🔥 ACTUALIZADO: TARJETA DE CLIENTES CON GLOBO ROJO 🔥 */}
               <Link href={`/${locale}/dashboard-admin/clientes`} 
-                className="group bg-white p-5 rounded-xl border border-gray-200 hover:border-purple-500 hover:shadow-md transition-all cursor-pointer block">
+                className="group bg-white p-5 rounded-xl border border-gray-200 hover:border-purple-500 hover:shadow-md transition-all cursor-pointer block relative">
+                
+                {(stats.facturasClientes || 0) > 0 && (
+                    <span className="absolute top-4 right-4 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-full animate-pulse uppercase tracking-wide lining-nums shadow-sm">
+                        {(stats.facturasClientes || 0)} POR REVISAR
+                    </span>
+                )}
+
                 <div className="flex items-start justify-between">
                   <div>
                     <h3 className="text-base font-bold text-gmc-gris-oscuro group-hover:text-purple-600 transition-colors">Base de Clientes</h3>

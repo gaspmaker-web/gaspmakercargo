@@ -1,8 +1,8 @@
 import React from 'react';
 import Link from 'next/link';
-import { Eye, User } from 'lucide-react';
+import { Eye, User, UploadCloud } from 'lucide-react'; // 1. Agregamos UploadCloud
 
-// Definimos la interfaz de los datos que esperamos
+// Definimos la interfaz incluyendo el contador opcional
 interface Client {
   id: string;
   name: string | null;
@@ -10,6 +10,7 @@ interface Client {
   role: string;
   createdAt: Date;
   suiteNo: string | null;
+  pendingInvoicesCount?: number; // 2. Nueva propiedad opcional
 }
 
 interface ClientListTableProps {
@@ -46,14 +47,23 @@ export default function ClientListTable({ clients, locale }: ClientListTableProp
               clients.map((client) => (
                 <tr key={client.id} className="hover:bg-blue-50/50 transition-colors group">
                   
-                  {/* Nombre + Suite */}
+                  {/* Nombre + Suite + Badge de Alerta */}
                   <td className="p-4">
                     <div className="flex items-center gap-3">
                       <div className="h-10 w-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-500 font-bold group-hover:bg-white group-hover:text-gmc-dorado-principal transition-colors">
                          {client.name ? client.name[0].toUpperCase() : <User size={18}/>}
                       </div>
                       <div>
-                        <p className="font-bold text-gmc-gris-oscuro">{client.name || 'Sin Nombre'}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="font-bold text-gmc-gris-oscuro">{client.name || 'Sin Nombre'}</p>
+                          
+                          {/* 3. 🔥 BADGE DE ALERTA DINÁMICO */}
+                          {client.pendingInvoicesCount && client.pendingInvoicesCount > 0 && (
+                            <span className="bg-red-500 text-white text-[9px] px-2 py-0.5 rounded-full font-bold animate-pulse flex items-center gap-0.5">
+                              <UploadCloud size={10} /> {client.pendingInvoicesCount}
+                            </span>
+                          )}
+                        </div>
                         <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded border border-gray-200">
                           {client.suiteNo || 'N/A'}
                         </span>
@@ -82,10 +92,9 @@ export default function ClientListTable({ clients, locale }: ClientListTableProp
                     </span>
                   </td>
 
-                  {/* Botón Acción (CORREGIDO) */}
+                  {/* Botón Acción */}
                   <td className="p-4 text-center">
                     <Link 
-                      // ⚠️ AQUÍ ESTÁ LA MAGIA: Ruta dinámica correcta
                       href={`/${locale}/dashboard-admin/clientes/${client.id}`}
                       className="inline-flex items-center gap-2 text-sm font-bold text-gmc-dorado-principal hover:text-gmc-gris-oscuro hover:underline transition-all"
                     >

@@ -42,7 +42,7 @@ export default async function GestionClientesPage({
     let allUsers: any[] = [];
 
     try {
-        // Consulta con filtros dinámicos
+        // Consulta con filtros dinámicos y contador inteligente de facturas
         allUsers = await prisma.user.findMany({
             where: query ? {
                 OR: [
@@ -60,7 +60,19 @@ export default async function GestionClientesPage({
                 email: true,
                 role: true,
                 createdAt: true,
-                suiteNo: true
+                suiteNo: true,
+                // 🔥 AQUÍ AGREGAMOS EL CONTADOR DE FACTURAS SIN PROCESAR
+                _count: {
+                    select: {
+                        packages: {
+                            where: {
+                                status: { in: ['RECIBIDO_MIAMI', 'EN_ALMACEN'] }, // En Miami
+                                invoiceUrl: { not: null }, // Que el cliente haya subido algo
+                                declaredValue: { equals: 0 } // Que tú NO le hayas puesto precio aún
+                            }
+                        }
+                    }
+                }
             }
         });
     } catch (error) {
@@ -68,8 +80,19 @@ export default async function GestionClientesPage({
         allUsers = []; 
     }
 
-    // Serialización simple para evitar errores de fechas
-    const serializedUsers = JSON.parse(JSON.stringify(allUsers));
+    // Mapeamos para pasar un conteo limpio a la tabla y quitamos el _count de la estructura
+    const processedUsers = allUsers.map((user: any) => ({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        createdAt: user.createdAt,
+        suiteNo: user.suiteNo,
+        pendingInvoicesCount: user._count?.packages || 0 // Extraemos el contador mágico
+    }));
+
+    // Serialización simple para evitar errores de fechas al pasar data al componente cliente
+    const serializedUsers = JSON.parse(JSON.stringify(processedUsers));
 
     return (
         <div className="bg-gray-100 min-h-screen p-4 sm:p-6 lg:p-8 font-montserrat">

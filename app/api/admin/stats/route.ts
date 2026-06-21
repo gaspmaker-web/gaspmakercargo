@@ -30,8 +30,9 @@ export async function GET() {
       sobresFisicosRaw,
       shopperPorCotizar,
       shopperPagados,
-      // 🔥 NUEVA CONSULTA: Citas de Recogida Física (Buzón)
-      pickupsBuzonPendientes
+      pickupsBuzonPendientes,
+      // 🔥 NUEVA CONSULTA: Facturas de clientes subidas esperando precio
+      facturasClientesPendientes
     ] = await Promise.all([
       prisma.package.count({
         where: { status: { not: 'ENTREGADO' } }
@@ -91,9 +92,16 @@ export async function GET() {
       prisma.shopperOrder.count({
         where: { status: 'PAID' }
       }),
-      // 🔥 Cuenta las citas que están esperando ser entregadas en el mostrador
       prisma.mailPickupRequest.count({
         where: { status: { in: ['PENDING', 'READY'] } }
+      }),
+      // 🔥 Cuenta paquetes en Miami con factura, pero cuyo valor es 0
+      prisma.package.count({
+        where: {
+            status: { in: ['RECIBIDO_MIAMI', 'EN_ALMACEN'] },
+            invoiceUrl: { not: null },
+            declaredValue: { equals: 0 }
+        }
       })
     ]);
 
@@ -128,8 +136,9 @@ export async function GET() {
         kycPendientes: kycTitularesPendientes + kycAdicionalesPendientes,
         caducados: caducadosCount,
         comprasPendientes: shopperPorCotizar + shopperPagados,
-        // 🔥 ENVIAMOS EL CONTADOR AL FRONTEND
-        pickupsBuzon: pickupsBuzonPendientes 
+        pickupsBuzon: pickupsBuzonPendientes,
+        // 🔥 ENVIAMOS EL CONTADOR DE FACTURAS NUEVAS AL FRONTEND
+        facturasClientes: facturasClientesPendientes 
       }
     });
 
@@ -149,7 +158,8 @@ export async function GET() {
         kycPendientes: 0,   
         caducados: 0,
         comprasPendientes: 0,
-        pickupsBuzon: 0
+        pickupsBuzon: 0,
+        facturasClientes: 0 // Fallback seguro
       }
     }, { status: 500 });
   }
