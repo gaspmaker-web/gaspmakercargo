@@ -208,7 +208,7 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
       }
   };
 
-// 4. CALCULAR TOTALES (CON REGLAS ENTERPRISE VIP)
+// 4. CALCULAR TOTALES (CON REGLAS ENTERPRISE VIP Y MARÍTIMO)
   const calculateTotals = () => {
       let serviceSubtotal = 0;
       let handlingSubtotal = 0; 
@@ -223,15 +223,18 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
           const bill = bills.find(b => b.id === id);
           if (bill) {
               const isConsolidated = bill.serviceType === 'CONSOLIDATION' || 
+                                     bill.serviceType === 'OCEAN_CONSOLIDATION' ||
                                      bill.description?.toLowerCase().includes('consolid') ||
                                      (bill.packages && bill.packages.length > 1);
               
               let billHandlingFee = 0;
               const rate = selectedRateMap[id];
               const isLocalAura = rate && rate.carrier === 'Gasp Maker Cargo' && rate.service === 'Local Delivery (Aura)';
+              // 🔥 NUEVA REGLA: Detectar si es un barco
+              const isOcean = bill.serviceType === 'OCEAN_CONSOLIDATION';
 
-              // 📦 CÁLCULO DE HANDLING Y DÍAS DE GRACIA
-              if (isConsolidated && !isLocalAura) { 
+              // 📦 CÁLCULO DE HANDLING Y DÍAS DE GRACIA (EXENTOS AURA Y MARÍTIMO)
+              if (isConsolidated && !isLocalAura && !isOcean) { 
                   if (!bill.packages || bill.packages.length === 0) {
                       const billDate = new Date(bill.createdAt || Date.now());
                       const dayOfMonth = billDate.getDate();
@@ -458,11 +461,15 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
              const rate = selectedRateMap[id];
              
              const isConsolidated = bill?.serviceType === 'CONSOLIDATION' || 
+                                    bill?.serviceType === 'OCEAN_CONSOLIDATION' ||
                                     bill?.description?.toLowerCase().includes('consolid') ||
                                     (bill?.packages && bill?.packages.length > 1);
              
              let dynamicHandling = 0;
-             if (isConsolidated && bill?.packages) {
+             const isOcean = bill?.serviceType === 'OCEAN_CONSOLIDATION';
+
+             // Si es envío marítimo no aplicamos tarifa de consolidación
+             if (isConsolidated && !isOcean && bill?.packages) {
                  let chargeablePackagesCount = 0;
                  bill.packages.forEach((pkg: any) => {
                      const isDocument = pkg.courier === 'Buzón Virtual' || 
@@ -472,9 +479,10 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                      if (!isDocument) chargeablePackagesCount++;
                  });
                  dynamicHandling = chargeablePackagesCount * 0.60;
-             } else if (isConsolidated) {
+             } else if (isConsolidated && !isOcean) {
                  dynamicHandling = 0.60;
              }
+             
              const val = Number(bill?.declaredValue) || 0;
              const ins = val > 100 ? val * 0.03 : 0;
              
@@ -598,17 +606,20 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                                    const isConsolidated = bill.serviceType === 'CONSOLIDATION' || 
                        bill.description?.toLowerCase().includes('consolid') ||
                        (bill.packages && bill.packages.length > 1);
-// 🔥 Detectamos visualmente si eligió Aura
+
+// 🔥 Detectamos visualmente si eligió Aura o Marítimo
                                     const isVisualLocalAura = selectedRate && 
                                                               selectedRate.carrier === 'Gasp Maker Cargo' && 
                                                               selectedRate.service === 'Local Delivery (Aura)';
+                                    const isOceanVisual = bill.serviceType === 'OCEAN_CONSOLIDATION';
 
                                     // 🔥 4. CORREGIDO: LÓGICA VISUAL DIRECTA A LA VARIABLE
                                     const isVipVisual = planType === 'VIP_WHOLESALE';
                                     const defaultHandlingVisual = isVipVisual ? 0.50 : 0.60;
                                     let effectiveHandling = 0;
                                     
-                                    if (isConsolidated && !isVisualLocalAura) { 
+                                    // No aplica Handling Visual si es Aura ni Marítimo
+                                    if (isConsolidated && !isVisualLocalAura && !isOceanVisual) { 
                                         if (!bill.packages || bill.packages.length === 0) {
                                             const billDate = new Date(bill.createdAt || Date.now());
                                             const dayOfMonth = billDate.getDate();
@@ -769,7 +780,7 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                                                                     {ins > 0 && (
                                                                         <div className="flex justify-between text-xs text-blue-600">
                                                                             <span>Insurance</span><span>+${ins.toFixed(2)}</span>
-                                                                    </div>
+                                                                        </div>
                                                                     )}
                                                                 </div>
                                                             </div>

@@ -147,7 +147,7 @@
   "makeDefault": "Make Default",
   "edit": "Edit"
   },
-  "Dashboard": {
+ "Dashboard": {
     "welcome": "Welcome, {name}",
     "activeShipments": "Active Shipments",
     "noPackages": "You have no active packages at the moment.",
@@ -193,7 +193,7 @@
     "referralTitle": "Get $25 USD",
     "referralDesc": "Invite friends and earn credit.",
     "btnPickup": "PICKUP",
-    "btnConsolidate": "Consolidate",
+    "btnConsolidate": "Pack in 1 Box (Air)",
     "modalPickupTitle": "Schedule Pickup",
     "modalPickupDesc": "Select when you will pick up your packages. We will calculate applicable fees.",
     "feeStorage": "Storage (Long Term):",
@@ -228,9 +228,14 @@
     "palletLimitTitle": "Capacity Limit Reached",
     "palletLimitDesc": "You have {count} packages in the Miami warehouse. The stowage engine detected that your load has reached the physical limit of a secure pallet. You must dispatch to free up space.",
     "palletLimitBtn": "Consolidate Pallet",
+    "btnConsolidateOcean": "Group on Pallet (Ocean)",
     "aerialReadyTitle": "Load Ready for Air Consolidation",
     "aerialReadyDesc": "You have <strong>{count} packages</strong> ({weight} lbs) ready in the warehouse. Remember that the international limit for an air shipment is 150 lbs.",
-    "aerialReadyBtn": "Consolidate Air Shipment"
+    "aerialReadyBtn": "Consolidate Air Shipment",
+    "custom_text_ocean": "We will group your boxes in their original form on a <strong>wooden pallet (Ocean)</strong> so you save on volume.",
+    "custom_text_local": "We will group your boxes to send them via <strong>local delivery truck</strong>.",
+    "requestOcean": "Ocean Consolidation",
+    "btnConfirmLocal": "Confirm Local Delivery"
   },
 "Notifications": {
     "title": "Notifications",

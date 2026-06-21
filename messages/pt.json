@@ -146,7 +146,7 @@
   "makeDefault": "Tornar Padrão",
   "edit": "Editar"
   },
-  "Dashboard": {
+ "Dashboard": {
     "welcome": "Bem-vindo, {name}",
     "activeShipments": "Envios Ativos",
     "noPackages": "Você não tem pacotes ativos no momento.",
@@ -192,7 +192,7 @@
     "referralTitle": "Ganhe $25 USD",
     "referralDesc": "Convide amigos e ganhe crédito.",
     "btnPickup": "RETIRAR",
-    "btnConsolidate": "CONSOLIDAR",
+    "btnConsolidate": "Embalar em 1 Caixa (Aéreo)",
     "modalPickupTitle": "Agendar Retirada",
     "modalPickupDesc": "Selecione quando você irá retirar seus pacotes. Calcularemos as taxas aplicáveis.",
     "feeStorage": "Armazenagem (Longo Prazo):",
@@ -227,9 +227,14 @@
     "palletLimitTitle": "Limite de capacidade atingido",
     "palletLimitDesc": "Você tem {count} pacotes no armazém de Miami. O motor de estiva detectou que sua carga atingiu o limite físico de um palete seguro. Você deve despachar para liberar espaço.",
     "palletLimitBtn": "Consolidar Palete",
+    "btnConsolidateOcean": "Agrupar em Palete (Marítimo)",
     "aerialReadyTitle": "Carga pronta para Consolidação Aérea",
     "aerialReadyDesc": "Você tem <strong>{count} pacotes</strong> ({weight} lbs) prontos no armazém. Lembre-se de que o limite internacional para um envio aéreo é de 150 lbs.",
-    "aerialReadyBtn": "Consolidar Envio Aéreo"
+    "aerialReadyBtn": "Consolidar Envio Aéreo",
+    "custom_text_ocean": "Agruparemos suas caixas em sua forma original sobre um <strong>palete de madeira (Marítimo)</strong> para que você economize em volume.",
+    "custom_text_local": "Agruparemos suas caixas para enviá-las em um <strong>caminhão de entrega local</strong>.",
+    "requestOcean": "Consolidação Marítima",
+    "btnConfirmLocal": "Confirmar Entrega Local"
   },
 "Notifications": {
     "title": "Notificações",

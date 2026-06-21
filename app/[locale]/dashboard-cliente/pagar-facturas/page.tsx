@@ -48,7 +48,7 @@ export default async function PagarFacturasPage({ params: { locale } }: { params
   const bills = pendingShipments.map(s => {
     
     // =========================================================================
-    // 🛡️ LÓGICA BLINDADA: SEPARAR PICKUP, STORAGE, AURA Y ENVÍO
+    // 🛡️ LÓGICA BLINDADA: SEPARAR PICKUP, STORAGE, AURA, MARÍTIMO Y ENVÍO
     // =========================================================================
     
     let type = 'CONSOLIDATION';
@@ -61,8 +61,9 @@ export default async function PagarFacturasPage({ params: { locale } }: { params
     const isServicePickup = s.serviceType === 'PICKUP' || s.courierService?.toLowerCase().includes('pickup') || s.courierService?.toLowerCase().includes('cita');
     const isStorage = s.serviceType === 'STORAGE_FEE' || s.serviceType?.includes('STORAGE');
     
-    // 🚀 NUEVO: Detectar si es Aura (Local Delivery)
+    // 🚀 NUEVO: Detectar si es Aura (Local Delivery) o Marítimo (Ocean)
     const isLocalDelivery = s.serviceType === 'LOCAL_DELIVERY';
+    const isOcean = s.serviceType === 'OCEAN_CONSOLIDATION';
 
     if (isIdPickup || isServicePickup) {
         // 🏬 ESCENARIO 1: RETIRO EN BODEGA
@@ -92,13 +93,19 @@ export default async function PagarFacturasPage({ params: { locale } }: { params
         handlingFee = 0; 
         
     } else if (isLocalDelivery) {
-        // 🚚 ESCENARIO 3: AURA LOCAL DELIVERY (NUEVO)
+        // 🚚 ESCENARIO 3: AURA LOCAL DELIVERY
         type = 'LOCAL_DELIVERY';
         displayService = 'Entrega Local (Aura)';
         handlingFee = 0;
 
+    } else if (isOcean) {
+        // 🚢 ESCENARIO 4: CONSOLIDACIÓN MARÍTIMA (NUEVO)
+        type = 'OCEAN_CONSOLIDATION';
+        displayService = 'Consolidación Marítima';
+        handlingFee = 0; // Garantizamos que el backend inicialice el cobro de armado en 0
+
     } else {
-        // ✈️ ESCENARIO 4: ENVÍO INTERNACIONAL / CONSOLIDACIÓN
+        // ✈️ ESCENARIO 5: ENVÍO INTERNACIONAL / CONSOLIDACIÓN (AÉREO)
         type = 'CONSOLIDATION';
         handlingFee = 0;
     }
@@ -111,7 +118,8 @@ export default async function PagarFacturasPage({ params: { locale } }: { params
     let typeLabel = 'Consolidación';
     if (type === 'WAREHOUSE_PICKUP') typeLabel = 'Solicitud de Retiro';
     if (type === 'STORAGE') typeLabel = 'Cargo por Almacenaje';
-    if (type === 'LOCAL_DELIVERY') typeLabel = 'Consolidación Local (Aura)'; // 🔥 Etiqueta bonita
+    if (type === 'LOCAL_DELIVERY') typeLabel = 'Consolidación Local (Aura)'; 
+    if (type === 'OCEAN_CONSOLIDATION') typeLabel = 'Consolidación Marítima'; // 🔥 Etiqueta bonita para Marítimo
 
     return {
       id: s.id,
@@ -131,7 +139,7 @@ export default async function PagarFacturasPage({ params: { locale } }: { params
       widthIn: s.widthIn || 0,
       heightIn: s.heightIn || 0,
       
-      // 🚀 ¡LOS DATOS CRUCIALES PARA AURA! (Las líneas que agregaste)
+      // 🚀 ¡LOS DATOS CRUCIALES PARA AURA Y MARÍTIMO!
       serviceType: s.serviceType,
       auraDetails: s.auraDetails, 
 

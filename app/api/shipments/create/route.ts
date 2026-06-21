@@ -132,7 +132,7 @@ export async function POST(req: Request) {
     }
 
     // =======================================================================
-    // ✈️ CASO 2: CONSOLIDACIÓN / ENVÍO INT. / LOCAL DELIVERY
+    // ✈️ / 🚢 CASO 2: CONSOLIDACIÓN / ENVÍO INT. / LOCAL DELIVERY / OCEAN
     // =======================================================================
     
     const packagesToConsolidate = await prisma.package.findMany({ 
@@ -164,8 +164,11 @@ export async function POST(req: Request) {
     if (type === 'LOCAL_DELIVERY') {
         finalServiceType = 'LOCAL_DELIVERY'; // <- Le dice al chofer y al Admin qué hacer
         initialStatus = 'SOLICITUD_CONSOLIDACION'; 
+    } else if (type === 'OCEAN_CONSOLIDATION') {
+        finalServiceType = 'OCEAN_CONSOLIDATION'; // 🔥 Reconoce servicio Marítimo y avisa al Admin
+        initialStatus = 'SOLICITUD_CONSOLIDACION';
     } else if (type === 'CONSOLIDATION' || packageIds.length > 1) {
-        finalServiceType = 'CONSOLIDATION';
+        finalServiceType = 'CONSOLIDATION'; // Aéreo por defecto
         initialStatus = 'SOLICITUD_CONSOLIDACION'; 
     }
 
@@ -181,6 +184,8 @@ export async function POST(req: Request) {
     let smartCourierService = courierService;
     if (finalServiceType === 'LOCAL_DELIVERY') {
          smartCourierService = "LOCAL DELIVERY (AURA)"; 
+    } else if (finalServiceType === 'OCEAN_CONSOLIDATION') {
+         smartCourierService = "CONSOLIDACIÓN MARÍTIMA"; // 🔥 Nombre visual para la operación interna
     } else if (finalServiceType === 'CONSOLIDATION') {
         if (normalBoxesCount === 0 && documentsCount > 0) {
             smartCourierService = "SOLO DOCUMENTOS (CONSOLIDACIÓN GRATIS)";
@@ -195,7 +200,7 @@ export async function POST(req: Request) {
             gmcShipmentNumber: shipmentNumber,
             status: initialStatus,
             destinationCountryCode: finalCountryCode, // <-- ¡Respeta si Nelsom es de Trinidad!
-            serviceType: finalServiceType,            // <-- ¡Pero la operación se maneja como Aura Local!
+            serviceType: finalServiceType,            // <-- ¡Manda la señal a ConsolidationCard.tsx!
             
             subtotalAmount: subtotal,
             processingFee: processingFee,
@@ -210,7 +215,7 @@ export async function POST(req: Request) {
     });
 
     // Actualizamos paquetes
-    const newPackageStatus = (finalServiceType === 'CONSOLIDATION' || finalServiceType === 'LOCAL_DELIVERY') 
+    const newPackageStatus = (finalServiceType === 'CONSOLIDATION' || finalServiceType === 'OCEAN_CONSOLIDATION' || finalServiceType === 'LOCAL_DELIVERY') 
         ? 'EN_PROCESO_CONSOLIDACION' 
         : 'EN_PROCESO_ENVIO';
 
@@ -230,8 +235,8 @@ export async function POST(req: Request) {
     try {
         const userLang = (session.user as any).language || 'en';
         
-        if (finalServiceType === 'CONSOLIDATION' || finalServiceType === 'LOCAL_DELIVERY') {
-            console.log("🔄 Enviando email de Solicitud de Consolidación / Delivery...");
+        if (finalServiceType === 'CONSOLIDATION' || finalServiceType === 'OCEAN_CONSOLIDATION' || finalServiceType === 'LOCAL_DELIVERY') {
+            console.log("🔄 Enviando email de Solicitud de Consolidación / Delivery / Ocean...");
             
             await sendConsolidationRequestEmail(
                 session.user.email || '', 

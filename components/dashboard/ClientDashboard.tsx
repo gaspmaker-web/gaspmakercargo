@@ -13,7 +13,7 @@ import {
     CreditCard, CheckCircle, AlertCircle, ChevronRight, 
     UploadCloud, Box, Scale, Calendar, Loader2, ChevronDown, ChevronUp, FileCheck,
     MapPin, Clock, DollarSign, X, Lock, AlertTriangle,
-    ShoppingBag 
+    ShoppingBag, Plane, Ship 
 } from 'lucide-react';
 
 // --- TIPO EXTENDIDO PARA LOS CÁLCULOS ---
@@ -91,7 +91,7 @@ export default function ClientDashboard({
   const [isExpanded, setIsExpanded] = useState(true);
 
   // 🔥 ESTADO DE CONSOLIDACIÓN
-  const [consolidationType, setConsolidationType] = useState<'AERIAL' | 'LOCAL'>('AERIAL');
+  const [consolidationType, setConsolidationType] = useState<'AERIAL' | 'LOCAL' | 'OCEAN'>('AERIAL');
 
   // --- ESTADOS PARA MODALES ---
   const [isPickupModalOpen, setIsPickupModalOpen] = useState(false);
@@ -153,7 +153,6 @@ export default function ClientDashboard({
               let minHeightIncrease = Infinity;
 
               for (let ori of orientations) {
-                  // 🔥 SE ELIMINÓ EL MULTIPLICADOR 1.15 PARA USAR EL 100% DEL ÁREA FÍSICA
                   const boxArea = ori.baseL * ori.baseW; 
                   if (layer.areaUsed + boxArea <= PALLET_AREA) {
                       let heightIncrease = Math.max(0, ori.h - layer.maxHeight);
@@ -179,7 +178,6 @@ export default function ClientDashboard({
 
           if (!boxPlaced) {
               let bestOri = orientations.sort((a, b) => a.h - b.h)[0];
-              // 🔥 SE ELIMINÓ EL MULTIPLICADOR 1.15 AQUÍ TAMBIÉN
               const boxArea = bestOri.baseL * bestOri.baseW;
 
               if (currentPallet.totalHeight + bestOri.h <= MAX_HEIGHT) {
@@ -229,9 +227,9 @@ export default function ClientDashboard({
   const totalSelectedWeight = selectedPackagesData.reduce((acc, p) => acc + (Number(p.weightLbs) || 0), 0);
 
  // =========================================================================
-  // 🚚 ACCIÓN 1: CONSOLIDAR / LOCAL DELIVERY 
+  // 🚚 ACCIÓN 1: CONSOLIDAR / LOCAL DELIVERY / OCEAN
   // =========================================================================
-  const handleConsolidateClick = (type: 'AERIAL' | 'LOCAL') => {
+  const handleConsolidateClick = (type: 'AERIAL' | 'LOCAL' | 'OCEAN') => {
       if (selectedPkgs.length === 0) return;
 
       if (selectedPkgs.length === 1) {
@@ -239,22 +237,17 @@ export default function ClientDashboard({
           return;
       }
 
-      // 🔥 IDENTIFICAMOS AL CLIENTE VIP
-     // ✅ CÓDIGO CORREGIDO (Lee directamente la variable correcta)
-        const isVip = planType === 'VIP_WHOLESALE';
-
+      const isVip = planType === 'VIP_WHOLESALE';
       
       if (type === 'LOCAL' && selectedPkgs.length > 100) {
           alert(`Para Local Delivery el límite por solicitud es de 100 paquetes. Tienes ${selectedPkgs.length} seleccionados.`); 
           return;
       }
 
-      // Usamos la función global Aura para los paquetes seleccionados
       const palletsNeeded = calculatePalletsNeeded(selectedPackagesData);
 
       // 🔥 LÍMITES INTELIGENTES MULTILINGÜES
       if (type === 'AERIAL') {
-          // El límite de 150 lbs se omite si es VIP
           if (!isVip && totalSelectedWeight > 150) {
               const msg = t.has('alertAerialLimit') 
                 ? t('alertAerialLimit', { weight: totalSelectedWeight.toFixed(2) })
@@ -300,7 +293,9 @@ export default function ClientDashboard({
   const onConfirmConsolidation = async () => {
       setIsConsolidating(true);
       try {
-          const dynamicServiceType = consolidationType === 'LOCAL' ? 'LOCAL_DELIVERY' : 'CONSOLIDATION';
+          let dynamicServiceType = 'CONSOLIDATION';
+          if (consolidationType === 'LOCAL') dynamicServiceType = 'LOCAL_DELIVERY';
+          if (consolidationType === 'OCEAN') dynamicServiceType = 'OCEAN_CONSOLIDATION';
 
           const res = await fetch('/api/shipments/create', { 
               method: 'POST',
@@ -471,7 +466,7 @@ export default function ClientDashboard({
           
           <div className="lg:col-span-2 space-y-4">
 
-            {/* 🚨 ALERTA CRÍTICA ENTERPRISE: LÍMITE DE PALLET ALCANZADO (Traducción Nativa desde JSON) */}
+            {/* 🚨 ALERTA CRÍTICA ENTERPRISE: LÍMITE DE PALLET ALCANZADO */}
             {isPalletReady && displayPackages.length > 0 && (
                 <div className="bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500 rounded-2xl p-0.5 mb-6 animate-in slide-in-from-top duration-500 shadow-xl">
                     <div className="bg-white/95 backdrop-blur-md rounded-xl p-5 md:p-6 flex flex-col lg:flex-row items-center justify-between gap-5">
@@ -492,34 +487,61 @@ export default function ClientDashboard({
                             </div>
                         </div>
                         
-                        <button
-                            onClick={() => {
-                                // Seleccionamos cajas hasta llenar exactamente 1 pallet
-                                const clearPackages = displayPackages.filter(p => !p.isBlocked);
-                                let selectedIds: string[] = [];
-                                let currentSelectedData: any[] = [];
-                                
-                                for (let p of clearPackages) {
-                                    currentSelectedData.push(p);
-                                    if (calculatePalletsNeeded(currentSelectedData) > 1) {
-                                        break; 
+              {/* 🔥 GRUPO DE BOTONES: LOCAL Y MARÍTIMO */}
+                        <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto shrink-0 mt-4 lg:mt-0">
+                            {/* BOTÓN 1: LOCAL DELIVERY */}
+                            <button
+                                onClick={() => {
+                                    const clearPackages = displayPackages.filter(p => !p.isBlocked);
+                                    let selectedIds: string[] = [];
+                                    let currentSelectedData: any[] = [];
+                                    
+                                    for (let p of clearPackages) {
+                                        currentSelectedData.push(p);
+                                        if (calculatePalletsNeeded(currentSelectedData) > 1) {
+                                            break; 
+                                        }
+                                        selectedIds.push(p.id);
                                     }
-                                    selectedIds.push(p.id);
-                                }
-                                
-                                setSelectedPkgs(selectedIds);
-                                setTimeout(() => handleConsolidateClick('LOCAL'), 50); 
-                            }}
-                            className="w-full lg:w-auto bg-black text-white hover:bg-gray-900 px-6 py-3.5 rounded-xl font-bold text-sm transition-all shadow-md flex items-center justify-center gap-2 shrink-0 transform hover:-translate-y-0.5"
-                        >
-                            <Truck size={18} className="animate-bounce" />
-                            {t('palletLimitBtn')}
-                        </button>
+                                    
+                                    setSelectedPkgs(selectedIds);
+                                    setTimeout(() => handleConsolidateClick('LOCAL'), 50); 
+                                }}
+                                className="w-full sm:w-auto bg-black text-white hover:bg-gray-900 px-5 py-3.5 rounded-xl font-bold text-sm transition-all shadow-md flex items-center justify-center gap-2 transform hover:-translate-y-0.5"
+                            >
+                                <Truck size={18} className="animate-bounce" />
+                                {t('palletLimitBtn')}
+                            </button>
+
+                            {/* BOTÓN 2: CONSOLIDACIÓN MARÍTIMA */}
+                            <button
+                                onClick={() => {
+                                    const clearPackages = displayPackages.filter(p => !p.isBlocked);
+                                    let selectedIds: string[] = [];
+                                    let currentSelectedData: any[] = [];
+                                    
+                                    for (let p of clearPackages) {
+                                        currentSelectedData.push(p);
+                                        if (calculatePalletsNeeded(currentSelectedData) > 1) {
+                                            break; 
+                                        }
+                                        selectedIds.push(p.id);
+                                    }
+                                    
+                                    setSelectedPkgs(selectedIds);
+                                    setTimeout(() => handleConsolidateClick('OCEAN'), 50); 
+                                }}
+                                className="w-full sm:w-auto bg-blue-600 text-white hover:bg-blue-700 px-5 py-3.5 rounded-xl font-bold text-sm transition-all shadow-md flex items-center justify-center gap-2 transform hover:-translate-y-0.5"
+                            >
+                                <Ship size={18} />
+                                {t.has('btnConsolidateOcean') ? t('btnConsolidateOcean') : 'Ocean Consolidate'}
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
 
-            {/* ✈️ ALERTA PROACTIVA: CONSOLIDACIÓN AÉREA LISTA (Fricción Cero) */}
+            {/* ✈️ ALERTA PROACTIVA: CONSOLIDACIÓN AÉREA LISTA */}
             {isAerialReady && displayPackages.length > 0 && !isPalletReady && (
                 <div className="bg-gradient-to-r from-blue-500 via-indigo-500 to-gmc-dorado-principal rounded-2xl p-0.5 mb-6 animate-in slide-in-from-top duration-500 shadow-xl">
                     <div className="bg-white/95 backdrop-blur-md rounded-xl p-5 md:p-6 flex flex-col lg:flex-row items-center justify-between gap-5">
@@ -541,18 +563,15 @@ export default function ClientDashboard({
                             </div>
                         </div>
                         
-       <button
+                        <button
                             onClick={() => {
                                 const clearPackages = displayPackages.filter(p => !p.isBlocked);
                                 let selectedIds: string[] = [];
                                 let accumulatedWeight = 0;
                                 
-                                // 🔥 IDENTIFICAMOS AL CLIENTE VIP
-                                // ✅ CÓDIGO CORREGIDO (Lee directamente la variable correcta)
                                 const isVip = planType === 'VIP_WHOLESALE';
                                 
                                 for (let p of clearPackages) {
-                                    // 🔥 Si es VIP, no hay límite de 150 lbs
                                     if (!isVip && (accumulatedWeight + (Number(p.weightLbs) || 0)) > 150) {
                                         break; 
                                     }
@@ -668,7 +687,6 @@ export default function ClientDashboard({
                                             </div>
                                         </div>
                                         
-                                       {/* 🔥 LÓGICA ENTERPRISE: Ocultamos visualmente deudas menores a $1.00 */}
                                         {(pkg.storageFee || 0) >= 1.00 && (
                                             <div className="bg-red-50 px-3 py-2 rounded text-xs text-red-600 font-bold flex justify-between items-center border border-red-100">
                                                 <span className="flex items-center gap-1"><AlertTriangle size={12}/> {t('storageFee')} ({pkg.daysInWarehouse} {t('days')})</span>
@@ -795,10 +813,20 @@ export default function ClientDashboard({
                     <button 
                         onClick={() => handleConsolidateClick('AERIAL')}
                         disabled={isConsolidating}
-                        className="snap-start shrink-0 bg-gmc-dorado-principal hover:bg-yellow-500 text-black px-3 sm:px-4 py-2 rounded-full text-[10px] sm:text-xs font-bold transition-colors flex items-center gap-1.5 disabled:opacity-70 disabled:cursor-not-allowed whitespace-nowrap"
+                        className="snap-start shrink-0 bg-gmc-dorado-principal hover:bg-yellow-500 text-black px-3 sm:px-4 py-2 rounded-full text-[10px] sm:text-xs font-bold transition-colors flex items-center gap-1.5 disabled:opacity-70 disabled:cursor-not-allowed whitespace-nowrap shadow-md"
                     >
-                        {isConsolidating ? <Loader2 className="animate-spin" size={14} /> : <Box size={14} />}
-                        {isConsolidating ? '...' : t('btnConsolidate')}
+                        {isConsolidating ? <Loader2 className="animate-spin" size={14} /> : <Plane size={14} />}
+                        {isConsolidating ? '...' : (t.has('btnConsolidateAir') ? t('btnConsolidateAir') : 'CONSOLIDAR AÉREO')}
+                    </button>
+
+                    {/* 🔥 BOTÓN DE CONSOLIDACIÓN MARÍTIMA */}
+                    <button 
+                        onClick={() => handleConsolidateClick('OCEAN')}
+                        disabled={isConsolidating}
+                        className="snap-start shrink-0 bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-4 py-2 rounded-full text-[10px] sm:text-xs font-bold transition-colors flex items-center gap-1.5 disabled:opacity-70 disabled:cursor-not-allowed whitespace-nowrap shadow-md"
+                    >
+                        {isConsolidating ? <Loader2 className="animate-spin" size={14} /> : <Ship size={14} />}
+                        {isConsolidating ? '...' : (t.has('btnConsolidateOcean') ? t('btnConsolidateOcean') : 'CONSOLIDAR MARÍTIMO')}
                     </button>
                 </div>
             </div>
@@ -815,8 +843,10 @@ export default function ClientDashboard({
                         <h3 className="font-bold text-gray-800 flex items-center gap-2">
                             {consolidationType === 'LOCAL' ? (
                                 <><Truck className="text-black" size={20}/> {t.has('requestLocalDelivery') ? t('requestLocalDelivery') : 'Request Local Delivery'}</>
+                            ) : consolidationType === 'OCEAN' ? (
+                                <><Ship className="text-blue-600" size={20}/> {t.has('requestOcean') ? t('requestOcean') : 'Consolidación Marítima'}</>
                             ) : (
-                                <><Box className="text-gmc-dorado-principal" size={20}/> {t('requestConsolidation')}</>
+                                <><Plane className="text-gmc-dorado-principal" size={20}/> {t.has('requestAir') ? t('requestAir') : 'Consolidación Aérea'}</>
                             )}
                         </h3>
                         <button onClick={() => setIsConsolidateModalOpen(false)} className="text-gray-400 hover:text-red-500">
@@ -826,10 +856,12 @@ export default function ClientDashboard({
 
                     <div className="p-6">
                         <div className="text-center mb-6">
-                            <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 border ${consolidationType === 'LOCAL' ? 'bg-gray-100 border-gray-300' : 'bg-blue-50 border-blue-100'}`}>
+                            <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 border ${consolidationType === 'LOCAL' ? 'bg-gray-100 border-gray-300' : consolidationType === 'OCEAN' ? 'bg-blue-50 border-blue-200' : 'bg-yellow-50 border-yellow-200'}`}>
                                 {consolidationType === 'LOCAL' 
                                     ? <Truck size={32} className="text-black"/> 
-                                    : <Box size={32} className="text-blue-600"/>
+                                    : consolidationType === 'OCEAN'
+                                    ? <Ship size={32} className="text-blue-600"/>
+                                    : <Plane size={32} className="text-gmc-dorado-principal"/>
                                 }
                             </div>
                             <h3 className="text-lg font-bold text-gray-800 mb-2">
@@ -838,10 +870,22 @@ export default function ClientDashboard({
                             <p className="text-sm font-bold text-blue-600 mb-2">
                                 {t('estimatedWeight', { weight: totalSelectedWeight.toFixed(2) })}
                             </p>
-                           <p className="text-sm text-gray-500 leading-relaxed">
-                              {t.rich('custom_text', {
-                               strong: (chunks) => <strong className="text-gray-800">{chunks}</strong>
-                               })}
+                            
+                            {/* 🔥 TEXTO DINÁMICO SEGÚN SERVICIO (MULTILINGÜE) */}
+                            <p className="text-sm text-gray-500 leading-relaxed">
+                                {consolidationType === 'LOCAL' ? (
+                                    <>{t.rich('custom_text_local', {
+                                        strong: (chunks) => <strong className="text-gray-800">{chunks}</strong>
+                                    })}</>
+                                ) : consolidationType === 'OCEAN' ? (
+                                    <>{t.rich('custom_text_ocean', {
+                                        strong: (chunks) => <strong className="text-gray-800">{chunks}</strong>
+                                    })}</>
+                                ) : (
+                                    <>{t.rich('custom_text', {
+                                        strong: (chunks) => <strong className="text-gray-800">{chunks}</strong>
+                                    })}</>
+                                )}
                             </p>
                         </div>
 
@@ -866,13 +910,22 @@ export default function ClientDashboard({
                         >
                             {t('cancel')}
                         </button>
+                        
+                        {/* 🔥 BOTÓN DINÁMICO SEGÚN SERVICIO (MULTILINGÜE) */}
                         <button 
                             onClick={onConfirmConsolidation}
                             disabled={isConsolidating}
-                            className={`${consolidationType === 'LOCAL' ? 'bg-black text-white hover:bg-gray-800' : 'bg-gmc-dorado-principal text-black hover:bg-yellow-500'} px-6 py-2 rounded-lg font-bold text-sm shadow-md flex items-center gap-2 disabled:opacity-70`}
+                            className={`${consolidationType === 'LOCAL' ? 'bg-black text-white hover:bg-gray-800' : consolidationType === 'OCEAN' ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-gmc-dorado-principal text-black hover:bg-yellow-500'} px-6 py-2 rounded-lg font-bold text-sm shadow-md flex items-center gap-2 disabled:opacity-70`}
                         >
                             {isConsolidating ? <Loader2 className="animate-spin" size={16}/> : <CheckCircle size={16}/>}
-                            {isConsolidating ? t('sendingRequest') : t('btnConsolidate')}
+                            {isConsolidating 
+                                ? t('sendingRequest') 
+                                : consolidationType === 'LOCAL'
+                                    ? (t.has('btnConfirmLocal') ? t('btnConfirmLocal') : 'Confirmar Entrega Local')
+                                    : consolidationType === 'OCEAN'
+                                        ? (t.has('btnConsolidateOcean') ? t('btnConsolidateOcean') : 'Agrupar en Pallet (Marítimo)')
+                                        : t('btnConsolidate')
+                            }
                         </button>
                     </div>
                 </div>

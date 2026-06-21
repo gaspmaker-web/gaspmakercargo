@@ -143,7 +143,7 @@
   "makeDefault": "Hacer Predeterminada",
   "edit": "Editar"
   },
-  "Dashboard": {
+ "Dashboard": {
     "welcome": "Bienvenido, {name}",
     "activeShipments": "Envíos Activos",
     "noPackages": "No tienes paquetes activos en este momento.",
@@ -189,7 +189,7 @@
     "referralTitle": "Consigue $25 USD",
     "referralDesc": "Invita a tus amigos y gana crédito.",
     "btnPickup": "RECOGER",
-    "btnConsolidate": "CONSOLIDAR",
+    "btnConsolidate": "Empacar en 1 Caja (Aéreo)",
     "modalPickupTitle": "Agendar Recogida",
     "modalPickupDesc": "Selecciona cuándo pasarás por tus paquetes. Calcularemos los costos aplicables.",
     "feeStorage": "Almacenaje (Larga Estancia):",
@@ -224,9 +224,14 @@
     "palletLimitTitle": "Límite de capacidad alcanzado",
     "palletLimitDesc": "Tienes {count} paquetes en el almacén de Miami. El motor de estiba detectó que tu carga ha llenado el límite físico de un pallet seguro. Debes despachar para liberar espacio.",
     "palletLimitBtn": "Consolidar Pallet",
+    "btnConsolidateOcean": "Agrupar en Pallet (Marítimo)",
     "aerialReadyTitle": "Carga lista para Consolidación Aérea",
     "aerialReadyDesc": "Tienes <strong>{count} paquetes</strong> ({weight} lbs) listos en el almacén. Recuerda que el límite internacional para un despacho aéreo es de 150 lbs.",
-    "aerialReadyBtn": "Consolidar Envío Aéreo"
+    "aerialReadyBtn": "Consolidar Envío Aéreo",
+    "custom_text_ocean": "Agruparemos tus cajas en su forma original sobre un <strong>pallet de madera (Marítimo)</strong> para que ahorres en volumen.",
+    "custom_text_local": "Agruparemos tus cajas para enviarlas en <strong>camión de reparto local</strong>.",
+    "requestOcean": "Consolidación Marítima",
+    "btnConfirmLocal": "Confirmar Entrega Local"
   },
 "Notifications": {
     "title": "Notificaciones",

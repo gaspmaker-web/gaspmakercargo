@@ -111,14 +111,24 @@ function calculateRate_GD(weight: number): number {
     return weight * 2.50; 
 }
 
+// 🔥 NUEVA TARIFA MARÍTIMA (Basada en Pies Cúbicos - CUFT)
+function calculateOceanRate_Caribe(cuft: number): number {
+    const safeCuft = Math.max(1, cuft); 
+    
+    if (safeCuft <= 5) return 77.00;
+    if (safeCuft <= 10) return 123.00;
+    if (safeCuft <= 499) return (safeCuft * 5.85) + 62.00;
+    
+    return (safeCuft * 5.30) + 62.00;
+}
+
 // ==========================================
 // 2. CONTROLADOR PRINCIPAL (API ROUTE)
 // ==========================================
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    // Extraemos distanceMiles y el arreglo de pallets de Aura
-    const { weight, weightLbs, dimensions, destination, distanceMiles, auraDetails } = body;
+    const { weight, weightLbs, dimensions, destination, distanceMiles, auraDetails, serviceType } = body;
     
     // --- 🛡️ SANITIZACIÓN BÁSICA ---
     let finalWeightLbs = parseFloat(weightLbs || weight);
@@ -173,26 +183,49 @@ export async function POST(req: Request) {
     // 🔥 DETECCIÓN FLORIDA (Miami / Broward)
     const isFloridaLocal = easyPostCountryCode === 'US' && (rawStateInput === 'FL' || rawStateInput === 'FLORIDA' || rawZip.startsWith('33'));
 
+    // ==========================================
+    // 4. CANDADOS DE SERVICIO Y AUTOCORRECCIÓN INTELIGENTE
+    // ==========================================
+    const reqType = serviceType || 'SHIPPING_INTL';
+    let isOceanRequest = reqType === 'OCEAN_CONSOLIDATION';
+    let isLocalRequest = reqType === 'LOCAL_DELIVERY';
+    let isAirConsolidation = reqType === 'CONSOLIDATION';
+    const isSinglePackage = reqType === 'SHIPPING_INTL';
+
+    // 🛡️ REGLA ESTRICTA: Si cambia la dirección en el checkout, el sistema corrige el servicio
+    if (!isFloridaLocal && isLocalRequest) {
+        // El cliente pidió Local Delivery pero puso una dirección Internacional
+        isLocalRequest = false;
+        isAirConsolidation = true; // Lo pasamos a Aéreo para que no se quede bloqueado
+    }
+    if (isFloridaLocal && isOceanRequest) {
+        // El cliente pidió Marítimo pero puso una dirección en Florida
+        isOceanRequest = false;
+        isLocalRequest = true; // Lo pasamos al Camión local
+    }
+
+    // 🔒 Cerrando los candados finales
+    const showOcean = isOceanRequest;
+    const showAir = isAirConsolidation || isSinglePackage;
+    const showLocal = isFloridaLocal && (isLocalRequest || isSinglePackage);
+
     let rawRates: any[] = [];
     const gmcLogo = '/gaspmakercargoproject.png';
 
- // ==========================================
-    // 4. MOTOR AURA (GASP MAKER LOCAL DELIVERY) - CON GPS BACKEND
     // ==========================================
-    if (isFloridaLocal) {
+    // 5. MOTOR AURA (GASP MAKER LOCAL DELIVERY) 
+    // ==========================================
+    if (showLocal) {
         let auraBoxes: AuraBox[] = [];
         
-        // 🔥 TRADUCTOR DE PALLETS: Convertimos lo que manda el frontend al formato de tu motor
         if (auraDetails && Array.isArray(auraDetails) && auraDetails.length > 0) {
             auraBoxes = auraDetails.map((b: any) => ({
                 length: parseFloat(b.length) || 1,
                 width: parseFloat(b.width) || 1,
                 height: parseFloat(b.height) || 1,
-                // El frontend envía "weight", el motor espera "realWeight"
                 realWeight: parseFloat(b.weight || b.realWeight) || 1
             }));
         } else {
-            // Si por alguna razón no hay pallets, asume 1 solo paquete global
             auraBoxes = [{
                 length: len || 1,
                 width: wid || 1,
@@ -201,27 +234,22 @@ export async function POST(req: Request) {
             }];
         }
 
-        // 📍 Calcular la distancia real en el servidor
         let calculatedMiles = parseFloat(distanceMiles) || 0;
 
-        // Si el frontend no nos mandó las millas (o mandó 0), las calculamos nosotros
         if (calculatedMiles === 0 && rawCityInput && rawZip) {
             try {
                 const GMC_WAREHOUSE_ADDRESS = "1861 NW 22nd St, Miami, FL 33142";
                 const destinationAddress = `${destination?.address || ''}, ${rawCityInput}, ${rawStateInput || 'FL'} ${rawZip}`.trim();
-                
                 const googleApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY;
                 
                 if (googleApiKey && destinationAddress.length > 10) {
                     const mapUrl = `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${encodeURIComponent(GMC_WAREHOUSE_ADDRESS)}&destinations=${encodeURIComponent(destinationAddress)}&units=imperial&key=${googleApiKey}`;
-                    
                     const mapRes = await fetch(mapUrl);
                     const mapData = await mapRes.json();
                     
                     if (mapData.status === 'OK' && mapData.rows[0].elements[0].status === 'OK') {
                         const distanceText = mapData.rows[0].elements[0].distance.text;
                         calculatedMiles = parseFloat(distanceText.replace(/[^0-9.]/g, ''));
-                        console.log(`🗺️ Distancia GPS backend a ${rawCityInput}: ${calculatedMiles} millas`);
                     }
                 }
             } catch (error) {
@@ -244,9 +272,9 @@ export async function POST(req: Request) {
     }
 
     // ==========================================
-    // 5. EASYPOST (Para resto de USA / Exportaciones selectas)
+    // 6. EASYPOST (Para resto de USA / Exportaciones selectas)
     // ==========================================
-    if (targetCountryCode !== 'CU') {
+    if (targetCountryCode !== 'CU' && showAir) {
         try {
             let finalState = destination?.state;
             let finalCity = rawCityInput;
@@ -342,34 +370,67 @@ export async function POST(req: Request) {
     }
 
     // ==========================================
-    // 6. TARIFAS LOCALES (EXPORTACIÓN CARIBE)
+    // 7. TARIFAS LOCALES (EXPORTACIÓN CARIBE)
     // ==========================================
     const isVipWholesale = body.isVip || false;
 
+    // 🌊 CÁLCULO DE PIES CÚBICOS (CUFT) PARA TARIFA MARÍTIMA
+    let totalCuft = 0;
+    if (auraDetails && Array.isArray(auraDetails) && auraDetails.length > 0) {
+        totalCuft = auraDetails.reduce((sum: number, b: any) => {
+            const l = parseFloat(b.length) || 10;
+            const w = parseFloat(b.width) || 10;
+            const h = parseFloat(b.height) || 10;
+            return sum + ((l * w * h) / 1728);
+        }, 0);
+    } else if (len && wid && hgt) {
+        totalCuft = (len * wid * hgt) / 1728;
+    } else {
+        totalCuft = 1; 
+    }
+
     if (targetCountryCode === 'BB') {
-        const price = (isVipWholesale && chargeableWeight >= 230) 
-            ? chargeableWeight * 2.80 
-            : calculateRate_BB(chargeableWeight);
-        rawRates.push({ id: 'GMC-BB', carrier: 'Gasp Maker Cargo', service: 'Barbados Direct', price, days: '3-5 days', logo: gmcLogo });
+        if (showAir) {
+            const priceAir = (isVipWholesale && chargeableWeight >= 230) 
+                ? chargeableWeight * 2.80 
+                : calculateRate_BB(chargeableWeight);
+            rawRates.push({ id: 'GMC-BB-AIR', carrier: 'Gasp Maker Cargo', service: 'Barbados Direct (Air)', price: priceAir, days: '3-5 days', logo: gmcLogo });
+        }
+        
+        if (showOcean) {
+            const priceOcean = calculateOceanRate_Caribe(totalCuft);
+            rawRates.push({ id: 'GMC-BB-OCEAN', carrier: 'Gasp Maker Cargo', service: 'Barbados Maritime', price: parseFloat(priceOcean.toFixed(2)), days: '14-21 days', logo: gmcLogo });
+        }
     }
+    
     if (targetCountryCode === 'TT') {
-        const price = (isVipWholesale && chargeableWeight >= 230) 
-            ? chargeableWeight * 2.80 
-            : calculateRate_TT(chargeableWeight);
-        rawRates.push({ id: 'GMC-TT', carrier: 'Gasp Maker Cargo', service: 'Trinidad Direct', price, days: '3-5 days', logo: gmcLogo });
+        if (showAir) {
+            const priceAir = (isVipWholesale && chargeableWeight >= 230) 
+                ? chargeableWeight * 2.80 
+                : calculateRate_TT(chargeableWeight);
+            rawRates.push({ id: 'GMC-TT-AIR', carrier: 'Gasp Maker Cargo', service: 'Trinidad Direct (Air)', price: priceAir, days: '3-5 days', logo: gmcLogo });
+        }
+        
+        if (showOcean) {
+            const priceOcean = calculateOceanRate_Caribe(totalCuft);
+            rawRates.push({ id: 'GMC-TT-OCEAN', carrier: 'Gasp Maker Cargo', service: 'Trinidad Maritime', price: parseFloat(priceOcean.toFixed(2)), days: '14-21 days', logo: gmcLogo });
+        }
     }
-    if (targetCountryCode === 'JM') {
-        rawRates.push({ id: 'GMC-JM', carrier: 'Gasp Maker Cargo', service: 'Jamaica Direct', price: calculateRate_JM(chargeableWeight), days: '3-5 days', logo: gmcLogo });
-    }
-    if (targetCountryCode === 'CU') {
-        rawRates.push({ id: 'GMC-CU', carrier: 'Gasp Maker Cargo', service: 'Aerovaradero', price: calculateRate_CU(chargeableWeight), days: '15-21 days', logo: gmcLogo });
-    }
-    if (isStThomas) {
-        rawRates.push({ id: 'GMC-VI', carrier: 'Gasp Maker Cargo', service: 'St. Thomas Direct', price: calculateRate_VI(chargeableWeight), days: '3-5 days', logo: gmcLogo });
+    
+    if (showAir) {
+        if (targetCountryCode === 'JM') {
+            rawRates.push({ id: 'GMC-JM', carrier: 'Gasp Maker Cargo', service: 'Jamaica Direct', price: calculateRate_JM(chargeableWeight), days: '3-5 days', logo: gmcLogo });
+        }
+        if (targetCountryCode === 'CU') {
+            rawRates.push({ id: 'GMC-CU', carrier: 'Gasp Maker Cargo', service: 'Aerovaradero', price: calculateRate_CU(chargeableWeight), days: '15-21 days', logo: gmcLogo });
+        }
+        if (isStThomas) {
+            rawRates.push({ id: 'GMC-VI', carrier: 'Gasp Maker Cargo', service: 'St. Thomas Direct', price: calculateRate_VI(chargeableWeight), days: '3-5 days', logo: gmcLogo });
+        }
     }
 
     // ==========================================
-    // 7. FILTRO Y LIMPIEZA FINAL
+    // 8. FILTRO Y LIMPIEZA FINAL
     // ==========================================
     rawRates = rawRates.filter(rate => {
         if (!rate.price || rate.price < 1) return false;

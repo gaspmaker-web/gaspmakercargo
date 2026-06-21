@@ -146,7 +146,7 @@
   "makeDefault": "Définir par défaut",
   "edit": "Modifier"
   },
-  "Dashboard": {
+ "Dashboard": {
     "welcome": "Bienvenue, {name}",
     "activeShipments": "Expéditions Actives",
     "noPackages": "Vous n'avez aucun colis actif pour le moment.",
@@ -192,7 +192,7 @@
     "referralTitle": "Obtenez 25 $",
     "referralDesc": "Invitez des amis et gagnez du crédit.",
     "btnPickup": "RETIRER",
-    "btnConsolidate": "CONSOLIDER",
+    "btnConsolidate": "Emballer dans 1 Boîte (Aérien)",
     "modalPickupTitle": "Planifier Retrait",
     "modalPickupDesc": "Sélectionnez quand vous récupérerez vos colis. Nous calculerons les frais applicables.",
     "feeStorage": "Stockage (Long Terme) :",
@@ -227,9 +227,14 @@
     "palletLimitTitle": "Limite de capacité atteinte",
     "palletLimitDesc": "Vous avez {count} colis dans l'entrepôt de Miami. Le moteur d'arrimage a détecté que votre charge a atteint la limite physique d'une palette sécurisée. Vous devez expédier pour libérer de l'espace.",
     "palletLimitBtn": "Consolider la Palette",
-    "aerialReadyTitle": "Cargaison prête para Consolidation Aérienne",
+    "btnConsolidateOcean": "Grouper sur Palette (Maritime)",
+    "aerialReadyTitle": "Cargaison prête pour Consolidation Aérienne",
     "aerialReadyDesc": "Vous avez <strong>{count} colis</strong> ({weight} lbs) prêts dans l'entrepôt. N'oubliez pas que la limite internationale pour une expédition aérienne est de 150 lbs.",
-    "aerialReadyBtn": "Consolider l'Expédition Aérienne"
+    "aerialReadyBtn": "Consolider l'Expédition Aérienne",
+    "custom_text_ocean": "Nous regrouperons vos boîtes dans leur forme originale sur une <strong>palette en bois (Maritime)</strong> pour vous faire économiser du volume.",
+    "custom_text_local": "Nous regrouperons vos boîtes pour les expédier par <strong>camion de livraison locale</strong>.",
+    "requestOcean": "Consolidation Maritime",
+    "btnConfirmLocal": "Confirmer la Livraison Locale"
   },
 "Notifications": {
     "title": "Notifications",
