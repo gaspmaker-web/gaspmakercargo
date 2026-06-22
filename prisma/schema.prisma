@@ -124,7 +124,10 @@ model Package {
   stripePaymentId        String?   
 
   // 🔥 NUEVO: Para guardar la tabla detallada de aduanas (DHL/FedEx)
-  customsItems           Json?    
+  customsItems           Json? 
+
+ // 🚨 NUEVO: Para guardar Cargos Especiales (Hazmat, EEI, Prep Fee, etc.)
+  extraCharges           Json?   
 
   weightLbs              Float?
   lengthIn               Float?
@@ -189,6 +192,9 @@ model ConsolidatedShipment {
 
   // 🔥 NUEVO: Para guardar la tabla detallada de aduanas de cajas agrupadas
   customsItems           Json?    
+
+ // 🚨 NUEVO: Para guardar Cargos Especiales de toda la consolidación
+  extraCharges           Json?
 
   // 🚀 NUEVO: Aquí se guardará el arreglo con Pallet 1, Pallet 2, etc.
   auraDetails            Json?    

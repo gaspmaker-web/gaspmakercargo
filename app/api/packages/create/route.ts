@@ -33,7 +33,9 @@ export async function POST(req: Request) {
       photoUrlMiami,
       declaredValue,
       invoiceUrl,
-      customsItems 
+      customsItems,
+      // 🔥 RECIBIMOS LOS CARGOS ESPECIALES (HAZMAT, EEI, ETC)
+      extraCharges
     } = body;
 
     // Validaciones
@@ -64,6 +66,8 @@ export async function POST(req: Request) {
           invoiceUrl: invoiceUrl || existingPackage.invoiceUrl,
           declaredValue: declaredValue ? parseFloat(declaredValue) : existingPackage.declaredValue,
           customsItems: customsItems || existingPackage.customsItems,
+          // 🔥 GUARDAMOS LOS CARGOS ESPECIALES AL ACTUALIZAR
+          extraCharges: extraCharges || existingPackage.extraCharges,
         },
         include: { user: true } 
       });
@@ -120,7 +124,9 @@ export async function POST(req: Request) {
           photoUrlMiami: photoUrlMiami || null,
           invoiceUrl: invoiceUrl || null,
           customsItems: customsItems || null,
-          declaredValue: declaredValue ? parseFloat(declaredValue) : 0
+          declaredValue: declaredValue ? parseFloat(declaredValue) : 0,
+          // 🔥 GUARDAMOS LOS CARGOS ESPECIALES AL CREAR
+          extraCharges: extraCharges || null
         },
         include: { user: true } 
       });

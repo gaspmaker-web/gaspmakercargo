@@ -142,6 +142,9 @@ export default async function PagarFacturasPage({ params: { locale } }: { params
       // 🚀 ¡LOS DATOS CRUCIALES PARA AURA Y MARÍTIMO!
       serviceType: s.serviceType,
       auraDetails: s.auraDetails, 
+      
+      // 🔥 LA SOLUCIÓN: ENVIAR LOS CARGOS ESPECIALES AL FRONTEND
+      extraCharges: s.extraCharges,
 
       packages: s.packages,
       selectedCourier: s.selectedCourier,

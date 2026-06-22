@@ -23,13 +23,13 @@ import {
   Clock,
   Tag,
   XCircle,
+  AlertTriangle,
 } from "lucide-react";
 import Image from "next/image";
 import { useRouter, useParams } from "next/navigation";
 import { getProcessingFee } from "@/lib/stripeCalc";
 import { useTranslations } from "next-intl";
 import CourierLogo from "@/components/CourierLogo";
-// ✅ IMPORTACIÓN CORRECTA
 import InteractiveEvidence from "@/components/client/InteractiveEvidence";
 
 const getCarrierLogo = (carrier: string): string => {
@@ -40,7 +40,6 @@ const getCarrierLogo = (carrier: string): string => {
   return "/gaspmakercargoproject.png";
 };
 
-// 🔥 HELPERS DE DISEÑO
 const cleanCarrierName = (name: string) => {
   if (!name) return "";
   const n = name.toLowerCase();
@@ -71,14 +70,14 @@ interface PackageDetailProps {
   pkg: any;
   userProfile: any;
   savedCards?: any[];
-  allAddresses?: any[]; // 🔥 NUEVO: Recibimos la libreta de direcciones
+  allAddresses?: any[]; 
 }
 
 export default function PackageDetailClient({
   pkg,
   userProfile,
   savedCards = [],
-  allAddresses = [], // 🔥 Inicializado vacío por si acaso
+  allAddresses = [], 
 }: PackageDetailProps) {
   const t = useTranslations("PackageDetail");
   const tPickup = useTranslations("Pickup");
@@ -90,7 +89,6 @@ export default function PackageDetailClient({
 
   const couriersRef = useRef<HTMLDivElement>(null);
 
-  // 🔥 AQUÍ CONECTAMOS LA FACTURA QUE VIENE DE LA BASE DE DATOS
   const [invoiceUrl, setInvoiceUrl] = useState<string | null>(pkg.invoiceUrl || null);
   const [isUploading, setIsUploading] = useState(false);
   
@@ -101,26 +99,21 @@ export default function PackageDetailClient({
   const [cards, setCards] = useState<any[]>(savedCards);
   const [selectedCardId, setSelectedCardId] = useState<string>("");
   
-// 🔥 NUEVOS ESTADOS PARA EL SELECTOR DE DIRECCIONES
   const [selectedAddressId, setSelectedAddressId] = useState<string>("");
 
   const [isPaying, setIsPaying] = useState(false);
   const [showMobileDetails, setShowMobileDetails] = useState(false);
 
-  // 🔥 ESCUDO ANTI-DOBLE-CLIC (Cerrojo Síncrono)
   const isPayingRef = useRef(false);
 
-  // Cupones
   const [couponCode, setCouponCode] = useState("");
   const [discount, setDiscount] = useState(0);
   const [couponMsg, setCouponMsg] = useState({ type: "", text: "" });
   const [validatingCoupon, setValidatingCoupon] = useState(false);
 
-  // 🔥 BILLETERA / REFERIDOS 🔥
   const walletBalance = userProfile?.walletBalance || 0;
   const [useWallet, setUseWallet] = useState(false);
 
-  // Fees
   const isGMCSelected =
     selectedRate?.carrier?.toUpperCase().includes("GASP") ||
     selectedRate?.carrier?.toUpperCase().includes("GMC") ||
@@ -132,24 +125,47 @@ export default function PackageDetailClient({
   const declaredValue = Number(pkg.declaredValue) || 0;
   const insuranceCost = declaredValue > 100 ? declaredValue * 0.03 : 0;
 
-  // 🔥 SOLUCIÓN: Buscamos la foto en 'photoUrlMiami' (para cajas) o en 'receiptUrl' (para sobres del buzón)
+  // =====================================================================================
+  // 🔥 LÓGICA DE CARGOS ESPECIALES MULTILINGÜE 🔥
+  // =====================================================================================
+  const specialChargesObj = pkg.extraCharges || {};
+  let totalSpecialCharges = 0;
+  const activeSpecialCharges: { label: string; amount: number }[] = [];
+
+  if (specialChargesObj.hazmatPrepFee) {
+      totalSpecialCharges += 120.00;
+      activeSpecialCharges.push({ label: t("hazmatPrepFee"), amount: 120.00 });
+  }
+  if (specialChargesObj.hazmatShippingLineFee) {
+      totalSpecialCharges += 180.00;
+      activeSpecialCharges.push({ label: t("hazmatShippingFee"), amount: 180.00 });
+  }
+  if (specialChargesObj.airHazmat) {
+      totalSpecialCharges += 275.00;
+      activeSpecialCharges.push({ label: t("airHazmatCompliance"), amount: 275.00 });
+  }
+  if (specialChargesObj.eei) {
+      totalSpecialCharges += 40.00;
+      activeSpecialCharges.push({ label: t("eeiCustomsFee"), amount: 40.00 });
+  }
+
+  const hasSpecialCharges = totalSpecialCharges > 0;
+  // =====================================================================================
+
   const warehousePhoto = (pkg.photoUrlMiami && pkg.photoUrlMiami.startsWith("http")) ? pkg.photoUrlMiami : 
                          (pkg.receiptUrl && pkg.receiptUrl.startsWith("http")) ? pkg.receiptUrl : null;
 
   const isReadyToShip = pkg.status === "RECIBIDO_MIAMI" || pkg.status === "EN_ALMACEN";
   
-  // 🔥 IDENTIFICAR SI ES DOCUMENTO PARA OMITIR FACTURA Y VALOR
   const isDocument = pkg.courier === 'Buzón Virtual' || (pkg.carrierTrackingNumber || '').startsWith('DOC-') || (pkg.gmcTrackingNumber || '').startsWith('GMC-DOC-');
   
-  // 🔥 MEJORADA: Validación robusta para saber si hay invoice (acepta PDF o imagen)
   const hasInvoice = !!invoiceUrl && (invoiceUrl.startsWith("http") || invoiceUrl.startsWith("https"));
-  const invoiceSatisfied = hasInvoice || isDocument; // 🔥 Los documentos no requieren factura
+  const invoiceSatisfied = hasInvoice || isDocument; 
   
   const isOverdue = Number(pkg.storageDebt) > 0;
   const isDelivered = pkg.status === "ENTREGADO";
-  const isAdminVerifiedValue = declaredValue > 0 || isDocument; // 🔥 Los documentos no requieren valor declarado (son $0 y saltan la alerta de aduana)
+  const isAdminVerifiedValue = declaredValue > 0 || isDocument; 
 
-  // 🔥 EFECTO PARA SELECCIONAR LA DIRECCIÓN DEFAULT INICIAL
   useEffect(() => {
     if (allAddresses.length > 0 && !selectedAddressId) {
       const def = allAddresses.find((a) => a.isDefault);
@@ -180,37 +196,29 @@ export default function PackageDetailClient({
     }
   }, [cards.length]);
 
-  // 🔥 AUTO-APLICAR BONO DE BIENVENIDA AL AMIGO INVITADO
   useEffect(() => {
     if (selectedRate) {
       const isEligibleForWelcomeBonus = userProfile?.referredBy && !userProfile?.referralRewardPaid;
       
-      // Calculamos el costo base antes de aplicar descuentos para ver si supera la meta
-      const tempBaseAmount = selectedRate.price + handlingFee + insuranceCost;
+      const tempBaseAmount = selectedRate.price + handlingFee + insuranceCost + totalSpecialCharges;
 
       if (isEligibleForWelcomeBonus && tempBaseAmount >= 100) {
-        // ¡Premio Automático!
         setDiscount(25.0);
         setCouponMsg({ type: "success", text: `${t("welcomeBonus")} (-$25.00)` });
       } else {
-        // Si no califica, quitamos el descuento
         setDiscount(0);
         setCouponMsg({ type: "", text: "" });
       }
     }
-  }, [selectedRate, userProfile, handlingFee, insuranceCost]);
+  }, [selectedRate, userProfile, handlingFee, insuranceCost, totalSpecialCharges, t]);
 
- // 🔥 HELPER: OBTIENE LOS DATOS COMPLETOS DE LA DIRECCIÓN SELECCIONADA
   const currentAddress = allAddresses.find((a) => a.id === selectedAddressId);
   const currentDestination = currentAddress ? {
     name: currentAddress.fullName,
     address: currentAddress.address,
-    
-    // 👇 ESTO ES LO QUE ACTIVA A GmcDelivery AUTOMÁTICAMENTE 👇
     city: currentAddress.city || '', 
     state: currentAddress.state || '', 
     zip: currentAddress.zip || '',
-    
     cityZip: currentAddress.cityZip,
     countryCode: currentAddress.country, 
     countryName: currentAddress.country, 
@@ -232,7 +240,7 @@ export default function PackageDetailClient({
     setRates([]);
     setDiscount(0);
     setCouponMsg({ type: "", text: "" });
-    setUseWallet(false); // Resetear billetera por seguridad
+    setUseWallet(false);
 
     try {
       const res = await fetch("/api/rates", {
@@ -245,7 +253,6 @@ export default function PackageDetailClient({
             width: pkg.widthIn,
             height: pkg.heightIn,
           },
-          // 🔥 MANDAMOS AL MOTOR LA DIRECCIÓN EXACTA SELECCIONADA EN EL MENÚ
           destination: currentDestination,
         }),
       });
@@ -281,7 +288,6 @@ export default function PackageDetailClient({
     }
   };
 
-  // 🔥 MANEJO DE CUPÓN BLINDADO (Seguridad de Referidos)
   const handleApplyCoupon = async () => {
     if (!couponCode.trim()) return;
     if (!selectedRate) { setCouponMsg({ type: "error", text: "Select a shipping method first." }); return; }
@@ -290,7 +296,6 @@ export default function PackageDetailClient({
     setCouponMsg({ type: "", text: "" });
     setDiscount(0);
 
-    // 1. Validar que el envío supere los $100
     if (selectedRate.price < 100) {
       setTimeout(() => {
         setCouponMsg({ type: "error", text: "Give $25, Get $25: Valid only on shipments over $100 USD." });
@@ -299,13 +304,11 @@ export default function PackageDetailClient({
       return;
     }
 
-    // 2. Seguridad: Extraer código ingresado y código real en BD
     const cleanInput = couponCode.trim().toUpperCase();
     const actualReferrer = userProfile?.referredBy ? userProfile.referredBy.trim().toUpperCase() : null;
     const isBonusUsed = userProfile?.referralRewardPaid === true;
 
     setTimeout(() => {
-      // 3. Validar si el código es correcto y no ha sido usado
       if (cleanInput === actualReferrer && !isBonusUsed) {
         setDiscount(25.0);
         setCouponMsg({ type: "success", text: "Welcome Bonus applied! 🎁 (-$25.00)" });
@@ -319,7 +322,6 @@ export default function PackageDetailClient({
     }, 800);
   };
 
- // 5. PAGAR (Versión Blindada Anti-Doble-Clic)
   const handlePay = async () => {
     if (!selectedCardId) {
         setShowMobileDetails(true); 
@@ -329,21 +331,17 @@ export default function PackageDetailClient({
 
     if (!selectedRate) { alert("Selecciona un método de envío."); return; }
 
-    // 🔥 1. EL ESCUDO: Si ya está pagando, rechazamos cualquier clic adicional al instante
     if (isPayingRef.current) return; 
     
-    // 🔥 2. CERRAMOS EL CERROJO: Bloqueo instantáneo en memoria
     isPayingRef.current = true; 
 
     setIsPaying(true);
 
-   const servicePrice = selectedRate.price;
-    const baseAmount = servicePrice + handlingFee + insuranceCost;
+    const servicePrice = selectedRate.price;
+    const baseAmount = servicePrice + handlingFee + insuranceCost + totalSpecialCharges;
     const fee = getProcessingFee ? getProcessingFee(baseAmount) : baseAmount * 0.0727;
-    // Utilizamos el cálculo ya procesado con billetera
     const total = finalTotalAmount;
 
-    // 👇 1. CREAMOS LA DIRECCIÓN (Esto faltaba en tu código)
     const formattedAddress = `${currentDestination.name} | ${currentDestination.address}, ${currentDestination.cityZip}, ${currentDestination.countryCode || currentDestination.countryName} | Tel: ${currentDestination.phone || 'N/A'}`;
     
     try {
@@ -351,7 +349,7 @@ export default function PackageDetailClient({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          amountNet: total, // Este es el monto final que Stripe cobrará
+          amountNet: total, 
           paymentMethodId: selectedCardId,
           serviceType: "SINGLE_SHIPMENT",
           description: `Envío ${pkg.gmcTrackingNumber} via ${selectedRate.carrier}`,
@@ -359,7 +357,6 @@ export default function PackageDetailClient({
           discountApplied: discount,
           shippingAddress: formattedAddress,
           walletDiscount: useWallet ? appliedWalletAmount : 0,
-          
         }),
       });
 
@@ -378,10 +375,10 @@ export default function PackageDetailClient({
           processingFee: fee,
           insuranceCost: insuranceCost,
           handlingFee: handlingFee,
+          specialCharges: totalSpecialCharges, 
           discount: discount,
           totalPaid: total,
           stripePaymentId: payData.paymentId,
-          // 🔥 GUARDAMOS LA DIRECCIÓN COMPLETA SELECCIONADA EN EL MENÚ
           shippingAddress: `${currentDestination.name} | ${currentDestination.address}, ${currentDestination.cityZip}, ${currentDestination.countryName || currentDestination.countryCode}`,
         }),
       });
@@ -396,7 +393,6 @@ export default function PackageDetailClient({
       console.error("ERROR DE PAGO:", error);
       alert(error.message || "Error de conexión.");
     } finally {
-      // 🔥 3. ABRIMOS EL CERROJO: Pase lo que pase, liberamos el botón
       setIsPaying(false);
       isPayingRef.current = false;
     }
@@ -421,28 +417,24 @@ export default function PackageDetailClient({
           body: JSON.stringify({ packageId: pkg.id, invoiceUrl: data.secure_url }),
         });
         setInvoiceUrl(data.secure_url);
-        router.refresh(); // 🔥 Refrescamos los datos en el servidor
+        router.refresh(); 
       }
     } catch (e) { alert("Error subir"); } finally { setIsUploading(false); }
   };
 
   const servicePrice = selectedRate ? selectedRate.price : 0; 
-  const baseAmount = servicePrice + handlingFee + insuranceCost;
+  const baseAmount = servicePrice + handlingFee + insuranceCost + totalSpecialCharges;
   const processingFee = selectedRate ? (getProcessingFee ? getProcessingFee(baseAmount) : baseAmount * 0.0727) : 0;
   
- let finalTotalAmount = Math.max(0, servicePrice + processingFee + handlingFee + insuranceCost - discount);
+  let finalTotalAmount = Math.max(0, servicePrice + processingFee + handlingFee + insuranceCost + totalSpecialCharges - discount);
   let appliedWalletAmount = 0;
 
-// ✅ NUEVA LÓGICA ENTERPRISE: Basada en la Tarjeta ✅
   const activeCardDetails = cards.find(c => c.id === selectedCardId);
   const isTrinidad = activeCardDetails?.country?.toUpperCase() === 'TT';
 
-  const tasaTTD = 7.30; // Tu Tasa Gasp Maker (1 USD = 7.30 TTD)
+  const tasaTTD = 7.30; 
   const montoTTD = (finalTotalAmount * tasaTTD).toFixed(2);
 
-  // 🔥 LÓGICA DE BILLETERA (Mínimo $0.50 Stripe)
-
-  // 🔥 LÓGICA DE BILLETERA (Mínimo $0.50 Stripe)
   if (useWallet && walletBalance > 0) {
       appliedWalletAmount = Math.min(walletBalance, finalTotalAmount - 0.50);
       if (appliedWalletAmount < 0) appliedWalletAmount = 0;
@@ -468,7 +460,6 @@ export default function PackageDetailClient({
             </h3>
             <div className="bg-white rounded-xl border border-gray-200 overflow-hidden relative flex items-center justify-center group w-full">
               {pkg.deliveryPhotoUrl ? (
-                // 🔥 AQUÍ INYECTAMOS LA FOTO INTERACTIVA DEL CHOFER
                 <InteractiveEvidence 
                   photoUrl={pkg.deliveryPhotoUrl} 
                   trackingNumber={pkg.carrierTrackingNumber || pkg.gmcTrackingNumber} 
@@ -520,7 +511,14 @@ export default function PackageDetailClient({
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start pt-6">
           <div className="lg:col-span-2 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 relative overflow-hidden">
+                {/* 🔥 ALERTA VISUAL MULTILINGÜE 🔥 */}
+                {hasSpecialCharges && (
+                    <div className="absolute top-0 right-0 bg-orange-500 text-white text-[9px] font-black px-3 py-1 rounded-bl-xl uppercase tracking-widest shadow-sm z-10 flex items-center gap-1">
+                        <AlertTriangle size={10} /> {t("specialHandling")}
+                    </div>
+                )}
+                
                 <h2 className="flex items-center gap-2 font-bold text-gray-800 text-base mb-4 border-b border-gray-100 pb-2">
                   <Box className="text-gmc-dorado-principal" size={20} /> {t("detailsTitle")}
                 </h2>
@@ -559,7 +557,6 @@ export default function PackageDetailClient({
                 </h2>
                 <div className="flex-1 bg-gray-100 rounded-xl border-2 border-dashed flex items-center justify-center relative min-h-[180px] overflow-hidden">
                   {warehousePhoto ? (
-                    // 🔥 AHORA SÍ, LA FOTO DE BODEGA ES INTERACTIVA 🔥
                     <InteractiveEvidence 
                       photoUrl={warehousePhoto} 
                       trackingNumber={pkg.carrierTrackingNumber || pkg.gmcTrackingNumber} 
@@ -574,7 +571,6 @@ export default function PackageDetailClient({
               </div>
             </div>
 
-            {/* 🔥 TARJETA DE FACTURA CONECTADA Y EXCEPCIÓN DE DOCUMENTOS 🔥 */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
                 <div className={`p-3 rounded-full ${invoiceSatisfied ? "bg-blue-50 text-blue-600" : "bg-orange-50 text-orange-400"}`}>
@@ -591,7 +587,6 @@ export default function PackageDetailClient({
                   )}
                 </div>
               </div>
-              {/* Ocultamos el botón de subir si es un documento para no confundir al usuario */}
               {!isDocument && (
                   <label className="cursor-pointer bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-xs font-bold hover:bg-gray-50 flex items-center gap-2 transition-colors active:scale-95 shadow-sm">
                     {isUploading ? <Loader2 className="animate-spin" size={14} /> : <Upload size={14} />} {hasInvoice ? t("replaceBtn") : t("uploadBtn")}
@@ -607,14 +602,13 @@ export default function PackageDetailClient({
                   <div className="w-full">
                     <p className="text-[10px] font-bold text-blue-400 uppercase tracking-wide mb-1">{t("quotingFor")}:</p>
                     
-                    {/* 🔥 SELECTOR DE DIRECCIONES NIVEL AMAZON */}
                     {allAddresses.length > 0 ? (
                       <div className="mt-1 relative max-w-sm">
                           <select 
                               value={selectedAddressId} 
                               onChange={(e) => {
                                   setSelectedAddressId(e.target.value);
-                                  setRates([]); // Limpiar tarifas al cambiar destino
+                                  setRates([]); 
                                   setSelectedRate(null);
                               }}
                               className="w-full bg-white text-blue-900 text-sm font-bold p-2.5 pr-8 rounded-lg border border-blue-200 focus:border-blue-400 focus:ring-1 focus:ring-blue-400 outline-none appearance-none cursor-pointer shadow-sm"
@@ -737,6 +731,18 @@ export default function PackageDetailClient({
                       </div>
                     )}
 
+                    {/* 🔥 NUEVA SECCIÓN DE CARGOS ESPECIALES EN DESKTOP (MULTILINGÜE) 🔥 */}
+                    {hasSpecialCharges && (
+                        <div className="pt-2 pb-2">
+                            {activeSpecialCharges.map((charge, idx) => (
+                                <div key={idx} className="flex justify-between text-sm text-orange-400 font-medium">
+                                    <span className="flex items-center gap-1"><AlertTriangle size={12} /> {charge.label}</span>
+                                    <span>+${charge.amount.toFixed(2)}</span>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
                     <div className="flex justify-between text-sm text-gray-400">
                         <span>{t("processingFee")}</span>
                         <span>+${processingFee.toFixed(2)}</span>
@@ -768,7 +774,6 @@ export default function PackageDetailClient({
                     </div>
                   </div>
 
-               {/* 🔥 CAJITA DORADA BILLETERA (DESKTOP) 🔥 */}
                   {walletBalance > 0 && (
                       <div className="mt-4 p-3 bg-gradient-to-r from-yellow-500/10 to-yellow-600/20 border border-yellow-500/30 rounded-xl mb-6">
                           <div className="flex items-center justify-between">
@@ -777,9 +782,7 @@ export default function PackageDetailClient({
                                       <DollarSign size={16} />
                                   </div>
                                   <div>
-                                      {/* 👇 Título traducido usando tBills */}
                                       <p className="text-xs font-bold text-yellow-400 uppercase tracking-wide">{tBills('walletTitle')}</p>
-                                      {/* 👇 Subtítulo traducido usando tBills */}
                                       <p className="text-[10px] text-yellow-400/80">{tBills('walletBalance')}: ${walletBalance.toFixed(2)}</p>
                                   </div>
                               </div>
@@ -790,17 +793,13 @@ export default function PackageDetailClient({
                           </div>
                           {useWallet && appliedWalletAmount > 0 && (
                               <div className="mt-2 pt-2 border-t border-yellow-500/20 flex justify-between text-xs font-bold text-yellow-400">
-                                  {/* 👇 Tercera frase traducida usando tBills (con texto por defecto por si acaso) */}
                                   <span>{tBills('walletApplied') || "Saldo a aplicar"}:</span>
                                   <span>-${appliedWalletAmount.toFixed(2)}</span>
                               </div>
                           )}
                       </div>
-                )} 
-                  {/* (Este es el cierre del bloque de billetera) */}
+                  )} 
 
-                  {/* 👇 INSERTA ESTE BLOQUE AQUÍ (DESKTOP) 👇 */}
-               {/* 🔥 ALERTA PAGO LOCAL TRINIDAD (MULTILINGÜE) 🔥 */}
                {isTrinidad && finalTotalAmount > 0 && (
               <div className="mt-4 p-3 bg-blue-900/20 border border-blue-500/30 rounded-xl mb-3">
               <div className="flex items-center gap-2 mb-1">
@@ -816,7 +815,6 @@ export default function PackageDetailClient({
             </div>
             </div>
              )}
-                  {/* 👆 FIN DEL BLOQUE NUEVO 👆 */}
 
                   <div className="flex justify-between items-center mb-8">
                     <span className="text-xl font-bold">{tPickup("sumTotal")}</span>
@@ -897,6 +895,18 @@ export default function PackageDetailClient({
                     </div>
                   )}
 
+                  {/* 🔥 NUEVA SECCIÓN DE CARGOS ESPECIALES EN MÓVIL (MULTILINGÜE) 🔥 */}
+                  {hasSpecialCharges && (
+                      <div className="pt-1 pb-1">
+                          {activeSpecialCharges.map((charge, idx) => (
+                              <div key={idx} className="flex justify-between text-sm text-orange-400 font-medium mt-1">
+                                  <span className="flex items-center gap-1"><AlertTriangle size={12} /> {charge.label}</span>
+                                  <span>+${charge.amount.toFixed(2)}</span>
+                              </div>
+                          ))}
+                      </div>
+                  )}
+
                   <div className="flex justify-between text-gray-400">
                       <span>{t("processingFee")}</span>
                       <span>+${processingFee.toFixed(2)}</span>
@@ -927,7 +937,6 @@ export default function PackageDetailClient({
                     )}
                   </div>
 
-                  {/* 🔥 CAJITA DORADA BILLETERA (MÓVIL) 🔥 */}
                   {walletBalance > 0 && (
                       <div className="mt-3 p-3 bg-gradient-to-r from-yellow-500/10 to-yellow-600/20 border border-yellow-500/30 rounded-xl mb-3">
                           <div className="flex items-center justify-between">
@@ -936,9 +945,7 @@ export default function PackageDetailClient({
                                       <DollarSign size={14} />
                                   </div>
                                   <div>
-                                      {/* 👇 Título traducido usando tBills */}
                                       <p className="text-xs font-bold text-yellow-400 uppercase tracking-wide">{tBills('walletTitle')}</p>
-                                      {/* 👇 Subtítulo traducido usando tBills */}
                                       <p className="text-[10px] text-yellow-400/80">{tBills('walletBalance')}: ${walletBalance.toFixed(2)}</p>
                                   </div>
                               </div>
@@ -949,17 +956,13 @@ export default function PackageDetailClient({
                           </div>
                           {useWallet && appliedWalletAmount > 0 && (
                               <div className="mt-2 pt-2 border-t border-yellow-500/20 flex justify-between text-xs font-bold text-yellow-400">
-                                  {/* 👇 Tercera frase traducida usando tBills (con texto por defecto por si acaso) */}
                                   <span>{tBills('walletApplied') || "Aplicado"}:</span>
                                   <span>-${appliedWalletAmount.toFixed(2)}</span>
                               </div>
                           )}
                       </div>
                   )}
-                  {/* (Este es el cierre del bloque de billetera móvil) */}
 
-                  {/* 👇 INSERTA ESTE BLOQUE AQUÍ (MÓVIL) 👇 */}
-                {/* 🔥 ALERTA PAGO LOCAL TRINIDAD (MULTILINGÜE) 🔥 */}
                 {isTrinidad && finalTotalAmount > 0 && (
                 <div className="mt-4 p-3 bg-blue-900/20 border border-blue-500/30 rounded-xl mb-3">
                  <div className="flex items-center gap-2 mb-1">
@@ -975,10 +978,8 @@ export default function PackageDetailClient({
              </div>
              </div>
                )}
-                  {/* 👆 FIN DEL BLOQUE NUEVO 👆 */}
 
                  <div className="pt-3 border-t border-gray-600 pb-4">
-                {/* Usamos tPickup que ya tenías configurado para el título */}
                 <label className="block text-xs font-bold text-gray-400 uppercase mb-2">{tPickup('paymentTitle')}</label>
                 {cards.length > 0 ? (
                 <div className="space-y-2">

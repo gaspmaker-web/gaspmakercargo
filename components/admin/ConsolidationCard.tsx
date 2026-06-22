@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Package, MapPin, Calendar, ArrowRight, X, Loader2, Box, Ruler, DollarSign, Truck, Plane, Ship, Plus, Trash2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Package, MapPin, Calendar, ArrowRight, X, Loader2, Box, Ruler, DollarSign, Truck, Plane, Ship, Plus, Trash2, AlertTriangle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 export default function ConsolidationCard({ request }: { request: any }) {
@@ -17,6 +17,29 @@ export default function ConsolidationCard({ request }: { request: any }) {
   const [finalWeight, setFinalWeight] = useState('');
   const [dims, setDims] = useState({ length: '', width: '', height: '' });
   const [finalValue, setFinalValue] = useState('');
+
+  // =================================================================
+  // 🔥 ESTADO PARA CARGOS ESPECIALES (HAZMAT Y EEI)
+  // =================================================================
+  const [specialCharges, setSpecialCharges] = useState({
+      hazmatPrepFee: false,
+      hazmatShippingLineFee: false,
+      airHazmat: false,
+      eei: false
+  });
+
+  const toggleCharge = (charge: keyof typeof specialCharges) => {
+      setSpecialCharges(prev => ({ ...prev, [charge]: !prev[charge] }));
+  };
+
+  // Lógica Automática EEI: Si supera $2,500, se marca el Trámite EEI
+  useEffect(() => {
+      if (parseFloat(finalValue || '0') > 2500) {
+          setSpecialCharges(prev => ({ ...prev, eei: true }));
+      } else {
+          setSpecialCharges(prev => ({ ...prev, eei: false }));
+      }
+  }, [finalValue]);
 
   // =================================================================
   // 🚚 ESTADO PARA LOCAL DELIVERY (Aura Inteligencia - Filas Dinámicas)
@@ -50,7 +73,9 @@ export default function ConsolidationCard({ request }: { request: any }) {
     try {
         let payload: any = { 
             consolidationId: request.id,
-            isAura: isLocalDelivery 
+            isAura: isLocalDelivery,
+            // 🔥 ENVIAMOS LOS CARGOS ESPECIALES AL BACKEND
+            extraCharges: specialCharges 
         };
 
         if (isLocalDelivery) {
@@ -206,7 +231,8 @@ export default function ConsolidationCard({ request }: { request: any }) {
       {/* --- MODAL DE PROCESAMIENTO --- */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in">
-            <div className={`rounded-xl shadow-2xl max-w-sm w-full p-6 animate-in zoom-in-95 ${isLocalDelivery ? 'bg-gray-50' : 'bg-white'}`}>
+            {/* 🔥 Aumentamos el max-w-sm a max-w-md y pusimos overflow-y-auto para evitar recortes */}
+            <div className={`rounded-xl shadow-2xl max-w-md w-full p-6 max-h-[95vh] overflow-y-auto custom-scrollbar animate-in zoom-in-95 ${isLocalDelivery ? 'bg-gray-50' : 'bg-white'}`}>
                 <div className="flex justify-between items-center mb-4">
                     <h3 className={`text-lg font-bold flex items-center gap-2 ${
                         isLocalDelivery ? 'text-black' : isOcean ? 'text-blue-900' : 'text-indigo-900'
@@ -235,7 +261,7 @@ export default function ConsolidationCard({ request }: { request: any }) {
                 {/* 🚚 INTERFAZ DINÁMICA AURA (LOCAL DELIVERY)                     */}
                 {/* ============================================================== */}
                 {isLocalDelivery ? (
-                    <div className="max-h-80 overflow-y-auto pr-1 mb-4 space-y-3 custom-scrollbar">
+                    <div className="max-h-64 overflow-y-auto pr-1 mb-4 space-y-3 custom-scrollbar">
                         {auraPieces.map((piece, index) => (
                             <div key={index} className="bg-white p-3 rounded-xl border border-gray-300 relative shadow-sm">
                                 <div className="flex justify-between items-center mb-3">
@@ -311,7 +337,7 @@ export default function ConsolidationCard({ request }: { request: any }) {
                             />
                         </div>
 
-                        <div className="grid grid-cols-3 gap-2 mb-6">
+                        <div className="grid grid-cols-3 gap-2 mb-4">
                             <div>
                                 <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1 flex items-center gap-1"><Ruler size={10}/> Largo</label>
                                 <input type="number" placeholder="In" className="w-full border p-2 rounded-lg text-center font-mono"
@@ -331,10 +357,65 @@ export default function ConsolidationCard({ request }: { request: any }) {
                     </>
                 )}
 
+                {/* ============================================================== */}
+                {/* 🔥 NUEVO PANEL: CARGOS ESPECIALES Y HAZMAT 🔥                  */}
+                {/* ============================================================== */}
+                <div className="bg-orange-50/50 p-3 rounded-xl border border-orange-200 mb-4 overflow-hidden shadow-sm">
+                    <div className="flex items-center gap-2 mb-3">
+                        <AlertTriangle size={16} className="text-orange-500" />
+                        <label className="text-xs font-bold text-orange-800 uppercase tracking-wider">
+                            Cargos Especiales y Hazmat
+                        </label>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {/* Hazmat Preparation Fee */}
+                        <label className={`flex items-center gap-2 p-2.5 rounded-lg border cursor-pointer transition-all ${specialCharges.hazmatPrepFee ? 'bg-orange-100 border-orange-400' : 'bg-white border-orange-100 hover:bg-orange-50'}`}>
+                            <input type="checkbox" checked={specialCharges.hazmatPrepFee} onChange={() => toggleCharge('hazmatPrepFee')} className="w-4 h-4 text-orange-600 rounded shrink-0" />
+                            <div className="min-w-0 flex-1">
+                                <p className="text-[10px] font-bold text-gray-800 uppercase leading-tight truncate">HAZMAT PREP FEE</p>
+                                <p className="text-[10px] text-orange-600 font-bold mt-0.5">+$120.00</p>
+                            </div>
+                        </label>
+
+                        {/* Hazmat Shipping Line Fee */}
+                        <label className={`flex items-center gap-2 p-2.5 rounded-lg border cursor-pointer transition-all ${specialCharges.hazmatShippingLineFee ? 'bg-orange-100 border-orange-400' : 'bg-white border-orange-100 hover:bg-orange-50'}`}>
+                            <input type="checkbox" checked={specialCharges.hazmatShippingLineFee} onChange={() => toggleCharge('hazmatShippingLineFee')} className="w-4 h-4 text-orange-600 rounded shrink-0" />
+                            <div className="min-w-0 flex-1">
+                                <p className="text-[10px] font-bold text-gray-800 uppercase leading-tight truncate">SHIPPING LINE FEE</p>
+                                <p className="text-[10px] text-orange-600 font-bold mt-0.5">+$180.00</p>
+                            </div>
+                        </label>
+
+                        {/* Air Hazmat Compliance */}
+                        <label className={`flex items-center gap-2 p-2.5 rounded-lg border cursor-pointer transition-all sm:col-span-2 ${specialCharges.airHazmat ? 'bg-orange-100 border-orange-400' : 'bg-white border-orange-100 hover:bg-orange-50'}`}>
+                            <input type="checkbox" checked={specialCharges.airHazmat} onChange={() => toggleCharge('airHazmat')} className="w-4 h-4 text-orange-600 rounded shrink-0" />
+                            <div>
+                                <p className="text-[10px] font-bold text-gray-800 uppercase leading-tight">AIR HAZMAT COMPLIANCE</p>
+                                <p className="text-[10px] text-orange-600 font-bold mt-0.5">+$275.00</p>
+                            </div>
+                        </label>
+
+                        {/* Trámite EEI */}
+                        <label className={`flex items-center gap-2 p-2.5 rounded-lg border cursor-pointer transition-all sm:col-span-2 ${specialCharges.eei ? 'bg-blue-100 border-blue-400' : 'bg-white border-blue-100 hover:bg-blue-50'}`}>
+                            <input type="checkbox" checked={specialCharges.eei} onChange={() => toggleCharge('eei')} className="w-4 h-4 text-blue-600 rounded shrink-0" />
+                            <div className="flex-1">
+                                <div className="flex items-center justify-between">
+                                    <p className="text-[10px] font-bold text-gray-800 uppercase leading-tight">Trámite EEI (Aduana)</p>
+                                    {specialCharges.eei && parseFloat(finalValue || '0') > 2500 && (
+                                        <span className="text-[8px] bg-blue-500 text-white px-1.5 py-0.5 rounded uppercase font-bold tracking-wider">Auto</span>
+                                    )}
+                                </div>
+                                <p className="text-[10px] text-blue-600 font-bold mt-0.5">+$40.00</p>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
                 <button 
                     onClick={handleProcess} 
                     disabled={isSaving}
-                    className={`w-full text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-all mt-2 ${
+                    className={`w-full text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all mt-2 shadow-md ${
                         isLocalDelivery 
                             ? 'bg-black hover:bg-gray-800' 
                             : isOcean

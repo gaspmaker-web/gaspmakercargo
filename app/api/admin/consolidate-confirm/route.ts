@@ -24,13 +24,17 @@ export async function POST(req: Request) {
         finalDimensions, 
         finalValue,
         isAura,
-        auraPieces
+        auraPieces,
+        // 🔥 RECIBIMOS LOS CARGOS ESPECIALES (HAZMAT, EEI, ETC)
+        extraCharges
     } = await req.json();
 
     // 🔥 REGLA DE ORO: El precio inicia en 0 hasta que el cliente elija envío
     let updateData: any = {
         totalAmount: 0,
         status: "PENDIENTE_PAGO",
+        // 🔥 ALMACENAMOS EL JSON DE CARGOS ESPECIALES EN EL REGISTRO
+        extraCharges: extraCharges || null
     };
 
     // 🚦 SEMÁFORO: ¿Es Local Delivery o Aéreo?

@@ -371,7 +371,12 @@
     "proofPhoto": "Proof of Delivery (Photo)",
     "signatureTitle": "Proof of Signature",
     "noSignature": "No digital signature registered",
-    "signedDigitally": "Digitally Signed"
+    "signedDigitally": "Digitally Signed",
+    "hazmatPrepFee": "Hazmat Prep Fee",
+    "hazmatShippingFee": "Hazmat Shipping Fee",
+    "airHazmatCompliance": "Air Hazmat Compliance",
+    "eeiCustomsFee": "EEI Customs Fee",
+    "specialHandling": "Special Handling"
   },
   "PendingBills": {
     "title": "Pending Bills",

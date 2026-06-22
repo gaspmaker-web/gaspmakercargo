@@ -370,7 +370,12 @@
     "proofPhoto": "Comprovante de Entrega (Foto)",
     "signatureTitle": "Prova de Assinatura",
     "noSignature": "Nenhuma assinatura digital registrada",
-    "signedDigitally": "Assinado Digitalmente"
+    "signedDigitally": "Assinado Digitalmente",
+    "hazmatPrepFee": "Taxa de Preparação Hazmat",
+    "hazmatShippingFee": "Taxa de Envio Hazmat",
+    "airHazmatCompliance": "Conformidade Hazmat Aéreo",
+    "eeiCustomsFee": "Taxa Alfandegária EEI",
+    "specialHandling": "Manuseio Especial"
   },
   "PendingBills": {
     "title": "Faturas Pendentes",

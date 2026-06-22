@@ -7,7 +7,7 @@ import Image from 'next/image';
 import { 
     FileText, CreditCard, Loader2, Check, CheckCircle, ChevronDown, ChevronUp, 
     DollarSign, AlertCircle, Package, Truck, Box, Ruler, Scale, ShieldCheck, 
-    ExternalLink, Plus, Clock, Info, Tag, XCircle, MapPin 
+    ExternalLink, Plus, Clock, Info, Tag, XCircle, MapPin, AlertTriangle 
 } from 'lucide-react';
 import { getProcessingFee } from '@/lib/stripeCalc';
 import { useTranslations } from 'next-intl';
@@ -59,12 +59,10 @@ interface PendingBillsClientProps {
   locale: string;
   userProfile: any;
   allAddresses?: any[]; 
-  // 🔥 1. AÑADIMOS LA VARIABLE PLAN TYPE AQUÍ
   planType?: string | null; 
 }
 
 export default function PendingBillsClient({ bills: initialBills, locale, userProfile, allAddresses = [], planType = null }: PendingBillsClientProps) {
-  // ✅ Declaraciones correctas, sin duplicados
   const t = useTranslations('PendingBills');
   const tPickup = useTranslations('Pickup'); 
   const tPackage = useTranslations('PackageDetail'); 
@@ -84,10 +82,7 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
   const [isProcessing, setIsProcessing] = useState(false);
   const [loadingRatesId, setLoadingRatesId] = useState<string | null>(null);
   
-  // 🔥 ESCUDO ANTI-DOBLE-CLIC (Cerrojo Síncrono en Memoria)
   const isPayingRef = useRef(false);
-  
-  // 🔥 LLAVE MAESTRA ANTI-DOBLE-COBRO (Para Stripe)
   const [idempotencyKey, setIdempotencyKey] = useState(() => Math.random().toString(36).substring(2) + Date.now().toString(36));
   
   // Estado de Selección y Tarifas
@@ -105,11 +100,10 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
   const [couponMsg, setCouponMsg] = useState({ type: "", text: "" });
   const [validatingCoupon, setValidatingCoupon] = useState(false);
 
-  // 🔥 BILLETERA / REFERIDOS 🔥
+  // BILLETERA
   const walletBalance = userProfile?.walletBalance || 0;
   const [useWallet, setUseWallet] = useState(false);
 
-  // EFECTO: Seleccionar dirección DEFAULT al cargar
   useEffect(() => {
     if (allAddresses.length > 0 && !selectedAddressId) {
       const def = allAddresses.find((a) => a.isDefault);
@@ -117,7 +111,6 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
     }
   }, [allAddresses, selectedAddressId]);
 
-  // 1. CARGAR TARJETAS
   useEffect(() => {
       const fetchCards = async () => {
           try {
@@ -132,7 +125,6 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
       fetchCards();
   }, []);
 
-  // 🔥 OBTENER DIRECCIÓN ACTUAL SELECCIONADA (VERSIÓN ENTERPRISE)
   const currentAddress = allAddresses.find((a) => a.id === selectedAddressId);
   const currentDestination = currentAddress ? {
     name: currentAddress.fullName,
@@ -148,7 +140,6 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
 
   const currentHasAddress = !!currentDestination.address;
 
-  // MANEJADOR DE CAMBIO DE DIRECCIÓN
   const handleAddressChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
       setSelectedAddressId(e.target.value);
       setRatesMap({});
@@ -160,13 +151,11 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
       setUseWallet(false);
   };
 
-// 2. OBTENER TARIFAS (Cotizar)
   const handleGetRates = async (bill: any) => {
       if (!currentHasAddress) { alert("⚠️ " + t('errorAddress')); return; }
       
       setLoadingRatesId(bill.id);
       try {
-          // 🔥 NUEVO: Nos aseguramos de parsear correctamente si viene como string
           const auraPieces = typeof bill.auraDetails === 'string' ? JSON.parse(bill.auraDetails) : bill.auraDetails;
 
           const res = await fetch('/api/rates', {
@@ -179,7 +168,6 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                   },
                   destination: currentDestination,
                   isVip: planType === 'VIP_WHOLESALE',
-                  // 🚀 NUEVOS CAMPOS: Enviamos el tipo de servicio y el desglose de piezas
                   serviceType: bill.type,
                   auraDetails: auraPieces
               })
@@ -200,7 +188,7 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
           setLoadingRatesId(null); 
       }
   };
-  // 3. SELECCIONAR TARIFA
+
   const handleSelectRate = (billId: string, rate: Rate) => {
       setSelectedRateMap(prev => ({ ...prev, [billId]: rate }));
       if (!selectedBillIds.includes(billId)) {
@@ -208,14 +196,17 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
       }
   };
 
-// 4. CALCULAR TOTALES (CON REGLAS ENTERPRISE VIP Y MARÍTIMO)
+// 4. CALCULAR TOTALES (CON AGRUPACIÓN INTELIGENTE DE CARGOS ESPECIALES)
   const calculateTotals = () => {
       let serviceSubtotal = 0;
       let handlingSubtotal = 0; 
       let insuranceSubtotal = 0; 
+      let specialChargesSubtotal = 0; 
       let count = 0;
+      
+      // 🔥 Objeto para agrupar cargos repetidos (Ej: 2 paquetes con Trámite EEI)
+      const specialChargesMap: Record<string, number> = {};
 
-      // 👑 3. CORREGIDO: USAMOS LA VARIABLE DIRECTA
       const isVip = planType === 'VIP_WHOLESALE';
       const defaultHandlingRate = isVip ? 0.50 : 0.60;
 
@@ -230,10 +221,31 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
               let billHandlingFee = 0;
               const rate = selectedRateMap[id];
               const isLocalAura = rate && rate.carrier === 'Gasp Maker Cargo' && rate.service === 'Local Delivery (Aura)';
-              // 🔥 NUEVA REGLA: Detectar si es un barco
               const isOcean = bill.serviceType === 'OCEAN_CONSOLIDATION';
 
-              // 📦 CÁLCULO DE HANDLING Y DÍAS DE GRACIA (EXENTOS AURA Y MARÍTIMO)
+              // =========================================================================
+              // 🔥 EXTRACCIÓN Y AGRUPACIÓN MULTILINGÜE DE CARGOS ESPECIALES
+              // =========================================================================
+              const specialChargesObj = typeof bill.extraCharges === 'string' ? JSON.parse(bill.extraCharges) : (bill.extraCharges || {});
+              
+              if (specialChargesObj.hazmatPrepFee) {
+                  specialChargesSubtotal += 120.00;
+                  specialChargesMap[tPackage("hazmatPrepFee")] = (specialChargesMap[tPackage("hazmatPrepFee")] || 0) + 120.00;
+              }
+              if (specialChargesObj.hazmatShippingLineFee) {
+                  specialChargesSubtotal += 180.00;
+                  specialChargesMap[tPackage("hazmatShippingFee")] = (specialChargesMap[tPackage("hazmatShippingFee")] || 0) + 180.00;
+              }
+              if (specialChargesObj.airHazmat) {
+                  specialChargesSubtotal += 275.00;
+                  specialChargesMap[tPackage("airHazmatCompliance")] = (specialChargesMap[tPackage("airHazmatCompliance")] || 0) + 275.00;
+              }
+              if (specialChargesObj.eei) {
+                  specialChargesSubtotal += 40.00;
+                  specialChargesMap[tPackage("eeiCustomsFee")] = (specialChargesMap[tPackage("eeiCustomsFee")] || 0) + 40.00;
+              }
+              // =========================================================================
+
               if (isConsolidated && !isLocalAura && !isOcean) { 
                   if (!bill.packages || bill.packages.length === 0) {
                       const billDate = new Date(bill.createdAt || Date.now());
@@ -259,7 +271,6 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                                   const dayOfMonth = receiveDate.getDate();
                                   
                                   if (dayOfMonth >= 22 && dayOfMonth <= 28) {
-                                      // 🗓️ Es VIP y cayó en semana de gracia, handling $0
                                   } else {
                                       chargeablePackagesCount++;
                                   }
@@ -282,7 +293,6 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
               let itemServicePrice = 0;
               const weight = Number(bill.weightLbs) || 0;
               
-           // ✈️ CÁLCULO DE FLETE ($2.80 FLAT SI CUMPLE REGLAS Y NO ES AURA)
               if (rate) {
                   if (isVip && weight >= 230 && !isLocalAura) {
                       itemServicePrice = weight * 2.80;
@@ -308,9 +318,8 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
           }
       });
 
-     const taxableAmount = serviceSubtotal + handlingSubtotal + insuranceSubtotal;
+      const taxableAmount = serviceSubtotal + handlingSubtotal + insuranceSubtotal + specialChargesSubtotal;
       
-      // 🔥 ESCUDO AURA: Verificamos si en este pago hay algún servicio de Local Delivery
       let isPayingAura = false;
       selectedBillIds.forEach(id => {
           const currentBill = bills.find(b => b.id === id);
@@ -326,7 +335,6 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
           }
       });
 
-      // 💳 ELIMINAR EL FEE DE LA PASARELA PARA VIPs (EXCEPTO SI ES AURA)
       const fee = (isVip && !isPayingAura) ? 0 : getProcessingFee(taxableAmount);
       
       let finalTotal = Math.max(0, taxableAmount + fee - discount);
@@ -336,11 +344,16 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
           if (appliedWallet < 0) appliedWallet = 0;
           finalTotal = finalTotal - appliedWallet;
       }
+
+      // Transformamos el objeto mapeado en un arreglo limpio para el Resumen
+      const allActiveSpecialCharges = Object.entries(specialChargesMap).map(([label, amount]) => ({ label, amount }));
       
       return { 
           serviceSubtotal, 
           handlingSubtotal, 
           insuranceSubtotal, 
+          specialChargesSubtotal, 
+          allActiveSpecialCharges, 
           fee, 
           total: finalTotal, 
           appliedWallet,
@@ -350,32 +363,25 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
 
   const totals = calculateTotals();
 
- // ✅ NUEVA LÓGICA ENTERPRISE: Basada en la Tarjeta ✅
   const activeCardDetails = cards.find(c => c.id === selectedCardId);
   const isTrinidad = activeCardDetails?.country?.toUpperCase() === 'TT';
 
-  const tasaTTD = 7.30; // Tu Tasa Gasp Maker (1 USD = 7.30 TTD)
+  const tasaTTD = 7.30; 
   const montoTTD = (totals.total * tasaTTD).toFixed(2);
-  // 👆 FIN DEL BLOQUE NUEVO 👆
 
-  // 🔥 AUTO-APLICAR BONO DE BIENVENIDA (VERSIÓN BLINDADA)
   useEffect(() => {
       const isEligibleForWelcomeBonus = userProfile?.referredBy && !userProfile?.referralRewardPaid;
-
-      // Evaluamos el costo BASE real (Envío + Handling + Seguro) ANTES de procesar la tarjeta
-      const tempBaseTotal = totals.serviceSubtotal + totals.handlingSubtotal + totals.insuranceSubtotal;
+      const tempBaseTotal = totals.serviceSubtotal + totals.handlingSubtotal + totals.insuranceSubtotal + totals.specialChargesSubtotal;
 
       if (isEligibleForWelcomeBonus && tempBaseTotal >= 100) {
           setDiscount(25.0);
-          // Usamos la traducción del bono, y si no carga, un texto por defecto
           setCouponMsg({ type: "success", text: `${t('welcomeBonusApplied') || 'Welcome Bonus Auto-Applied! 🎁'} (-$25.00)` });
       } else {
           setDiscount(0);
           setCouponMsg({ type: "", text: "" });
       }
-  }, [totals.serviceSubtotal, totals.handlingSubtotal, totals.insuranceSubtotal, userProfile?.referredBy, userProfile?.referralRewardPaid, t]);
+  }, [totals.serviceSubtotal, totals.handlingSubtotal, totals.insuranceSubtotal, totals.specialChargesSubtotal, userProfile?.referredBy, userProfile?.referralRewardPaid, t]);
   
- // MANEJO DE CUPÓN MANUAL
   const handleApplyCoupon = async () => {
     if (!couponCode.trim()) return;
     if (totals.count === 0) { setCouponMsg({ type: "error", text: "Select items first." }); return; }
@@ -384,7 +390,7 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
     setCouponMsg({ type: "", text: "" });
     setDiscount(0);
 
-    const tempBaseTotal = totals.serviceSubtotal + totals.handlingSubtotal + totals.insuranceSubtotal;
+    const tempBaseTotal = totals.serviceSubtotal + totals.handlingSubtotal + totals.insuranceSubtotal + totals.specialChargesSubtotal;
 
     if (tempBaseTotal < 100) {
       setTimeout(() => {
@@ -401,7 +407,6 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
     }, 800);
   };
 
-// 5. PAGAR (Versión Limpia y Blindada Anti-Doble-Clic)
   const handlePay = async () => {
       if (!selectedCardId) {
           setShowMobileSummary(true); 
@@ -411,12 +416,8 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
 
       if (totals.count === 0) return;
 
-      // 🔥 1. EL ESCUDO: Si ya está pagando, rechazamos cualquier clic adicional al instante
       if (isPayingRef.current) return; 
-      
-      // 🔥 2. CERRAMOS EL CERROJO: Bloqueo instantáneo en memoria
       isPayingRef.current = true; 
-      
       setIsProcessing(true);
 
       const finalShippingAddress = currentAddress 
@@ -426,7 +427,7 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
       try {
           let selectedCourier = null;
           let courierService = null;
-          let packageServiceType = 'SHIPPING_INTL'; // 🔥 1. NUEVO: Variable para la etiqueta Enterprise
+          let packageServiceType = 'SHIPPING_INTL'; 
 
           if (selectedBillIds.length > 0) {
               const primaryId = selectedBillIds[0];
@@ -436,9 +437,8 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
               if (rate) {
                   selectedCourier = rate.carrier; 
                   courierService = rate.service;
-                  packageServiceType = 'SHIPPING_INTL'; // Si eligió FedEx/DHL, es internacional
+                  packageServiceType = 'SHIPPING_INTL'; 
               } else {
-                  // 🔥 2. Mejoramos la detección de Pickup basada en tu UI
                   const isStorePickup = originalBill?.serviceType === 'PICKUP' || 
                                         originalBill?.courierService === 'Entregar en Tienda' ||
                                         originalBill?.description?.toUpperCase().includes('PICKUP');
@@ -446,7 +446,7 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                   if (isStorePickup) {
                       selectedCourier = 'CLIENTE_RETIRO';
                       courierService = 'Recogida en Tienda';
-                      packageServiceType = 'STORE_PICKUP'; // 🔥 3. LA ETIQUETA DEFINITIVA
+                      packageServiceType = 'STORE_PICKUP'; 
                   } else if (originalBill?.selectedCourier) {
                       selectedCourier = originalBill.selectedCourier;
                       courierService = originalBill.courierService;
@@ -468,7 +468,6 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
              let dynamicHandling = 0;
              const isOcean = bill?.serviceType === 'OCEAN_CONSOLIDATION';
 
-             // Si es envío marítimo no aplicamos tarifa de consolidación
              if (isConsolidated && !isOcean && bill?.packages) {
                  let chargeablePackagesCount = 0;
                  bill.packages.forEach((pkg: any) => {
@@ -494,9 +493,17 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                  itemServicePrice = Math.max(0, totalFromServer - (bill?.handlingFee || 0) - ins);
              }
 
+             // 🔥 Sumamos al Payload los Special Charges de esta factura individual
+             const billSpecialChargesObj = typeof bill?.extraCharges === 'string' ? JSON.parse(bill.extraCharges) : (bill?.extraCharges || {});
+             let localSpecialCharges = 0;
+             if (billSpecialChargesObj.hazmatPrepFee) localSpecialCharges += 120.00;
+             if (billSpecialChargesObj.hazmatShippingLineFee) localSpecialCharges += 180.00;
+             if (billSpecialChargesObj.airHazmat) localSpecialCharges += 275.00;
+             if (billSpecialChargesObj.eei) localSpecialCharges += 40.00;
+
              return {
                  id: id,
-                 amount: itemServicePrice + dynamicHandling + ins
+                 amount: itemServicePrice + dynamicHandling + ins + localSpecialCharges
              };
           });
 
@@ -522,7 +529,6 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
               discountApplied: discount,
               shippingAddress: finalShippingAddress,
               walletDiscount: useWallet ? totals.appliedWallet : 0,
-              // 🔥 ENVIAMOS LA LLAVE A STRIPE
               idempotencyKey: idempotencyKey 
           };
 
@@ -547,11 +553,9 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
 
       } catch (e: any) { 
           alert(e.message); 
-          // 🔥 Regeneramos la llave si falló, para que pueda intentar de nuevo
           setIdempotencyKey(Math.random().toString(36).substring(2) + Date.now().toString(36));
       }
       finally { 
-          // 🔥 3. ABRIMOS EL CERROJO: Pase lo que pase (éxito o error), liberamos el botón
           setIsProcessing(false); 
           isPayingRef.current = false;
       }
@@ -604,21 +608,19 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                                     const selectedRate = selectedRateMap[bill.id];
                                     
                                    const isConsolidated = bill.serviceType === 'CONSOLIDATION' || 
-                       bill.description?.toLowerCase().includes('consolid') ||
-                       (bill.packages && bill.packages.length > 1);
+                                   bill.serviceType === 'OCEAN_CONSOLIDATION' ||
+                                   bill.description?.toLowerCase().includes('consolid') ||
+                                   (bill.packages && bill.packages.length > 1);
 
-// 🔥 Detectamos visualmente si eligió Aura o Marítimo
                                     const isVisualLocalAura = selectedRate && 
                                                               selectedRate.carrier === 'Gasp Maker Cargo' && 
                                                               selectedRate.service === 'Local Delivery (Aura)';
                                     const isOceanVisual = bill.serviceType === 'OCEAN_CONSOLIDATION';
 
-                                    // 🔥 4. CORREGIDO: LÓGICA VISUAL DIRECTA A LA VARIABLE
                                     const isVipVisual = planType === 'VIP_WHOLESALE';
                                     const defaultHandlingVisual = isVipVisual ? 0.50 : 0.60;
                                     let effectiveHandling = 0;
                                     
-                                    // No aplica Handling Visual si es Aura ni Marítimo
                                     if (isConsolidated && !isVisualLocalAura && !isOceanVisual) { 
                                         if (!bill.packages || bill.packages.length === 0) {
                                             const billDate = new Date(bill.createdAt || Date.now());
@@ -642,7 +644,6 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                                                         const receiveDate = new Date(pkg.createdAt || Date.now());
                                                         const dayOfMonth = receiveDate.getDate();
                                                         if (dayOfMonth >= 22 && dayOfMonth <= 28) {
-                                                            // Semana de gracia visual: $0.00
                                                         } else {
                                                             chargeableCount++;
                                                         }
@@ -659,7 +660,20 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                                     const ins = val > 100 ? val * 0.03 : 0;
                                     const visualWeight = Number(bill.weightLbs) || 0;
 
-                                 // ✈️ Lógica de visualización del precio con tarifa VIP ($2.80) (EXCEPTO AURA)
+                                    // =========================================================
+                                    // 🔥 CÁLCULO INDIVIDUAL DE CARGOS ESPECIALES PARA ESTA CAJA
+                                    // =========================================================
+                                    const billSpecialChargesObj = typeof bill.extraCharges === 'string' ? JSON.parse(bill.extraCharges) : (bill.extraCharges || {});
+                                    let billSpecialChargesTotal = 0;
+                                    const billActiveSpecialCharges: { label: string; amount: number }[] = [];
+                                    
+                                    if (billSpecialChargesObj.hazmatPrepFee) { billSpecialChargesTotal += 120.00; billActiveSpecialCharges.push({ label: tPackage("hazmatPrepFee"), amount: 120.00 }); }
+                                    if (billSpecialChargesObj.hazmatShippingLineFee) { billSpecialChargesTotal += 180.00; billActiveSpecialCharges.push({ label: tPackage("hazmatShippingFee"), amount: 180.00 }); }
+                                    if (billSpecialChargesObj.airHazmat) { billSpecialChargesTotal += 275.00; billActiveSpecialCharges.push({ label: tPackage("airHazmatCompliance"), amount: 275.00 }); }
+                                    if (billSpecialChargesObj.eei) { billSpecialChargesTotal += 40.00; billActiveSpecialCharges.push({ label: tPackage("eeiCustomsFee"), amount: 40.00 }); }
+
+                                    const billHasSpecialHandling = billSpecialChargesTotal > 0;
+
                                     let baseDisplayPrice = bill.totalAmount || 0;
                                     if (selectedRate) {
                                         if (isVipVisual && visualWeight >= 230 && !isVisualLocalAura) {
@@ -672,7 +686,8 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                                             baseDisplayPrice = visualWeight * 2.80;
                                         }
                                     }
-                                    const displayPrice = baseDisplayPrice + effectiveHandling + ins;
+                                    // 🔥 SUMAMOS LOS CARGOS ESPECIALES AL TOTAL DE ESTA CAJA
+                                    const displayPrice = baseDisplayPrice + effectiveHandling + ins + billSpecialChargesTotal;
 
                                     const isPickup = bill.serviceType === 'PICKUP' || 
                                                      bill.courierService === 'Entregar en Tienda' || 
@@ -681,8 +696,15 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                                     const needsQuote = !isPickup && !selectedRate && (!bill.subtotalAmount || bill.subtotalAmount === 0);
                                     
                                     return (
-                                        <div key={bill.id} className={`relative bg-white p-5 rounded-2xl border-2 transition-all shadow-sm flex flex-col ${isSelected ? 'border-gmc-dorado-principal ring-2 ring-yellow-50/50' : 'border-gray-100 hover:border-gray-300'}`}>
+                                        <div key={bill.id} className={`relative bg-white p-5 rounded-2xl border-2 transition-all shadow-sm flex flex-col overflow-hidden ${isSelected ? 'border-gmc-dorado-principal ring-2 ring-yellow-50/50' : 'border-gray-100 hover:border-gray-300'}`}>
                                             
+                                            {/* 🔥 ETIQUETA ROJA DE MANEJO ESPECIAL 🔥 */}
+                                            {billHasSpecialHandling && (
+                                                <div className="absolute top-0 right-0 bg-orange-500 text-white text-[9px] font-black px-3 py-1 rounded-bl-xl uppercase tracking-widest shadow-sm z-10 flex items-center gap-1">
+                                                    <AlertTriangle size={10} /> {tPackage("specialHandling")}
+                                                </div>
+                                            )}
+
                                             <div className="flex justify-between items-start mb-4">
                                                 <div className="flex items-start gap-4">
                                                     <div 
@@ -707,9 +729,7 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                                                 </div>
                                             </div>
 
-                                          {/* 🔥 NUEVO: DESGLOSE VISUAL DE PALLETS AURA 🔥 */}
                                             {(() => {
-                                                // Convertimos los datos si vienen como texto desde Supabase
                                                 const auraList = typeof bill.auraDetails === 'string' ? JSON.parse(bill.auraDetails) : bill.auraDetails;
                                                 const isAuraDetails = Array.isArray(auraList) && auraList.length > 0;
 
@@ -782,6 +802,12 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                                                                             <span>Insurance</span><span>+${ins.toFixed(2)}</span>
                                                                         </div>
                                                                     )}
+                                                                    {/* 🔥 NUEVO: MOSTRAR CARGOS ESPECIALES EN LA TARJETA 🔥 */}
+                                                                    {billActiveSpecialCharges.map((charge, idx) => (
+                                                                        <div key={idx} className="flex justify-between text-xs text-orange-500 font-medium">
+                                                                            <span>{charge.label}</span><span>+${charge.amount.toFixed(2)}</span>
+                                                                        </div>
+                                                                    ))}
                                                                 </div>
                                                             </div>
                                                         ) : (
@@ -888,6 +914,18 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                                         </div>
                                     )}
 
+                                    {/* 🔥 NUEVA SECCIÓN DE CARGOS ESPECIALES EN DESKTOP (MULTILINGÜE) 🔥 */}
+                                    {totals.specialChargesSubtotal > 0 && (
+                                        <div className="pt-2 pb-2">
+                                            {totals.allActiveSpecialCharges.map((charge, idx) => (
+                                                <div key={idx} className="flex justify-between text-sm text-orange-400 font-medium">
+                                                    <span className="flex items-center gap-1"><AlertTriangle size={12} /> {charge.label}</span>
+                                                    <span>+${charge.amount.toFixed(2)}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+
                                     <div className="flex justify-between text-gray-400 text-xs">
                                         <span className="flex items-center gap-1"><Info size={12}/> {t('processingFee')}</span>
                                         <span>+${totals.fee.toFixed(2)}</span>
@@ -920,7 +958,6 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                                          )}
                                     </div>
 
-                                {/* 🔥 CAJITA DORADA BILLETERA (DESKTOP) 🔥 */}
                                     {walletBalance > 0 && (
                                         <div className="mt-4 p-3 bg-gradient-to-r from-yellow-500/10 to-yellow-600/20 border border-yellow-500/30 rounded-xl">
                                             <div className="flex items-center justify-between">
@@ -945,10 +982,8 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                                                 </div>
                                             )}
                                         </div>
-                                        
                                     )}
 
-                                   {/* 🔥 ALERTA PAGO LOCAL TRINIDAD (MULTILINGÜE) 🔥 */}
                                    {isTrinidad && totals.total > 0 && (
                                    <div className="mt-4 p-3 bg-blue-900/20 border border-blue-500/30 rounded-xl mb-3">
                                    <div className="flex items-center gap-2 mb-1">
@@ -1064,6 +1099,18 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                                     {totals.insuranceSubtotal > 0 && (
                                         <div className="flex justify-between text-blue-300"><span>+ Insurance (3%)</span><span>+${totals.insuranceSubtotal.toFixed(2)}</span></div>
                                     )}
+
+                                    {/* 🔥 NUEVA SECCIÓN DE CARGOS ESPECIALES EN MÓVIL (MULTILINGÜE) 🔥 */}
+                                    {totals.specialChargesSubtotal > 0 && (
+                                        <div className="pt-1 pb-1">
+                                            {totals.allActiveSpecialCharges.map((charge, idx) => (
+                                                <div key={idx} className="flex justify-between text-sm text-orange-400 font-medium mt-1">
+                                                    <span className="flex items-center gap-1"><AlertTriangle size={12} /> {charge.label}</span>
+                                                    <span>+${charge.amount.toFixed(2)}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
                                     
                                     <div className="flex justify-between text-gray-500 text-xs">
                                         <span>{t('processingFee')}</span>
@@ -1097,7 +1144,6 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                                        )}
                                    </div>
                                    
-                                   {/* 🔥 CAJITA DORADA BILLETERA (MÓVIL) 🔥 */}
                                     {walletBalance > 0 && (
                                         <div className="mt-3 p-3 bg-gradient-to-r from-yellow-500/10 to-yellow-600/20 border border-yellow-500/30 rounded-xl mb-3">
                                             <div className="flex items-center justify-between">
@@ -1123,7 +1169,6 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                                             )}
                                         </div>
                                     )}
-                                    {/* 🔥 ALERTA PAGO LOCAL TRINIDAD (MULTILINGÜE) 🔥 */}
                                     {isTrinidad && totals.total > 0 && (
                                         <div className="mt-3 p-3 bg-blue-900/20 border border-blue-500/30 rounded-xl mb-3">
                                             <div className="flex items-center gap-2 mb-1">

@@ -367,7 +367,12 @@
     "proofPhoto": "Prueba de Entrega (Foto)",
     "signatureTitle": "Firma de Conformidad",
     "noSignature": "No se registró firma digital",
-    "signedDigitally": "Firmado Digitalmente"
+    "signedDigitally": "Firmado Digitalmente",
+    "hazmatPrepFee": "Cargo de Preparación Hazmat",
+    "hazmatShippingFee": "Cargo de Envío Hazmat",
+    "airHazmatCompliance": "Cumplimiento Hazmat Aéreo",
+    "eeiCustomsFee": "Trámite Aduanal EEI",
+    "specialHandling": "Manejo Especial"
   },
   "PendingBills": {
     "title": "Facturas Pendientes",

@@ -370,7 +370,12 @@
     "proofPhoto": "Preuve de Livraison (Photo)",
     "signatureTitle": "Preuve de Signature",
     "noSignature": "Aucune signature numérique enregistrée",
-    "signedDigitally": "Signé Numériquement"
+    "signedDigitally": "Signé Numériquement",
+    "hazmatPrepFee": "Frais de Préparation Hazmat",
+    "hazmatShippingFee": "Frais d'Expédition Hazmat",
+    "airHazmatCompliance": "Conformité Hazmat Aérien",
+    "eeiCustomsFee": "Frais de Douane EEI",
+    "specialHandling": "Manutention Spéciale"
   },
   "PendingBills": {
     "title": "Factures en Attente",

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { Camera, Search, CheckCircle, X, ScanBarcode, Printer, Tag, DollarSign, User, Save, Scale, Ruler, FileText, Plus, Trash2, Globe } from 'lucide-react';
+import { Camera, Search, CheckCircle, X, ScanBarcode, Printer, Tag, DollarSign, User, Save, Scale, Ruler, FileText, Plus, Trash2, Globe, AlertTriangle } from 'lucide-react';
 import Image from 'next/image';
 import BarcodeScannerModal from '@/components/BarcodeScannerModal';
 
@@ -33,6 +33,21 @@ export default function CreatePackageForm() {
   const [createdPackage, setCreatedPackage] = useState<any | null>(null);
 
   const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm();
+
+  // ========================================================================
+  // 🔥 ESTADO PARA CARGOS ESPECIALES (4 OPCIONES EXACTAS)
+  // ========================================================================
+  const [specialCharges, setSpecialCharges] = useState({
+      hazmatPrepFee: false,
+      hazmatShippingLineFee: false,
+      airHazmat: false,
+      eei: false
+  });
+
+  const toggleCharge = (charge: keyof typeof specialCharges) => {
+      setSpecialCharges(prev => ({ ...prev, [charge]: !prev[charge] }));
+  };
+  // ========================================================================
 
   // ========================================================================
   // 🔥 ESTADO PARA LA TABLA DE ADUANAS (DHL/FEDEX)
@@ -67,6 +82,13 @@ export default function CreatePackageForm() {
   const recalculateTotalValue = (items: any[]) => {
       const total = items.reduce((acc, item) => acc + (Number(item.qty) * Number(item.value || 0)), 0);
       setValue('declaredValue', total.toFixed(2));
+
+      // 🔥 LÓGICA AUTOMÁTICA EEI: Si supera $2,500, se marca el Trámite EEI de Aduana
+      if (total > 2500) {
+          setSpecialCharges(prev => ({ ...prev, eei: true }));
+      } else {
+          setSpecialCharges(prev => ({ ...prev, eei: false }));
+      }
   };
   // ========================================================================
 
@@ -193,7 +215,7 @@ const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     // Si entramos a la página, ponemos el foco en el buscador de cliente automáticamente
     const searchInput = document.getElementById('userSearch');
     if (searchInput) searchInput.focus();
-}, []);
+  }, []);
 
   const onSubmit = async (data: any) => {
     if (!foundUser) {
@@ -217,8 +239,8 @@ const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     try {
       const payload = {
         carrierTrackingNumber: data.trackingNumber.toUpperCase(), 
-        description: combinedDescription, // Texto plano (Compatibilidad)
-        customsItems: customsItems,       // 🔥 JSON DETALLADO PARA BASE DE DATOS
+        description: combinedDescription, 
+        customsItems: customsItems,       
         weightLbs: parseFloat(data.weight),
         lengthIn: parseFloat(data.length || 0),
         widthIn: parseFloat(data.width || 0),
@@ -227,7 +249,9 @@ const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         photoUrlMiami: photoUrl,
         invoiceUrl: invoiceUrl, 
         countryCode: 'US',
-        declaredValue: parseFloat(data.declaredValue) || 0
+        declaredValue: parseFloat(data.declaredValue) || 0,
+        // 🔥 ENVIAMOS LOS CARGOS ESPECIALES AL BACKEND
+        extraCharges: specialCharges 
       };
 
       const res = await fetch('/api/packages/create', {
@@ -256,7 +280,8 @@ const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
       reset();
       setPhotoUrl(null);
       setInvoiceUrl(null); 
-      setCustomsItems([{ qty: 1, description: '', value: '' }]); // Limpiamos tabla aduanas
+      setCustomsItems([{ qty: 1, description: '', value: '' }]); 
+      setSpecialCharges({ hazmatPrepFee: false, hazmatShippingLineFee: false, airHazmat: false, eei: false });
       window.scrollTo({ top: 0, behavior: 'smooth' });
 
     } catch (error: any) {
@@ -372,7 +397,7 @@ const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
                         <input 
                             {...register("trackingNumber", { required: true })}
                             placeholder="1Z99..." 
-                            enterKeyHint="next" // 👈 Agrega esto
+                            enterKeyHint="next" 
                             className="w-full h-full pl-3 pr-2 md:pl-4 bg-gray-50 border-2 border-gray-200 rounded-xl focus:border-gmc-dorado-principal focus:ring-0 text-base md:text-lg font-mono uppercase font-bold"
                         />
                     </div>
@@ -496,6 +521,64 @@ const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
                 >
                     <Plus size={16} /> Agregar Artículo
                 </button>
+            </div>
+
+            {/* 🔥 NUEVO PANEL: CARGOS ESPECIALES Y HAZMAT 🔥 */}
+            <div className="bg-orange-50/50 p-4 rounded-xl border border-orange-200 w-full overflow-hidden">
+                <div className="flex items-center gap-2 mb-4">
+                    <AlertTriangle size={18} className="text-orange-500" />
+                    <label className="text-sm font-bold text-orange-800 uppercase tracking-wider">
+                        Cargos Especiales y Hazmat
+                    </label>
+                </div>
+
+                {/* Grid 2x2 para las 4 opciones limpias */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    
+                    {/* Hazmat Preparation Fee */}
+                    <label className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${specialCharges.hazmatPrepFee ? 'bg-orange-100 border-orange-400 shadow-sm' : 'bg-white border-orange-100 hover:bg-orange-50'}`}>
+                        <input type="checkbox" checked={specialCharges.hazmatPrepFee} onChange={() => toggleCharge('hazmatPrepFee')} className="w-5 h-5 text-orange-600 rounded border-gray-300 focus:ring-orange-500" />
+                        <div>
+                            <p className="text-sm font-bold text-gray-800">HAZMAT PREPARATION FEE</p>
+                            <p className="text-xs text-orange-600 font-bold mt-0.5">+$120.00</p>
+                        </div>
+                    </label>
+
+                    {/* Hazmat Shipping Line Fee */}
+                    <label className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${specialCharges.hazmatShippingLineFee ? 'bg-orange-100 border-orange-400 shadow-sm' : 'bg-white border-orange-100 hover:bg-orange-50'}`}>
+                        <input type="checkbox" checked={specialCharges.hazmatShippingLineFee} onChange={() => toggleCharge('hazmatShippingLineFee')} className="w-5 h-5 text-orange-600 rounded border-gray-300 focus:ring-orange-500" />
+                        <div>
+                            <p className="text-sm font-bold text-gray-800">HAZMAT SHIPPING LINE FEE</p>
+                            <p className="text-xs text-orange-600 font-bold mt-0.5">+$180.00</p>
+                        </div>
+                    </label>
+
+                    {/* Air Hazmat Compliance */}
+                    <label className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${specialCharges.airHazmat ? 'bg-orange-100 border-orange-400 shadow-sm' : 'bg-white border-orange-100 hover:bg-orange-50'}`}>
+                        <input type="checkbox" checked={specialCharges.airHazmat} onChange={() => toggleCharge('airHazmat')} className="w-5 h-5 text-orange-600 rounded border-gray-300 focus:ring-orange-500" />
+                        <div>
+                            <p className="text-sm font-bold text-gray-800">Air Hazmat Compliance Fee</p>
+                            <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">Inspección, reempaque ONU, DGD y etiquetado.</p>
+                            <p className="text-xs text-orange-600 font-bold mt-1">+$275.00</p>
+                        </div>
+                    </label>
+
+                    {/* Trámite EEI */}
+                    <label className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${specialCharges.eei ? 'bg-blue-100 border-blue-400 shadow-sm' : 'bg-white border-blue-100 hover:bg-blue-50'}`}>
+                        <input type="checkbox" checked={specialCharges.eei} onChange={() => toggleCharge('eei')} className="w-5 h-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500" />
+                        <div>
+                            <div className="flex items-center gap-2">
+                                <p className="text-sm font-bold text-gray-800">Trámite EEI (Aduana)</p>
+                                {specialCharges.eei && parseFloat(customsItems.reduce((acc, item) => acc + (Number(item.qty) * Number(item.value || 0)), 0).toString()) > 2500 && (
+                                    <span className="text-[9px] bg-blue-500 text-white px-1.5 py-0.5 rounded uppercase font-bold tracking-wider">Auto</span>
+                                )}
+                            </div>
+                            <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">Declaración obligatoria (Valor > $2,500).</p>
+                            <p className="text-xs text-blue-600 font-bold mt-1">+$40.00</p>
+                        </div>
+                    </label>
+
+                </div>
             </div>
 
             {/* 🔥 GRID PARA FOTOS 🔥 */}
