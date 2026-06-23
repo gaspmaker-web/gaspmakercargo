@@ -234,7 +234,8 @@
     "custom_text_ocean": "Nous regrouperons vos boîtes dans leur forme originale sur une <strong>palette en bois (Maritime)</strong> pour vous faire économiser du volume.",
     "custom_text_local": "Nous regrouperons vos boîtes pour les expédier par <strong>camion de livraison locale</strong>.",
     "requestOcean": "Consolidation Maritime",
-    "btnConfirmLocal": "Confirmer la Livraison Locale"
+    "btnConfirmLocal": "Confirmer la Livraison Locale",
+    "btnConsolidateLocalPallet": "Grouper sur Palette (Livraison)"
   },
 "Notifications": {
     "title": "Notifications",

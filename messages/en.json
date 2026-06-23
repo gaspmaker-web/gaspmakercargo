@@ -235,7 +235,8 @@
     "custom_text_ocean": "We will group your boxes in their original form on a <strong>wooden pallet (Ocean)</strong> so you save on volume.",
     "custom_text_local": "We will group your boxes to send them via <strong>local delivery truck</strong>.",
     "requestOcean": "Ocean Consolidation",
-    "btnConfirmLocal": "Confirm Local Delivery"
+    "btnConfirmLocal": "Confirm Local Delivery",
+    "btnConsolidateLocalPallet": "Group on Pallet (delivery)"
   },
 "Notifications": {
     "title": "Notifications",

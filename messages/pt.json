@@ -234,7 +234,8 @@
     "custom_text_ocean": "Agruparemos suas caixas em sua forma original sobre um <strong>palete de madeira (Marítimo)</strong> para que você economize em volume.",
     "custom_text_local": "Agruparemos suas caixas para enviá-las em um <strong>caminhão de entrega local</strong>.",
     "requestOcean": "Consolidação Marítima",
-    "btnConfirmLocal": "Confirmar Entrega Local"
+    "btnConfirmLocal": "Confirmar Entrega Local",
+    "btnConsolidateLocalPallet": "Agrupar em Pallet (Delivery)"
   },
 "Notifications": {
     "title": "Notificações",

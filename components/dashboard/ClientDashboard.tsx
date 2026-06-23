@@ -147,7 +147,7 @@ export default function ClientDashboard({
 
       const isVip = planType === 'VIP_WHOLESALE';
 
-      // 🔥 LÍMITES INTELIGENTES MULTILINGÜES (Mantenemos el límite aéreo y peso bruto para local)
+      // 🔥 LÍMITES INTELIGENTES MULTILINGÜES
       if (type === 'AERIAL') {
           if (!isVip && totalSelectedWeight > 150) {
               const msg = t.has('alertAerialLimit') 
@@ -157,7 +157,6 @@ export default function ClientDashboard({
               return;
           }
       } else if (type === 'LOCAL') {
-          // El límite de Pallets fue eliminado a petición del cliente
           if (totalSelectedWeight > 2000) {
               const msg = t.has('alertLocalWeightLimit')
                 ? t('alertLocalWeightLimit', { weight: totalSelectedWeight.toFixed(2) })
@@ -360,55 +359,100 @@ export default function ClientDashboard({
           
           <div className="lg:col-span-2 space-y-4">
 
-            {/* 🚨 LA ALERTA DE "CAPACITY LIMIT REACHED" (ROJA) FUE ELIMINADA COMO SE SOLICITÓ */}
-
-            {/* ✈️ ALERTA PROACTIVA: CONSOLIDACIÓN AÉREA LISTA (Se mantiene, pero sin restricción) */}
+            {/* ✈️ ALERTA PROACTIVA: CONSOLIDACIÓN AÉREA Y OPCIONES EXTRA */}
             {isAerialReady && displayPackages.length > 0 && (
                 <div className="bg-gradient-to-r from-blue-500 via-indigo-500 to-gmc-dorado-principal rounded-2xl p-0.5 mb-6 animate-in slide-in-from-top duration-500 shadow-xl">
-                    <div className="bg-white/95 backdrop-blur-md rounded-xl p-5 md:p-6 flex flex-col lg:flex-row items-center justify-between gap-5">
-                        <div className="flex items-start gap-4 text-center lg:text-left flex-col sm:flex-row sm:items-center lg:items-start w-full">
-                            <div className="bg-blue-100 p-3 rounded-full text-blue-600 shrink-0 shadow-md border border-blue-200 mx-auto sm:mx-0">
+                    {/* 🔥 NUEVO DISEÑO EN COLUMNA CON BOTONES RESPONSIVOS */}
+                    <div className="bg-white/95 backdrop-blur-md rounded-xl p-5 md:p-6 flex flex-col gap-5">
+                        
+                        {/* TEXTO Y TÍTULO ARRIBA */}
+                        <div className="flex items-start gap-4 text-left w-full">
+                            <div className="bg-blue-100 p-3 rounded-full text-blue-600 shrink-0 shadow-md border border-blue-200">
                                 <Box size={28} />
                             </div>
                             <div className="flex-1">
-                                <h3 className="text-lg font-bold text-gray-900 flex items-center justify-center sm:justify-start gap-2">
-                                    {t('aerialReadyTitle')}
+                                <h3 className="text-lg font-bold text-gray-900 flex items-center justify-start gap-2">
+                                    {t.has('aerialReadyTitle') ? t('aerialReadyTitle') : 'Load Ready for Consolidation'}
                                 </h3>
                                 <p className="text-sm text-gray-600 mt-1 leading-relaxed">
-                                    {t.rich('aerialReadyDesc', {
-                                        count: displayPackages.length,
-                                        weight: totalWeightInWarehouse.toFixed(1),
-                                        strong: (chunks) => <strong className="text-blue-600 font-mono font-bold text-base mx-1">{chunks}</strong>
-                                    })}
+                                    {t.has('aerialReadyDesc') ? (
+                                        t.rich('aerialReadyDesc', {
+                                            count: displayPackages.length,
+                                            weight: totalWeightInWarehouse.toFixed(1),
+                                            strong: (chunks) => <strong className="text-blue-600 font-mono font-bold text-base mx-1">{chunks}</strong>
+                                        })
+                                    ) : (
+                                        <>
+                                            You have <strong className="text-blue-600 font-mono font-bold text-base mx-1">{displayPackages.length} packages</strong> ({totalWeightInWarehouse.toFixed(1)} lbs) ready in the warehouse. 
+                                            Remember that the international limit for an air shipment is 150 lbs.
+                                            {totalWeightInWarehouse > 150 && (
+                                                <span className="block mt-1 font-medium text-gray-800">For larger loads, please select <strong>Group on Pallet (delivery)</strong> or <strong>Ocean</strong>.</span>
+                                            )}
+                                        </>
+                                    )}
                                 </p>
                             </div>
                         </div>
                         
-                        <button
-                            onClick={() => {
-                                const clearPackages = displayPackages.filter(p => !p.isBlocked);
-                                let selectedIds: string[] = [];
-                                let accumulatedWeight = 0;
-                                
-                                const isVip = planType === 'VIP_WHOLESALE';
-                                
-                                for (let p of clearPackages) {
-                                    if (!isVip && (accumulatedWeight + (Number(p.weightLbs) || 0)) > 150) {
-                                        break; 
+                        {/* BOTONES ABAJO CON SEPARADOR SUTIL */}
+                        <div className="flex flex-col sm:flex-row flex-wrap gap-3 w-full border-t border-gray-100 pt-4">
+                            {/* BOTÓN 1: AÉREO */}
+                            <button
+                                onClick={() => {
+                                    const clearPackages = displayPackages.filter(p => !p.isBlocked);
+                                    let selectedIds: string[] = [];
+                                    let accumulatedWeight = 0;
+                                    const isVip = planType === 'VIP_WHOLESALE';
+                                    
+                                    for (let p of clearPackages) {
+                                        if (!isVip && (accumulatedWeight + (Number(p.weightLbs) || 0)) > 150) break; 
+                                        selectedIds.push(p.id);
+                                        accumulatedWeight += Number(p.weightLbs) || 0;
                                     }
-                                    selectedIds.push(p.id);
-                                    accumulatedWeight += Number(p.weightLbs) || 0;
-                                }
-                                
-                                setSelectedPkgs(selectedIds);
-                                setConsolidationType('AERIAL');
-                                setTimeout(() => handleConsolidateClick('AERIAL'), 50); 
-                            }}
-                            className="w-full lg:w-auto bg-gmc-dorado-principal text-black hover:bg-yellow-500 px-6 py-3.5 rounded-xl font-bold text-sm transition-all shadow-md flex items-center justify-center gap-2 shrink-0 transform hover:-translate-y-0.5"
-                        >
-                            <UploadCloud size={18} />
-                            {t('aerialReadyBtn')}
-                        </button>
+                                    
+                                    setSelectedPkgs(selectedIds);
+                                    setConsolidationType('AERIAL');
+                                    setTimeout(() => handleConsolidateClick('AERIAL'), 50); 
+                                }}
+                                className="w-full sm:w-auto bg-gmc-dorado-principal text-black hover:bg-yellow-500 px-5 py-3 rounded-xl font-bold text-sm transition-all shadow-md flex items-center justify-center gap-2 transform hover:-translate-y-0.5"
+                            >
+                                <UploadCloud size={18} />
+                                {t.has('aerialReadyBtn') ? t('aerialReadyBtn') : 'Consolidate Air Shipment'}
+                            </button>
+
+                            {/* 🔥 BOTONES EXTRAS: SE MUESTRAN SI SUPERA LAS 150 LBS */}
+                            {totalWeightInWarehouse > 150 && (
+                                <>
+                                    {/* BOTÓN 2: PALLET LOCAL */}
+                                    <button
+                                        onClick={() => {
+                                            const clearPackages = displayPackages.filter(p => !p.isBlocked);
+                                            setSelectedPkgs(clearPackages.map(p => p.id));
+                                            setConsolidationType('LOCAL');
+                                            setTimeout(() => handleConsolidateClick('LOCAL'), 50); 
+                                        }}
+                                        className="w-full sm:w-auto bg-black text-white hover:bg-gray-900 px-5 py-3 rounded-xl font-bold text-sm transition-all shadow-md flex items-center justify-center gap-2 transform hover:-translate-y-0.5"
+                                    >
+                                        <Truck size={18} />
+                                        {t.has('btnConsolidateLocalPallet') ? t('btnConsolidateLocalPallet') : 'Group on Pallet (delivery)'}
+                                    </button>
+
+                                    {/* BOTÓN 3: OCEAN */}
+                                    <button
+                                        onClick={() => {
+                                            const clearPackages = displayPackages.filter(p => !p.isBlocked);
+                                            setSelectedPkgs(clearPackages.map(p => p.id));
+                                            setConsolidationType('OCEAN');
+                                            setTimeout(() => handleConsolidateClick('OCEAN'), 50); 
+                                        }}
+                                        className="w-full sm:w-auto bg-blue-600 text-white hover:bg-blue-700 px-5 py-3 rounded-xl font-bold text-sm transition-all shadow-md flex items-center justify-center gap-2 transform hover:-translate-y-0.5"
+                                    >
+                                        <Ship size={18} />
+                                        {t.has('btnConsolidateOcean') ? t('btnConsolidateOcean') : 'Group on Pallet (Ocean)'}
+                                    </button>
+                                </>
+                            )}
+                        </div>
                     </div>
                 </div>
             )}
@@ -621,7 +665,6 @@ export default function ClientDashboard({
                        <MapPin size={14}/> {t('btnPickup')}
                     </button>
 
-                    {/* 🔥 BOTÓN DE AURA LOCAL DELIVERY (SIN CORTE) */}
                     <button 
                         onClick={() => handleConsolidateClick('LOCAL')}
                         disabled={isConsolidating}
@@ -630,7 +673,6 @@ export default function ClientDashboard({
                         <Truck size={14}/> {t.has('btnLocalDelivery') ? t('btnLocalDelivery') : 'LOCAL DELIVERY'}
                     </button>
 
-                    {/* 🔥 BOTÓN DE CONSOLIDACIÓN AÉREA */}
                     <button 
                         onClick={() => handleConsolidateClick('AERIAL')}
                         disabled={isConsolidating}
@@ -640,7 +682,6 @@ export default function ClientDashboard({
                         {isConsolidating ? '...' : (t.has('btnConsolidateAir') ? t('btnConsolidateAir') : 'CONSOLIDAR AÉREO')}
                     </button>
 
-                    {/* 🔥 BOTÓN DE CONSOLIDACIÓN MARÍTIMA (SIN CORTE) */}
                     <button 
                         onClick={() => handleConsolidateClick('OCEAN')}
                         disabled={isConsolidating}
@@ -752,7 +793,7 @@ export default function ClientDashboard({
         )}
 
         {/* ===================================================================
-           MODAL DE PICKUP (Se mantiene igual)
+           MODAL DE PICKUP
            =================================================================== */}
         {isPickupModalOpen && (
             <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in">
