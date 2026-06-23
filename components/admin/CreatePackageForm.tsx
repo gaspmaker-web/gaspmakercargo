@@ -563,7 +563,7 @@ const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
                         </div>
                     </label>
 
-                    {/* Trámite EEI */}
+           {/* Trámite EEI */}
                     <label className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${specialCharges.eei ? 'bg-blue-100 border-blue-400 shadow-sm' : 'bg-white border-blue-100 hover:bg-blue-50'}`}>
                         <input type="checkbox" checked={specialCharges.eei} onChange={() => toggleCharge('eei')} className="w-5 h-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500" />
                         <div>
@@ -573,14 +573,14 @@ const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
                                     <span className="text-[9px] bg-blue-500 text-white px-1.5 py-0.5 rounded uppercase font-bold tracking-wider">Auto</span>
                                 )}
                             </div>
-                            <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">Declaración obligatoria (Valor > $2,500).</p>
+                            {/* 👇 El cambio está aquí abajo: &gt; en lugar del símbolo > */}
+                            <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">Declaración obligatoria (Valor &gt; $2,500).</p>
                             <p className="text-xs text-blue-600 font-bold mt-1">+$40.00</p>
                         </div>
                     </label>
 
                 </div>
             </div>
-
             {/* 🔥 GRID PARA FOTOS 🔥 */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5 w-full">
                 {/* 1. FOTO EVIDENCIA */}
