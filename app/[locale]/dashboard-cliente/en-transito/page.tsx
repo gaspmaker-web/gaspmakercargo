@@ -61,17 +61,21 @@ export default async function EnTransitoPage({ params: { locale } }: { params: {
                 courierService: true,     
                 awbDocumentUrl: true,   
                 shippingAddress: true,  // ✅ AQUÍ SÍ VA: La consolidación sí tiene dirección
-                packages: {
-                    select: {
-                        id: true,
-                        gmcTrackingNumber: true,
-                        description: true,
-                        weightLbs: true,
-                        status: true,
-                        awbDocumentUrl: true
-                        // 🔥 Quitamos shippingAddress de aquí también
-                    }
-                },
+               packages: {
+    select: {
+        id: true,
+        gmcTrackingNumber: true,
+        carrierTrackingNumber: true, // 🔥 Tracking del courier que entregó en almacén
+        finalTrackingNumber: true,   // 🔥 Tracking del courier de salida (EasyPost)
+        description: true,
+        weightLbs: true,
+        status: true,
+        selectedCourier: true,       // 🔥 Para identificar el courier correctamente
+        courierService: true,        // 🔥 Para el nombre del servicio
+        awbDocumentUrl: true,
+        shippingAddress: true        // 🔥 Para el destino individual del paquete
+    }
+},
                 _count: { select: { packages: true } }
             }
         }
