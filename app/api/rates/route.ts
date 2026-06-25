@@ -216,7 +216,9 @@ if (isFloridaLocal && isOceanRequest) {
     });
 }
     // 🔒 Cerrando los candados finales
-    const showOcean = isOceanRequest;
+    // 🔥 Países con opción marítima disponible para paquetes individuales también
+const oceanEligibleCountries = ['BB', 'TT'];
+const showOcean = isOceanRequest || (isSinglePackage && oceanEligibleCountries.includes(targetCountryCode));
     const showAir = isAirConsolidation || isSinglePackage;
     const showLocal = isFloridaLocal && (isLocalRequest || isSinglePackage);
 
