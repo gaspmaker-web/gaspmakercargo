@@ -132,7 +132,18 @@ export async function POST(req: Request) {
             shippingLabelUrl: boughtShipment.postage_label.label_url 
         }
     });
-
+    
+// 🔥 NUEVO: Propagar tracking al ConsolidatedShipment
+if (pkg.consolidatedShipmentId) {
+    await prisma.consolidatedShipment.update({
+        where: { id: pkg.consolidatedShipmentId },
+        data: {
+            status: 'ENVIADO',
+            finalTrackingNumber: boughtShipment.tracker.tracking_code,
+            shippingLabelUrl: boughtShipment.postage_label.label_url
+        }
+    });
+}
     return NextResponse.json({ 
         success: true, 
         tracking: boughtShipment.tracker.tracking_code,

@@ -158,8 +158,10 @@ export default function InTransitPackagesCarousel({ packages, userCountryCode }:
                 const pkg = isMaster ? item.children[0] : item.data; 
                 
                 const internalTracking = isMaster ? (parent?.gmcShipmentNumber || parent?.id.slice(0,8).toUpperCase()) : (pkg.gmcTrackingNumber || t('processing'));
-                const easyPostTracking = isMaster ? parent?.finalTrackingNumber : pkg.finalTrackingNumber;
-
+                const easyPostTracking = isMaster 
+    ? (parent?.finalTrackingNumber || item.children?.[0]?.finalTrackingNumber)
+    : pkg.finalTrackingNumber;
+    
                 const displayCourier = isMaster 
                     ? (parent?.selectedCourier || item.children?.[0]?.selectedCourier || 'Gasp Maker Cargo') 
                     : (pkg.selectedCourier || pkg.consolidatedShipment?.selectedCourier || 'Gasp Maker Cargo');

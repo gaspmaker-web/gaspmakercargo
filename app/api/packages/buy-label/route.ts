@@ -16,9 +16,12 @@ export async function POST(req: Request) {
     const { packageId } = await req.json();
 
     const pkg = await prisma.package.findUnique({
-      where: { id: packageId },
-      include: { user: true }
-    });
+    where: { id: packageId },
+    include: { 
+        user: true,
+        consolidatedShipment: true  // 🔥 NUEVO
+    }
+});
 
     if (!pkg) return NextResponse.json({ error: "Paquete no encontrado" }, { status: 404 });
     if (!pkg.selectedCourier) return NextResponse.json({ error: "Sin courier asignado" }, { status: 400 });
@@ -144,18 +147,32 @@ export async function POST(req: Request) {
     }
     // ====================================================================
 
-    const boughtShipment = await easypost.Shipment.buy(shipment.id, selectedRate.id);
+  const boughtShipment = await easypost.Shipment.buy(shipment.id, selectedRate.id);
 
-    await prisma.package.update({
-        where: { id: packageId },
+await prisma.package.update({
+    where: { id: packageId },
+    data: {
+        status: 'ENVIADO',
+        finalTrackingNumber: boughtShipment.tracker.tracking_code,
+        receiptUrl: boughtShipment.postage_label.label_url,
+        shippingLabelUrl: boughtShipment.postage_label.label_url,
+        courierService: `${boughtShipment.selected_rate.carrier} - ${boughtShipment.selected_rate.service}`
+    }
+});
+
+// 🔥 NUEVO: Propagar tracking al ConsolidatedShipment si el paquete pertenece a uno
+if (pkg.consolidatedShipmentId) {
+    await prisma.consolidatedShipment.update({
+        where: { id: pkg.consolidatedShipmentId },
         data: {
             status: 'ENVIADO',
             finalTrackingNumber: boughtShipment.tracker.tracking_code,
-            receiptUrl: boughtShipment.postage_label.label_url,
             shippingLabelUrl: boughtShipment.postage_label.label_url,
+            selectedCourier: boughtShipment.selected_rate.carrier,
             courierService: `${boughtShipment.selected_rate.carrier} - ${boughtShipment.selected_rate.service}`
         }
     });
+}
 
     // ====================================================================
     // 🔥 MAGIA DE NOTIFICACIONES (EMAIL + CAMPANITA) 🔥
