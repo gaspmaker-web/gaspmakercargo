@@ -414,7 +414,9 @@
     "manageInSettings": "Gérer dans les Paramètres",
     "goToAddCard": "Aller à Ajouter une Carte",
     "addCardWallet": "Ajouter une Carte au Portefeuille",
-    "addNewCard": "Ajouter (Aller aux Paramètres)"
+    "addNewCard": "Ajouter (Aller aux Paramètres)",
+    "oceanNotAvailableTitle": "Service indisponible",
+    "oceanNotAvailableDesc": "Le service maritime n'est pas disponible pour les adresses en Floride. Veuillez sélectionner une adresse internationale."
   },
   "PreAlertPage": {
     "title": "Pré-Alerter un Colis",

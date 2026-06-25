@@ -198,12 +198,23 @@ export async function POST(req: Request) {
         isLocalRequest = false;
         isAirConsolidation = true; // Lo pasamos a Aéreo para que no se quede bloqueado
     }
-    if (isFloridaLocal && isOceanRequest) {
-        // El cliente pidió Marítimo pero puso una dirección en Florida
-        isOceanRequest = false;
-        isLocalRequest = true; // Lo pasamos al Camión local
-    }
+   // ANTES:
+if (isFloridaLocal && isOceanRequest) {
+    isOceanRequest = false;
+    isLocalRequest = true;
+}
 
+// DESPUÉS:
+if (isFloridaLocal && isOceanRequest) {
+    // 🔥 Si es Marítimo, no lo convertimos a Local.
+    // Simplemente bloqueamos todo y devolvemos error claro.
+    return NextResponse.json({ 
+        success: false, 
+        rates: [],
+        error: 'OCEAN_NOT_AVAILABLE_FOR_LOCAL',
+        message: 'El servicio marítimo no está disponible para direcciones locales en Florida.'
+    });
+}
     // 🔒 Cerrando los candados finales
     const showOcean = isOceanRequest;
     const showAir = isAirConsolidation || isSinglePackage;
@@ -218,21 +229,26 @@ export async function POST(req: Request) {
     if (showLocal) {
         let auraBoxes: AuraBox[] = [];
         
-        if (auraDetails && Array.isArray(auraDetails) && auraDetails.length > 0) {
-            auraBoxes = auraDetails.map((b: any) => ({
-                length: parseFloat(b.length) || 1,
-                width: parseFloat(b.width) || 1,
-                height: parseFloat(b.height) || 1,
-                realWeight: parseFloat(b.weight || b.realWeight) || 1
-            }));
-        } else {
-            auraBoxes = [{
-                length: len || 1,
-                width: wid || 1,
-                height: hgt || 1,
-                realWeight: finalWeightLbs
-            }];
-        }
+        // 🔥 ACTUALIZACIÓN: Recibimos tanto los datos armados desde admin, como los generados en vivo
+        const dynamicPallets = body.auraPieces || auraDetails;
+
+       if (dynamicPallets && Array.isArray(dynamicPallets) && dynamicPallets.length > 0) {
+    auraBoxes = dynamicPallets.map((b: any) => ({
+        length: parseFloat(b.length) || 1,
+        width: parseFloat(b.width) || 1,
+        height: parseFloat(b.height) || 1,
+        realWeight: parseFloat(b.weight || b.realWeight) || 1,
+        isPreBuiltPallet: true  // 🔥 Admin ya armó estos pallets físicamente
+    }));
+} else {
+    auraBoxes = [{
+        length: len || 1,
+        width: wid || 1,
+        height: hgt || 1,
+        realWeight: finalWeightLbs
+        // ❌ Sin isPreBuiltPallet → usa el Tetris normal
+    }];
+}
 
         let calculatedMiles = parseFloat(distanceMiles) || 0;
 
@@ -376,8 +392,12 @@ export async function POST(req: Request) {
 
     // 🌊 CÁLCULO DE PIES CÚBICOS (CUFT) PARA TARIFA MARÍTIMA
     let totalCuft = 0;
-    if (auraDetails && Array.isArray(auraDetails) && auraDetails.length > 0) {
-        totalCuft = auraDetails.reduce((sum: number, b: any) => {
+    
+    // 🔥 ACTUALIZACIÓN: Recibimos tanto los datos armados desde admin, como los generados en vivo
+    const dynamicPallets = body.auraPieces || auraDetails;
+
+    if (dynamicPallets && Array.isArray(dynamicPallets) && dynamicPallets.length > 0) {
+        totalCuft = dynamicPallets.reduce((sum: number, b: any) => {
             const l = parseFloat(b.length) || 10;
             const w = parseFloat(b.width) || 10;
             const h = parseFloat(b.height) || 10;

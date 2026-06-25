@@ -415,7 +415,9 @@
     "manageInSettings": "Manage in Settings",
     "goToAddCard": "Go to Add Card",
     "addCardWallet": "Add Card to Wallet",
-    "addNewCard": "Add new (Go to Settings)"
+    "addNewCard": "Add new (Go to Settings)",
+    "oceanNotAvailableTitle": "Service not available",
+    "oceanNotAvailableDesc": "Maritime service is not available for Florida addresses. Please select an international address."
   },
   "PreAlertPage": {
     "title": "Pre-Alert Package",

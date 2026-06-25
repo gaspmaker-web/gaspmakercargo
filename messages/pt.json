@@ -414,7 +414,9 @@
     "manageInSettings": "Gerenciar nas Configurações",
     "goToAddCard": "Ir para Adicionar Cartão",
     "addCardWallet": "Adicionar Cartão na Carteira",
-    "addNewCard": "Adicionar novo (Ir p/ Configurações)"
+    "addNewCard": "Adicionar novo (Ir p/ Configurações)",
+    "oceanNotAvailableTitle": "Serviço indisponível",
+    "oceanNotAvailableDesc": "O serviço marítimo não está disponível para endereços na Flórida. Selecione um endereço internacional."
   },
   "PreAlertPage": {
     "title": "Pré-Alertar Pacote",

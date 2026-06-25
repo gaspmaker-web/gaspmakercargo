@@ -7,7 +7,7 @@ import Image from 'next/image';
 import { 
     FileText, CreditCard, Loader2, Check, CheckCircle, ChevronDown, ChevronUp, 
     DollarSign, AlertCircle, Package, Truck, Box, Ruler, Scale, ShieldCheck, 
-    ExternalLink, Plus, Clock, Info, Tag, XCircle, MapPin, AlertTriangle 
+    ExternalLink, Plus, Clock, Info, Tag, XCircle, MapPin, AlertTriangle, Ship
 } from 'lucide-react';
 import { getProcessingFee } from '@/lib/stripeCalc';
 import { useTranslations } from 'next-intl';
@@ -85,10 +85,11 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
   const isPayingRef = useRef(false);
   const [idempotencyKey, setIdempotencyKey] = useState(() => Math.random().toString(36).substring(2) + Date.now().toString(36));
   
-  // Estado de Selección y Tarifas
-  const [selectedBillIds, setSelectedBillIds] = useState<string[]>([]);
-  const [ratesMap, setRatesMap] = useState<Record<string, Rate[]>>({}); 
-  const [selectedRateMap, setSelectedRateMap] = useState<Record<string, Rate>>({});
+// Estado de Selección y Tarifas
+const [selectedBillIds, setSelectedBillIds] = useState<string[]>([]);
+const [ratesMap, setRatesMap] = useState<Record<string, Rate[]>>({}); 
+const [selectedRateMap, setSelectedRateMap] = useState<Record<string, Rate>>({});
+const [rateErrorMap, setRateErrorMap] = useState<Record<string, string>>({}); // 🔥 NUEVO
 
   // UX
   const [isBillsOpen, setIsBillsOpen] = useState(true);
@@ -140,24 +141,40 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
 
   const currentHasAddress = !!currentDestination.address;
 
-  const handleAddressChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-      setSelectedAddressId(e.target.value);
-      setRatesMap({});
-      setSelectedRateMap({});
-      setSelectedBillIds([]); 
-      setDiscount(0);
-      setCouponCode("");
-      setCouponMsg({ type: "", text: "" });
-      setUseWallet(false);
-  };
+const handleAddressChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedAddressId(e.target.value);
+    setRatesMap({});
+    setSelectedRateMap({});
+    setSelectedBillIds([]);
+    setDiscount(0);
+    setCouponCode("");
+    setCouponMsg({ type: "", text: "" });
+    setUseWallet(false);
+    setRateErrorMap({}); // Se limpia solo, el error se re-evalúa al intentar cotizar
+};
+const handleGetRates = async (bill: any) => {
+    if (!currentHasAddress) { alert("⚠️ " + t('errorAddress')); return; }
 
-  const handleGetRates = async (bill: any) => {
-      if (!currentHasAddress) { alert("⚠️ " + t('errorAddress')); return; }
+    // 🔥 BLOQUEO ENTERPRISE: Marítimo nunca puede entregarse en Florida
+    const isOceanBill = bill.serviceType === 'OCEAN_CONSOLIDATION';
+    const isFloridaAddress = currentDestination?.state === 'FL' || 
+                             currentDestination?.state === 'FLORIDA' ||
+                             (currentDestination?.zip || '').startsWith('33');
+
+    if (isOceanBill && isFloridaAddress) {
+        setRateErrorMap(prev => ({ ...prev, [bill.id]: t('oceanNotAvailableDesc') }));
+        // 🔥 Limpiar rates previas para que no muestre opciones viejas
+        setRatesMap(prev => { const next = { ...prev }; delete next[bill.id]; return next; });
+        setSelectedRateMap(prev => { const next = { ...prev }; delete next[bill.id]; return next; });
+        setSelectedBillIds(prev => prev.filter(id => id !== bill.id));
+        return;
+    }
       
       setLoadingRatesId(bill.id);
       try {
           const auraPieces = typeof bill.auraDetails === 'string' ? JSON.parse(bill.auraDetails) : bill.auraDetails;
 
+          // 🔥 ENVIAMOS EL SERVICIO EXACTO Y LOS PALLETS AL ARCHIVO DE TARIFAS (RATE)
           const res = await fetch('/api/rates', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -168,26 +185,40 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                   },
                   destination: currentDestination,
                   isVip: planType === 'VIP_WHOLESALE',
-                  serviceType: bill.type,
+                  serviceType: bill.serviceType || bill.type || 'SHIPPING', // Garantiza que envíe OCEAN_CONSOLIDATION
                   auraDetails: auraPieces
               })
           });
           
-          const data = await res.json();
-          if (res.ok && data.rates) {
-              const processed = data.rates.map((r: Rate) => ({ ...r, logo: getCarrierLogo(r.carrier) }));
-              if(processed.length === 0) processed.push({ id: 'std-gmc', carrier: 'Gasp Maker Cargo', service: 'Standard', price: (bill.weightLbs * 4.5) + 15, currency: 'USD', days: '5-7', logo: '/gaspmakercargoproject.png' });
-              
-              setRatesMap(prev => ({ ...prev, [bill.id]: processed }));
-          } else {
-              alert(t('errorGeneric') || "No rates found.");
-          }
-      } catch (e) { 
-          alert(t('errorConnection') || "Connection Error"); 
-      } finally { 
-          setLoadingRatesId(null); 
-      }
-  };
+    const data = await res.json();
+if (res.ok && data.rates) {
+    // 🔥 NUEVO: Error marítimo con dirección local
+    if (data.rates.length === 0 && data.error === 'OCEAN_NOT_AVAILABLE_FOR_LOCAL') {
+        setRateErrorMap(prev => ({ 
+            ...prev, 
+            [bill.id]: t('oceanNotAvailableDesc')
+        }));
+        return;
+    }
+    // 🔥 NUEVO: Limpiar error previo si ahora sí hay rates
+    setRateErrorMap(prev => { 
+        const next = { ...prev }; 
+        delete next[bill.id]; 
+        return next; 
+    });
+    const processed = data.rates.map((r: Rate) => ({ ...r, logo: getCarrierLogo(r.carrier) }));
+    if(processed.length === 0) processed.push({ id: 'std-gmc', carrier: 'Gasp Maker Cargo', service: 'Standard', price: (bill.weightLbs * 4.5) + 15, currency: 'USD', days: '5-7', logo: '/gaspmakercargoproject.png' });
+    
+    setRatesMap(prev => ({ ...prev, [bill.id]: processed }));
+} else {
+    alert(t('errorGeneric') || "No rates found.");
+}
+} catch (e) { 
+    alert(t('errorConnection') || "Connection Error"); 
+} finally { 
+    setLoadingRatesId(null); 
+}
+};
 
   const handleSelectRate = (billId: string, rate: Rate) => {
       setSelectedRateMap(prev => ({ ...prev, [billId]: rate }));
@@ -204,7 +235,6 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
       let specialChargesSubtotal = 0; 
       let count = 0;
       
-      // 🔥 Objeto para agrupar cargos repetidos (Ej: 2 paquetes con Trámite EEI)
       const specialChargesMap: Record<string, number> = {};
 
       const isVip = planType === 'VIP_WHOLESALE';
@@ -221,7 +251,10 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
               let billHandlingFee = 0;
               const rate = selectedRateMap[id];
               const isLocalAura = rate && rate.carrier === 'Gasp Maker Cargo' && rate.service === 'Local Delivery (Aura)';
+              
+              // 🔥 VARIABLES DE BLOQUEO (Marítimo y Camión Local)
               const isOcean = bill.serviceType === 'OCEAN_CONSOLIDATION';
+              const isLocal = bill.serviceType === 'LOCAL_DELIVERY'; 
 
               // =========================================================================
               // 🔥 EXTRACCIÓN Y AGRUPACIÓN MULTILINGÜE DE CARGOS ESPECIALES
@@ -244,9 +277,8 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                   specialChargesSubtotal += 40.00;
                   specialChargesMap[tPackage("eeiCustomsFee")] = (specialChargesMap[tPackage("eeiCustomsFee")] || 0) + 40.00;
               }
-              // =========================================================================
 
-              if (isConsolidated && !isLocalAura && !isOcean) { 
+              if (isConsolidated && !isLocalAura && !isOcean && !isLocal) { 
                   if (!bill.packages || bill.packages.length === 0) {
                       const billDate = new Date(bill.createdAt || Date.now());
                       const dayOfMonth = billDate.getDate();
@@ -294,17 +326,19 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
               const weight = Number(bill.weightLbs) || 0;
               
               if (rate) {
-                  if (isVip && weight >= 230 && !isLocalAura) {
+                  // 🛡️ BLOQUEO ESTRICTO: Solo aplica 2.80 si NO ES Local y NO ES Marítimo
+                  if (isVip && weight >= 230 && !isLocalAura && !isLocal && !isOcean) {
                       itemServicePrice = weight * 2.80;
                   } else {
                       itemServicePrice = rate.price;
                   }
               } else {
-                  const isRetiroOAlmacenaje = bill.type === 'WAREHOUSE_PICKUP' || bill.type === 'STORAGE';
+                  const isRetiroOAlmacenaje = bill.serviceType === 'WAREHOUSE_PICKUP' || bill.serviceType === 'STORAGE';
                   if (isRetiroOAlmacenaje) {
                       itemServicePrice = bill.totalAmount || 0;
                   } else {
-                      if (isVip && weight >= 230 && !isLocalAura) {
+                      // 🛡️ BLOQUEO ESTRICTO AQUÍ TAMBIÉN
+                      if (isVip && weight >= 230 && !isLocalAura && !isLocal && !isOcean) {
                           itemServicePrice = weight * 2.80;
                       } else {
                           const totalFromServer = bill.totalAmount || 0;
@@ -327,7 +361,7 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
           
           const hasAuraBolsillo = currentBill?.auraDetails && Array.isArray(currentBill.auraDetails) && currentBill.auraDetails.length > 0;
           if (
-              currentBill?.type === 'LOCAL_DELIVERY' || 
+              currentBill?.serviceType === 'LOCAL_DELIVERY' || 
               hasAuraBolsillo || 
               (currentRate && currentRate.service?.toLowerCase().includes('aura'))
           ) {
@@ -345,7 +379,6 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
           finalTotal = finalTotal - appliedWallet;
       }
 
-      // Transformamos el objeto mapeado en un arreglo limpio para el Resumen
       const allActiveSpecialCharges = Object.entries(specialChargesMap).map(([label, amount]) => ({ label, amount }));
       
       return { 
@@ -493,7 +526,6 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                  itemServicePrice = Math.max(0, totalFromServer - (bill?.handlingFee || 0) - ins);
              }
 
-             // 🔥 Sumamos al Payload los Special Charges de esta factura individual
              const billSpecialChargesObj = typeof bill?.extraCharges === 'string' ? JSON.parse(bill.extraCharges) : (bill?.extraCharges || {});
              let localSpecialCharges = 0;
              if (billSpecialChargesObj.hazmatPrepFee) localSpecialCharges += 120.00;
@@ -612,16 +644,20 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                                    bill.description?.toLowerCase().includes('consolid') ||
                                    (bill.packages && bill.packages.length > 1);
 
-                                    const isVisualLocalAura = selectedRate && 
+                                  const isVisualLocalAura = selectedRate && 
                                                               selectedRate.carrier === 'Gasp Maker Cargo' && 
                                                               selectedRate.service === 'Local Delivery (Aura)';
+                                    
+                                    // 🔥 VARIABLES DE BLOQUEO VISUAL (Marítimo y Camión Local)
                                     const isOceanVisual = bill.serviceType === 'OCEAN_CONSOLIDATION';
+                                    const isLocalVisual = bill.serviceType === 'LOCAL_DELIVERY';
 
                                     const isVipVisual = planType === 'VIP_WHOLESALE';
                                     const defaultHandlingVisual = isVipVisual ? 0.50 : 0.60;
                                     let effectiveHandling = 0;
                                     
-                                    if (isConsolidated && !isVisualLocalAura && !isOceanVisual) { 
+                                    // 🔥 PROTEGEMOS EL HANDLING FEE (Para que no se cobre por paquete en Marítimo/Local)
+                                    if (isConsolidated && !isVisualLocalAura && !isOceanVisual && !isLocalVisual) { 
                                         if (!bill.packages || bill.packages.length === 0) {
                                             const billDate = new Date(bill.createdAt || Date.now());
                                             const dayOfMonth = billDate.getDate();
@@ -676,16 +712,19 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
 
                                     let baseDisplayPrice = bill.totalAmount || 0;
                                     if (selectedRate) {
-                                        if (isVipVisual && visualWeight >= 230 && !isVisualLocalAura) {
+                                        // 🛡️ BLOQUEO ESTRICTO VISUAL: Solo aplica regla 2.80 si NO ES Local y NO ES Marítimo
+                                        if (isVipVisual && visualWeight >= 230 && !isVisualLocalAura && !isLocalVisual && !isOceanVisual) {
                                             baseDisplayPrice = visualWeight * 2.80;
                                         } else {
                                             baseDisplayPrice = selectedRate.price;
                                         }
                                     } else {
-                                        if (isVipVisual && visualWeight >= 230 && !isVisualLocalAura) {
+                                        // 🛡️ BLOQUEO ESTRICTO VISUAL AQUÍ TAMBIÉN
+                                        if (isVipVisual && visualWeight >= 230 && !isVisualLocalAura && !isLocalVisual && !isOceanVisual) {
                                             baseDisplayPrice = visualWeight * 2.80;
                                         }
                                     }
+                                    
                                     // 🔥 SUMAMOS LOS CARGOS ESPECIALES AL TOTAL DE ESTA CAJA
                                     const displayPrice = baseDisplayPrice + effectiveHandling + ins + billSpecialChargesTotal;
 
@@ -729,6 +768,9 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                                                 </div>
                                             </div>
 
+                                            {/* ========================================================= */}
+                                            {/* 🔥 RENDERIZADO VISUAL DINÁMICO DE PALLETS MÚLTIPLES 🔥   */}
+                                            {/* ========================================================= */}
                                             {(() => {
                                                 const auraList = typeof bill.auraDetails === 'string' ? JSON.parse(bill.auraDetails) : bill.auraDetails;
                                                 const isAuraDetails = Array.isArray(auraList) && auraList.length > 0;
@@ -737,17 +779,20 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                                                     return (
                                                         <div className="mb-5 pl-10 flex flex-col gap-2">
                                                             {auraList.map((bulto: any, idx: number) => (
-                                                                <div key={idx} className="inline-flex items-center gap-2 bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg text-xs font-bold border border-gray-200 w-fit">
-                                                                    <span className="text-gray-800">#{idx + 1}</span>
-                                                                    <Scale size={12} className="text-gray-500"/> {bulto.weight} lb
-                                                                    <span className="text-gray-300">|</span>
-                                                                    <Ruler size={12} className="text-gray-500"/> {bulto.length}x{bulto.width}x{bulto.height}
+                                                                <div key={idx} className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold border w-fit shadow-sm ${isOceanVisual ? 'bg-blue-50/50 text-blue-800 border-blue-200' : 'bg-gray-100 text-gray-700 border-gray-200'}`}>
+                                                                    {isOceanVisual ? <Ship size={14} className="text-blue-500"/> : <Truck size={14} className="text-gray-500"/>}
+                                                                    <span className={isOceanVisual ? 'text-blue-900' : 'text-gray-900'}>Pallet #{idx + 1}:</span>
+                                                                    <span className="opacity-30 ml-1 mr-1">|</span>
+                                                                    <Scale size={12} className={isOceanVisual ? "text-blue-500" : "text-gray-500"}/> {bulto.weight} lb
+                                                                    <span className="opacity-30 ml-1 mr-1">|</span>
+                                                                    <Ruler size={12} className={isOceanVisual ? "text-blue-500" : "text-gray-500"}/> {bulto.length}x{bulto.width}x{bulto.height} in
                                                                 </div>
                                                             ))}
                                                         </div>
                                                     );
                                                 }
 
+                                                // Fallback si no tiene pallets múltiples (Ej: Aéreo)
                                                 return (
                                                     <div className="flex gap-3 mb-5 pl-10">
                                                         <span className="inline-flex items-center gap-1 bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg text-xs font-bold border border-gray-200">
@@ -761,15 +806,26 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                                             })()}
 
                                             <div className="pl-0 sm:pl-2">
-                                                {needsQuote && !rates ? (
-                                                    <button 
-                                                        onClick={() => handleGetRates(bill)}
-                                                        disabled={loadingRatesId === bill.id}
-                                                        className="w-full py-3 bg-blue-600 text-white text-sm font-bold rounded-xl hover:bg-blue-700 transition shadow-md flex justify-center items-center gap-2"
-                                                    >
-                                                        {loadingRatesId === bill.id ? <Loader2 className="animate-spin" size={16}/> : <Truck size={16}/>}
-                                                        {t('viewOptionsBtn')}
-                                                    </button>
+                                               {needsQuote && !rates ? (
+    rateErrorMap[bill.id] ? (
+        // 🔥 NUEVO: Mensaje de error visual multilingüe
+        <div className="w-full py-4 px-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3">
+            <AlertCircle size={18} className="text-red-500 mt-0.5 shrink-0"/>
+            <div>
+                <p className="text-sm font-bold text-red-700">{t('oceanNotAvailableTitle')}</p>
+                <p className="text-xs text-red-500 mt-1">{rateErrorMap[bill.id]}</p>
+            </div>
+        </div>
+    ) : (
+        <button 
+            onClick={() => handleGetRates(bill)}
+            disabled={loadingRatesId === bill.id}
+            className="w-full py-3 bg-blue-600 text-white text-sm font-bold rounded-xl hover:bg-blue-700 transition shadow-md flex justify-center items-center gap-2"
+        >
+            {loadingRatesId === bill.id ? <Loader2 className="animate-spin" size={16}/> : <Truck size={16}/>}
+            {t('viewOptionsBtn')}
+        </button>
+    )
                                                 ) : (
                                                     <div className="space-y-3">
                                                         {isSelected && selectedRate ? (
@@ -795,7 +851,7 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
                                                                     {effectiveHandling > 0 && (
                                                                         <div className="flex justify-between text-xs text-yellow-600">
                                                                             <span>{t('consolidationFee')}</span><span>+${effectiveHandling.toFixed(2)}</span>
-                                                                        </div>
+                                                                    </div>
                                                                     )}
                                                                     {ins > 0 && (
                                                                         <div className="flex justify-between text-xs text-blue-600">
