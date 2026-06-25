@@ -49,7 +49,6 @@ export default async function EnTransitoPage({ params: { locale } }: { params: {
       ]
     },
     include: {
-        // 🔥 Quitamos shippingAddress de aquí porque Package no lo tiene
         consolidatedShipment: {
             select: { 
                 id: true, 
@@ -60,27 +59,70 @@ export default async function EnTransitoPage({ params: { locale } }: { params: {
                 serviceType: true,        
                 courierService: true,     
                 awbDocumentUrl: true,   
-                shippingAddress: true,  // ✅ AQUÍ SÍ VA: La consolidación sí tiene dirección
-               packages: {
-    select: {
-        id: true,
-        gmcTrackingNumber: true,
-        carrierTrackingNumber: true, // 🔥 Tracking del courier que entregó en almacén
-        finalTrackingNumber: true,   // 🔥 Tracking del courier de salida (EasyPost)
-        description: true,
-        weightLbs: true,
-        status: true,
-        selectedCourier: true,       // 🔥 Para identificar el courier correctamente
-        courierService: true,        // 🔥 Para el nombre del servicio
-        awbDocumentUrl: true,
-        shippingAddress: true        // 🔥 Para el destino individual del paquete
-    }
-},
+                shippingAddress: true,
+                packages: {
+                    select: {
+                        id: true,
+                        gmcTrackingNumber: true,
+                        carrierTrackingNumber: true,
+                        finalTrackingNumber: true,
+                        description: true,
+                        weightLbs: true,
+                        status: true,
+                        selectedCourier: true,
+                        courierService: true,
+                        awbDocumentUrl: true,
+                        shippingAddress: true
+                    }
+                },
                 _count: { select: { packages: true } }
             }
         }
     },
     orderBy: { updatedAt: 'desc' }
+  });
+
+  // 🔥 ENTERPRISE FIX: Query separada para traer TODOS los hijos con campos completos
+  // Prisma limita registros anidados en producción para consolidaciones grandes (135+ paquetes)
+  const shipmentIds = activePackages
+      .map(p => p.consolidatedShipmentId)
+      .filter(Boolean) as string[];
+
+  const uniqueIds = [...new Set(shipmentIds)];
+
+  const allChildPackages = uniqueIds.length > 0
+      ? await prisma.package.findMany({
+          where: { consolidatedShipmentId: { in: uniqueIds } },
+          select: {
+              id: true,
+              consolidatedShipmentId: true,
+              gmcTrackingNumber: true,
+              carrierTrackingNumber: true,
+              finalTrackingNumber: true,
+              description: true,
+              weightLbs: true,
+              status: true,
+              selectedCourier: true,
+              courierService: true,
+              awbDocumentUrl: true,
+              shippingAddress: true
+          },
+          orderBy: { createdAt: 'asc' }
+      })
+      : [];
+
+  // 🔥 Inyectar los hijos completos en cada consolidación
+  const enrichedPackages = activePackages.map(pkg => {
+      if (!pkg.consolidatedShipmentId) return pkg;
+      return {
+          ...pkg,
+          consolidatedShipment: {
+              ...pkg.consolidatedShipment,
+              packages: allChildPackages.filter(
+                  c => c.consolidatedShipmentId === pkg.consolidatedShipmentId
+              )
+          }
+      };
   });
 
   return (
@@ -105,7 +147,7 @@ export default async function EnTransitoPage({ params: { locale } }: { params: {
 
         <div className="flex-1 flex flex-col justify-center">
              <InTransitPackagesCarousel 
-                packages={activePackages} 
+                packages={enrichedPackages} 
                 userCountryCode={session.user.countryCode || 'US'} 
              />
         </div>
