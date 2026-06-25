@@ -109,13 +109,16 @@ export default function InTransitPackagesCarousel({ packages, userCountryCode }:
         if (pkg.consolidatedShipment) {
             const masterId = pkg.consolidatedShipment.id;
             if (!masterMap.has(masterId)) {
-                masterMap.set(masterId, {
-                    isMaster: true,
-                    id: masterId,
-                    data: pkg.consolidatedShipment, 
-                    children: pkg.consolidatedShipment.packages || [pkg], 
-                    createdAt: pkg.updatedAt || pkg.createdAt 
-                });
+              masterMap.set(masterId, {
+    isMaster: true,
+    id: masterId,
+    data: pkg.consolidatedShipment, 
+    // 🔥 Usamos los packages del consolidatedShipment que ya viene enriquecido
+    children: (pkg.consolidatedShipment as any).packages?.length > 0 
+        ? (pkg.consolidatedShipment as any).packages 
+        : [pkg], 
+    createdAt: pkg.updatedAt || pkg.createdAt 
+});
             }
         } else {
             loosePackages.push({
@@ -161,7 +164,7 @@ export default function InTransitPackagesCarousel({ packages, userCountryCode }:
                 const easyPostTracking = isMaster 
     ? (parent?.finalTrackingNumber || item.children?.[0]?.finalTrackingNumber)
     : pkg.finalTrackingNumber;
-    
+
                 const displayCourier = isMaster 
                     ? (parent?.selectedCourier || item.children?.[0]?.selectedCourier || 'Gasp Maker Cargo') 
                     : (pkg.selectedCourier || pkg.consolidatedShipment?.selectedCourier || 'Gasp Maker Cargo');
@@ -351,15 +354,18 @@ export default function InTransitPackagesCarousel({ packages, userCountryCode }:
 
                                         {expandedMasterId === item.id && (
                                             <div className="mt-3 space-y-2 bg-slate-50 p-3 rounded-xl border border-slate-200 animate-in slide-in-from-top-2 fade-in duration-200 max-h-48 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300">
-                                                {item.children.map((childPkg: any) => (
-                                                    <div key={childPkg.id} className="flex flex-col bg-white p-2 rounded-lg border border-slate-100 shadow-sm">
-                                                        <div className="flex justify-between items-start">
-                                                            <span className="text-xs font-bold text-gray-800 capitalize line-clamp-1">{childPkg.description || 'Paquete'}</span>
-                                                            <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">{childPkg.weightLbs} lb</span>
-                                                        </div>
-                                                        <span className="text-[10px] font-mono text-gray-400 mt-1">{childPkg.gmcTrackingNumber}</span>
-                                                    </div>
-                                                ))}
+                                          {item.children.map((childPkg: any) => (
+    <div key={childPkg.id} className="flex flex-col bg-white p-2 rounded-lg border border-slate-100 shadow-sm">
+        <div className="flex justify-between items-start">
+            <span className="text-xs font-bold text-gray-800 capitalize line-clamp-1">{childPkg.description || 'Paquete'}</span>
+            <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">{childPkg.weightLbs} lb</span>
+        </div>
+      {/* 🔥 Mostramos el tracking del courier que entregó en almacén */}
+<span className="text-[10px] font-mono text-gray-400 mt-1">
+    {childPkg.carrierTrackingNumber || childPkg.gmcTrackingNumber}
+</span>
+    </div>
+))}
                                             </div>
                                         )}
                                     </div>
