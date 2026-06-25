@@ -157,7 +157,9 @@ export default function DeliveredPackagesCarousel({ consolidations, loosePackage
                                                     <span className="text-xs font-bold text-gray-800 capitalize line-clamp-1">{pkg.description || 'Paquete'}</span>
                                                     <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded shrink-0">{pkg.weightLbs ? `${pkg.weightLbs} lb` : ''}</span>
                                                 </div>
-                                                <span className="text-[10px] font-mono text-gray-500">{pkg.gmcTrackingNumber}</span>
+                                                <span className="text-[10px] font-mono text-gray-500">
+    {pkg.carrierTrackingNumber || pkg.gmcTrackingNumber}
+</span>
                                             </div>
                                         ))}
                                     </div>

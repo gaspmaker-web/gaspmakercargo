@@ -24,17 +24,47 @@ export default async function EnDestinoPage({ params: { locale } }: { params: { 
       serviceType: { notIn: ['STORAGE_FEE', 'PICKUP', 'Recogida en Tienda'] }
     },
     include: {
-      packages: true // Anidamos los paquetes hijos dentro del padre
+      packages: true
     },
     orderBy: { updatedAt: 'desc' }
   });
+
+  // 🔥 ENTERPRISE FIX: Query separada para traer TODOS los hijos con campos completos
+  const consolidationIds = deliveredConsolidations
+      .map(c => c.id)
+      .filter(Boolean) as string[];
+
+  const allChildPackages = consolidationIds.length > 0
+      ? await prisma.package.findMany({
+          where: { consolidatedShipmentId: { in: consolidationIds } },
+          select: {
+              id: true,
+              consolidatedShipmentId: true,
+              gmcTrackingNumber: true,
+              carrierTrackingNumber: true,
+              description: true,
+              weightLbs: true,
+              status: true,
+              awbDocumentUrl: true
+          },
+          orderBy: { createdAt: 'asc' }
+      })
+      : [];
+
+  // 🔥 Inyectar hijos completos en cada consolidación
+  const enrichedConsolidations = deliveredConsolidations.map(cons => ({
+      ...cons,
+      packages: allChildPackages.filter(
+          p => p.consolidatedShipmentId === cons.id
+      )
+  }));
 
   // 🔥 2. BUSCAMOS LOS PAQUETES SUELTOS (Sin consolidación)
   const deliveredLoosePackages = await prisma.package.findMany({
     where: {
       userId: session.user.id,
       status: { in: ['ENTREGADO', 'DELIVERED', 'COMPLETADO'] },
-      consolidatedShipmentId: null, // Solo los que viajaron sueltos
+      consolidatedShipmentId: null,
       NOT: {
           OR: [
               { selectedCourier: 'CLIENTE_RETIRO' },
@@ -67,9 +97,8 @@ export default async function EnDestinoPage({ params: { locale } }: { params: { 
           </div>
         </div>
 
-        {/* Le pasamos ambas listas estructuradas al Carrusel */}
         <DeliveredPackagesCarousel 
-            consolidations={deliveredConsolidations}
+            consolidations={enrichedConsolidations}
             loosePackages={deliveredLoosePackages} 
             userCountryCode={session.user.countryCode?.toUpperCase() || ''}
         />
