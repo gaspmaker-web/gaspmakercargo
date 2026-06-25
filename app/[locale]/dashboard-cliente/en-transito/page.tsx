@@ -88,8 +88,9 @@ export default async function EnTransitoPage({ params: { locale } }: { params: {
       .map(p => p.consolidatedShipmentId)
       .filter(Boolean) as string[];
 
-  const uniqueIds = [...new Set(shipmentIds)];
-
+  const uniqueIds = shipmentIds.filter(
+    (id, index, self) => self.indexOf(id) === index
+);
   const allChildPackages = uniqueIds.length > 0
       ? await prisma.package.findMany({
           where: { consolidatedShipmentId: { in: uniqueIds } },
