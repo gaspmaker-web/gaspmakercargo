@@ -113,13 +113,15 @@ function calculateRate_GD(weight: number): number {
 
 // 🔥 NUEVA TARIFA MARÍTIMA (Basada en Pies Cúbicos - CUFT)
 function calculateOceanRate_Caribe(cuft: number): number {
-    const safeCuft = Math.max(1, cuft); 
+    const safeCuft = Math.max(1, cuft);
     
-    if (safeCuft <= 5) return 77.00;
+    if (safeCuft <= 5)  return 77.00;
     if (safeCuft <= 10) return 123.00;
-    if (safeCuft <= 499) return (safeCuft * 5.85) + 62.00;
+    if (safeCuft <= 15) return 155.00;
+    if (safeCuft <= 20) return 195.00;
+    if (safeCuft <= 25) return 255.00;
     
-    return (safeCuft * 5.30) + 62.00;
+    return parseFloat((safeCuft * 10.20).toFixed(2));
 }
 
 // ==========================================
