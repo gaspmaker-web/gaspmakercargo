@@ -102,7 +102,7 @@ export default async function PagarFacturasPage({ params: { locale } }: { params
         // 🚢 ESCENARIO 4: CONSOLIDACIÓN MARÍTIMA (NUEVO)
         type = 'OCEAN_CONSOLIDATION';
         displayService = 'Consolidación Marítima';
-        handlingFee = 0; // Garantizamos que el backend inicialice el cobro de armado en 0
+        handlingFee = 0; 
 
     } else {
         // ✈️ ESCENARIO 5: ENVÍO INTERNACIONAL / CONSOLIDACIÓN (AÉREO)
@@ -119,7 +119,24 @@ export default async function PagarFacturasPage({ params: { locale } }: { params
     if (type === 'WAREHOUSE_PICKUP') typeLabel = 'Solicitud de Retiro';
     if (type === 'STORAGE') typeLabel = 'Cargo por Almacenaje';
     if (type === 'LOCAL_DELIVERY') typeLabel = 'Consolidación Local (Aura)'; 
-    if (type === 'OCEAN_CONSOLIDATION') typeLabel = 'Consolidación Marítima'; // 🔥 Etiqueta bonita para Marítimo
+    if (type === 'OCEAN_CONSOLIDATION') typeLabel = 'Consolidación Marítima'; 
+
+    // =========================================================================
+    // 🔥 EXTRACCIÓN INTELIGENTE DE PESO Y MEDIDAS (SOPORTE PARA MÚLTIPLES PALLETS)
+    // =========================================================================
+    let globalWeight = s.weightLbs || 0;
+    
+    // Si la consolidación tiene pallets anidados en JSON, sumamos su peso real para el frontend
+    if (s.auraDetails) {
+        try {
+            const auraList = typeof s.auraDetails === 'string' ? JSON.parse(s.auraDetails) : s.auraDetails;
+            if (Array.isArray(auraList) && auraList.length > 0) {
+                globalWeight = auraList.reduce((acc: number, item: any) => acc + (parseFloat(item.weight) || 0), 0);
+            }
+        } catch(e) {
+            console.error("Error parseando auraDetails", e);
+        }
+    }
 
     return {
       id: s.id,
@@ -128,22 +145,23 @@ export default async function PagarFacturasPage({ params: { locale } }: { params
       gmcShipmentNumber: s.gmcShipmentNumber,
       createdAt: s.createdAt,
       
-      // --- MONTOS AJUSTADOS ---
       totalAmount: finalTotalAmount, 
       subtotalAmount: finalSubtotal,
       handlingFee: handlingFee,      
       
       declaredValue: s.declaredValue || 0,
-      weightLbs: s.weightLbs || 0,
+      
+      // 🔥 MANDAMOS EL PESO GLOBAL COMBINADO
+      weightLbs: globalWeight,
+      
       lengthIn: s.lengthIn || 0,
       widthIn: s.widthIn || 0,
       heightIn: s.heightIn || 0,
       
-      // 🚀 ¡LOS DATOS CRUCIALES PARA AURA Y MARÍTIMO!
+      // 🚀 DATOS CRUCIALES PARA MÚLTIPLES PALLETS
       serviceType: s.serviceType,
       auraDetails: s.auraDetails, 
       
-      // 🔥 LA SOLUCIÓN: ENVIAR LOS CARGOS ESPECIALES AL FRONTEND
       extraCharges: s.extraCharges,
 
       packages: s.packages,
@@ -161,7 +179,9 @@ export default async function PagarFacturasPage({ params: { locale } }: { params
     referredBy: user?.referredBy || null,
     referralRewardPaid: user?.referralRewardPaid || false,
     walletBalance: user?.walletBalance || 0,
-  };
+    // 🔥 EXENCIÓN DE FEE DE CONSOLIDACIÓN
+    noConsolidationFee: user?.noConsolidationFee || false,
+};
 
 return (
     <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8 font-montserrat">

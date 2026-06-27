@@ -32,8 +32,10 @@ model User {
 
   role                  String                @default("CLIENTE")
 
-// 🔥 PLAN CORPORATIVO / VIP (AÑADIR ESTA LÍNEA)
+ // 🔥 PLAN CORPORATIVO / VIP (AÑADIR ESTA LÍNEA)
   planType              String?               @default("STANDARD")
+  // 🔥 EXENCIÓN DE FEE DE CONSOLIDACIÓN (CLIENTES VIP ESPECIALES)
+  noConsolidationFee    Boolean               @default(false)
   createdAt             DateTime              @default(now())
 
   // Campos de Perfil

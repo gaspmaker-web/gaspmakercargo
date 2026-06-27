@@ -237,8 +237,9 @@ if (res.ok && data.rates) {
       
       const specialChargesMap: Record<string, number> = {};
 
-      const isVip = planType === 'VIP_WHOLESALE';
-      const defaultHandlingRate = isVip ? 0.50 : 0.60;
+     const isVip = planType === 'VIP_WHOLESALE';
+     const noFee = userProfile?.noConsolidationFee === true;
+     const defaultHandlingRate = isVip ? 0.50 : 0.60;
 
       selectedBillIds.forEach(id => {
           const bill = bills.find(b => b.id === id);
@@ -286,7 +287,7 @@ if (res.ok && data.rates) {
                       if (isVip && dayOfMonth >= 22 && dayOfMonth <= 28) {
                           billHandlingFee = 0; 
                       } else {
-                          billHandlingFee = 1 * defaultHandlingRate;
+                         billHandlingFee = noFee ? 0 : 1 * defaultHandlingRate;
                       }
                   } else {
                       let chargeablePackagesCount = 0;
@@ -312,7 +313,7 @@ if (res.ok && data.rates) {
                           }
                       });
                       
-                      billHandlingFee = chargeablePackagesCount * defaultHandlingRate;
+                      billHandlingFee = noFee ? 0 : chargeablePackagesCount * defaultHandlingRate;
                   }
               }
               
@@ -510,7 +511,8 @@ if (res.ok && data.rates) {
                                         pkg.description === "Documento Físico (Enviado desde Buzón)";
                      if (!isDocument) chargeablePackagesCount++;
                  });
-                 dynamicHandling = chargeablePackagesCount * 0.60;
+                 const noFee = userProfile?.noConsolidationFee === true;
+                 dynamicHandling = noFee ? 0 : chargeablePackagesCount * 0.60;
              } else if (isConsolidated && !isOcean) {
                  dynamicHandling = 0.60;
              }
@@ -688,7 +690,8 @@ if (res.ok && data.rates) {
                                                     }
                                                 }
                                             });
-                                            effectiveHandling = chargeableCount * defaultHandlingVisual;
+                                            const noFeeVisual = userProfile?.noConsolidationFee === true;
+                                            effectiveHandling = noFeeVisual ? 0 : chargeableCount * defaultHandlingVisual;
                                         }
                                     }
 
