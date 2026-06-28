@@ -13,7 +13,7 @@ import {
     CreditCard, CheckCircle, AlertCircle, ChevronRight, 
     UploadCloud, Box, Scale, Calendar, Loader2, ChevronDown, ChevronUp, FileCheck,
     MapPin, Clock, DollarSign, X, Lock, AlertTriangle,
-    ShoppingBag, Plane, Ship 
+    ShoppingBag, Plane, Ship, Search 
 } from 'lucide-react';
 
 // --- TIPO EXTENDIDO PARA LOS CÁLCULOS ---
@@ -86,6 +86,7 @@ export default function ClientDashboard({
   const [selectedPkgs, setSelectedPkgs] = useState<string[]>([]);
   const [isConsolidating, setIsConsolidating] = useState(false);
   const [isExpanded, setIsExpanded] = useState(true);
+  const [trackingSearch, setTrackingSearch] = useState('');
 
   const [consolidationType, setConsolidationType] = useState<'AERIAL' | 'LOCAL' | 'OCEAN'>('AERIAL');
 
@@ -482,6 +483,31 @@ export default function ClientDashboard({
                 </div>
             </div>
 
+            {/* 🔥 BUSCADOR DE TRACKING */}
+            {isExpanded && displayPackages.length > 0 && (
+                <div className="relative mx-1 mb-2">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <Search size={16} className="text-gray-400" />
+                    </div>
+                    <input
+                        type="text"
+                        placeholder={t.has('searchByTracking') ? t('searchByTracking') : "Buscar por tracking o descripción..."}
+                        value={trackingSearch}
+                        onChange={(e) => setTrackingSearch(e.target.value)}
+                        onClick={(e) => e.stopPropagation()}
+                        className="w-full pl-10 pr-10 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-700 focus:ring-2 focus:ring-gmc-dorado-principal focus:border-transparent outline-none transition-all shadow-sm placeholder-gray-400"
+                    />
+                    {trackingSearch && (
+                        <button
+                            onClick={(e) => { e.stopPropagation(); setTrackingSearch(''); }}
+                            className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                        >
+                            <X size={16} />
+                        </button>
+                    )}
+                </div>
+            )}
+
             {isExpanded && (
                 displayPackages.length === 0 ? (
                     <div className="bg-white rounded-2xl p-8 text-center border border-gray-200 border-dashed">
@@ -491,7 +517,17 @@ export default function ClientDashboard({
                     </div>
                 ) : (
                     <div className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-4 px-1 items-stretch [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
-                        {displayPackages.map((pkg) => {
+                        {displayPackages
+                            .filter(pkg => {
+                                if (!trackingSearch.trim()) return true;
+                                const search = trackingSearch.toLowerCase();
+                                return (
+                                    (pkg.carrierTrackingNumber || '').toLowerCase().includes(search) ||
+                                    (pkg.gmcTrackingNumber || '').toLowerCase().includes(search) ||
+                                    (pkg.description || '').toLowerCase().includes(search)
+                                );
+                            })
+                            .map((pkg) => {
                             const isSelected = selectedPkgs.includes(pkg.id);
                             const isBlocked = pkg.isBlocked; 
                             
@@ -558,6 +594,7 @@ export default function ClientDashboard({
                                                 <span>${pkg.storageFee?.toFixed(2)}</span>
                                             </div>
                                         )}
+                                        
 
                                         <button 
                                             onClick={(e) => handlePackageAction(e, pkg)}

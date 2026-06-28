@@ -232,7 +232,8 @@
     "custom_text_local": "Agruparemos tus cajas para enviarlas en <strong>camión de reparto local</strong>.",
     "requestOcean": "Consolidación Marítima",
     "btnConfirmLocal": "Confirmar Entrega Local",
-    "btnConsolidateLocalPallet": "Agrupar en Pallet (Delivery)"
+   "btnConsolidateLocalPallet": "Agrupar en Pallet (Delivery)",
+   "searchByTracking": "Buscar por tracking o descripción..."
   },
 "Notifications": {
     "title": "Notificaciones",

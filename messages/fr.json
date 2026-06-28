@@ -235,7 +235,8 @@
     "custom_text_local": "Nous regrouperons vos boîtes pour les expédier par <strong>camion de livraison locale</strong>.",
     "requestOcean": "Consolidation Maritime",
     "btnConfirmLocal": "Confirmer la Livraison Locale",
-    "btnConsolidateLocalPallet": "Grouper sur Palette (Livraison)"
+    "btnConsolidateLocalPallet": "Grouper sur Palette (Livraison)",
+    "searchByTracking": "Rechercher par suivi ou description..."
   },
 "Notifications": {
     "title": "Notifications",
