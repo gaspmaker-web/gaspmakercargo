@@ -9,6 +9,7 @@ interface Office {
     phone: string;
     hours?: string;
     mapUrl: string;
+    type: 'air' | 'sea';
 }
 
 export default function LocationsClient() {
@@ -20,33 +21,54 @@ export default function LocationsClient() {
             address: "GASP MAKER 1861 NW 22nd St, Miami, FL 33142",
             phone: "(786) 282-0763",
             hours: "Mon-Fri: 9:00 AM - 4:00 PM",
-            mapUrl: "https://maps.google.com/?q=1861+NW+22nd+St,+Miami,+FL+33142" // Corregido link real aproximado
+            mapUrl: "https://maps.google.com/?q=1861+NW+22nd+St,+Miami,+FL+33142",
+            type: 'air'
         },
         {
             name: "Oficina Central Trinidad y Tobago",
             address: "150 BWIA Blvd, Piarco, Trinidad and Tobago",
             phone: "+1 868 468-9635",
             hours: "Mon-Sat: 9:00 AM - 7:00 PM",
-            mapUrl: "https://maps.google.com/?q=150+BWIA+Blvd,+Piarco,+Trinidad+and+Tobago"
+            mapUrl: "https://maps.google.com/?q=150+BWIA+Blvd,+Piarco,+Trinidad+and+Tobago",
+            type: 'air'
+        },
+        {
+            name: t('trinidadMaritimeName'),
+            address: "Port Admin Bldg, Gnd Fl, Dock Road, Port of Spain, Trinidad",
+            phone: "+1 868 625-4775",
+            hours: "Mon-Fri: 8:00 AM - 4:00 PM",
+            mapUrl: "https://maps.google.com/?q=Dock+Road+Port+of+Spain+Trinidad",
+            type: 'sea'
         },
         {
             name: "Barbados (GCG Ground Services)",
             address: "GCG Ground Services Ltd, Barbados",
             phone: "+1 246 428 1670 (ext 3535)",
             hours: "Mon-Fri: 8:00 AM - 4:00 PM",
-            mapUrl: "https://maps.google.com/?q=GCG+Ground+Services+Ltd,+Barbados"
+            mapUrl: "https://maps.google.com/?q=GCG+Ground+Services+Ltd,+Barbados",
+            type: 'air'
+        },
+        {
+            name: t('laparkanName'),
+            address: "Almac Trading Complex, Bridgetown, Barbados",
+            phone: "+1 246-538-5322",
+            hours: "Mon-Fri: 8:00 AM - 5:00 PM",
+            mapUrl: "https://maps.google.com/?q=Almac+Trading+Complex,+Bridgetown,+Barbados",
+            type: 'sea'
         },
         {
             name: "Kingston (AJAS Cargo)",
             address: "AJAS Cargo, Norman Manley Int'l Airport, Kingston",
             phone: "+1 876 945 6405 / 6408",
-            mapUrl: "https://maps.google.com/?q=AJAS+Cargo,+Kingston"
+            mapUrl: "https://maps.google.com/?q=AJAS+Cargo,+Kingston",
+            type: 'air'
         },
         {
             name: "St. Thomas (US Virgin Islands)",
             address: "Cyril E. King Airport, Airport Rd, Charlotte Amalie West, St Thomas 00802",
             phone: "+1 340 774 5100",
-            mapUrl: "https://maps.google.com/?q=Cyril+E.+King+Airport"
+            mapUrl: "https://maps.google.com/?q=Cyril+E.+King+Airport",
+            type: 'air'
         }
     ];
 
@@ -75,8 +97,18 @@ export default function LocationsClient() {
             {/* CARDS GRID */}
             <div className="max-w-7xl mx-auto px-4 -mt-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-20 relative z-20">
                 {offices.map((office, idx) => (
-                    <div key={idx} className="bg-white rounded-3xl p-8 shadow-xl border border-gray-100 hover:shadow-2xl transition-all duration-300 group flex flex-col h-full">
+                    <div key={idx} className="bg-white rounded-3xl p-8 shadow-xl border border-gray-100 hover:shadow-2xl transition-all duration-300 group flex flex-col h-full relative">
                         
+                        {/* Badge Aéreo / Marítimo */}
+                        <div className={`absolute top-5 right-5 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold tracking-wide
+                            ${office.type === 'air'
+                                ? 'bg-blue-50 text-blue-600 border border-blue-100'
+                                : 'bg-cyan-50 text-cyan-700 border border-cyan-100'
+                            }`}>
+                            {office.type === 'air' ? '✈️' : '🚢'}
+                            <span>{office.type === 'air' ? t('airFreight') : t('seaFreight')}</span>
+                        </div>
+
                         {/* Icono Cabecera */}
                         <div className="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 shadow-sm">
                             <MapPin size={28} />
@@ -89,22 +121,16 @@ export default function LocationsClient() {
                         
                         {/* Lista de Detalles */}
                         <div className="space-y-3 text-gray-600 text-sm flex-grow">
-                            
-                            {/* Dirección */}
                             <div className="flex items-start gap-3">
                                 <MapPin size={16} className="text-gmc-dorado-principal shrink-0 mt-0.5" />
                                 <p className="leading-relaxed font-montserrat">{office.address}</p>
                             </div>
-
-                            {/* Teléfono (Números Alineados) */}
                             <div className="flex items-start gap-3">
                                 <Phone size={16} className="text-gmc-dorado-principal shrink-0 mt-0.5" />
                                 <div>
                                     <p className="font-montserrat lining-nums">{office.phone}</p>
                                 </div>
                             </div>
-
-                            {/* Horario (Si existe) */}
                             {office.hours && (
                                 <div className="flex items-center gap-3">
                                     <Clock size={16} className="text-gmc-dorado-principal shrink-0" />
@@ -129,8 +155,7 @@ export default function LocationsClient() {
             </div>
 
             <div className="max-w-4xl mx-auto px-4 pb-20 text-center">
-                <p className="text-xs text-gray-400">
-                </p>
+                <p className="text-xs text-gray-400"></p>
             </div>
         </div>
     );
