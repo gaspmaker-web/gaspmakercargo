@@ -674,7 +674,11 @@
     "dr": "Siège Social en République Dominicaine",
     "viewMap": "Voir sur Google Maps",
     "globalNetwork": "Réseau Mondial Gasp Maker Cargo",
-    "disclaimer": "* Les horaires d'ouverture peuvent varier en fonction des jours fériés locaux."
+    "disclaimer": "* Les horaires d'ouverture peuvent varier en fonction des jours fériés locaux.",
+    "airFreight": "Fret Aérien",
+    "seaFreight": "Fret Maritime",
+    "laparkanName": "Barbade Maritime (Laparkan)",
+    "trinidadMaritimeName": "Trinité Maritime (Laparkan)"
   },
   "RegisterPage": {
     "title": "Enchanté de vous rencontrer !",

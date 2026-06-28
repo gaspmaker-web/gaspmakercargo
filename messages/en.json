@@ -651,7 +651,11 @@
     "subtitle": "Find the office nearest to you.",
     "viewMap": "View Map",
     "globalNetwork": "Gasp Maker Cargo Global Network",
-    "disclaimer": "* Operating hours may vary due to local holidays."
+    "disclaimer": "* Operating hours may vary due to local holidays.",
+    "airFreight": "Air Freight",
+    "seaFreight": "Sea Freight",
+    "laparkanName": "Barbados Maritime (Laparkan)",
+    "trinidadMaritimeName": "Trinidad Maritime (Laparkan)"
   },
   "RegisterPage": {
     "title": "Nice to meet you!",

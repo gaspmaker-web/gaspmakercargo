@@ -692,7 +692,11 @@
     "subtitle": "Encuentra la oficina más cercana a ti.",
     "viewMap": "Ver Mapa",
     "globalNetwork": "Red Global Gasp Maker Cargo",
-    "disclaimer": "* Los horarios de atención pueden variar según días festivos locales."
+    "disclaimer": "* Los horarios de atención pueden variar según días festivos locales.",
+    "airFreight": "Carga Aérea",
+    "seaFreight": "Carga Marítima",
+    "laparkanName": "Barbados Marítimo (Laparkan)",
+    "trinidadMaritimeName": "Trinidad Marítimo (Laparkan)"
   },
   "RegisterPage": {
     "title": "¡Encantados de conocerte!",

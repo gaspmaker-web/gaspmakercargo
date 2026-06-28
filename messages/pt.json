@@ -674,7 +674,11 @@
     "dr": "Sede na República Dominicana",
     "viewMap": "Ver no Google Maps",
     "globalNetwork": "Rede Global Gasp Maker Cargo",
-    "disclaimer": "* O horário de funcionamento pode variar devido a feriados locais."
+    "disclaimer": "* O horário de funcionamento pode variar devido a feriados locais.",
+    "airFreight": "Carga Aérea",
+    "seaFreight": "Carga Marítima",
+    "laparkanName": "Barbados Marítimo (Laparkan)",
+    "trinidadMaritimeName": "Trinidad Marítimo (Laparkan)"
   },
   "RegisterPage": {
     "title": "Prazer em conhecê-lo!",
