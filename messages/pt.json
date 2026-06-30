@@ -229,7 +229,7 @@
     "palletLimitBtn": "Consolidar Palete",
     "btnConsolidateOcean": "Agrupar em Palete (Marítimo)",
     "aerialReadyTitle": "Carga pronta para Consolidação Aérea",
-    "aerialReadyDesc": "Você tem <strong>{count} pacotes</strong> ({weight} lbs) prontos no armazém. Lembre-se de que o limite internacional para um envio aéreo é de 150 lbs.",
+   "aerialReadyDesc": "Você tem <strong>{count} pacotes</strong> ({weight} lbs) prontos no armazém. Lembre-se que o limite internacional para um envio aéreo é de 150 lbs por caixa.",
     "aerialReadyBtn": "Consolidar Envio Aéreo",
     "custom_text_ocean": "Agruparemos suas caixas em sua forma original sobre um <strong>palete de madeira (Marítimo)</strong> para que você economize em volume.",
     "custom_text_local": "Agruparemos suas caixas para enviá-las em um <strong>caminhão de entrega local</strong>.",

@@ -230,7 +230,7 @@
     "palletLimitBtn": "Consolidate Pallet",
     "btnConsolidateOcean": "Group on Pallet (Ocean)",
     "aerialReadyTitle": "Load Ready for Air Consolidation",
-    "aerialReadyDesc": "You have <strong>{count} packages</strong> ({weight} lbs) ready in the warehouse. Remember that the international limit for an air shipment is 150 lbs.",
+    "aerialReadyDesc": "You have <strong>{count} packages</strong> ({weight} lbs) ready in the warehouse. Remember that the international limit for an air shipment is 150 lbs per box.",
     "aerialReadyBtn": "Consolidate Air Shipment",
     "custom_text_ocean": "We will group your boxes in their original form on a <strong>wooden pallet (Ocean)</strong> so you save on volume.",
     "custom_text_local": "We will group your boxes to send them via <strong>local delivery truck</strong>.",
