@@ -2,6 +2,17 @@ import { NextResponse } from "next/server";
 
 export const dynamic = 'force-dynamic';
 
+// 🚢 RATE ENGINE MARÍTIMO
+function calculateOceanRate(cuft: number): number {
+    const safeCuft = Math.max(1, cuft);
+    if (safeCuft <= 5)  return 77.00;
+    if (safeCuft <= 10) return 123.00;
+    if (safeCuft <= 15) return 155.00;
+    if (safeCuft <= 20) return 195.00;
+    if (safeCuft <= 25) return 255.00;
+    return parseFloat((safeCuft * 10.20).toFixed(2));
+}
+
 export async function POST(req: Request) {
   try {
     const { auth } = await import("@/auth");
@@ -24,17 +35,6 @@ export async function POST(req: Request) {
         containerType,
         containerFee
     } = await req.json();
-
-    // 🚢 RATE ENGINE MARÍTIMO
-    function calculateOceanRate(cuft: number): number {
-        const safeCuft = Math.max(1, cuft);
-        if (safeCuft <= 5)  return 77.00;
-        if (safeCuft <= 10) return 123.00;
-        if (safeCuft <= 15) return 155.00;
-        if (safeCuft <= 20) return 195.00;
-        if (safeCuft <= 25) return 255.00;
-        return parseFloat((safeCuft * 10.20).toFixed(2));
-    }
 
     // 🔥 REGLA DE ORO: El precio inicia en 0 hasta que el cliente elija envío
     let updateData: any = {
@@ -65,7 +65,6 @@ export async function POST(req: Request) {
         });
 
         if (consolidation?.serviceType === 'OCEAN_CONSOLIDATION' && containerType && containerFee) {
-            // 🚢 OCEAN: Calcular flete + container fee
             const l = parseFloat(auraPieces[0].length) || 1;
             const w = parseFloat(auraPieces[0].width) || 1;
             const h = parseFloat(auraPieces[0].height) || 1;
@@ -74,12 +73,10 @@ export async function POST(req: Request) {
             const fleteBase = calculateOceanRate(totalCuft);
             const containerCost = parseFloat(containerFee) || 0;
             const subtotal = fleteBase + containerCost;
-            const processingFee = parseFloat((subtotal * 0.029 + 0.30).toFixed(2));
-            const total = parseFloat((subtotal + processingFee).toFixed(2));
 
-          updateData.subtotalAmount = subtotal;
-        updateData.processingFee = 0;
-        updateData.totalAmount = 0;  // ← Se calcula cuando el cliente selecciona courier
+            updateData.subtotalAmount = subtotal;
+            updateData.processingFee = 0;
+            updateData.totalAmount = 0;
             updateData.extraCharges = {
                 ...(extraCharges || {}),
                 containerType,
@@ -88,7 +85,6 @@ export async function POST(req: Request) {
                 totalCuft: parseFloat(totalCuft.toFixed(2))
             };
         } else if (containerType && containerFee) {
-            // 🚚 LOCAL DELIVERY con container
             updateData.subtotalAmount = parseFloat(containerFee) || 0;
             updateData.extraCharges = {
                 ...(extraCharges || {}),
@@ -106,7 +102,6 @@ export async function POST(req: Request) {
         updateData.declaredValue = finalValue ? parseFloat(finalValue) : 0;
     }
 
-    // 2. Actualizar la Consolidación en la Base de Datos
     const updatedConsolidation = await prisma.consolidatedShipment.update({
       where: { id: consolidationId },
       data: updateData,
