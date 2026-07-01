@@ -12,7 +12,7 @@ export default function ConsolidationCard({ request }: { request: any }) {
   const [isSaving, setIsSaving] = useState(false);
   
   // =================================================================
-  // ✈️ ESTADO PARA AÉREO Y MARÍTIMO (Flujo Internacional)
+  // ✈️ ESTADO PARA AÉREO (Un solo bulto global)
   // =================================================================
   const [finalWeight, setFinalWeight] = useState('');
   const [dims, setDims] = useState({ length: '', width: '', height: '' });
@@ -41,8 +41,18 @@ export default function ConsolidationCard({ request }: { request: any }) {
       }
   }, [finalValue]);
 
+  // 🚢 ESTADO PARA CONTAINER MARÍTIMO
+const [containerType, setContainerType] = useState<string | null>(null);
+
+const CONTAINER_OPTIONS = [
+    { id: 'EH', label: 'EH Container', price: 20 },
+    { id: 'E',  label: 'E Container',  price: 30 },
+    { id: 'D',  label: 'D Container',  price: 60 },
+    { id: 'JUMBO_FIBER', label: 'Jumbo Fiber', price: 50 },
+    { id: 'REGULAR', label: 'Caja Regular', price: 7 },
+];
   // =================================================================
-  // 🚚 ESTADO PARA LOCAL DELIVERY (Aura Inteligencia - Filas Dinámicas)
+  // 🚚🚢 ESTADO PARA LOCAL DELIVERY Y OCEAN (Múltiples Pallets Físicos)
   // =================================================================
   const [auraPieces, setAuraPieces] = useState([
     { weight: '', length: '', width: '', height: '' }
@@ -50,8 +60,11 @@ export default function ConsolidationCard({ request }: { request: any }) {
 
   const isLocalDelivery = request.serviceType === 'LOCAL_DELIVERY';
   const isOcean = request.serviceType === 'OCEAN_CONSOLIDATION';
+  
+  // 🔥 LA LLAVE MAESTRA: Activamos las filas dinámicas si es Camión o Barco
+  const isDynamicPalletMode = isLocalDelivery || isOcean;
 
-  // --- Funciones para manejar las filas de Aura ---
+  // --- Funciones para manejar las filas de los Pallets ---
   const handleAddPiece = () => {
     setAuraPieces([...auraPieces, { weight: '', length: '', width: '', height: '' }]);
   };
@@ -73,20 +86,26 @@ export default function ConsolidationCard({ request }: { request: any }) {
     try {
         let payload: any = { 
             consolidationId: request.id,
-            isAura: isLocalDelivery,
-            // 🔥 ENVIAMOS LOS CARGOS ESPECIALES AL BACKEND
-            extraCharges: specialCharges 
+            isAura: isDynamicPalletMode, // 🔥 Enviamos array dinámico al backend
+            isOcean: isOcean,
+            extraCharges: specialCharges,
+            finalValue: parseFloat(finalValue) || 0 
         };
 
-        if (isLocalDelivery) {
-            // Validación Aura
+        if (isDynamicPalletMode) {
+            // Validación Aura / Ocean (Múltiples Pallets)
             const isIncomplete = auraPieces.some(p => !p.weight || !p.length || !p.width || !p.height);
             if (isIncomplete) {
                 setIsSaving(false);
-                return alert("⚠️ Por favor completa el Peso y las 3 Medidas en todas las filas de Aura.");
+                return alert("⚠️ Por favor completa el Peso y las 3 Medidas en todas las filas.");
             }
 
-            // Mapeamos y calculamos el Billable Weight individual de una vez para facilitar al backend
+            if (isOcean) {
+    payload.containerType = containerType;
+    payload.containerFee = CONTAINER_OPTIONS.find(c => c.id === containerType)?.price || 0;
+}
+
+            // Mapeamos los pallets físicos armados
             payload.auraPieces = auraPieces.map(p => {
                 const w = parseFloat(p.weight);
                 const l = parseFloat(p.length);
@@ -96,16 +115,23 @@ export default function ConsolidationCard({ request }: { request: any }) {
                 
                 return {
                     weight: w,
+                    realWeight: w, // Enviamos el peso real limpio
                     length: l,
                     width: wd,
                     height: h,
-                    billableWeight: Math.max(w, volWeight) // 👈 El divisor 166 de Aura
+                    billableWeight: Math.max(w, volWeight) 
                 };
             });
-            payload.distanceMiles = request.user?.distanceMiles || 0;
+            
+            // Calculamos peso global visual
+            payload.finalWeight = auraPieces.reduce((acc, p) => acc + parseFloat(p.weight), 0);
+            
+            if (isLocalDelivery) {
+                payload.distanceMiles = request.user?.distanceMiles || 0;
+            }
 
         } else {
-            // Validación Aéreo / Marítimo
+            // Validación Aéreo (Bulto único)
             if (!finalWeight || !dims.length || !dims.width || !dims.height) {
                 setIsSaving(false);
                 return alert("⚠️ Por favor ingresa el Peso y las 3 Medidas reales de la carga.");
@@ -116,7 +142,6 @@ export default function ConsolidationCard({ request }: { request: any }) {
                 width: parseFloat(dims.width),
                 height: parseFloat(dims.height)
             };
-            payload.finalValue = parseFloat(finalValue) || 0;
         }
 
         const res = await fetch('/api/admin/consolidate-confirm', { 
@@ -128,7 +153,7 @@ export default function ConsolidationCard({ request }: { request: any }) {
         const data = await res.json();
         
         if (res.ok) {
-            alert(`✅ Consolidación procesada. ${isLocalDelivery ? 'Aura calculó la tarifa exacta por bultos.' : 'El cliente ya puede pagar.'}`);
+            alert(`✅ Consolidación procesada exitosamente. El cliente ya puede pagar.`);
             setShowModal(false);
             router.refresh(); 
         } else {
@@ -141,6 +166,12 @@ export default function ConsolidationCard({ request }: { request: any }) {
         setIsSaving(false);
     }
   };
+
+ console.log('🔍 DEBUG:', { 
+      serviceType: request.serviceType, 
+      isOcean, 
+      isDynamicPalletMode 
+  });
 
   return (
     <>
@@ -188,7 +219,7 @@ export default function ConsolidationCard({ request }: { request: any }) {
 
         <div className="p-6">
             <h4 className="text-sm font-bold text-gray-400 uppercase mb-3 flex items-center gap-2">
-                <Package size={14} /> {request.packages?.length || 0} Cajas a {isLocalDelivery ? 'Armar (Pallet)' : 'Agrupar'}:
+                <Package size={14} /> {request.packages?.length || 0} Cajas a {isLocalDelivery ? 'Armar (Pallet)' : isOcean ? 'Agrupar en Pallets' : 'Agrupar'}:
             </h4>
             
             <div className="space-y-2 mb-6 max-h-40 overflow-y-auto pr-2 custom-scrollbar">
@@ -222,7 +253,7 @@ export default function ConsolidationCard({ request }: { request: any }) {
                             : 'bg-indigo-600 text-white hover:bg-indigo-700'
                     }`}
                 >
-                    {isLocalDelivery ? 'Medir Pallet Aura' : isOcean ? 'Procesar Marítimo' : 'Procesar Aéreo'} <ArrowRight size={16} />
+                    {isLocalDelivery ? 'Medir Pallets Aura' : isOcean ? 'Medir Pallets Marítimos' : 'Procesar Aéreo'} <ArrowRight size={16} />
                 </button>
             </div>
         </div>
@@ -231,13 +262,12 @@ export default function ConsolidationCard({ request }: { request: any }) {
       {/* --- MODAL DE PROCESAMIENTO --- */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in">
-            {/* 🔥 Aumentamos el max-w-sm a max-w-md y pusimos overflow-y-auto para evitar recortes */}
             <div className={`rounded-xl shadow-2xl max-w-md w-full p-6 max-h-[95vh] overflow-y-auto custom-scrollbar animate-in zoom-in-95 ${isLocalDelivery ? 'bg-gray-50' : 'bg-white'}`}>
                 <div className="flex justify-between items-center mb-4">
                     <h3 className={`text-lg font-bold flex items-center gap-2 ${
                         isLocalDelivery ? 'text-black' : isOcean ? 'text-blue-900' : 'text-indigo-900'
                     }`}>
-                        {isLocalDelivery ? <><Box size={20}/> Datos del Pallet</> : isOcean ? <><Ship size={20}/> Datos Marítimos</> : 'Datos Finales'}
+                        {isDynamicPalletMode ? <><Box size={20}/> Datos de los Pallets</> : 'Datos Finales'}
                     </h3>
                     <button onClick={() => setShowModal(false)}><X size={20} className="text-gray-400 hover:text-red-500"/></button>
                 </div>
@@ -250,22 +280,36 @@ export default function ConsolidationCard({ request }: { request: any }) {
                         : 'bg-indigo-50 border-indigo-100 text-indigo-800'
                 }`}>
                     <p>
-                        {isLocalDelivery ? <Truck size={14} className="inline mr-1"/> : isOcean ? <Ship size={14} className="inline mr-1"/> : '📦 '} 
+                        {isDynamicPalletMode ? <Truck size={14} className="inline mr-1"/> : '📦 '} 
                         Estás preparando <strong>{request.packages?.length} paquetes</strong> para {
                             isLocalDelivery ? 'AURA LOGISTICS' : isOcean ? 'ENVÍO MARÍTIMO (OCEAN)' : 'ENVÍO INTERNACIONAL (AIR)'
-                        }. Ingresa las medidas finales.
+                        }. Arma los pallets en bodega e ingresa las medidas de cada uno.
                     </p>
                 </div>
 
+                {/* 💰 CAMPO DE VALOR DECLARADO TOTAL (SIEMPRE VISIBLE) */}
+                <div className="mb-4">
+                    <label className="block text-xs font-bold text-blue-600 uppercase mb-1 flex items-center gap-1">
+                        <DollarSign size={12}/> Valor Declarado Total ($)
+                    </label>
+                    <input 
+                        type="number" 
+                        value={finalValue}
+                        onChange={(e) => setFinalValue(e.target.value)}
+                        placeholder="0.00"
+                        className="w-full border border-blue-200 bg-blue-50/30 rounded-lg p-3 font-bold text-blue-800 focus:ring-2 focus:ring-blue-500 outline-none placeholder-blue-300"
+                    />
+                </div>
+
                 {/* ============================================================== */}
-                {/* 🚚 INTERFAZ DINÁMICA AURA (LOCAL DELIVERY)                     */}
+                {/* 🚚🚢 INTERFAZ DINÁMICA (MÚLTIPLES PALLETS) PARA LOCAL Y OCEAN  */}
                 {/* ============================================================== */}
-                {isLocalDelivery ? (
+                {isDynamicPalletMode ? (
                     <div className="max-h-64 overflow-y-auto pr-1 mb-4 space-y-3 custom-scrollbar">
                         {auraPieces.map((piece, index) => (
-                            <div key={index} className="bg-white p-3 rounded-xl border border-gray-300 relative shadow-sm">
+                            <div key={index} className={`p-3 rounded-xl border relative shadow-sm ${isOcean ? 'bg-blue-50/10 border-blue-200' : 'bg-white border-gray-300'}`}>
                                 <div className="flex justify-between items-center mb-3">
-                                    <span className="text-xs font-bold text-gray-800 uppercase bg-gray-100 px-2 py-1 rounded">
+                                    <span className={`text-xs font-bold uppercase px-2 py-1 rounded ${isOcean ? 'text-blue-800 bg-blue-100' : 'text-gray-800 bg-gray-100'}`}>
                                         Pallet / Bulto {index + 1}
                                     </span>
                                     {index > 0 && (
@@ -277,22 +321,22 @@ export default function ConsolidationCard({ request }: { request: any }) {
                                 <div className="grid grid-cols-4 gap-2">
                                     <div>
                                         <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Lbs</label>
-                                        <input type="number" placeholder="0" className="w-full border border-gray-300 p-2 rounded-lg text-center font-mono text-sm focus:ring-2 focus:ring-black outline-none"
+                                        <input type="number" placeholder="0" className={`w-full border p-2 rounded-lg text-center font-mono text-sm outline-none ${isOcean ? 'border-blue-200 focus:ring-2 focus:ring-blue-500' : 'border-gray-300 focus:ring-2 focus:ring-black'}`}
                                             value={piece.weight} onChange={(e) => handlePieceChange(index, 'weight', e.target.value)} />
                                     </div>
                                     <div>
                                         <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1 flex items-center gap-1"><Ruler size={10}/> L</label>
-                                        <input type="number" placeholder="In" className="w-full border border-gray-200 p-2 rounded-lg text-center font-mono text-sm focus:ring-2 focus:ring-black outline-none"
+                                        <input type="number" placeholder="In" className={`w-full border p-2 rounded-lg text-center font-mono text-sm outline-none ${isOcean ? 'border-blue-200 focus:ring-2 focus:ring-blue-500' : 'border-gray-200 focus:ring-2 focus:ring-black'}`}
                                             value={piece.length} onChange={(e) => handlePieceChange(index, 'length', e.target.value)} />
                                     </div>
                                     <div>
                                         <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">W</label>
-                                        <input type="number" placeholder="In" className="w-full border border-gray-200 p-2 rounded-lg text-center font-mono text-sm focus:ring-2 focus:ring-black outline-none"
+                                        <input type="number" placeholder="In" className={`w-full border p-2 rounded-lg text-center font-mono text-sm outline-none ${isOcean ? 'border-blue-200 focus:ring-2 focus:ring-blue-500' : 'border-gray-200 focus:ring-2 focus:ring-black'}`}
                                             value={piece.width} onChange={(e) => handlePieceChange(index, 'width', e.target.value)} />
                                     </div>
                                     <div>
                                         <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">H</label>
-                                        <input type="number" placeholder="In" className="w-full border border-gray-200 p-2 rounded-lg text-center font-mono text-sm focus:ring-2 focus:ring-black outline-none"
+                                        <input type="number" placeholder="In" className={`w-full border p-2 rounded-lg text-center font-mono text-sm outline-none ${isOcean ? 'border-blue-200 focus:ring-2 focus:ring-blue-500' : 'border-gray-200 focus:ring-2 focus:ring-black'}`}
                                             value={piece.height} onChange={(e) => handlePieceChange(index, 'height', e.target.value)} />
                                     </div>
                                 </div>
@@ -301,14 +345,18 @@ export default function ConsolidationCard({ request }: { request: any }) {
                         
                         <button 
                             onClick={handleAddPiece}
-                            className="w-full py-3 border-2 border-dashed border-gray-300 text-gray-500 rounded-xl hover:border-black hover:text-black transition-colors flex justify-center items-center gap-2 text-xs font-bold uppercase"
+                            className={`w-full py-3 border-2 border-dashed rounded-xl transition-colors flex justify-center items-center gap-2 text-xs font-bold uppercase ${
+                                isOcean 
+                                ? 'border-blue-300 text-blue-600 hover:border-blue-600 hover:bg-blue-50' 
+                                : 'border-gray-300 text-gray-500 hover:border-black hover:text-black'
+                            }`}
                         >
                             <Plus size={16} /> Agregar Pallet / Bulto Adicional
                         </button>
                     </div>
                 ) : (
                 /* ============================================================== */
-                /* ✈️/🚢 INTERFAZ ESTÁTICA ORIGINAL (AÉREO Y MARÍTIMO)             */
+                /* ✈️ INTERFAZ ESTÁTICA ORIGINAL (SÓLO AÉREO)                      */
                 /* ============================================================== */
                     <>
                         <div className="mb-4">
@@ -318,22 +366,7 @@ export default function ConsolidationCard({ request }: { request: any }) {
                                 value={finalWeight}
                                 onChange={(e) => setFinalWeight(e.target.value)}
                                 placeholder="Ej: 50.5"
-                                className={`w-full border rounded-lg p-3 font-mono text-lg outline-none focus:ring-2 ${
-                                    isOcean ? 'border-blue-300 focus:ring-blue-500' : 'border-gray-300 focus:ring-indigo-500'
-                                }`}
-                            />
-                        </div>
-
-                        <div className="mb-4">
-                            <label className="block text-xs font-bold text-blue-600 uppercase mb-1 flex items-center gap-1">
-                                <DollarSign size={12}/> Valor Declarado Total ($)
-                            </label>
-                            <input 
-                                type="number" 
-                                value={finalValue}
-                                onChange={(e) => setFinalValue(e.target.value)}
-                                placeholder="0.00"
-                                className="w-full border border-blue-200 bg-blue-50/30 rounded-lg p-3 font-bold text-blue-800 focus:ring-2 focus:ring-blue-500 outline-none placeholder-blue-300"
+                                className="w-full border border-gray-300 rounded-lg p-3 font-mono text-lg outline-none focus:ring-2 focus:ring-indigo-500"
                             />
                         </div>
 
@@ -358,7 +391,7 @@ export default function ConsolidationCard({ request }: { request: any }) {
                 )}
 
                 {/* ============================================================== */}
-                {/* 🔥 NUEVO PANEL: CARGOS ESPECIALES Y HAZMAT 🔥                  */}
+                {/* 🔥 PANEL: CARGOS ESPECIALES Y HAZMAT 🔥                        */}
                 {/* ============================================================== */}
                 <div className="bg-orange-50/50 p-3 rounded-xl border border-orange-200 mb-4 overflow-hidden shadow-sm">
                     <div className="flex items-center gap-2 mb-3">
@@ -411,6 +444,41 @@ export default function ConsolidationCard({ request }: { request: any }) {
                         </label>
                     </div>
                 </div>
+                {/* 🚢 CONTAINER MARÍTIMO - Solo Ocean */}
+{isOcean && (
+    <div className="bg-blue-50/50 p-3 rounded-xl border border-blue-200 mb-4 shadow-sm">
+        <div className="flex items-center gap-2 mb-3">
+            <Ship size={16} className="text-blue-600" />
+            <label className="text-xs font-bold text-blue-800 uppercase tracking-wider">
+                Container Usado
+            </label>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {CONTAINER_OPTIONS.map((c) => (
+                <label 
+                    key={c.id}
+                    className={`flex items-center gap-2 p-2.5 rounded-lg border cursor-pointer transition-all ${
+                        containerType === c.id 
+                            ? 'bg-blue-100 border-blue-500' 
+                            : 'bg-white border-blue-100 hover:bg-blue-50'
+                    }`}
+                >
+                    <input 
+                        type="radio" 
+                        name="containerType"
+                        checked={containerType === c.id}
+                        onChange={() => setContainerType(c.id)}
+                        className="w-4 h-4 text-blue-600 shrink-0" 
+                    />
+                    <div>
+                        <p className="text-[10px] font-bold text-gray-800 uppercase leading-tight">{c.label}</p>
+                        <p className="text-[10px] text-blue-600 font-bold mt-0.5">+${c.price}.00</p>
+                    </div>
+                </label>
+            ))}
+        </div>
+    </div>
+)}
 
                 <button 
                     onClick={handleProcess} 
@@ -422,8 +490,9 @@ export default function ConsolidationCard({ request }: { request: any }) {
                             ? 'bg-blue-600 hover:bg-blue-700'
                             : 'bg-indigo-600 hover:bg-indigo-700'
                     }`}
+                    
                 >
-                    {isSaving ? <Loader2 className="animate-spin"/> : (isLocalDelivery ? <Truck size={18}/> : isOcean ? <Ship size={18}/> : <Plane size={18}/>)}
+                    {isSaving ? <Loader2 className="animate-spin"/> : (isDynamicPalletMode ? <Truck size={18}/> : <Plane size={18}/>)}
                     Guardar y Habilitar Pago
                 </button>
             </div>
