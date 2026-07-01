@@ -70,7 +70,8 @@ export default function AccountContent() {
             let dobFormatted = 'N/A';
             if (user.dateOfBirth) {
                 const date = new Date(user.dateOfBirth);
-                dobFormatted = date.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+const utcDate = new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
+dobFormatted = utcDate.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
             }
             const code = user.countryCode || 'US';
             const countryObj = ALL_COUNTRIES.find(c => c.code.toLowerCase() === code.toLowerCase());

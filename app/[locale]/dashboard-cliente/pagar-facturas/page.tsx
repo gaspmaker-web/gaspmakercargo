@@ -98,11 +98,13 @@ export default async function PagarFacturasPage({ params: { locale } }: { params
         displayService = 'Entrega Local (Aura)';
         handlingFee = 0;
 
-    } else if (isOcean) {
+   } else if (isOcean) {
         // 🚢 ESCENARIO 4: CONSOLIDACIÓN MARÍTIMA (NUEVO)
         type = 'OCEAN_CONSOLIDATION';
         displayService = 'Consolidación Marítima';
-        handlingFee = 0; 
+        handlingFee = 0;
+        // 🔥 Para Ocean: usar totalAmount si ya está confirmado, si no usar subtotalAmount para mostrar en Pending Bills
+        finalSubtotal = (s.totalAmount && s.totalAmount > 0) ? s.totalAmount : (s.subtotalAmount || 0);
 
     } else {
         // ✈️ ESCENARIO 5: ENVÍO INTERNACIONAL / CONSOLIDACIÓN (AÉREO)
