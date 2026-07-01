@@ -5,7 +5,6 @@ import { getTranslations } from 'next-intl/server';
 import ClientDashboard from "@/components/dashboard/ClientDashboard"; 
 import OneSignalInit from "@/components/client/OneSignalInit"; 
 
-// 🔥 IMPORTAMOS TU NUEVA CALCULADORA GLOBAL
 import { calculateHandlingFee } from '@/lib/utils'; 
 
 export const dynamic = 'force-dynamic';
@@ -15,38 +14,25 @@ export async function generateMetadata({ params: { locale } }: { params: { local
   return { title: `${t('welcome', { name: '' })} | Gasp Maker Cargo` };
 }
 
-// --- CONFIGURACIÓN DE TARIFAS ---
 const STORAGE_FREE_DAYS = 30;
 const STORAGE_RATE_PER_CFT = 2.25;
 
-// 🔥 FUNCIÓN DE CÁLCULO SINCRONIZADA
 function calculateFees(pkg: any, t: any) {
     const now = new Date();
     const arrivalDate = new Date(pkg.createdAt);
-    
-    // 1. REVISIÓN CLAVE: ¿Hasta cuándo está pagado?
     const paidUntil = pkg.storagePaidUntil ? new Date(pkg.storagePaidUntil) : null;
-
-    // Cálculo informativo de días totales
     const totalDiff = Math.abs(now.getTime() - arrivalDate.getTime());
     const daysInWarehouse = Math.ceil(totalDiff / (1000 * 60 * 60 * 24)); 
-
-    // Medidas seguras (Fallback 12x12x10)
     const length = Number(pkg.lengthIn) || 12;
     const width = Number(pkg.widthIn) || 12;
     const height = Number(pkg.heightIn) || 10;
-    
-    // Volumen
     const volumeCft = (length * width * height) / 1728;
 
     let storageFee = 0;
     
-    // 2. LÓGICA DE COBRO (Igual a la página de detalle)
     if (paidUntil) {
-        // CASO A: TIENE FECHA DE PAGO (Ya pagó)
         const diffSincePaid = now.getTime() - paidUntil.getTime();
         const daysPending = Math.floor(diffSincePaid / (1000 * 60 * 60 * 24));
-
         if (daysPending > 0) {
             const dailyRate = (volumeCft * STORAGE_RATE_PER_CFT) / 30;
             storageFee = daysPending * dailyRate;
@@ -54,7 +40,6 @@ function calculateFees(pkg: any, t: any) {
             storageFee = 0; 
         }
     } else {
-        // CASO B: NUNCA HA PAGADO
         if (daysInWarehouse > STORAGE_FREE_DAYS) {
             const chargeableDays = daysInWarehouse - STORAGE_FREE_DAYS;
             const monthlyCost = volumeCft * STORAGE_RATE_PER_CFT;
@@ -63,20 +48,16 @@ function calculateFees(pkg: any, t: any) {
         }
     }
 
-    // 🔥 APLICAMOS LA NUEVA LÓGICA DE MANEJO ENTERPRISE
-    // Para que los sobres de Documentos Físicos del Buzón sean GRATIS (Handling $0.00)
     let handlingFee = 0;
     if (pkg.description === "Documento Físico (Enviado desde Buzón)") {
         handlingFee = 0;
     } else {
-        // Si es un paquete normal, usamos nuestra nueva función importada
         handlingFee = calculateHandlingFee(pkg.weightLbs);
     }
 
     return {
         ...pkg,
         carrierTrackingNumber: pkg.carrierTrackingNumber || pkg.gmcTrackingNumber,
-// 🔥 INTERCEPTOR MULTILINGÜE
         description: pkg.description === "Documento Físico (Enviado desde Buzón)" 
                      ? t('physicalDocument') 
                      : (pkg.description || (pkg.gmcTrackingNumber?.startsWith('GMC') ? 'Pickup Procesado' : t('noDescription'))),
@@ -85,8 +66,6 @@ function calculateFees(pkg: any, t: any) {
         pickupHandlingFee: parseFloat(handlingFee.toFixed(2)), 
         storageDebt: parseFloat(storageFee.toFixed(2)), 
         volumeCft: parseFloat(volumeCft.toFixed(2)),
-        
-        // 🔥 LÓGICA ENTERPRISE CORREGIDA: Solo bloquea si es mayor o igual a $1.00
         isBlocked: storageFee >= 1.00 
     };
 }
@@ -102,41 +81,27 @@ export default async function DashboardPage({ params: { locale } }: Props) {
     redirect('/login-cliente');
   }
 
- // -------------------------------------------------------------------------
-  // 🔥 NUEVA LÓGICA: VERIFICACIÓN DEL BUZÓN VIRTUAL (MAILBOX) Y KYC
-  // -------------------------------------------------------------------------
   const mailboxSubscription = await prisma.mailboxSubscription.findUnique({
     where: { userId: session.user.id }
   });
 
-  // Evaluamos el estado exacto del cliente para el Buzón
   const hasMailbox = !!mailboxSubscription;
   const isKycMissing = mailboxSubscription?.status === 'PENDING_USPS' && !mailboxSubscription.uspsForm1583Url;
   const isKycRejected = mailboxSubscription?.status === 'REJECTED';
-  
-  // ✅ ESTO SE QUEDA INTACTO (Para el Buzón Virtual)
   const planType = mailboxSubscription?.planType || null; 
-
   const needsKycUpload = isKycMissing || isKycRejected;
 
-  // 🔥 👇 SOLO AGREGAMOS ESTO (Para el Rango VIP) 👇 🔥
   const dbUser = await prisma.user.findUnique({
     where: { id: session.user.id }
   });
 
-  // Extraemos el plan ignorando la advertencia estricta de TypeScript
   const userPlan = (dbUser as any)?.planType;
-
-  // Combinamos ambos mundos: Si es VIP_WHOLESALE, tiene prioridad para el botón amarillo. 
-  // Si no es VIP, pasamos el plan normal del buzón virtual para que no se rompa el upselling.
   const resolvedPlanType = userPlan === 'VIP_WHOLESALE' ? 'VIP_WHOLESALE' : planType;
 
-  // 🔥 1. BUSCAMOS LAS TARJETAS GUARDADAS DEL CLIENTE
   const savedCards = await prisma.paymentMethod.findMany({
     where: { userId: session.user.id }
   });
 
-  // 1. Obtener Paquetes
   const allPackages = await prisma.package.findMany({
     where: { userId: session.user.id },
     orderBy: { createdAt: 'desc' },
@@ -150,23 +115,16 @@ export default async function DashboardPage({ params: { locale } }: Props) {
     }
   });
 
-  // 1.5 🔥 INICIALIZAR EL TRADUCTOR
   const t = await getTranslations({ locale, namespace: 'Dashboard' });
-
-  // 2. Normalizar y Calcular (Aplicando la lógica)
   const normalizedPackages = allPackages.map(pkg => calculateFees(pkg, t));
-
-  // --- FILTROS DE CONTADORES CORREGIDOS ---
 
   const isPickupPackage = (pkg: any) => {
       const isClientRetiro = pkg.selectedCourier === 'CLIENTE_RETIRO';
       const isServicePickup = pkg.courierService?.toUpperCase().includes('PICKUP') || 
                               pkg.courierService?.toUpperCase().includes('RECOGIDA') || 
                               pkg.courierService?.toUpperCase().includes('TIENDA');
-      
       const isConsolidatedPickup = pkg.consolidatedShipment?.serviceType === 'PICKUP' || 
                                    pkg.consolidatedShipment?.courierService?.toUpperCase().includes('TIENDA');
-
       return isClientRetiro || isServicePickup || isConsolidatedPickup;
   };
 
@@ -191,7 +149,7 @@ export default async function DashboardPage({ params: { locale } }: Props) {
     const s = pkg.status?.toUpperCase().trim() || '';
     return !['ENTREGADO', 'DELIVERED', 'CANCELADO', 'ENTREGADO_HISTORICO', 'EN_PROCESAMIENTO'].includes(s);
   });
-// 3. Deuda Global (Sincronizada y Protegida contra Driver Pickups)
+
   const pendingBills = await prisma.consolidatedShipment.findMany({
     where: { 
         userId: session.user.id, 
@@ -202,24 +160,28 @@ export default async function DashboardPage({ params: { locale } }: Props) {
 
   const totalDebt = pendingBills.reduce((acc, s) => {
       let handlingFee = 0;
-      let finalSubtotal = s.subtotalAmount || s.totalAmount || 0;
 
       const gmcNumber = s.gmcShipmentNumber?.toUpperCase() || '';
       const serviceType = s.serviceType?.toUpperCase() || '';
       const courierService = s.courierService?.toLowerCase() || '';
-      // 🔥 AÑADIMOS LA LECTURA DEL COURIER
       const selectedCourier = s.selectedCourier?.toUpperCase() || ''; 
+
+      // 🚢 OCEAN: Solo suma si ya tiene totalAmount confirmado (cliente seleccionó courier)
+      const isOcean = serviceType === 'OCEAN_CONSOLIDATION';
+      const oceanHasFinalPrice = isOcean && (s.totalAmount || 0) > 0;
+      
+      let finalSubtotal = isOcean 
+          ? (oceanHasFinalPrice ? (s.totalAmount || 0) : 0)
+          : (s.subtotalAmount || s.totalAmount || 0);
 
       const isIdPickup = gmcNumber.startsWith('PICKUP');
       const isStorage = serviceType === 'STORAGE_FEE' || serviceType.includes('STORAGE');
-
-      // 🚨 BLINDAJE DRIVER
       const isDriverInvolved = courierService.includes('driver') || courierService.includes('chofer') || courierService.includes('domicilio');
       
       const isWarehousePickup = (
           isIdPickup || 
           serviceType === 'PICKUP' || 
-          selectedCourier === 'CLIENTE_RETIRO' || // 🔥 LA LLAVE MAESTRA QUE FALTABA
+          selectedCourier === 'CLIENTE_RETIRO' ||
           courierService.includes('cita') ||  
           courierService.includes('tienda') || 
           courierService.includes('bodega') || 
@@ -229,13 +191,11 @@ export default async function DashboardPage({ params: { locale } }: Props) {
       if (isStorage) {
           handlingFee = 0; 
       } else if (isWarehousePickup && !isDriverInvolved) {
-          // Es Retiro en Bodega 
           let totalHandlingForPickup = 0;
           if (s.packages && s.packages.length > 0) {
               s.packages.forEach(pkg => {
                   const p = pkg as any; 
                   const weight = p.weightLbs || p.weight || p.peso || 1;
-                  
                   if (weight <= 10) totalHandlingForPickup += 2.50;
                   else if (weight <= 50) totalHandlingForPickup += 5.00;
                   else if (weight <= 150) totalHandlingForPickup += 12.50;
@@ -244,10 +204,10 @@ export default async function DashboardPage({ params: { locale } }: Props) {
           } else {
               totalHandlingForPickup = 2.50;
           }
-          finalSubtotal = 0; // Flete a cero
+          finalSubtotal = 0;
           handlingFee = totalHandlingForPickup;
       } else {
-          handlingFee = 0; // Se respeta el flete original para envíos
+          handlingFee = 0;
       }
 
       return acc + (finalSubtotal + handlingFee);
@@ -267,8 +227,7 @@ export default async function DashboardPage({ params: { locale } }: Props) {
                 enDestinoCount={enDestinoCount}
                 hasMailbox={hasMailbox}
                 needsKycUpload={needsKycUpload}
-                planType={resolvedPlanType} // 👈 USAMOS LA VARIABLE COMBINADA
-                // 🔥 2. LE PASAMOS LAS TARJETAS AL DASHBOARD
+                planType={resolvedPlanType}
                 savedCards={savedCards}
             />
         </div>

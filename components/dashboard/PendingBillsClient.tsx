@@ -206,7 +206,18 @@ if (res.ok && data.rates) {
         delete next[bill.id]; 
         return next; 
     });
-    const processed = data.rates.map((r: Rate) => ({ ...r, logo: getCarrierLogo(r.carrier) }));
+    // 🚢 Para Ocean, sumar containerFee al precio de cada rate
+const isOceanBillRate = bill.serviceType === 'OCEAN_CONSOLIDATION';
+const extraChargesObj = typeof bill.extraCharges === 'string' 
+    ? JSON.parse(bill.extraCharges) 
+    : (bill.extraCharges || {});
+const containerFeeAmount = isOceanBillRate ? (parseFloat(extraChargesObj.containerFee) || 0) : 0;
+
+const processed = data.rates.map((r: Rate) => ({ 
+    ...r, 
+    price: r.price + containerFeeAmount,
+    logo: getCarrierLogo(r.carrier) 
+}));
     if(processed.length === 0) processed.push({ id: 'std-gmc', carrier: 'Gasp Maker Cargo', service: 'Standard', price: (bill.weightLbs * 4.5) + 15, currency: 'USD', days: '5-7', logo: '/gaspmakercargoproject.png' });
     
     setRatesMap(prev => ({ ...prev, [bill.id]: processed }));
@@ -220,12 +231,12 @@ if (res.ok && data.rates) {
 }
 };
 
-  const handleSelectRate = (billId: string, rate: Rate) => {
-      setSelectedRateMap(prev => ({ ...prev, [billId]: rate }));
-      if (!selectedBillIds.includes(billId)) {
-          setSelectedBillIds(prev => [...prev, billId]);
-      }
-  };
+const handleSelectRate = (billId: string, rate: Rate) => {
+    setSelectedRateMap(prev => ({ ...prev, [billId]: rate }));
+    if (!selectedBillIds.includes(billId)) {
+        setSelectedBillIds(prev => [...prev, billId]);
+    }
+};
 
 // 4. CALCULAR TOTALES (CON AGRUPACIÓN INTELIGENTE DE CARGOS ESPECIALES)
   const calculateTotals = () => {
@@ -735,8 +746,9 @@ if (res.ok && data.rates) {
                                                      bill.courierService === 'Entregar en Tienda' || 
                                                      bill.description?.toUpperCase().includes('PICKUP');
 
-                                    const needsQuote = !isPickup && !selectedRate && (!bill.subtotalAmount || bill.subtotalAmount === 0);
-                                    
+                                   const needsQuote = !isPickup && !selectedRate && (
+    (!bill.subtotalAmount || bill.subtotalAmount === 0) || isOceanVisual
+) && !rates;
                                     return (
                                         <div key={bill.id} className={`relative bg-white p-5 rounded-2xl border-2 transition-all shadow-sm flex flex-col overflow-hidden ${isSelected ? 'border-gmc-dorado-principal ring-2 ring-yellow-50/50' : 'border-gray-100 hover:border-gray-300'}`}>
                                             
