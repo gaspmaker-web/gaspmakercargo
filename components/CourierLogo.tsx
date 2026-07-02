@@ -21,7 +21,7 @@ export default function CourierLogo({ courierName, className = "", width = 100, 
     src = "/dhl-1.svg";
   } else if (name.includes("ups")) {
     src = "/ups-united-parcel-service.svg";
-  } else if (name.includes("usps") || name.includes("postal")) {
+  } else if (name.includes("usps") || name.includes("postal") || name.includes("usaexport") || name.includes("u s a export")) {
     src = "/usps-logo.svg";
   }
 
