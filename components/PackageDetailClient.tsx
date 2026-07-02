@@ -33,11 +33,12 @@ import CourierLogo from "@/components/CourierLogo";
 import InteractiveEvidence from "@/components/client/InteractiveEvidence";
 
 const getCarrierLogo = (carrier: string): string => {
-  const c = carrier.toLowerCase();
-  if (c.includes("fedex")) return "/fedex-express-6.svg";
-  if (c.includes("dhl")) return "/dhl-1.svg";
-  if (c.includes("ups")) return "/ups-united-parcel-service.svg";
-  return "/gaspmakercargoproject.png";
+  const c = (carrier || '').toLowerCase();
+  if (c.includes('fedex')) return '/fedex-express-6.svg';
+  if (c.includes('dhl')) return '/dhl-1.svg';
+  if (c.includes('ups')) return '/ups-united-parcel-service.svg';
+  if (c.includes('usps') || c.includes('usaexport') || c.includes('postal')) return '/usps-logo.svg';
+  return '/gaspmakercargoproject.png';
 };
 
 const cleanCarrierName = (name: string) => {
