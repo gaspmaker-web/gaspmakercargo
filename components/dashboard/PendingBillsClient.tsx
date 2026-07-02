@@ -213,11 +213,18 @@ const extraChargesObj = typeof bill.extraCharges === 'string'
     : (bill.extraCharges || {});
 const containerFeeAmount = isOceanBillRate ? (parseFloat(extraChargesObj.containerFee) || 0) : 0;
 
-const processed = data.rates.map((r: Rate) => ({ 
-    ...r, 
-    price: r.price + containerFeeAmount,
-    logo: getCarrierLogo(r.carrier) 
-}));
+const processed = data.rates.map((r: Rate) => {
+    // 🚢 Solo sumar containerFee a rates marítimas, no aéreas
+    const isMaritimeRate = r.id?.includes('OCEAN') || 
+                           r.service?.toLowerCase().includes('maritime') ||
+                           r.service?.toLowerCase().includes('marítim');
+    const extraFee = isOceanBillRate && isMaritimeRate ? containerFeeAmount : 0;
+    return { 
+        ...r, 
+        price: r.price + extraFee,
+        logo: getCarrierLogo(r.carrier) 
+    };
+});
     if(processed.length === 0) processed.push({ id: 'std-gmc', carrier: 'Gasp Maker Cargo', service: 'Standard', price: (bill.weightLbs * 4.5) + 15, currency: 'USD', days: '5-7', logo: '/gaspmakercargoproject.png' });
     
     setRatesMap(prev => ({ ...prev, [bill.id]: processed }));
