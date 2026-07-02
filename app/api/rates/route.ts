@@ -221,7 +221,8 @@ if (isFloridaLocal && isOceanRequest) {
     // 🔥 Países con opción marítima disponible para paquetes individuales también
 const oceanEligibleCountries = ['BB', 'TT'];
 const showOcean = isOceanRequest || (isSinglePackage && oceanEligibleCountries.includes(targetCountryCode));
-    const showAir = isAirConsolidation || isSinglePackage;
+    // 🚢 Para Ocean, también mostrar opciones aéreas para comparación
+const showAir = isAirConsolidation || isSinglePackage || isOceanRequest;
     const showLocal = isFloridaLocal && (isLocalRequest || isSinglePackage);
 
     let rawRates: any[] = [];
