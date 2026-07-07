@@ -133,6 +133,105 @@ function calculateOceanRate_TT(cuft: number): number {
     return parseFloat((safeCuft * 10.30).toFixed(2));
 }
 
+// 🌊 GRENADA
+function calculateOceanRate_GD(cuft: number): number {
+    const safeCuft = Math.max(1, cuft);
+    if (safeCuft <= 5)  return 100.00;
+    if (safeCuft <= 10) return 150.00;
+    if (safeCuft <= 15) return 200.00;
+    if (safeCuft <= 20) return 260.00;
+    if (safeCuft <= 25) return 340.00;
+    return parseFloat((safeCuft * 14.60).toFixed(2));
+}
+
+// 🌊 JAMAICA
+function calculateOceanRate_JM_Ocean(cuft: number): number {
+    const safeCuft = Math.max(1, cuft);
+    if (safeCuft <= 5)  return 85.00;
+    if (safeCuft <= 10) return 125.00;
+    if (safeCuft <= 15) return 155.00;
+    if (safeCuft <= 20) return 200.00;
+    if (safeCuft <= 25) return 255.00;
+    return parseFloat((safeCuft * 10.05).toFixed(2));
+}
+
+// 🌊 ANTIGUA
+function calculateOceanRate_AG(cuft: number): number {
+    const safeCuft = Math.max(1, cuft);
+    if (safeCuft <= 5)  return 95.00;
+    if (safeCuft <= 10) return 140.00;
+    if (safeCuft <= 15) return 180.00;
+    if (safeCuft <= 20) return 230.00;
+    if (safeCuft <= 25) return 305.00;
+    return parseFloat((safeCuft * 12.65).toFixed(2));
+}
+
+// 🌊 DOMINICA
+function calculateOceanRate_DM(cuft: number): number {
+    const safeCuft = Math.max(1, cuft);
+    if (safeCuft <= 5)  return 95.00;
+    if (safeCuft <= 10) return 140.00;
+    if (safeCuft <= 15) return 180.00;
+    if (safeCuft <= 20) return 235.00;
+    if (safeCuft <= 25) return 305.00;
+    return parseFloat((safeCuft * 12.72).toFixed(2));
+}
+
+// 🌊 GUYANA
+function calculateOceanRate_GY(cuft: number): number {
+    const safeCuft = Math.max(1, cuft);
+    if (safeCuft <= 5)  return 95.00;
+    if (safeCuft <= 10) return 135.00;
+    if (safeCuft <= 15) return 170.00;
+    if (safeCuft <= 20) return 215.00;
+    if (safeCuft <= 25) return 280.00;
+    return parseFloat((safeCuft * 10.78).toFixed(2));
+}
+
+// 🌊 ST. LUCIA
+function calculateOceanRate_LC(cuft: number): number {
+    const safeCuft = Math.max(1, cuft);
+    if (safeCuft <= 5)  return 100.00;
+    if (safeCuft <= 10) return 150.00;
+    if (safeCuft <= 15) return 195.00;
+    if (safeCuft <= 20) return 255.00;
+    if (safeCuft <= 25) return 335.00;
+    return parseFloat((safeCuft * 14.23).toFixed(2));
+}
+
+// 🌊 ST. VINCENT
+function calculateOceanRate_VC(cuft: number): number {
+    const safeCuft = Math.max(1, cuft);
+    if (safeCuft <= 5)  return 100.00;
+    if (safeCuft <= 10) return 155.00;
+    if (safeCuft <= 15) return 205.00;
+    if (safeCuft <= 20) return 265.00;
+    if (safeCuft <= 25) return 345.00;
+    return parseFloat((safeCuft * 14.96).toFixed(2));
+}
+
+// 🌊 ST. MAARTEN
+function calculateOceanRate_MF(cuft: number): number {
+    const safeCuft = Math.max(1, cuft);
+    if (safeCuft <= 5)  return 100.00;
+    if (safeCuft <= 10) return 150.00;
+    if (safeCuft <= 15) return 195.00;
+    if (safeCuft <= 20) return 250.00;
+    if (safeCuft <= 25) return 330.00;
+    return parseFloat((safeCuft * 14.11).toFixed(2));
+}
+
+// 🌊 SURINAME
+function calculateOceanRate_SR(cuft: number): number {
+    const safeCuft = Math.max(1, cuft);
+    if (safeCuft <= 5)  return 95.00;
+    if (safeCuft <= 10) return 135.00;
+    if (safeCuft <= 15) return 175.00;
+    if (safeCuft <= 20) return 225.00;
+    if (safeCuft <= 25) return 295.00;
+    return parseFloat((safeCuft * 12.17).toFixed(2));
+}
+
 // ==========================================
 // 2. CONTROLADOR PRINCIPAL (API ROUTE)
 // ==========================================
@@ -228,7 +327,7 @@ if (isFloridaLocal && isOceanRequest) {
 }
     // 🔒 Cerrando los candados finales
     // 🔥 Países con opción marítima disponible para paquetes individuales también
-const oceanEligibleCountries = ['BB', 'TT'];
+const oceanEligibleCountries = ['BB', 'TT', 'GD', 'JM', 'AG', 'DM', 'GY', 'LC', 'VC', 'MF', 'SR'];
 const showOcean = isOceanRequest || (isSinglePackage && oceanEligibleCountries.includes(targetCountryCode));
     // 🚢 Para Ocean, también mostrar opciones aéreas para comparación
 const showAir = isAirConsolidation || isSinglePackage || isOceanRequest;
@@ -449,6 +548,32 @@ if (targetCountryCode === 'BB') {
             const priceOcean = calculateOceanRate_TT(totalCuft);
             rawRates.push({ id: 'GMC-TT-OCEAN', carrier: 'Gasp Maker Cargo', service: 'Trinidad Maritime', price: parseFloat(priceOcean.toFixed(2)), days: '14-21 days', logo: gmcLogo });
         }
+    }
+
+    // 🌊 NUEVOS DESTINOS MARÍTIMOS
+    const oceanRoutes: Record<string, {fn: (c: number) => number, service: string}> = {
+        'GD': { fn: calculateOceanRate_GD,       service: 'Grenada Maritime' },
+        'JM': { fn: calculateOceanRate_JM_Ocean,  service: 'Jamaica Maritime' },
+        'AG': { fn: calculateOceanRate_AG,        service: 'Antigua Maritime' },
+        'DM': { fn: calculateOceanRate_DM,        service: 'Dominica Maritime' },
+        'GY': { fn: calculateOceanRate_GY,        service: 'Guyana Maritime' },
+        'LC': { fn: calculateOceanRate_LC,        service: 'St. Lucia Maritime' },
+        'VC': { fn: calculateOceanRate_VC,        service: 'St. Vincent Maritime' },
+        'MF': { fn: calculateOceanRate_MF,        service: 'St. Maarten Maritime' },
+        'SR': { fn: calculateOceanRate_SR,        service: 'Suriname Maritime' },
+    };
+
+    if (showOcean && oceanRoutes[targetCountryCode]) {
+        const route = oceanRoutes[targetCountryCode];
+        const priceOcean = route.fn(totalCuft);
+        rawRates.push({
+            id: `GMC-${targetCountryCode}-OCEAN`,
+            carrier: 'Gasp Maker Cargo',
+            service: route.service,
+            price: parseFloat(priceOcean.toFixed(2)),
+            days: '14-21 days',
+            logo: gmcLogo
+        });
     }
     
     if (showAir) {
