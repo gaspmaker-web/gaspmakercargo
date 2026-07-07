@@ -111,17 +111,26 @@ function calculateRate_GD(weight: number): number {
     return weight * 2.50; 
 }
 
-// 🔥 NUEVA TARIFA MARÍTIMA (Basada en Pies Cúbicos - CUFT)
-function calculateOceanRate_Caribe(cuft: number): number {
+// 🔥 BARBADOS — Rate actualizado Dic 2025 (Laparkan nuevo rate)
+function calculateOceanRate_BB(cuft: number): number {
     const safeCuft = Math.max(1, cuft);
-    
+    if (safeCuft <= 5)  return 90.00;
+    if (safeCuft <= 10) return 128.00;
+    if (safeCuft <= 15) return 165.00;
+    if (safeCuft <= 20) return 209.00;
+    if (safeCuft <= 25) return 272.00;
+    return parseFloat((safeCuft * 10.90).toFixed(2));
+}
+
+// 🔥 TRINIDAD — Rate actualizado Dic 2025 (Laparkan nuevo rate)
+function calculateOceanRate_TT(cuft: number): number {
+    const safeCuft = Math.max(1, cuft);
     if (safeCuft <= 5)  return 77.00;
     if (safeCuft <= 10) return 123.00;
     if (safeCuft <= 15) return 155.00;
     if (safeCuft <= 20) return 195.00;
     if (safeCuft <= 25) return 255.00;
-    
-    return parseFloat((safeCuft * 10.20).toFixed(2));
+    return parseFloat((safeCuft * 10.30).toFixed(2));
 }
 
 // ==========================================
@@ -414,7 +423,7 @@ const showAir = isAirConsolidation || isSinglePackage || isOceanRequest;
         totalCuft = 1; 
     }
 
-    if (targetCountryCode === 'BB') {
+if (targetCountryCode === 'BB') {
         if (showAir) {
             const priceAir = (isVipWholesale && chargeableWeight >= 230) 
                 ? chargeableWeight * 2.80 
@@ -423,7 +432,7 @@ const showAir = isAirConsolidation || isSinglePackage || isOceanRequest;
         }
         
         if (showOcean) {
-            const priceOcean = calculateOceanRate_Caribe(totalCuft);
+            const priceOcean = calculateOceanRate_BB(totalCuft);
             rawRates.push({ id: 'GMC-BB-OCEAN', carrier: 'Gasp Maker Cargo', service: 'Barbados Maritime', price: parseFloat(priceOcean.toFixed(2)), days: '14-21 days', logo: gmcLogo });
         }
     }
@@ -437,7 +446,7 @@ const showAir = isAirConsolidation || isSinglePackage || isOceanRequest;
         }
         
         if (showOcean) {
-            const priceOcean = calculateOceanRate_Caribe(totalCuft);
+            const priceOcean = calculateOceanRate_TT(totalCuft);
             rawRates.push({ id: 'GMC-TT-OCEAN', carrier: 'Gasp Maker Cargo', service: 'Trinidad Maritime', price: parseFloat(priceOcean.toFixed(2)), days: '14-21 days', logo: gmcLogo });
         }
     }
