@@ -8,3 +8,7 @@ npm-debug.log
 .vercel
 *.mov
 .env*.local
+
+# PWA Service Worker (generado automaticamente en build)
+public/sw.js
+public/workbox-*.js
