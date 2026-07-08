@@ -566,7 +566,13 @@
     "selectRate": "Select Rate",
     "chooseOption": "Choose this option",
     "closeBtn": "Close and calculate again",
-    "alertError": "Please complete all fields with valid numbers."
+    "alertError": "Please complete all fields with valid numbers.",
+    "modeLabel": "Shipping type",
+    "modeAir": "Air",
+    "modeOcean": "Ocean",
+    "oceanHint": "Ocean freight is quoted by volume (cubic feet). Enter all 3 dimensions.",
+    "oceanDimsRequired": "Ocean shipments require all 3 dimensions (L × W × H).",
+    "oceanNoRates": "No ocean rate available for this destination."
   },
   "HowItWorksPage": {
     "title": "How It Works",

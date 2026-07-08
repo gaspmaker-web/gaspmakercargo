@@ -561,7 +561,7 @@
     "errorMismatch": "As senhas não coincidem.",
     "errorToken": "O link é inválido ou expirou."
   },
-  "CalculatorPage": {
+ "CalculatorPage": {
     "title": "Calculadora de Envio",
     "subtitle": "Obtenha uma estimativa instantânea de quanto custará trazer seu pacote.",
     "step1Title": "Para onde enviamos seu pacote?",
@@ -587,7 +587,13 @@
     "selectRate": "Selecionar Tarifa",
     "chooseOption": "Escolher esta opção",
     "closeBtn": "Fechar e calcular novamente",
-    "alertError": "Por favor, preencha todos os campos com números válidos."
+    "alertError": "Por favor, preencha todos os campos com números válidos.",
+    "modeLabel": "Tipo de envio",
+    "modeAir": "Aéreo",
+    "modeOcean": "Marítimo",
+    "oceanHint": "O frete marítimo é cotado por volume (pé cúbico). Informe as 3 dimensões.",
+    "oceanDimsRequired": "Envios marítimos exigem as 3 dimensões (C × L × A).",
+    "oceanNoRates": "Nenhuma tarifa marítima disponível para este destino."
   },
   "HowItWorksPage": {
     "title": "Como Funciona?",

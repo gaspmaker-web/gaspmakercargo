@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { 
     Calculator, Package, Smartphone, Laptop, 
-    Footprints, Shirt, SprayCan, Box, Info, X, Check, Truck, Loader2, AlertCircle 
+    Footprints, Shirt, SprayCan, Box, Info, X, Check, Truck, Loader2, AlertCircle,
+    Ship, Plane
 } from 'lucide-react';
 
 // 🔥 IMPORTAMOS TU DICCIONARIO MAESTRO DE PAÍSES 🔥
@@ -23,6 +24,30 @@ const cleanCarrierName = (name: string) => {
     return name; // Si no coincide con ninguno, devuelve el original
 };
 
+// 🌊 DESTINOS CON RUTA MARÍTIMA (Laparkan)
+// ⚠️ Los códigos DEBEN calzar con `oceanEligibleCountries` en /api/rates.
+// Nota: St. Maarten usa el código MF en el rate engine (no SX).
+const OCEAN_DESTINATIONS = [
+    { code: 'bb', name: 'Barbados' },
+    { code: 'tt', name: 'Trinidad & Tobago' },
+    { code: 'gd', name: 'Grenada' },
+    { code: 'jm', name: 'Jamaica' },
+    { code: 'ag', name: 'Antigua & Barbuda' },
+    { code: 'dm', name: 'Dominica' },
+    { code: 'gy', name: 'Guyana' },
+    { code: 'lc', name: 'St. Lucia' },
+    { code: 'vc', name: 'St. Vincent & the Grenadines' },
+    { code: 'mf', name: 'St. Maarten' },
+    { code: 'sr', name: 'Suriname' },
+].sort((a, b) => a.name.localeCompare(b.name));
+
+const OCEAN_CODES = OCEAN_DESTINATIONS.map(d => d.code);
+
+// --- HELPER: Identificar si una tarifa devuelta es marítima ---
+const isMaritimeRate = (rate: any) =>
+    (rate?.id && String(rate.id).includes('OCEAN')) ||
+    (rate?.service && /maritime/i.test(String(rate.service)));
+
 export default function CalculadoraClient() { 
     const t = useTranslations('CalculatorPage'); 
     const router = useRouter(); 
@@ -39,6 +64,9 @@ export default function CalculadoraClient() {
     const [country, setCountry] = useState('do'); // 🇩🇴 Por defecto DO
     const [activePreset, setActivePreset] = useState('other'); 
 
+    // 🚢 Modo de transporte: aéreo (default) o marítimo
+    const [transportMode, setTransportMode] = useState<'air' | 'ocean'>('air');
+
     // Estados de resultados
     const [apiRates, setApiRates] = useState<any[]>([]);
     const [isModalVisible, setIsModalVisible] = useState(false);
@@ -52,6 +80,21 @@ export default function CalculadoraClient() {
             .filter(c => c.code.toLowerCase() !== 'us') 
             .sort((a, b) => a.name.localeCompare(b.name));
     }, []);
+
+    // 🌊 Lista de opciones del dropdown según el modo activo
+    const countryOptions = transportMode === 'ocean' ? OCEAN_DESTINATIONS : sortedCountries;
+
+    // 🌊 Volumen (pies cúbicos) para mostrar en el modal marítimo
+    const displayCuft = useMemo(() => {
+        const toIn = (v: number | '') => {
+            const n = Number(v);
+            if (!n) return 0;
+            return dimUnit === 'cm' ? n / 2.54 : n;
+        };
+        const l = toIn(length), w = toIn(width), h = toIn(height);
+        if (!l || !w || !h) return 0;
+        return (l * w * h) / 1728;
+    }, [length, width, height, dimUnit]);
     
     // Definición de presets 
     const presets = {
@@ -78,6 +121,16 @@ export default function CalculadoraClient() {
         if(presetData.wg !== '') setWeightUnit('kg');
     };
 
+    // 🚢 Cambio de modo aéreo/marítimo
+    const handleModeChange = (mode: 'air' | 'ocean') => {
+        setTransportMode(mode);
+        setErrorMsg('');
+        // Si el país actual no tiene ruta marítima, saltamos a un destino ocean válido
+        if (mode === 'ocean' && !OCEAN_CODES.includes(country)) {
+            setCountry('bb');
+        }
+    };
+
     const handleEstimate = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
@@ -93,6 +146,16 @@ export default function CalculadoraClient() {
             return;
         }
 
+        // 🌊 Marítimo se cobra por pie cúbico → las 3 dimensiones son obligatorias
+        if (transportMode === 'ocean') {
+            const lNum = Number(length), wNum = Number(width), hNum = Number(height);
+            if (!lNum || !wNum || !hNum || lNum <= 0 || wNum <= 0 || hNum <= 0) {
+                alert(t('oceanDimsRequired'));
+                setIsLoading(false);
+                return;
+            }
+        }
+
         // 1. Convertir a IMPERIAL (Libras/Pulgadas) para el Backend
         const weightLbs = weightUnit === 'kg' ? weightNum * 2.20462 : weightNum;
         const lengthIn = dimUnit === 'cm' ? Number(length) / 2.54 : Number(length);
@@ -100,7 +163,9 @@ export default function CalculadoraClient() {
         const heightIn = dimUnit === 'cm' ? Number(height) / 2.54 : Number(height);
 
         // 2. Obtener Nombre del País
-        const selectedCountry = ALL_COUNTRIES.find(c => c.code.toLowerCase() === country.toLowerCase());
+        const selectedCountry =
+            ALL_COUNTRIES.find(c => c.code.toLowerCase() === country.toLowerCase())
+            || OCEAN_DESTINATIONS.find(c => c.code.toLowerCase() === country.toLowerCase());
 
         try {
             const res = await fetch('/api/rates', {
@@ -109,6 +174,8 @@ export default function CalculadoraClient() {
                 body: JSON.stringify({
                     weight: weightLbs, 
                     weightLbs: weightLbs,
+                    // 🚢 Le decimos al engine explícitamente qué servicio pedir
+                    serviceType: transportMode === 'ocean' ? 'OCEAN_CONSOLIDATION' : 'SHIPPING_INTL',
                     dimensions: {
                         length: lengthIn,
                         width: widthIn,
@@ -124,9 +191,28 @@ export default function CalculadoraClient() {
 
             const data = await res.json();
 
+            // 🛡️ Captura el guard marítimo del backend (400 sin dimensiones)
+            if (!res.ok && data?.error === 'OCEAN_DIMENSIONS_REQUIRED') {
+                setErrorMsg(t('oceanDimsRequired'));
+                return;
+            }
+
             if (res.ok && data.rates && data.rates.length > 0) {
-                setApiRates(data.rates);
-                setIsModalVisible(true);
+                // 🚢 Separamos resultados según el modo elegido
+                const filtered = data.rates.filter((r: any) =>
+                    transportMode === 'ocean' ? isMaritimeRate(r) : !isMaritimeRate(r)
+                );
+
+                if (filtered.length > 0) {
+                    setApiRates(filtered);
+                    setIsModalVisible(true);
+                } else {
+                    setErrorMsg(
+                        transportMode === 'ocean'
+                            ? t('oceanNoRates')
+                            : 'No se encontraron tarifas disponibles para esta ruta.'
+                    );
+                }
             } else {
                 setErrorMsg('No se encontraron tarifas disponibles para esta ruta.');
             }
@@ -169,6 +255,37 @@ export default function CalculadoraClient() {
                 
                 <div className="bg-white rounded-[2.5rem] shadow-2xl border border-gray-100 overflow-hidden">
                     <form onSubmit={handleEstimate} className="p-8 md:p-12">
+
+                        {/* 0. Modo de transporte: Aéreo / Marítimo */}
+                        <div className="mb-10">
+                            <label className="block text-sm font-black text-gray-400 uppercase tracking-widest mb-4">
+                                {t('modeLabel')}
+                            </label>
+                            <div className="grid grid-cols-2 gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() => handleModeChange('air')}
+                                    className={`flex items-center justify-center gap-2 py-4 rounded-2xl border-2 transition-all duration-300 ${transportMode === 'air' ? 'border-gmc-dorado-principal bg-yellow-50 text-black shadow-lg' : 'border-gray-100 bg-white text-gray-400 hover:border-gray-200'}`}
+                                >
+                                    <Plane size={20} className={transportMode === 'air' ? 'text-gmc-dorado-principal' : 'text-gray-300'} />
+                                    <span className="text-xs font-black uppercase tracking-widest">{t('modeAir')}</span>
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => handleModeChange('ocean')}
+                                    className={`flex items-center justify-center gap-2 py-4 rounded-2xl border-2 transition-all duration-300 ${transportMode === 'ocean' ? 'border-gmc-dorado-principal bg-yellow-50 text-black shadow-lg' : 'border-gray-100 bg-white text-gray-400 hover:border-gray-200'}`}
+                                >
+                                    <Ship size={20} className={transportMode === 'ocean' ? 'text-gmc-dorado-principal' : 'text-gray-300'} />
+                                    <span className="text-xs font-black uppercase tracking-widest">{t('modeOcean')}</span>
+                                </button>
+                            </div>
+                            {transportMode === 'ocean' && (
+                                <p className="mt-3 text-[11px] text-gray-400 font-bold flex items-center gap-2">
+                                    <Info size={13} className="text-gmc-dorado-principal shrink-0" />
+                                    {t('oceanHint')}
+                                </p>
+                            )}
+                        </div>
                         
                         {/* 1. Destino */}
                         <div className="mb-10">
@@ -189,8 +306,8 @@ export default function CalculadoraClient() {
                                     onChange={(e) => setCountry(e.target.value.toLowerCase())}
                                     className="w-full pl-14 pr-10 py-4 border-2 border-gray-100 bg-gray-50 rounded-2xl text-gray-800 font-bold appearance-none focus:outline-none focus:border-gmc-dorado-principal focus:bg-white transition-all cursor-pointer"
                                 >
-                                    {/* 🔥 GENERADO DESDE EL DICCIONARIO MAESTRO 🔥 */}
-                                    {sortedCountries.map(c => (
+                                    {/* 🔥 AÉREO: diccionario maestro · MARÍTIMO: destinos ocean 🔥 */}
+                                    {countryOptions.map(c => (
                                         <option key={c.code} value={c.code.toLowerCase()}>{c.name}</option>
                                     ))}
                                 </select>
@@ -228,7 +345,10 @@ export default function CalculadoraClient() {
                                 {/* A. DIMENSIONES (Izquierda) */}
                                 <div className="h-full flex flex-col justify-end">
                                     <div className="flex justify-between items-center mb-3">
-                                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-tighter">{t('dimensionsLabel')}</span>
+                                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-tighter">
+                                            {t('dimensionsLabel')}
+                                            {transportMode === 'ocean' && <span className="text-gmc-dorado-principal ml-1">*</span>}
+                                        </span>
                                         <div className="flex bg-gray-100 p-1 rounded-xl">
                                             <button type="button" onClick={() => setDimUnit('cm')} className={`px-3 py-1 text-[10px] font-black rounded-lg transition-all ${dimUnit === 'cm' ? 'bg-white shadow text-black' : 'text-gray-400'}`}>CM</button>
                                             <button type="button" onClick={() => setDimUnit('in')} className={`px-3 py-1 text-[10px] font-black rounded-lg transition-all ${dimUnit === 'in' ? 'bg-white shadow text-black' : 'text-gray-400'}`}>IN</button>
@@ -295,8 +415,10 @@ export default function CalculadoraClient() {
                             <div className="flex justify-between items-start">
                                 <div>
                                     <h2 className="text-3xl font-black font-garamond uppercase tracking-tighter">{t('resultTitle')}</h2>
-                                    <p className="text-gmc-dorado-principal text-[10px] font-black uppercase tracking-widest mt-1">
-                                        Estimated for {weight} {weightUnit}
+                                    <p className="text-gmc-dorado-principal text-[10px] font-black uppercase tracking-widest mt-1 flex items-center gap-1.5">
+                                        {transportMode === 'ocean'
+                                            ? <><Ship size={12} /> Estimated for {displayCuft.toFixed(2)} ft³</>
+                                            : <><Plane size={12} /> Estimated for {weight} {weightUnit}</>}
                                     </p>
                                 </div>
                                 <button onClick={() => setIsModalVisible(false)} className="bg-white/10 hover:bg-white/20 p-2 rounded-full transition-colors"><X size={24} /></button>
@@ -336,7 +458,9 @@ export default function CalculadoraClient() {
 
                                         <div className="grid grid-cols-2 gap-4 text-[10px] font-bold text-gray-500 border-t border-dashed border-gray-200 pt-4 mb-4 items-start">
                                             <div className="flex items-center gap-2">
-                                                <Truck size={14} className="text-gmc-dorado-principal shrink-0"/> 
+                                                {isMaritimeRate(rate)
+                                                    ? <Ship size={14} className="text-gmc-dorado-principal shrink-0"/>
+                                                    : <Truck size={14} className="text-gmc-dorado-principal shrink-0"/>}
                                                 <span>{rate.days}</span>
                                             </div>
                                             

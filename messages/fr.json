@@ -571,7 +571,7 @@
     "priceLabel": "VALEUR DU PRODUIT (USD)",
     "calcBtn": "Calculer le Coût",
     "calculating": "Calcul...",
-    "resultTitle": "Coût Estimado",
+    "resultTitle": "Coût Estimé",
     "freight": "Fret / Manutention",
     "insurance": "Assurance",
     "customs": "Droits de Douane",
@@ -587,7 +587,13 @@
     "selectRate": "Sélectionner Tarif",
     "chooseOption": "Choisir cette option",
     "closeBtn": "Fermer et recalculer",
-    "alertError": "Veuillez remplir tous les champs avec des nombres valides."
+    "alertError": "Veuillez remplir tous les champs avec des nombres valides.",
+    "modeLabel": "Type d'envoi",
+    "modeAir": "Aérien",
+    "modeOcean": "Maritime",
+    "oceanHint": "Le fret maritime est calculé au volume (pied cube). Saisissez les 3 dimensions.",
+    "oceanDimsRequired": "Les envois maritimes nécessitent les 3 dimensions (L × l × H).",
+    "oceanNoRates": "Aucun tarif maritime disponible pour cette destination."
   },
 "HowItWorksPage": {
     "title": "Comment Ça Marche ?",

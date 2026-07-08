@@ -325,10 +325,27 @@ if (isFloridaLocal && isOceanRequest) {
         message: 'El servicio marítimo no está disponible para direcciones locales en Florida.'
     });
 }
-    // 🔒 Cerrando los candados finales
+ // 🔒 Cerrando los candados finales
     // 🔥 Países con opción marítima disponible para paquetes individuales también
 const oceanEligibleCountries = ['BB', 'TT', 'GD', 'JM', 'AG', 'DM', 'GY', 'LC', 'VC', 'MF', 'SR'];
 const showOcean = isOceanRequest || (isSinglePackage && oceanEligibleCountries.includes(targetCountryCode));
+
+    // 🛡️ GUARD MARÍTIMO: bloquea cotización ocean sin dimensiones reales.
+    // Sin L×W×H, el cuft cae a 1 y devolvería el mínimo del tramo (precio irreal).
+    if (isOceanRequest) {
+        const hasRealDims = (len && len > 0) && (wid && wid > 0) && (hgt && hgt > 0);
+        const hasPallets = Array.isArray(body.auraPieces || auraDetails)
+                           && (body.auraPieces || auraDetails).length > 0;
+        if (!hasRealDims && !hasPallets) {
+            return NextResponse.json({
+                success: false,
+                rates: [],
+                error: 'OCEAN_DIMENSIONS_REQUIRED',
+                message: 'El servicio marítimo requiere las 3 dimensiones (largo, ancho y alto) para calcular el volumen.'
+            }, { status: 400 });
+        }
+    }
+
     // 🚢 Para Ocean, también mostrar opciones aéreas para comparación
 const showAir = isAirConsolidation || isSinglePackage || isOceanRequest;
     const showLocal = isFloridaLocal && (isLocalRequest || isSinglePackage);

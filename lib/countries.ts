@@ -22,6 +22,7 @@ export const ALL_COUNTRIES: Country[] = [
     { name: "Dominican Republic", code: "do", dial_code: "+1" }, // +1-809, 829, 849
     { name: "Grenada", code: "gd", dial_code: "+1-473" },
     { name: "Guadeloupe", code: "gp", dial_code: "+590" },
+    { name: "Guyana", code: "gy", dial_code: "+592" }, // 🌊 AGREGADO (destino marítimo Laparkan)
     { name: "Haiti", code: "ht", dial_code: "+509" },
     { name: "Jamaica", code: "jm", dial_code: "+1-876" },
     { name: "Martinique", code: "mq", dial_code: "+596" },
@@ -33,6 +34,7 @@ export const ALL_COUNTRIES: Country[] = [
     { name: "Saint Martin", code: "mf", dial_code: "+590" },
     { name: "Saint Vincent and the Grenadines", code: "vc", dial_code: "+1-784" },
     { name: "Sint Maarten", code: "sx", dial_code: "+1-721" },
+    { name: "Suriname", code: "sr", dial_code: "+597" }, // 🌊 AGREGADO (destino marítimo Laparkan)
     { name: "Trinidad and Tobago", code: "tt", dial_code: "+1-868" },
     { name: "Turks and Caicos Islands", code: "tc", dial_code: "+1-649" },
     { name: "U.S. Virgin Islands", code: "vi", dial_code: "+1-340" },

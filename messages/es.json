@@ -581,7 +581,7 @@
     "ctaBtnLocker": "Abrir mi Casillero Gratis",
     "ctaBtnCalc": "Calcular Envíos"
   },
-  "CalculatorPage": {
+"CalculatorPage": {
     "title": "Calculadora de Envíos",
     "subtitle": "Obtén un estimado instantáneo de cuánto costará traer tu paquete.",
     "step1Title": "¿A dónde enviamos tu paquete?",
@@ -607,7 +607,13 @@
     "selectRate": "Seleccionar Tarifa",
     "chooseOption": "Elegir esta opción",
     "closeBtn": "Cerrar y calcular de nuevo",
-    "alertError": "Por favor completa todos los campos con números válidos."
+    "alertError": "Por favor completa todos los campos con números válidos.",
+    "modeLabel": "Tipo de envío",
+    "modeAir": "Aéreo",
+    "modeOcean": "Marítimo",
+    "oceanHint": "El envío marítimo se cotiza por volumen (pie cúbico). Ingresá las 3 dimensiones.",
+    "oceanDimsRequired": "Para envíos marítimos necesitás ingresar las 3 dimensiones (L × W × H).",
+    "oceanNoRates": "No hay tarifa marítima disponible para este destino."
   },
   "HowItWorksPage": {
     "title": "¿Cómo Funciona?",
