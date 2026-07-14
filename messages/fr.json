@@ -684,8 +684,17 @@
     "airFreight": "Fret Aérien",
     "seaFreight": "Fret Maritime",
     "laparkanName": "Barbade Maritime (Laparkan)",
-    "trinidadMaritimeName": "Trinité Maritime (Laparkan)"
-  },
+    "trinidadMaritimeName": "Trinité Maritime (Laparkan)",
+    "dominicaMaritimeName": "Dominique Maritime (Laparkan)",
+    "guyanaMaritimeName": "Guyana Maritime (Laparkan)",
+    "jamaicaMaritimeName": "Jamaïque Maritime (Laparkan)",
+    "stLuciaMaritimeName": "Sainte-Lucie Maritime (Laparkan)",
+    "stMaartenMaritimeName": "Saint-Martin Maritime (Laparkan)",
+    "stVincentMaritimeName": "Saint-Vincent Maritime (Laparkan)",
+    "antiguaMaritimeName": "Antigua Maritime (Laparkan)",
+    "surinameMaritimeName": "Suriname Maritime (Laparkan)",
+    "grenadaMaritimeName": "Grenade Maritime (Tropical Shipping)"
+},
   "RegisterPage": {
     "title": "Enchanté de vous rencontrer !",
     "subtitle": "L'inscription est gratuite et ne prend qu'une ou deux minutes.",

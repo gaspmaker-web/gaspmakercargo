@@ -32,6 +32,7 @@ export default function LocationsClient() {
             mapUrl: "https://maps.google.com/?q=150+BWIA+Blvd,+Piarco,+Trinidad+and+Tobago",
             type: 'air'
         },
+        // 🚢 TRINIDAD MARITIME (Laparkan)
         {
             name: t('trinidadMaritimeName'),
             address: "Port Admin Bldg, Gnd Fl, Dock Road, Port of Spain, Trinidad",
@@ -40,6 +41,7 @@ export default function LocationsClient() {
             mapUrl: "https://maps.google.com/?q=Dock+Road+Port+of+Spain+Trinidad",
             type: 'sea'
         },
+        // ✈️ BARBADOS AIR
         {
             name: "Barbados (GCG Ground Services)",
             address: "GCG Ground Services Ltd, Barbados",
@@ -48,6 +50,7 @@ export default function LocationsClient() {
             mapUrl: "https://maps.google.com/?q=GCG+Ground+Services+Ltd,+Barbados",
             type: 'air'
         },
+        // 🚢 BARBADOS MARITIME (Laparkan)
         {
             name: t('laparkanName'),
             address: "Almac Trading Complex, Bridgetown, Barbados",
@@ -56,6 +59,88 @@ export default function LocationsClient() {
             mapUrl: "https://maps.google.com/?q=Almac+Trading+Complex,+Bridgetown,+Barbados",
             type: 'sea'
         },
+        // 🚢 DOMINICA MARITIME (Laparkan)
+        {
+            name: t('dominicaMaritimeName'),
+            address: "Balthazar Shipping Agencies, 47A Kennedy Ave, Roseau, Dominica",
+            phone: "+1 767 448-7523",
+            hours: "Mon-Fri: 8:00 AM - 4:30 PM",
+            mapUrl: "https://maps.google.com/?q=47A+Kennedy+Ave+Roseau+Dominica",
+            type: 'sea'
+        },
+        // 🚢 GUYANA MARITIME (Laparkan)
+        {
+            name: t('guyanaMaritimeName'),
+            address: "2-9 Lombard Street, Georgetown, Guyana",
+            phone: "+592 226-1095",
+            hours: "Mon-Fri: 8:00 AM - 4:30 PM",
+            mapUrl: "https://maps.google.com/?q=Lombard+Street+Georgetown+Guyana",
+            type: 'sea'
+        },
+        // 🚢 JAMAICA MARITIME (Laparkan)
+        {
+            name: t('jamaicaMaritimeName'),
+            address: "10 Second Street, Newport West, Kingston 13, Jamaica",
+            phone: "+876 901-7310",
+            hours: "Mon-Fri: 8:00 AM - 4:30 PM",
+            mapUrl: "https://maps.google.com/?q=10+Second+Street+Newport+West+Kingston+Jamaica",
+            type: 'sea'
+        },
+        // 🚢 ST. LUCIA MARITIME (Laparkan)
+        {
+            name: t('stLuciaMaritimeName'),
+            address: "Superior Shipping Services, Hospital Road, Castries, St. Lucia",
+            phone: "+758 458-1590",
+            hours: "Mon-Fri: 8:00 AM - 4:30 PM",
+            mapUrl: "https://maps.google.com/?q=Hospital+Road+Castries+Saint+Lucia",
+            type: 'sea'
+        },
+        // 🚢 ST. MAARTEN MARITIME (Laparkan)
+        {
+            name: t('stMaartenMaritimeName'),
+            address: "CIRExpress, #1 Ground Dove, Pointe Blanche, Philipsburg, St. Maarten",
+            phone: "+721 543-3519",
+            hours: "Mon-Fri: 8:00 AM - 4:30 PM",
+            mapUrl: "https://maps.google.com/?q=Pointe+Blanche+Philipsburg+Sint+Maarten",
+            type: 'sea'
+        },
+        // 🚢 ST. VINCENT MARITIME (Laparkan)
+        {
+            name: t('stVincentMaritimeName'),
+            address: "Wills Agencies, Sharpe Street, Kingstown, St. Vincent",
+            phone: "+784 457-2100",
+            hours: "Mon-Fri: 8:00 AM - 4:30 PM",
+            mapUrl: "https://maps.google.com/?q=Sharpe+Street+Kingstown+Saint+Vincent",
+            type: 'sea'
+        },
+        // 🚢 ANTIGUA MARITIME (Laparkan)
+        {
+            name: t('antiguaMaritimeName'),
+            address: "Laparkan (Antigua) Ltd, Popeshead Street, St. John's, Antigua",
+            phone: "+268 562-5314",
+            hours: "Mon-Fri: 8:30 AM - 4:30 PM | Sat: 9:00 AM - 1:00 PM",
+            mapUrl: "https://maps.google.com/?q=Popeshead+Street+St+Johns+Antigua",
+            type: 'sea'
+        },
+        // 🚢 SURINAME MARITIME (Laparkan)
+        {
+            name: t('surinameMaritimeName'),
+            address: "Laparkan Suriname, Nieuwe Charlesburgweg 95, Paramaribo, Suriname",
+            phone: "+597 426341",
+            hours: "Mon-Fri: 8:00 AM - 4:00 PM | Sat-Sun: 8:00 AM - 4:00 PM",
+            mapUrl: "https://maps.google.com/?q=Nieuwe+Charlesburgweg+95+Paramaribo+Suriname",
+            type: 'sea'
+        },
+        // 🚢 GRENADA MARITIME (Tropical Shipping)
+        {
+            name: t('grenadaMaritimeName'),
+            address: "Tropical Shipping, PWU Building, Port Highway, Tanteen, St. George's, Grenada",
+            phone: "+473 440-8787",
+            hours: "Mon-Fri: 8:00 AM - 4:00 PM",
+            mapUrl: "https://maps.google.com/?q=Port+Highway+Tanteen+St+Georges+Grenada",
+            type: 'sea'
+        },
+        // ✈️ KINGSTON AIR
         {
             name: "Kingston (AJAS Cargo)",
             address: "AJAS Cargo, Norman Manley Int'l Airport, Kingston",
@@ -63,6 +148,7 @@ export default function LocationsClient() {
             mapUrl: "https://maps.google.com/?q=AJAS+Cargo,+Kingston",
             type: 'air'
         },
+        // ✈️ ST. THOMAS AIR
         {
             name: "St. Thomas (US Virgin Islands)",
             address: "Cyril E. King Airport, Airport Rd, Charlotte Amalie West, St Thomas 00802",

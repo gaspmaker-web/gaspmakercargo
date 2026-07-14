@@ -693,7 +693,7 @@
     "yearsExperience": "Más de 5 años conectando a nuestros clientes con el mundo.",
     "hubInfo": "GMC LOGISTICS • MIAMI HUB • CARIBBEAN DIRECT"
   },
-  "Locations": {
+ "Locations": {
     "title": "Nuestras Ubicaciones",
     "subtitle": "Encuentra la oficina más cercana a ti.",
     "viewMap": "Ver Mapa",
@@ -702,7 +702,16 @@
     "airFreight": "Carga Aérea",
     "seaFreight": "Carga Marítima",
     "laparkanName": "Barbados Marítimo (Laparkan)",
-    "trinidadMaritimeName": "Trinidad Marítimo (Laparkan)"
+    "trinidadMaritimeName": "Trinidad Marítimo (Laparkan)",
+    "dominicaMaritimeName": "Dominica Marítimo (Laparkan)",
+    "guyanaMaritimeName": "Guyana Marítimo (Laparkan)",
+    "jamaicaMaritimeName": "Jamaica Marítimo (Laparkan)",
+    "stLuciaMaritimeName": "Santa Lucía Marítimo (Laparkan)",
+    "stMaartenMaritimeName": "St. Maarten Marítimo (Laparkan)",
+    "stVincentMaritimeName": "San Vicente Marítimo (Laparkan)",
+    "antiguaMaritimeName": "Antigua Marítimo (Laparkan)",
+    "surinameMaritimeName": "Surinam Marítimo (Laparkan)",
+    "grenadaMaritimeName": "Granada Marítimo (Tropical Shipping)"
   },
   "RegisterPage": {
     "title": "¡Encantados de conocerte!",

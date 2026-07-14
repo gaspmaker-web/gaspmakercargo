@@ -673,7 +673,7 @@
     "yearsExperience": "Mais de 5 anos conectando nossos clientes com o mundo.",
     "hubInfo": "LOGÍSTICA GMC • HUB MIAMI • DIRETO DO CARIBE"
   },
-  "Locations": {
+"Locations": {
     "title": "Nossas Localizações",
     "subtitle": "Encontre o escritório mais próximo de você.",
     "miami": "Centro de Distribuição de Miami",
@@ -684,8 +684,17 @@
     "airFreight": "Carga Aérea",
     "seaFreight": "Carga Marítima",
     "laparkanName": "Barbados Marítimo (Laparkan)",
-    "trinidadMaritimeName": "Trinidad Marítimo (Laparkan)"
-  },
+    "trinidadMaritimeName": "Trinidad Marítimo (Laparkan)",
+    "dominicaMaritimeName": "Dominica Marítimo (Laparkan)",
+    "guyanaMaritimeName": "Guiana Marítimo (Laparkan)",
+    "jamaicaMaritimeName": "Jamaica Marítimo (Laparkan)",
+    "stLuciaMaritimeName": "Santa Lúcia Marítimo (Laparkan)",
+    "stMaartenMaritimeName": "St. Maarten Marítimo (Laparkan)",
+    "stVincentMaritimeName": "São Vicente Marítimo (Laparkan)",
+    "antiguaMaritimeName": "Antígua Marítimo (Laparkan)",
+    "surinameMaritimeName": "Suriname Marítimo (Laparkan)",
+    "grenadaMaritimeName": "Granada Marítimo (Tropical Shipping)"
+},
   "RegisterPage": {
     "title": "Prazer em conhecê-lo!",
     "subtitle": "O registro é gratuito e leva apenas um ou dois minutos.",
