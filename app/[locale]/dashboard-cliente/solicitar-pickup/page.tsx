@@ -260,9 +260,7 @@ export default function SolicitarPickupPage() {
       setAddressError(null);
       setIsAddressValid(true);
       const newOrigin = place.formatted_address!;
-      setFormData(prev => ({ ...prev, originAddress: newOrigin }));
-      
-      calculateComplexRoute(newOrigin, formData.dropOffAddress);
+   setFormData(prev => ({ ...prev, originAddress: newOrigin }));
   };
 
   const handleDropoffChange = () => {
@@ -289,18 +287,27 @@ export default function SolicitarPickupPage() {
       setDropOffError(null);
       const newDropoff = place.formatted_address!;
       setFormData(prev => ({ ...prev, dropOffAddress: newDropoff }));
-      
-      calculateComplexRoute(formData.originAddress, newDropoff);
   };
 
-  useEffect(() => {
-      if (serviceType === 'DELIVERY' && formData.originAddress && formData.dropOffAddress) {
-          calculateComplexRoute(formData.originAddress, formData.dropOffAddress);
-      }
-  }, [formData.volumeTier]);
+ useEffect(() => {
+    if (!isLoaded || !serviceType || serviceType === 'PICKUP_WAREHOUSE') return;
+    
+    console.log('🔍 EFFECT:', { serviceType, origin: formData.originAddress, dropoff: formData.dropOffAddress });
+    
+    if (serviceType === 'SHIPPING' && formData.originAddress) {
+        calculateComplexRoute(formData.originAddress, '');
+    }
+    if (serviceType === 'DELIVERY' && formData.originAddress && formData.dropOffAddress) {
+        calculateComplexRoute(formData.originAddress, formData.dropOffAddress);
+    }
+}, [formData.originAddress, formData.dropOffAddress, formData.volumeTier, serviceType, isLoaded]);
 
-  const calculateComplexRoute = async (origin: string, destination: string) => {
-    if (!isLoaded || typeof google === 'undefined' || !origin) return;
+const calculateComplexRoute = async (origin: string, destination: string) => {
+    console.log('🚗 ROUTE:', { origin, destination });
+    if (!isLoaded || typeof google === 'undefined' || !origin) {
+        console.log('❌ BLOCKED');
+        return;
+    }
 
     try {
         const service = new google.maps.DistanceMatrixService();
@@ -343,6 +350,7 @@ export default function SolicitarPickupPage() {
             }
         }
 
+     console.log('✅ MILES:', totalMiles);
         setQuote(prev => ({ ...prev, distanceMiles: parseFloat(totalMiles.toFixed(1)) }));
 
     } catch (e) { console.error("Error calculando ruta:", e); }

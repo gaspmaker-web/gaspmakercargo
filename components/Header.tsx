@@ -38,7 +38,7 @@ export default function Header({ backButtonUrl }: HeaderProps) {
   const isSubPage = 
     pathname.includes('/referidos') ||
     pathname.includes('/pre-alerta') ||
-    pathname.includes('/solicitar-pickup') ||
+    pathname.includes('/dashboard-cliente/solicitar-pickup') ||
     pathname.includes('/compras') ||
     pathname.includes('/historial-solicitudes') ||
     pathname.includes('/en-transito') ||

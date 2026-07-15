@@ -36,14 +36,15 @@ export default function ServicesPage() {
             color: 'bg-purple-50 text-purple-600',
             borderColor: 'group-hover:border-purple-200'
         },
-        {
-            id: 'pickup',
-            icon: Truck,
-            title: t('pickupTitle'),
-            desc: t('pickupDesc'),
-            color: 'bg-orange-50 text-orange-600',
-            borderColor: 'group-hover:border-orange-200'
-        },
+    {
+    id: 'pickup',
+    icon: Truck,
+    title: t('pickupTitle'),
+    desc: t('pickupDesc'),
+    color: 'bg-orange-50 text-orange-600',
+    borderColor: 'group-hover:border-orange-200',
+    href: `/${locale}/solicitar-pickup`
+},
         {
             id: 'corporate',
             icon: Building2,
