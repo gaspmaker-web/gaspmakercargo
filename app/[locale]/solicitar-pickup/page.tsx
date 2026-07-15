@@ -85,6 +85,8 @@ export default function PublicQuotePage() {
 
     const originRef = useRef<google.maps.places.Autocomplete | null>(null);
     const destRef = useRef<google.maps.places.Autocomplete | null>(null);
+    const formSectionRef = useRef<HTMLDivElement>(null);
+    const serviceSelectorRef = useRef<HTMLDivElement>(null);
 
   const [formData, setFormData] = useState({
     originAddress: '', dropOffAddress: '',
@@ -251,13 +253,15 @@ useEffect(() => {
         setQuote(prev => ({ ...prev, distanceMiles: 0 }));
     };
 
-    const handleServiceSelect = (type: string) => {
-        setServiceType(type);
-        setAddressError(null);
-        setDropOffError(null);
-        setQuote(prev => ({ ...prev, distanceMiles: 0, distanceSurcharge: 0 }));
-        setTimeout(() => window.scrollTo({ top: 200, behavior: 'smooth' }), 100);
-    };
+  const handleServiceSelect = (type: string) => {
+    setServiceType(type);
+    setAddressError(null);
+    setDropOffError(null);
+    setQuote(prev => ({ ...prev, distanceMiles: 0, distanceSurcharge: 0 }));
+    setTimeout(() => {
+        formSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+};
 
     if (!isLoaded) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin text-gmc-dorado-principal" size={32} /></div>;
 
@@ -286,7 +290,7 @@ useEffect(() => {
             </div>
 
             {/* SERVICE SELECTOR */}
-            <div className="max-w-4xl mx-auto px-4 -mt-16 relative z-20">
+<div ref={serviceSelectorRef} className="max-w-4xl mx-auto px-4 -mt-16 relative z-20 scroll-mt-24">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                     <button
                         onClick={() => handleServiceSelect('SHIPPING')}
@@ -320,9 +324,9 @@ useEffect(() => {
                 </div>
             </div>
 
-            {/* QUOTE FORM */}
-            {serviceType && (
-                <div className="max-w-5xl mx-auto px-4 pb-20 animate-fadeIn">
+           {/* QUOTE FORM */}
+{serviceType && (
+    <div ref={formSectionRef} className="max-w-5xl mx-auto px-4 pb-20 animate-fadeIn scroll-mt-24">
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
                         {/* LEFT: FORM */}
@@ -630,17 +634,21 @@ useEffect(() => {
                 </div>
             )}
 
-            {/* EMPTY STATE */}
+     {/* EMPTY STATE */}
             {!serviceType && (
                 <div className="max-w-2xl mx-auto px-4 py-16 text-center">
-                    <div className="bg-white rounded-2xl p-10 shadow-sm border border-gray-100">
-                        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <ArrowRight size={24} className="text-gray-400 -rotate-90" />
+                    <button
+                        type="button"
+                        onClick={() => serviceSelectorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                        className="w-full bg-white rounded-2xl p-10 shadow-sm border border-gray-100 hover:shadow-md hover:border-gmc-dorado-principal/40 active:scale-[0.98] transition-all cursor-pointer group"
+                    >
+                        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-gmc-dorado-principal/10 transition-colors">
+                            <ArrowRight size={24} className="text-gray-400 -rotate-90 group-hover:text-gmc-dorado-principal group-hover:-translate-y-1 transition-all" />
                         </div>
                         <p className="text-gray-500 font-medium">
                             {t.has('selectServicePrompt') ? t('selectServicePrompt') : 'Select a service above to get your quote'}
                         </p>
-                    </div>
+                    </button>
                 </div>
             )}
         </div>

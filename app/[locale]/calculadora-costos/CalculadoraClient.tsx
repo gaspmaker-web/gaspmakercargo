@@ -73,16 +73,40 @@ export default function CalculadoraClient() {
     const [isLoading, setIsLoading] = useState(false);
     const [errorMsg, setErrorMsg] = useState('');
     
-    // 🔥 FILTRAMOS Y ORDENAMOS LA LISTA MAESTRA
+  // 🔥 FILTRAMOS, TRADUCIMOS Y ORDENAMOS LA LISTA MAESTRA (AÉREO)
     const sortedCountries = useMemo(() => {
         return ALL_COUNTRIES
-            // 🇺🇸 ELIMINADO POR LÓGICA DE NEGOCIO (No se cotiza hacia USA)
             .filter(c => c.code.toLowerCase() !== 'us') 
+            .map(country => {
+                let translatedName = country.name;
+                try {
+                    // Buscamos la traducción usando el código en MAYÚSCULAS (ej: "DO")
+                    const translated = t(`destinations.${country.code.toUpperCase()}` as any);
+                    if (!translated.includes('destinations.')) {
+                        translatedName = translated;
+                    }
+                } catch (error) {}
+                return { ...country, name: translatedName };
+            })
             .sort((a, b) => a.name.localeCompare(b.name));
-    }, []);
+    }, [t]);
 
-    // 🌊 Lista de opciones del dropdown según el modo activo
-    const countryOptions = transportMode === 'ocean' ? OCEAN_DESTINATIONS : sortedCountries;
+    // 🌊 TRADUCIMOS Y ORDENAMOS LA LISTA MARÍTIMA
+    const oceanDestinationsTranslated = useMemo(() => {
+        return OCEAN_DESTINATIONS.map(country => {
+            let translatedName = country.name;
+            try {
+                const translated = t(`destinations.${country.code.toUpperCase()}` as any);
+                if (!translated.includes('destinations.')) {
+                    translatedName = translated;
+                }
+            } catch (error) {}
+            return { ...country, name: translatedName };
+        }).sort((a, b) => a.name.localeCompare(b.name));
+    }, [t]);
+
+    // 🌐 Lista final del dropdown según el modo activo
+    const countryOptions = transportMode === 'ocean' ? oceanDestinationsTranslated : sortedCountries;
 
     // 🌊 Volumen (pies cúbicos) para mostrar en el modal marítimo
     const displayCuft = useMemo(() => {

@@ -1,35 +1,52 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { 
-    Truck, MapPin, Warehouse, CreditCard, Info, Loader2, Package, Check, 
+import {
+    Truck, MapPin, Warehouse, CreditCard, Info, Loader2, Package, Check,
     ChevronDown, ChevronUp, Calendar, Phone, Weight, AlertTriangle, Clock,
-    Car
+    Car, Ruler
 } from 'lucide-react';
 import { useJsApiLoader, Autocomplete } from '@react-google-maps/api';
 import { getProcessingFee } from '@/lib/stripeCalc';
 import { useTranslations } from 'next-intl';
 
-// 🔥 IMPORTAMOS EL MOTOR AURA Y SU INTERFAZ
-import { calculateAuraLocalDelivery, AuraBox } from '@/lib/aura-engine';
+// 🔥 IMPORTAMOS EL MOTOR AURA ENTERPRISE
+import { calculateAuraLocalDelivery, getVehicleByWeight, AuraBox } from '@/lib/aura-engine';
 
 // --- CONFIGURACIÓN DE TARIFAS (HANDLING RATES SOLO PARA BODEGA) ---
-const FEE_MINI = 2.50;       // 0-10 lbs 
+const FEE_MINI = 2.50;       // 0-10 lbs
 const FEE_STANDARD = 5.00;   // 11-50 lbs
 const FEE_HEAVY = 12.50;     // 51-150 lbs
-const FEE_PALLET = 30.00;    // +150 lbs 
+const FEE_PALLET = 30.00;    // +150 lbs
 
 const GMC_WAREHOUSE_ADDRESS = "1861 NW 22nd St, Miami, FL 33142";
 const ALLOWED_COUNTIES = ['Miami-Dade County', 'Broward County'];
 const GOOGLE_LIBRARIES: ("places")[] = ["places"];
 
+// 🔥 RATE TABLE VISUAL — 13 rangos + 151+ (igual que cotizador público)
+const WEIGHT_OPTIONS = [
+    { id: 'w_0_40',    label: '0 - 40 Lbs',              estWeight: 40 },
+    { id: 'w_41_50',   label: '41 - 50 Lbs',             estWeight: 50 },
+    { id: 'w_51_60',   label: '51 - 60 Lbs',             estWeight: 60 },
+    { id: 'w_61_70',   label: '61 - 70 Lbs',             estWeight: 70 },
+    { id: 'w_71_80',   label: '71 - 80 Lbs',             estWeight: 80 },
+    { id: 'w_81_90',   label: '81 - 90 Lbs',             estWeight: 90 },
+    { id: 'w_91_100',  label: '91 - 100 Lbs',            estWeight: 100 },
+    { id: 'w_101_110', label: '101 - 110 Lbs',           estWeight: 110 },
+    { id: 'w_111_120', label: '111 - 120 Lbs',           estWeight: 120 },
+    { id: 'w_121_130', label: '121 - 130 Lbs',           estWeight: 130 },
+    { id: 'w_131_140', label: '131 - 140 Lbs',           estWeight: 140 },
+    { id: 'w_141_150', label: '141 - 150 Lbs',           estWeight: 150 },
+    { id: 'w_151_plus', label: '151+ Lbs (Pallet / Heavy)', estWeight: 0 },
+];
+
 export default function SolicitarPickupPage() {
   const t = useTranslations('Pickup');
-  const tBills = useTranslations('PendingBills'); 
+  const tBills = useTranslations('PendingBills');
   const router = useRouter();
-  
+
   const inventorySectionRef = useRef<HTMLDivElement>(null);
   const routeSectionRef = useRef<HTMLDivElement>(null);
 
@@ -39,49 +56,39 @@ export default function SolicitarPickupPage() {
     libraries: GOOGLE_LIBRARIES
   });
 
- // 🔥 MATRIZ DE PESO 100% MULTILINGÜE
-  const WEIGHT_TIERS = [
-    { id: 'w_mini', label: t.has('sizeSmall') ? t('sizeSmall') : 'Ligero (0 - 10 Lbs)', estWeight: 10 }, 
-    { id: 'w_std', label: t.has('sizeMedium') ? t('sizeMedium') : 'Estándar (11 - 50 Lbs)', estWeight: 45 },
-    { id: 'w_hvy', label: t.has('sizeLarge') ? t('sizeLarge') : 'Pesado (51 - 150 Lbs)', estWeight: 140 },
-    { id: 'w_pallet', label: t.has('sizeHeavy') ? t('sizeHeavy') : 'Pallet (+151 Lbs)', estWeight: 0 }, 
-  ];
-
- // 🔥 OPCIONES VISUALES DE VEHÍCULOS AUTOMATIZADAS (100% MULTILINGÜE)
-  const VEHICLE_OPTIONS = [
-    { 
-      id: 'v_30', 
-      title: t.has('volLow') ? t('volLow') : 'Auto / SUV', 
-      // ✅ AHORA SÍ LEE LA TRADUCCIÓN DEL JSON
-      desc: t.has('volLowDesc') ? t('volLowDesc') : 'Ideal para cajas pequeñas o documentos', 
-      icon: <Car size={26} className="text-gray-600 group-hover:text-gmc-dorado-principal transition-colors" />
-    },
-    { 
-      id: 'v_55', 
-      title: t.has('volMed') ? t('volMed') : 'Minivan / Transit Connect', 
-      desc: t.has('volMedDesc') ? t('volMedDesc', { height: 48 }) : 'Muebles pequeños o varias cajas medianas (Máx. 48" de altura)', 
-      icon: <Truck size={26} className="text-gray-600 group-hover:text-gmc-dorado-principal transition-colors" />
-    },
-    { 
-      id: 'v_75', 
-      title: t.has('volHigh') ? t('volHigh') : 'Cargo Van', 
-      desc: t.has('volHighDesc') ? t('volHighDesc', { height: 72 }) : 'Hasta 1 Pallet completo de mercancía (Máx. 72" de altura)', 
-      icon: <Warehouse size={26} className="text-gray-600 group-hover:text-gmc-dorado-principal transition-colors" />
-    },
-    { 
-      id: 'v_250', 
-      title: t.has('volFull') ? t('volFull') : 'Camión de Carga', 
-      // ✅ AHORA SÍ LEE LA TRADUCCIÓN DEL JSON
-      desc: t.has('volFullDesc') ? t('volFullDesc') : '2 Pallets o mercancía sobredimensionada', 
-      icon: <Package size={26} className="text-gray-600 group-hover:text-gmc-dorado-principal transition-colors" />
-    }
-  ];
+  // 🚛 VEHICLE INFO MAP (traducido, igual que cotizador público)
+  const VEHICLE_DISPLAY: Record<string, { icon: React.ReactNode; title: string; desc: string; dims: string }> = {
+      CAR_SUV: {
+          icon: <Car size={22} className="text-blue-600" />,
+          title: t('volLow'),
+          desc: t.has('carSuvDesc') ? t('carSuvDesc') : 'Small boxes, documents (0-50 lbs)',
+          dims: t.has('carSuvDims') ? t('carSuvDims') : 'Max. 4 ft long'
+      },
+      MINIVAN: {
+          icon: <Truck size={22} className="text-green-600" />,
+          title: t('volMed'),
+          desc: t.has('minivanDesc') ? t('minivanDesc') : 'Small furniture, medium boxes (51-150 lbs)',
+          dims: t.has('minivanDims') ? t('minivanDims') : 'Max. 7 ft long · 4 ft tall'
+      },
+      CARGO_VAN: {
+          icon: <Warehouse size={22} className="text-orange-600" />,
+          title: t('volHigh'),
+          desc: t.has('cargoVanDesc') ? t('cargoVanDesc') : '1-2 pallets, heavy cargo (151-800 lbs)',
+          dims: t.has('cargoVanDims') ? t('cargoVanDims') : 'Max. 12 ft long · 6 ft tall'
+      },
+      BOX_TRUCK: {
+          icon: <Package size={22} className="text-red-600" />,
+          title: t('volFull'),
+          desc: t.has('boxTruckDesc') ? t('boxTruckDesc') : '2+ pallets, oversized (800+ lbs)',
+          dims: t.has('boxTruckDims') ? t('boxTruckDims') : 'Max. 20 ft long · 8 ft tall'
+      }
+  };
 
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const isPayingRef = useRef(false);
 
-  const [serviceType, setServiceType] = useState<string | null>('PICKUP_WAREHOUSE'); 
+  const [serviceType, setServiceType] = useState<string | null>('PICKUP_WAREHOUSE');
   const [inventory, setInventory] = useState<any[]>([]);
   const [inventoryLoading, setInventoryLoading] = useState(true);
   const [cards, setCards] = useState<any[]>([]);
@@ -92,22 +99,46 @@ export default function SolicitarPickupPage() {
   const [dropOffError, setDropOffError] = useState<string | null>(null);
   const [timeError, setTimeError] = useState<string | null>(null);
   const [isAddressValid, setIsAddressValid] = useState(false);
-  const [isTimeValid, setIsTimeValid] = useState(false); 
+  const [isTimeValid, setIsTimeValid] = useState(false);
 
-  const [quote, setQuote] = useState({ 
-      total: 0, subtotal: 0, processingFee: 0, baseFare: 0, distanceSurcharge: 0, distanceMiles: 0, appliedStrategy: 'WEIGHT' 
+  const [quote, setQuote] = useState({
+      total: 0, subtotal: 0, processingFee: 0, baseFare: 0, distanceSurcharge: 0, distanceMiles: 0, appliedStrategy: 'WEIGHT'
   });
-  
+
   const [orderId, setOrderId] = useState<string | null>(null);
   const originRef = useRef<google.maps.places.Autocomplete | null>(null);
   const destRef = useRef<google.maps.places.Autocomplete | null>(null);
 
-  // Inicializamos con los IDs correctos (w_mini)
   const [formData, setFormData] = useState({
     originAddress: '', originCity: '', pickupDate: '', description: '', contactPhone: '',
     dropOffAddress: '', dropOffCity: '', dropOffContact: '', dropOffPhone: '',
-    weightTier: 'w_mini', volumeTier: 'v_30', exactWeight: 0, termsAccepted: false
+    weightTier: 'w_0_40', exactWeight: 0,
+    heavyVehicle: 'CARGO_VAN', palletCount: 1,
+    termsAccepted: false
   });
+
+  // 🔥 PESO CALCULADO (igual que cotizador público)
+  const calcWeight = useMemo(() => {
+      if (formData.weightTier === 'w_151_plus') {
+          return formData.exactWeight > 0 ? formData.exactWeight : 151;
+      }
+      const tier = WEIGHT_OPTIONS.find(w => w.id === formData.weightTier);
+      return tier?.estWeight || 40;
+  }, [formData.weightTier, formData.exactWeight]);
+
+  // 🔥 VEHÍCULO AUTO-ASIGNADO (igual que cotizador público)
+  const autoVehicle = useMemo(() => {
+      if (formData.weightTier === 'w_151_plus') {
+          // Para 151+, el cliente elige entre Cargo Van y Box Truck
+          return formData.heavyVehicle === 'BOX_TRUCK'
+              ? { type: 'BOX_TRUCK', rate: 2.50, maxLength: '20 ft', maxHeight: '8 ft' }
+              : { type: 'CARGO_VAN', rate: 1.75, maxLength: '12 ft', maxHeight: '6 ft' };
+      }
+      return getVehicleByWeight(calcWeight);
+  }, [calcWeight, formData.weightTier, formData.heavyVehicle]);
+
+  const vehicleInfo = VEHICLE_DISPLAY[autoVehicle.type] || VEHICLE_DISPLAY.CAR_SUV;
+  const isPalletMode = formData.weightTier === 'w_151_plus';
 
   // --- 1. CARGAR DATOS ---
   useEffect(() => {
@@ -125,13 +156,13 @@ export default function SolicitarPickupPage() {
                   const invData = await invRes.json();
                   setInventory(invData.packages || []);
               }
-          } catch (error) { console.error(error); } 
+          } catch (error) { console.error(error); }
           finally { setInventoryLoading(false); }
       };
       fetchData();
   }, []);
 
-  // --- 2. MANEJO DE SELECCIÓN ---
+  // --- 2. MANEJO DE SELECCIÓN (con auto-scroll a la sección correcta) ---
   const handleServiceSelect = (type: string) => {
       setServiceType(type);
       setAddressError(null);
@@ -139,14 +170,15 @@ export default function SolicitarPickupPage() {
       setTimeError(null);
       setQuote(prev => ({ ...prev, distanceMiles: 0, distanceSurcharge: 0 }));
       setTimeout(() => {
-          window.scrollTo({ top: 150, behavior: 'smooth' });
+          const target = type === 'PICKUP_WAREHOUSE' ? inventorySectionRef.current : routeSectionRef.current;
+          target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 100);
   };
 
- // --- 3. CÁLCULOS (POTENCIADOS POR AURA ENGINE) ---
+  // --- 3. CÁLCULOS (AURA ENGINE + VEHICLE OVERRIDE, igual que cotizador público) ---
   useEffect(() => {
     if (!isLoaded && serviceType !== 'PICKUP_WAREHOUSE') return;
-    
+
     const calculateTotal = () => {
         let subtotal = 0;
         let baseFare = 0;
@@ -157,74 +189,54 @@ export default function SolicitarPickupPage() {
              let totalHandling = 0;
              if (inventory && inventory.length > 0) {
                  inventory.forEach(pkg => {
-                     const weight = pkg.weight || pkg.peso || 1; 
-                     if (weight <= 10) totalHandling += FEE_MINI;       
-                     else if (weight <= 50) totalHandling += FEE_STANDARD;   
-                     else if (weight <= 150) totalHandling += FEE_HEAVY;      
-                     else totalHandling += FEE_PALLET;     
+                     const weight = pkg.weight || pkg.peso || 1;
+                     if (weight <= 10) totalHandling += FEE_MINI;
+                     else if (weight <= 50) totalHandling += FEE_STANDARD;
+                     else if (weight <= 150) totalHandling += FEE_HEAVY;
+                     else totalHandling += FEE_PALLET;
                  });
              }
-             subtotal = totalHandling; 
+             subtotal = totalHandling;
              baseFare = totalHandling;
-        } 
-        // B. LÓGICA DE CALLE (Pickup / Delivery con AURA)
+        }
+        // B. LÓGICA DE CALLE (Pickup / Delivery con AURA ENTERPRISE)
         else {
-            const selectedTier = WEIGHT_TIERS.find(t => t.id === formData.weightTier);
-            let calcWeight = formData.weightTier === 'w_pallet' ? formData.exactWeight : (selectedTier?.estWeight || 10);
-            if (calcWeight <= 0) calcWeight = 10;
-
-            // 2. MATRIZ DE TRADUCCIÓN EXACTA (De UI a Tetris 3D Aura)
-            let simulatedLength = 10, simulatedWidth = 10, simulatedHeight = 10;
-
-            switch (formData.volumeTier) {
-                case 'v_30': 
-                    // Auto/SUV -> Simula caja pequeña (Mantiene el peso volumétrico en ~9 lbs -> Cobra $25)
-                    simulatedLength = 15; simulatedWidth = 10; simulatedHeight = 10; 
-                    break;
-                case 'v_55': 
-                    // Minivan/Pickup -> Simula media carga (Mantiene el peso vol. en ~47 lbs -> Cobra $45)
-                    simulatedLength = 30; simulatedWidth = 20; simulatedHeight = 13; 
-                    break;
-                case 'v_75': 
-                    // Cargo Van -> Simula 1 Pallet Full (~832 lbs -> Cobra $150)
-                    simulatedLength = 40; simulatedWidth = 48; simulatedHeight = 72; 
-                    break;
-                case 'v_250': 
-                    // Camión -> Simula 2 Pallets (~1664 lbs -> Fuerza Lógica Multi-Pallet)
-                    simulatedLength = 80; simulatedWidth = 48; simulatedHeight = 72; 
-                    break;
-            }
-
             const simulatedBox: AuraBox = {
-                length: simulatedLength,
-                width: simulatedWidth,
-                height: simulatedHeight,
+                length: 10, width: 10, height: 10,
                 realWeight: calcWeight
             };
 
-            // ¡LLAMAMOS A AURA! 
             const auraQuote = calculateAuraLocalDelivery([simulatedBox], quote.distanceMiles);
 
+            // Override: modo pallet cobra $150 por pallet
             baseFare = auraQuote.baseFare;
-            distanceSurcharge = auraQuote.distanceSurcharge;
-            subtotal = auraQuote.totalFare;
+            if (isPalletMode) {
+                baseFare = formData.palletCount * 150;
+            }
+
+            // Override distancia con la tarifa del vehículo asignado (radio base 10 mi)
+            if (quote.distanceMiles > 10) {
+                distanceSurcharge = parseFloat(((quote.distanceMiles - 10) * autoVehicle.rate).toFixed(2));
+            }
+
+            subtotal = baseFare + distanceSurcharge;
         }
-        
+
         const fee = subtotal > 0 ? getProcessingFee(subtotal) : 0;
-        
-        setQuote(prev => ({ 
-            ...prev, 
-            baseFare, 
-            distanceSurcharge, 
-            subtotal, 
-            processingFee: fee, 
+
+        setQuote(prev => ({
+            ...prev,
+            baseFare,
+            distanceSurcharge,
+            subtotal,
+            processingFee: fee,
             total: subtotal + fee,
             appliedStrategy: serviceType === 'PICKUP_WAREHOUSE' ? 'HANDLING_FEE' : 'AURA_ENGINE'
         }));
     };
-    
+
     calculateTotal();
-  }, [formData.weightTier, formData.volumeTier, formData.exactWeight, quote.distanceMiles, isLoaded, serviceType, inventory]);
+  }, [calcWeight, quote.distanceMiles, isLoaded, serviceType, inventory, autoVehicle.rate, formData.palletCount, formData.heavyVehicle, isPalletMode]);
 
   // ✅ LÓGICA ENTERPRISE: Basada en la Tarjeta
   const activeCardDetails = cards.find(c => c.id === selectedCardId);
@@ -260,7 +272,7 @@ export default function SolicitarPickupPage() {
       setAddressError(null);
       setIsAddressValid(true);
       const newOrigin = place.formatted_address!;
-   setFormData(prev => ({ ...prev, originAddress: newOrigin }));
+      setFormData(prev => ({ ...prev, originAddress: newOrigin }));
   };
 
   const handleDropoffChange = () => {
@@ -289,25 +301,20 @@ export default function SolicitarPickupPage() {
       setFormData(prev => ({ ...prev, dropOffAddress: newDropoff }));
   };
 
- useEffect(() => {
+  // --- DISTANCE RECALC ---
+  useEffect(() => {
     if (!isLoaded || !serviceType || serviceType === 'PICKUP_WAREHOUSE') return;
-    
-    console.log('🔍 EFFECT:', { serviceType, origin: formData.originAddress, dropoff: formData.dropOffAddress });
-    
+
     if (serviceType === 'SHIPPING' && formData.originAddress) {
         calculateComplexRoute(formData.originAddress, '');
     }
     if (serviceType === 'DELIVERY' && formData.originAddress && formData.dropOffAddress) {
         calculateComplexRoute(formData.originAddress, formData.dropOffAddress);
     }
-}, [formData.originAddress, formData.dropOffAddress, formData.volumeTier, serviceType, isLoaded]);
+  }, [formData.originAddress, formData.dropOffAddress, serviceType, isLoaded, autoVehicle.type]);
 
-const calculateComplexRoute = async (origin: string, destination: string) => {
-    console.log('🚗 ROUTE:', { origin, destination });
-    if (!isLoaded || typeof google === 'undefined' || !origin) {
-        console.log('❌ BLOCKED');
-        return;
-    }
+  const calculateComplexRoute = async (origin: string, destination: string) => {
+    if (!isLoaded || typeof google === 'undefined' || !origin) return;
 
     try {
         const service = new google.maps.DistanceMatrixService();
@@ -321,36 +328,30 @@ const calculateComplexRoute = async (origin: string, destination: string) => {
             });
             const el = res.rows[0].elements[0];
             if (el.status !== "OK") return 0;
-            return el.distance.text.includes('mi') 
-                ? parseFloat(el.distance.text.replace(' mi','').replace(',','')) 
+            return el.distance.text.includes('mi')
+                ? parseFloat(el.distance.text.replace(' mi','').replace(',',''))
                 : el.distance.value / 1609.34;
         };
 
         if (serviceType === 'SHIPPING') {
-            const leg1 = await getLeg(GMC_WAREHOUSE_ADDRESS, origin); 
-            
-            // 🔥 REGLA DE ORO AURA: Cobra 1 vía (Bajo Volumen) o Circuito (Alto Volumen)
-            if (formData.volumeTier === 'v_30' || formData.volumeTier === 'v_55' || formData.volumeTier === 'v_75') {
-                totalMiles = leg1; 
-            } else {
-                totalMiles = leg1 * 2; 
-            }
-        } 
+            const leg1 = await getLeg(GMC_WAREHOUSE_ADDRESS, origin);
+            // 🔥 REGLA AURA: Box Truck cobra circuito completo (ida y vuelta)
+            totalMiles = (autoVehicle.type === 'BOX_TRUCK') ? leg1 * 2 : leg1;
+        }
         else if (serviceType === 'DELIVERY') {
             if (!destination) return;
-            
-            const leg1 = await getLeg(GMC_WAREHOUSE_ADDRESS, origin); 
-            const leg2 = await getLeg(origin, destination);           
-            
-            if (formData.volumeTier === 'v_30' || formData.volumeTier === 'v_55' || formData.volumeTier === 'v_75') {
-                totalMiles = leg1 + leg2;
+
+            const leg1 = await getLeg(GMC_WAREHOUSE_ADDRESS, origin);
+            const leg2 = await getLeg(origin, destination);
+
+            if (autoVehicle.type === 'BOX_TRUCK') {
+                const leg3 = await getLeg(destination, GMC_WAREHOUSE_ADDRESS);
+                totalMiles = leg1 + leg2 + leg3;
             } else {
-                const leg3 = await getLeg(destination, GMC_WAREHOUSE_ADDRESS); 
-                totalMiles = leg1 + leg2 + leg3; 
+                totalMiles = leg1 + leg2;
             }
         }
 
-     console.log('✅ MILES:', totalMiles);
         setQuote(prev => ({ ...prev, distanceMiles: parseFloat(totalMiles.toFixed(1)) }));
 
     } catch (e) { console.error("Error calculando ruta:", e); }
@@ -378,7 +379,7 @@ const calculateComplexRoute = async (origin: string, destination: string) => {
     }
 
     const hours = selectedDate.getHours();
-    
+
     if (hours >= 9 && hours < 16) {
       setIsTimeValid(true);
       setTimeError(null);
@@ -394,25 +395,25 @@ const calculateComplexRoute = async (origin: string, destination: string) => {
     validateTimeWindow(val);
   };
 
-const handlePaymentAndSubmit = async () => {
+  const handlePaymentAndSubmit = async () => {
     if (serviceType !== 'PICKUP_WAREHOUSE') {
-        if (!isAddressValid || !formData.originAddress) { 
-            alert("⚠️ Dirección no válida. Selecciona una opción de la lista."); return; 
+        if (!isAddressValid || !formData.originAddress) {
+            alert("⚠️ Dirección no válida. Selecciona una opción de la lista."); return;
         }
         if (serviceType === 'DELIVERY' && !formData.dropOffAddress) {
             alert("⚠️ Faltan dirección de entrega."); return;
         }
         if (!formData.pickupDate || !isTimeValid) { alert("Completa los campos correctamente, respetando el horario."); return; }
 
-        if (!selectedCardId) { 
-            setShowMobileSummary(true); 
+        if (!selectedCardId) {
+            setShowMobileSummary(true);
             if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(50);
-            return; 
+            return;
         }
     }
 
-    if (isPayingRef.current) return; 
-    isPayingRef.current = true; 
+    if (isPayingRef.current) return;
+    isPayingRef.current = true;
 
     setIsLoading(true);
     try {
@@ -428,13 +429,13 @@ const handlePaymentAndSubmit = async () => {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    amountNet: quote.total, 
+                    amountNet: quote.total,
                     paymentMethodId: selectedCardId,
                     serviceType,
                     description: `${serviceType}`
                 })
             });
-            
+
             try {
                 const payData = await payRes.json();
                 if (payRes.ok && payData && payData.financials) {
@@ -455,7 +456,7 @@ const handlePaymentAndSubmit = async () => {
         const payload = {
             ...formData,
             serviceType,
-            status: 'PAGADO', 
+            status: 'PAGADO',
             originAddress: serviceType === 'PICKUP_WAREHOUSE' ? GMC_WAREHOUSE_ADDRESS : formData.originAddress,
             dropOffAddress: serviceType === 'DELIVERY' ? formData.dropOffAddress : GMC_WAREHOUSE_ADDRESS,
             subtotal: paymentData.subtotal,
@@ -472,12 +473,12 @@ const handlePaymentAndSubmit = async () => {
             body: JSON.stringify(payload)
         });
 
-        if (orderRes.ok) { setOrderId('CONFIRMED'); setStep(2); } 
+        if (orderRes.ok) { setOrderId('CONFIRMED'); setStep(2); }
         else { alert("Error guardando la solicitud."); }
 
-    } catch (error: any) { alert(error.message || "Error inesperado."); } 
-    finally { 
-        setIsLoading(false); 
+    } catch (error: any) { alert(error.message || "Error inesperado."); }
+    finally {
+        setIsLoading(false);
         isPayingRef.current = false;
     }
   };
@@ -505,7 +506,7 @@ const handlePaymentAndSubmit = async () => {
   return (
     <div className="min-h-screen w-full max-w-[100vw] bg-gray-50 pb-40 md:pb-6 font-montserrat overflow-x-hidden relative" style={{ touchAction: 'pan-y' }}>
       <div className="max-w-6xl mx-auto p-4 md:p-6 w-full">
-        
+
         <div className="mb-6 text-center">
             <h1 className="text-xl md:text-2xl font-bold text-gmc-gris-oscuro font-garamond">{t('title')}</h1>
             <p className="text-sm text-gray-500">{t('subtitle')}</p>
@@ -539,14 +540,14 @@ const handlePaymentAndSubmit = async () => {
         {serviceType && (
             <div className={gridLayoutClass + " animate-fadeIn"}>
                 <div className={isBodega ? "w-full" : "lg:col-span-2 space-y-6"}>
-                    
+
                     {serviceType === 'PICKUP_WAREHOUSE' ? (
                         <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm border border-gray-200">
                             <div className="flex justify-between items-center mb-4 border-b pb-2">
                                 <h3 className="font-bold text-gmc-gris-oscuro text-sm uppercase">{t('inventoryTitle')}</h3>
                                 <div className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded font-bold">{t('statusReady')}</div>
                             </div>
-                            
+
                             {inventoryLoading ? <div className="text-center py-4"><Loader2 className="animate-spin mx-auto"/></div> : inventory.length === 0 ? (
                                 <div className="text-center py-8 bg-gray-50 rounded text-gray-500">
                                     <Package className="mx-auto mb-2 text-gray-300" size={32}/>
@@ -576,7 +577,7 @@ const handlePaymentAndSubmit = async () => {
                                     })}
                                 </div>
                             )}
-                            
+
                             <div className="mt-6 bg-yellow-50 p-4 rounded-lg border border-yellow-100 text-xs text-yellow-800">
                                 <p className="font-bold mb-2 flex items-center gap-2"><Info size={14}/> {t('handlingRatesTitle')}</p>
                                 <ul className="space-y-1 pl-1">
@@ -593,15 +594,15 @@ const handlePaymentAndSubmit = async () => {
                                 <h3 className="font-bold text-gmc-gris-oscuro text-sm uppercase mb-2">{t('routeTitle')}</h3>
                                 <div>
                                     <label className="text-xs font-bold text-gray-400">{t('pickupPointA')}</label>
-                                    <Autocomplete 
-                                        onLoad={ref => { originRef.current = ref }} 
+                                    <Autocomplete
+                                        onLoad={ref => { originRef.current = ref }}
                                         onPlaceChanged={handleOriginChange}
                                         restrictions={{ country: "us" }}
                                     >
-                                        <input 
-                                            type="text" 
-                                            placeholder="Dirección de recogida..." 
-                                            className={`w-full p-3 border rounded-lg text-base ${addressError ? 'border-red-500 bg-red-50 text-red-900' : 'border-gray-200'}`} 
+                                        <input
+                                            type="text"
+                                            placeholder="Dirección de recogida..."
+                                            className={`w-full p-3 border rounded-lg text-base ${addressError ? 'border-red-500 bg-red-50 text-red-900' : 'border-gray-200'}`}
                                             onInput={handleInputInput}
                                         />
                                     </Autocomplete>
@@ -626,15 +627,15 @@ const handlePaymentAndSubmit = async () => {
                                 {serviceType === 'DELIVERY' && (
                                     <div>
                                         <label className="text-xs font-bold text-gray-400">{t('dropoffPointB')}</label>
-                                        <Autocomplete 
-                                            onLoad={ref => { destRef.current = ref }} 
-                                            onPlaceChanged={handleDropoffChange} 
+                                        <Autocomplete
+                                            onLoad={ref => { destRef.current = ref }}
+                                            onPlaceChanged={handleDropoffChange}
                                             restrictions={{ country: "us" }}
                                         >
-                                            <input 
-                                                type="text" 
-                                                placeholder="Dirección de entrega..." 
-                                                className={`w-full p-3 border rounded-lg text-base ${dropOffError ? 'border-red-500 bg-red-50 text-red-900' : 'border-gray-200'}`} 
+                                            <input
+                                                type="text"
+                                                placeholder="Dirección de entrega..."
+                                                className={`w-full p-3 border rounded-lg text-base ${dropOffError ? 'border-red-500 bg-red-50 text-red-900' : 'border-gray-200'}`}
                                             />
                                         </Autocomplete>
                                         {dropOffError && (
@@ -649,68 +650,143 @@ const handlePaymentAndSubmit = async () => {
 
                             <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm border border-gray-200">
                                 <h3 className="font-bold text-gmc-gris-oscuro text-sm uppercase mb-4">{t('loadDetailsTitle')}</h3>
-                                
-                                {/* 🔥 SECCIÓN PESO (AHORA EXACTA CON AURA) */}
+
+                                {/* 🔥 WEIGHT SELECTOR (Granular, igual que cotizador público) */}
                                 <div className="mb-4">
-                                    <label className="block text-xs font-bold text-gray-400 uppercase mb-2 ml-1">Rango de Peso</label>
+                                    <label className="block text-xs font-bold text-gray-400 uppercase mb-2 ml-1">
+                                        {t('weightQuestion')}
+                                    </label>
                                     <div className="relative">
-                                        <select 
-                                            className="w-full p-3 pl-4 border border-gray-200 rounded-xl text-base bg-white appearance-none font-medium focus:ring-2 focus:ring-gmc-dorado-principal focus:border-transparent" 
-                                            onChange={e => setFormData({...formData, weightTier: e.target.value})}
+                                        <select
+                                            className="w-full p-3 pl-4 border border-gray-200 rounded-xl text-base bg-white appearance-none font-medium focus:ring-2 focus:ring-gmc-dorado-principal focus:border-transparent"
+                                            onChange={e => setFormData({ ...formData, weightTier: e.target.value, exactWeight: 0 })}
                                             value={formData.weightTier}
                                         >
-                                            {WEIGHT_TIERS.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
+                                            {WEIGHT_OPTIONS.map(opt => (
+                                                <option key={opt.id} value={opt.id}>{opt.label}</option>
+                                            ))}
                                         </select>
                                         <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
                                     </div>
                                 </div>
 
-                                {formData.weightTier === 'w_pallet' && (
-                                    <div className="mb-6 animate-in fade-in slide-in-from-top-2 duration-300">
+                                {/* 🔥 151+ LBS: Peso exacto + Selector de vehículo + Pallets */}
+                                {isPalletMode && (
+                                    <div className="space-y-4 mb-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                                        {/* Exact Weight Input */}
                                         <div className="relative">
                                             <Weight className="absolute left-3 top-1/2 -translate-y-1/2 text-gmc-dorado-principal" size={18} />
-                                            <input 
-                                                type="number" 
-                                                placeholder={t.has('exactWeightPlaceholder') ? t('exactWeightPlaceholder') : "Exact weight (Lbs)"} 
-                                                className="w-full p-3 pl-10 border border-yellow-200 rounded-xl bg-yellow-50 text-base font-bold placeholder-yellow-600/50 focus:ring-2 focus:ring-yellow-400 focus:outline-none" 
-                                                onChange={e => setFormData({...formData, exactWeight: parseFloat(e.target.value)})} 
+                                            <input
+                                                type="number"
+                                                placeholder={t.has('exactWeightPlaceholder') ? t('exactWeightPlaceholder') : "Exact weight (Lbs)"}
+                                                className="w-full p-3 pl-10 border border-yellow-200 rounded-xl bg-yellow-50 text-base font-bold placeholder-yellow-600/50 focus:ring-2 focus:ring-yellow-400 focus:outline-none"
+                                                onChange={e => setFormData({ ...formData, exactWeight: parseFloat(e.target.value) || 0 })}
                                             />
                                         </div>
-                                    </div>
-                                )}
 
-                                {/* 🚗 SELECTOR DE VEHÍCULOS (ESTILO UBER) */}
-                                <div className="mb-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 ml-1">
-                                        Tamaño del Vehículo
-                                    </label>
-                                    <div className="grid grid-cols-1 gap-3">
-                                        {VEHICLE_OPTIONS.map((veh) => (
-                                            <div 
-                                                key={veh.id}
-                                                onClick={() => setFormData({...formData, volumeTier: veh.id})}
-                                                className={`group relative flex items-center p-4 rounded-2xl cursor-pointer transition-all duration-300 border-2 ${
-                                                    formData.volumeTier === veh.id 
-                                                        ? 'border-gmc-dorado-principal bg-yellow-50/30 shadow-md scale-[1.01]' 
-                                                        : 'border-gray-100 bg-white hover:border-gray-200 hover:bg-gray-50'
-                                                }`}
+                                        {/* Vehicle Selector (Only Cargo Van / Box Truck) */}
+                                        <label className="block text-xs font-bold text-gray-400 uppercase mb-2 ml-1">{t('selectVehicleLabel')}</label>
+                                        <div className="grid grid-cols-1 gap-3">
+                                            {/* Cargo Van */}
+                                            <div
+                                                onClick={() => setFormData({ ...formData, heavyVehicle: 'CARGO_VAN' })}
+                                                className={`group relative flex items-center p-4 rounded-2xl cursor-pointer transition-all duration-300 border-2 ${formData.heavyVehicle === 'CARGO_VAN' ? 'border-gmc-dorado-principal bg-yellow-50/30 shadow-md' : 'border-gray-100 bg-white hover:border-gray-200'}`}
                                             >
-                                                {formData.volumeTier === veh.id && (
+                                                {formData.heavyVehicle === 'CARGO_VAN' && (
                                                     <div className="absolute top-1/2 -translate-y-1/2 -left-3 w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center shadow-sm z-10">
                                                         <Check size={14} strokeWidth={3} />
                                                     </div>
                                                 )}
-                                                <div className="w-16 h-12 bg-gray-50 border border-gray-100 rounded-xl flex items-center justify-center mr-4 shrink-0 overflow-hidden relative">
-                                                    {veh.icon}
+                                                <div className="w-14 h-12 bg-orange-50 border border-orange-100 rounded-xl flex items-center justify-center mr-4 shrink-0">
+                                                    <Warehouse size={22} className="text-orange-600" />
                                                 </div>
                                                 <div className="flex-1">
-                                                    <h4 className="font-bold text-gray-800 text-sm">{veh.title}</h4>
-                                                    <p className="text-xs text-gray-500 leading-tight mt-0.5">{veh.desc}</p>
+                                                    <h4 className="font-bold text-gray-800 text-sm">{t('volHigh')}</h4>
+                                                    <p className="text-xs text-gray-500 leading-tight mt-0.5">{VEHICLE_DISPLAY.CARGO_VAN.desc}</p>
+                                                    <p className="text-[10px] text-gray-400 mt-1 flex items-center gap-1"><Ruler size={10} /> {VEHICLE_DISPLAY.CARGO_VAN.dims}</p>
                                                 </div>
                                             </div>
-                                        ))}
+
+                                            {/* Box Truck */}
+                                            <div
+                                                onClick={() => setFormData({ ...formData, heavyVehicle: 'BOX_TRUCK' })}
+                                                className={`group relative flex items-center p-4 rounded-2xl cursor-pointer transition-all duration-300 border-2 ${formData.heavyVehicle === 'BOX_TRUCK' ? 'border-gmc-dorado-principal bg-yellow-50/30 shadow-md' : 'border-gray-100 bg-white hover:border-gray-200'}`}
+                                            >
+                                                {formData.heavyVehicle === 'BOX_TRUCK' && (
+                                                    <div className="absolute top-1/2 -translate-y-1/2 -left-3 w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center shadow-sm z-10">
+                                                        <Check size={14} strokeWidth={3} />
+                                                    </div>
+                                                )}
+                                                <div className="w-14 h-12 bg-red-50 border border-red-100 rounded-xl flex items-center justify-center mr-4 shrink-0">
+                                                    <Package size={22} className="text-red-600" />
+                                                </div>
+                                                <div className="flex-1">
+                                                    <h4 className="font-bold text-gray-800 text-sm">{t('volFull')}</h4>
+                                                    <p className="text-xs text-gray-500 leading-tight mt-0.5">{VEHICLE_DISPLAY.BOX_TRUCK.desc}</p>
+                                                    <p className="text-[10px] text-gray-400 mt-1 flex items-center gap-1"><Ruler size={10} /> {VEHICLE_DISPLAY.BOX_TRUCK.dims}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* 🔥 PALLET COUNT */}
+                                        <div className="mt-4 p-4 bg-red-50/30 border border-red-100 rounded-xl animate-in fade-in slide-in-from-top-2 duration-300">
+                                            <label className="block text-xs font-bold text-gray-500 uppercase mb-3">
+                                                {t('howManyPallets')}
+                                            </label>
+                                            <div className="flex gap-2">
+                                                {(formData.heavyVehicle === 'CARGO_VAN' ? [1, 2] : [2, 3, 4, 5, 6]).map(num => (
+                                                    <button
+                                                        key={num}
+                                                        type="button"
+                                                        onClick={() => setFormData({ ...formData, palletCount: num })}
+                                                        className={`flex-1 py-3 rounded-xl font-bold text-lg transition-all ${
+                                                            formData.palletCount === num
+                                                                ? 'bg-gmc-dorado-principal text-black shadow-md scale-105'
+                                                                : 'bg-white border border-gray-200 text-gray-600 hover:border-gray-400'
+                                                        }`}
+                                                    >
+                                                        {num}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                            <p className="text-[11px] text-gray-500 mt-2 text-center">
+                                                {formData.palletCount} pallets × $150 = <strong>${(formData.palletCount * 150).toFixed(2)}</strong>
+                                            </p>
+                                        </div>
                                     </div>
-                                </div>
+                                )}
+
+                                {/* 🔥 AUTO VEHICLE INFO (0-150 lbs) */}
+                                {!isPalletMode && (
+                                    <div className="p-4 bg-gray-50 border border-gray-200 rounded-xl mb-4">
+                                        <div className="flex items-center gap-3 mb-2">
+                                            <div className="w-10 h-10 bg-white border border-gray-200 rounded-lg flex items-center justify-center shadow-sm">
+                                                {vehicleInfo.icon}
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-bold text-gray-800">
+                                                    {t.has('vehicleLabel') ? t('vehicleLabel') : 'Vehicle:'} {vehicleInfo.title}
+                                                </p>
+                                                <p className="text-[10px] text-gray-500">{vehicleInfo.desc}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-1.5 text-[11px] text-gray-500 bg-white px-3 py-1.5 rounded-lg border border-gray-100 w-fit">
+                                            <Ruler size={12} className="text-gmc-dorado-principal" />
+                                            <span className="font-medium">{vehicleInfo.dims}</span>
+                                        </div>
+
+                                        {/* Dimension validation hint */}
+                                        <div className="mt-3 p-2.5 bg-amber-50 border border-amber-100 rounded-lg flex items-start gap-2">
+                                            <Info size={14} className="text-amber-600 shrink-0 mt-0.5" />
+                                            <p className="text-[11px] text-amber-800 leading-snug">
+                                                {t.has('dimensionHint')
+                                                    ? <>{t('dimensionHint', { maxLength: '' })}<strong>{autoVehicle.maxLength}</strong></>
+                                                    : <>Does your longest item exceed <strong>{autoVehicle.maxLength}</strong>?</>
+                                                }
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                     <div className="relative">
@@ -719,10 +795,10 @@ const handlePaymentAndSubmit = async () => {
                                         </label>
                                         <div className="relative">
                                             <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={18} />
-                                            <input 
-                                                type="datetime-local" 
+                                            <input
+                                                type="datetime-local"
                                                 className={`w-full p-3 pl-10 border rounded-xl text-base bg-white appearance-none focus:ring-2 focus:ring-gmc-dorado-principal min-h-[46px] ${timeError ? 'border-red-500 bg-red-50' : 'border-gray-200 focus:border-transparent'}`}
-                                                onChange={handleDateTimeChange} 
+                                                onChange={handleDateTimeChange}
                                             />
                                         </div>
                                         {timeError && (
@@ -739,19 +815,19 @@ const handlePaymentAndSubmit = async () => {
                                          </label>
                                          <div className="relative">
                                             <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={18} />
-                                            <input 
-                                                type="tel" 
-                                                placeholder={t.has('phonePlaceholder') ? t('phonePlaceholder') : "Phone number"} 
-                                                className="w-full p-3 pl-10 border border-gray-200 rounded-xl text-base bg-white focus:ring-2 focus:ring-gmc-dorado-principal focus:border-transparent min-h-[46px]" 
-                                                onChange={e => setFormData({...formData, contactPhone: e.target.value})} 
+                                            <input
+                                                type="tel"
+                                                placeholder={t.has('phonePlaceholder') ? t('phonePlaceholder') : "Phone number"}
+                                                className="w-full p-3 pl-10 border border-gray-200 rounded-xl text-base bg-white focus:ring-2 focus:ring-gmc-dorado-principal focus:border-transparent min-h-[46px]"
+                                                onChange={e => setFormData({...formData, contactPhone: e.target.value})}
                                             />
                                         </div>
                                     </div>
                                 </div>
-                                
-                                <textarea 
-                                    className="w-full p-3 border border-gray-200 rounded-xl text-base h-24 resize-none focus:ring-2 focus:ring-gmc-dorado-principal focus:border-transparent" 
-                                    placeholder={t.has('descPlaceholder') ? t('descPlaceholder') : "Description of items..."} 
+
+                                <textarea
+                                    className="w-full p-3 border border-gray-200 rounded-xl text-base h-24 resize-none focus:ring-2 focus:ring-gmc-dorado-principal focus:border-transparent"
+                                    placeholder={t.has('descPlaceholder') ? t('descPlaceholder') : "Description of items..."}
                                     onChange={e => setFormData({...formData, description: e.target.value})}
                                 ></textarea>
                             </div>
@@ -763,8 +839,7 @@ const handlePaymentAndSubmit = async () => {
                     <div className="hidden lg:block lg:col-span-1">
                         <div className="bg-gmc-gris-oscuro text-white p-6 rounded-2xl shadow-xl sticky top-6">
                             <h3 className="font-bold text-gmc-dorado-principal text-lg mb-4 border-b border-gray-600 pb-2">{t('summaryTitle')}</h3>
-                            
-                            {/* 🔥 NUESTRO BLOQUE CORREGIDO 🔥 */}
+
                             <div className="space-y-3 text-sm mb-4">
                                 <div className="flex justify-between">
                                     <span>{t('sumService')}</span>
@@ -783,6 +858,17 @@ const handlePaymentAndSubmit = async () => {
                                 <div className="flex justify-between text-xl font-bold pt-2 border-t border-gray-600 text-gmc-dorado-principal">
                                     <span>{t('sumTotal')}</span>
                                     <span>${quote.total.toFixed(2)}</span>
+                                </div>
+                            </div>
+
+                            {/* Vehicle badge (igual que cotizador público) */}
+                            <div className="flex items-center gap-2 p-3 bg-gray-700/50 rounded-xl border border-gray-600 mb-4">
+                                <div className="w-8 h-8 bg-gray-600 rounded-lg flex items-center justify-center">
+                                    {vehicleInfo.icon}
+                                </div>
+                                <div>
+                                    <p className="text-xs font-bold text-white">{vehicleInfo.title}</p>
+                                    <p className="text-[10px] text-gray-400">{vehicleInfo.dims}</p>
                                 </div>
                             </div>
 
@@ -833,12 +919,12 @@ const handlePaymentAndSubmit = async () => {
                             <div className="text-3xl font-garamond font-bold leading-none text-white">${quote.total.toFixed(2)}</div>
                         </div>
 
-                        <button 
-                            onClick={handlePaymentAndSubmit} 
-                            disabled={isLoading || quote.total === 0 || !isAddressValid || !isTimeValid} 
+                        <button
+                            onClick={handlePaymentAndSubmit}
+                            disabled={isLoading || quote.total === 0 || !isAddressValid || !isTimeValid}
                             className="bg-[#EAD8B1] text-[#222b3c] px-8 py-3.5 rounded-xl font-bold text-base shadow-lg active:scale-95 transition-transform flex items-center gap-2 disabled:opacity-50 disabled:shadow-none"
                         >
-                            {isLoading ? <Loader2 className="animate-spin" size={20}/> : <CreditCard size={20}/>} 
+                            {isLoading ? <Loader2 className="animate-spin" size={20}/> : <CreditCard size={20}/>}
                             {t('btnPay')}
                         </button>
                     </div>
@@ -856,7 +942,12 @@ const handlePaymentAndSubmit = async () => {
                                 <span>Processing Fee</span>
                                 <span>+${quote.processingFee.toFixed(2)}</span>
                             </div>
-                            
+
+                            <div className="flex items-center gap-2 pt-3 border-t border-gray-600">
+                                <div className="w-6 h-6 bg-gray-600 rounded flex items-center justify-center">{vehicleInfo.icon}</div>
+                                <span className="text-xs text-gray-400">{vehicleInfo.title} · {vehicleInfo.dims}</span>
+                            </div>
+
                             {isTrinidadCard && quote.total > 0 && (
                                 <div className="mt-3 p-3 bg-blue-900/40 border border-blue-500/50 rounded-xl mb-3">
                                     <div className="flex items-center gap-2 mb-1">
@@ -872,7 +963,7 @@ const handlePaymentAndSubmit = async () => {
                                     </div>
                                 </div>
                             )}
-                            
+
                             <div className="pt-4 mt-2 border-t border-gray-600">
                                 <label className="block text-xs font-bold text-gray-400 uppercase mb-2">PAYING WITH</label>
                                 {cards.length > 0 ? (
