@@ -208,11 +208,15 @@ export default function SolicitarPickupPage() {
 
             const auraQuote = calculateAuraLocalDelivery([simulatedBox], quote.distanceMiles);
 
-            // Override: modo pallet cobra $150 por pallet
-            baseFare = auraQuote.baseFare;
-            if (isPalletMode) {
-                baseFare = formData.palletCount * 150;
-            }
+           // Solicitar-pickup: vehículo = precio flat (no multiplica)
+baseFare = auraQuote.baseFare;
+if (isPalletMode) {
+    if (formData.heavyVehicle === 'BOX_TRUCK') {
+        baseFare = 175;
+    } else {
+        baseFare = formData.palletCount === 2 ? 125 : 95;
+    }
+}
 
             // Override distancia con la tarifa del vehículo asignado (radio base 10 mi)
             if (quote.distanceMiles > 10) {
@@ -689,7 +693,7 @@ export default function SolicitarPickupPage() {
                                         <div className="grid grid-cols-1 gap-3">
                                             {/* Cargo Van */}
                                             <div
-                                                onClick={() => setFormData({ ...formData, heavyVehicle: 'CARGO_VAN' })}
+                                                onClick={() => setFormData({ ...formData, heavyVehicle: 'CARGO_VAN', palletCount: 1 })}
                                                 className={`group relative flex items-center p-4 rounded-2xl cursor-pointer transition-all duration-300 border-2 ${formData.heavyVehicle === 'CARGO_VAN' ? 'border-gmc-dorado-principal bg-yellow-50/30 shadow-md' : 'border-gray-100 bg-white hover:border-gray-200'}`}
                                             >
                                                 {formData.heavyVehicle === 'CARGO_VAN' && (
@@ -709,7 +713,7 @@ export default function SolicitarPickupPage() {
 
                                             {/* Box Truck */}
                                             <div
-                                                onClick={() => setFormData({ ...formData, heavyVehicle: 'BOX_TRUCK' })}
+                                                onClick={() => setFormData({ ...formData, heavyVehicle: 'BOX_TRUCK', palletCount: 3 })}
                                                 className={`group relative flex items-center p-4 rounded-2xl cursor-pointer transition-all duration-300 border-2 ${formData.heavyVehicle === 'BOX_TRUCK' ? 'border-gmc-dorado-principal bg-yellow-50/30 shadow-md' : 'border-gray-100 bg-white hover:border-gray-200'}`}
                                             >
                                                 {formData.heavyVehicle === 'BOX_TRUCK' && (
@@ -734,7 +738,7 @@ export default function SolicitarPickupPage() {
                                                 {t('howManyPallets')}
                                             </label>
                                             <div className="flex gap-2">
-                                                {(formData.heavyVehicle === 'CARGO_VAN' ? [1, 2] : [2, 3, 4, 5, 6]).map(num => (
+                                                {(formData.heavyVehicle === 'CARGO_VAN' ? [1, 2] : [3, 4, 5, 6]).map(num => (
                                                     <button
                                                         key={num}
                                                         type="button"
@@ -750,7 +754,10 @@ export default function SolicitarPickupPage() {
                                                 ))}
                                             </div>
                                             <p className="text-[11px] text-gray-500 mt-2 text-center">
-                                                {formData.palletCount} pallets × $150 = <strong>${(formData.palletCount * 150).toFixed(2)}</strong>
+                                                {formData.heavyVehicle === 'CARGO_VAN' 
+    ? <><strong>${formData.palletCount === 2 ? '125.00' : '95.00'}</strong> ({formData.palletCount} pallet{formData.palletCount > 1 ? 's' : ''})</>
+    : <><strong>$175.00</strong> ({formData.palletCount} pallets — flat rate)</>
+}
                                             </p>
                                         </div>
                                     </div>
