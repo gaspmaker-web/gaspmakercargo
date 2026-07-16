@@ -165,7 +165,7 @@ export function calculateAuraLocalDelivery(
     boxes.forEach(box => {
       const realWeight = box.realWeight || 1;
       const volWeight = (box.length * box.width * box.height) / 166;
-      const billableWeight = Math.max(realWeight, volWeight);
+      const billableWeight = realWeight;
       totalBillableWeight += billableWeight;
 
       const full = isFullPallet(box.length, box.width, box.height, realWeight);
@@ -210,9 +210,13 @@ export function calculateAuraLocalDelivery(
     // 🚚 PRE-ARMADO: Cada pieza por peso real + topes
     // Distancia UNA vez según vehículo total
     // ==========================================
-    pallets.forEach(pallet => {
-      baseFare += getBaseFareByWeight(pallet.billableWeight);
-    });
+  pallets.forEach(pallet => {
+    if (pallet.billableWeight >= 151) {
+        baseFare += 150.00; // Flat $150 por pallet
+    } else {
+        baseFare += getBaseFareByWeight(pallet.billableWeight);
+    }
+});
 
     const vehicle = getVehicleInfo(totalBillableWeight, palletCount);
     vehicleType = vehicle.type;

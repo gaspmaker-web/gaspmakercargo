@@ -403,8 +403,9 @@ const showAir = isAirConsolidation || isSinglePackage || isOceanRequest;
             }
         }
 
-        const safeDistanceMiles = Math.max(0, calculatedMiles);
-        const auraResult = calculateAuraLocalDelivery(auraBoxes, safeDistanceMiles);
+    const safeDistanceMiles = Math.max(0, calculatedMiles);
+
+const auraResult = calculateAuraLocalDelivery(auraBoxes, safeDistanceMiles);
 
         rawRates.push({
             id: 'GMC-AURA-LOCAL',

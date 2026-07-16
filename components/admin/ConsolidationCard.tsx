@@ -167,12 +167,6 @@ const CONTAINER_OPTIONS = [
     }
   };
 
- console.log('🔍 DEBUG:', { 
-      serviceType: request.serviceType, 
-      isOcean, 
-      isDynamicPalletMode 
-  });
-
   return (
     <>
       {/* TARJETA PRINCIPAL */}

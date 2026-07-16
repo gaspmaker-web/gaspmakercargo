@@ -170,10 +170,12 @@ const handleGetRates = async (bill: any) => {
         return;
     }
       
-      setLoadingRatesId(bill.id);
-      try {
-          const auraPieces = typeof bill.auraDetails === 'string' ? JSON.parse(bill.auraDetails) : bill.auraDetails;
+   setLoadingRatesId(bill.id);
+try {
+    const auraPieces = typeof bill.auraDetails === 'string' ? JSON.parse(bill.auraDetails) : bill.auraDetails;
+  
 
+    // 🔥 ENVIAMOS EL SERVICIO EXACTO Y LOS PALLETS AL ARCHIVO DE TARIFAS (RATE)
           // 🔥 ENVIAMOS EL SERVICIO EXACTO Y LOS PALLETS AL ARCHIVO DE TARIFAS (RATE)
           const res = await fetch('/api/rates', {
               method: 'POST',
@@ -867,9 +869,22 @@ const handleSelectRate = (billId: string, rate: Rate) => {
                                                                 </div>
                                                                 
                                                                 <div className="border-t border-gray-100 pt-2 mt-2 space-y-1">
-                                                                    <div className="flex justify-between text-xs text-gray-500">
-                                                                        <span>{t('freightCost')}</span><span>${selectedRate.price.toFixed(2)}</span>
-                                                                    </div>
+    {selectedRate.auraDetails?.baseFare !== undefined ? (
+        <>
+            <div className="flex justify-between text-xs text-gray-500">
+                <span>Service</span><span>${selectedRate.auraDetails.baseFare.toFixed(2)}</span>
+            </div>
+            {selectedRate.auraDetails.distanceSurcharge > 0 && (
+                <div className="flex justify-between text-xs text-blue-500">
+                    <span>Distance</span><span>+${selectedRate.auraDetails.distanceSurcharge.toFixed(2)}</span>
+                </div>
+            )}
+        </>
+    ) : (
+        <div className="flex justify-between text-xs text-gray-500">
+            <span>{t('freightCost')}</span><span>${selectedRate.price.toFixed(2)}</span>
+        </div>
+    )}
                                                                     {effectiveHandling > 0 && (
                                                                         <div className="flex justify-between text-xs text-yellow-600">
                                                                             <span>{t('consolidationFee')}</span><span>+${effectiveHandling.toFixed(2)}</span>
