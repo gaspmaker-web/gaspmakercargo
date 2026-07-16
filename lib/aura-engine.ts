@@ -205,26 +205,38 @@ export function calculateAuraLocalDelivery(
   let vehicleType = 'CAR_SUV';
   let distanceRate = 1.25;
 
-  if (isPreBuiltMode) {
+ if (isPreBuiltMode) {
     // ==========================================
-    // 🚚 PRE-ARMADO: Cada pieza por peso real + topes
-    // Distancia UNA vez según vehículo total
+    // 🚚 PRE-ARMADO: $163.95 flat por pallet dentro de 20mi
+    // Fuera de 20mi: $163.95 + millas extra × tarifa por pallet
+    // Cajas sueltas: rate table normal + distancia desde 10mi
     // ==========================================
-  pallets.forEach(pallet => {
-    if (pallet.billableWeight >= 151) {
-        baseFare += 150.00; // Flat $150 por pallet
-    } else {
-        baseFare += getBaseFareByWeight(pallet.billableWeight);
-    }
-});
+    const PRE_BUILT_PALLET_FLAT = 163.95;
+    const PRE_BUILT_RADIUS = 20;
+
+    let palletCountForFlat = 0;
+
+    pallets.forEach(pallet => {
+        if (pallet.billableWeight >= 151) {
+            baseFare += PRE_BUILT_PALLET_FLAT;
+            palletCountForFlat++;
+        } else {
+            baseFare += getBaseFareByWeight(pallet.billableWeight);
+        }
+    });
 
     const vehicle = getVehicleInfo(totalBillableWeight, palletCount);
     vehicleType = vehicle.type;
     distanceRate = vehicle.rate;
 
-    if (distanceMiles > 10) {
-      distanceSurcharge = (distanceMiles - 10) * vehicle.rate;
+    // Distancia pallets: solo cobra millas FUERA del radio de 18mi
+    if (distanceMiles > PRE_BUILT_RADIUS && palletCountForFlat > 0) {
+        distanceSurcharge = (distanceMiles - PRE_BUILT_RADIUS) * vehicle.rate * palletCountForFlat;
     }
+   // Distancia cajas sueltas: solo si NO hay pallets en el mismo envío
+if (distanceMiles > 10 && palletCountForFlat === 0 && palletCount > palletCountForFlat) {
+    distanceSurcharge += (distanceMiles - 10) * vehicle.rate;
+}
 
     appliedStrategy = palletCount > 1 ? 'PRE_BUILT_LINEAR' : 'PRE_BUILT_SINGLE';
 
