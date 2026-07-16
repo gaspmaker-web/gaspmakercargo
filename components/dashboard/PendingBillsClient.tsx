@@ -869,14 +869,14 @@ const handleSelectRate = (billId: string, rate: Rate) => {
                                                                 </div>
                                                                 
                                                                 <div className="border-t border-gray-100 pt-2 mt-2 space-y-1">
-    {selectedRate.auraDetails?.baseFare !== undefined ? (
+    {(selectedRate as any).auraDetails?.baseFare !== undefined ? (
         <>
             <div className="flex justify-between text-xs text-gray-500">
-                <span>Service</span><span>${selectedRate.auraDetails.baseFare.toFixed(2)}</span>
+                <span>Service</span><span>${(selectedRate as any).auraDetails.baseFare.toFixed(2)}</span>
             </div>
-            {selectedRate.auraDetails.distanceSurcharge > 0 && (
+            {(selectedRate as any).auraDetails.distanceSurcharge > 0 && (
                 <div className="flex justify-between text-xs text-blue-500">
-                    <span>Distance</span><span>+${selectedRate.auraDetails.distanceSurcharge.toFixed(2)}</span>
+                    <span>Distance</span><span>+${(selectedRate as any).auraDetails.distanceSurcharge.toFixed(2)}</span>
                 </div>
             )}
         </>
