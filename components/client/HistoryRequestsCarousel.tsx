@@ -83,11 +83,14 @@ const HistoryGroup = ({ type, requests }: { type: string, requests: any[] }) => 
                             const upperTitle = rawTitle.toUpperCase();
                             let cardTitle = rawTitle;
 
-                           if (upperTitle.includes('ENVÍO INTERNACIONAL') || 
+   if (upperTitle.includes('ENVÍO INTERNACIONAL') || 
     upperTitle.includes('ENVIO INTERNACIONAL') || 
-    upperTitle.includes('INTERNATIONAL SHIPPING') ||  // ← AÑADIR
-    upperTitle.includes('INTL. SHIPMENT') ||          // ← AÑADIR
+    upperTitle.includes('INTERNATIONAL SHIPPING') ||
+    upperTitle.includes('INTL. SHIPMENT') ||
+    upperTitle.includes('ENVÍO MARÍTIMO') ||
+    upperTitle.includes('ENVIO MARITIMO') ||
     (upperTitle.includes('INTERNACIONAL') && type !== 'DELIVERY')) {
+        
     // 🚢 Detectar si es marítimo
     const serviceText = [
         req.courierService,
