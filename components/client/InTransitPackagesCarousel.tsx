@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from 'react';
-import { Search, MapPin, Calendar, Plane, ExternalLink, Box, Copy, Truck, Scale, ArrowRight, Check, ChevronDown, ChevronUp, Package } from 'lucide-react';
+import { Search, MapPin, Calendar, Plane, ExternalLink, Box, Copy, Truck, Scale, ArrowRight, Check, ChevronDown, ChevronUp, Package,Ship } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { getTrackingUrl } from '@/lib/getTrackingUrl';
 import Link from 'next/link';
@@ -177,10 +177,12 @@ export default function InTransitPackagesCarousel({ packages, userCountryCode }:
                     isMaster ? parent?.serviceType : pkg.serviceType
                 ].filter(Boolean).join(" ").toUpperCase();
 
-                const isLocalDelivery = textDump.includes('LOCAL DELIVERY') || 
-                                        textDump.includes('AURA') || 
-                                        textDump.includes('LOCAL_DELIVERY');
+               const isLocalDelivery = textDump.includes('LOCAL DELIVERY') || 
+                        textDump.includes('AURA') || 
+                        textDump.includes('LOCAL_DELIVERY');
 
+// 🚢 AÑADIR ESTA LÍNEA:
+const isMaritime = textDump.includes('MARITIME') || textDump.includes('OCEAN') || textDump.includes('LAPARKAN');
                 const trackingUrl = (easyPostTracking && !isGMC)
                     ? getTrackingUrl(displayCourier, easyPostTracking)
                     : "#";
@@ -210,7 +212,7 @@ export default function InTransitPackagesCarousel({ packages, userCountryCode }:
                     >
                         <div className={`backdrop-blur-md p-5 border-b border-gray-100 flex justify-between items-center ${isLocalDelivery ? 'bg-slate-800' : 'bg-slate-50/80'}`}>
                             <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 border ${isLocalDelivery ? 'bg-black text-white border-gray-700' : 'bg-blue-100 text-blue-700 border-blue-200'}`}>
-                                {isLocalDelivery ? <Truck size={12} className="animate-pulse"/> : <Plane size={12} className="animate-pulse"/>} 
+                                {isLocalDelivery ? <Truck size={12} className="animate-pulse"/> : isMaritime ? <Ship size={12} className="animate-pulse"/> : <Plane size={12} className="animate-pulse"/>} 
                                 {getStatusLabel(mainStatus, isLocalDelivery)}
                             </span>
                             <span className={`text-xs font-mono font-medium flex items-center gap-1 ${isLocalDelivery ? 'text-gray-400' : 'text-gray-400'}`}>
@@ -228,11 +230,13 @@ export default function InTransitPackagesCarousel({ packages, userCountryCode }:
                                 </div>
                                 <div className="flex-1 border-t-2 border-dashed border-gray-200 mx-2 relative top-[1px]">
                                     <div className="absolute top-1/2 left-1/2 -translate-y-1/2 -translate-x-1/2 bg-white px-1">
-                                        {isLocalDelivery ? (
-                                            <Truck size={14} className="text-black" />
-                                        ) : (
-                                            <Plane size={12} className="text-blue-400 rotate-90" />
-                                        )}
+                                       {isLocalDelivery ? (
+    <Truck size={14} className="text-black" />
+) : isMaritime ? (
+    <Ship size={14} className="text-blue-400" />
+) : (
+    <Plane size={12} className="text-blue-400 rotate-90" />
+)}
                                     </div>
                                 </div>
                                 <div className={`flex items-center gap-1 ${isLocalDelivery ? 'text-black' : 'text-blue-600'}`}>
