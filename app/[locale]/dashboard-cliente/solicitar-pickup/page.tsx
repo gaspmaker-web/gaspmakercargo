@@ -428,17 +428,23 @@ if (isPalletMode) {
             paymentId: 'PREPAID_PICKUP'
         };
 
-        if (serviceType !== 'PICKUP_WAREHOUSE' && quote.total > 0) {
-            const payRes = await fetch('/api/payments/charge', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    amountNet: quote.total,
-                    paymentMethodId: selectedCardId,
-                    serviceType,
-                    description: `${serviceType}`
-                })
-            });
+      if (serviceType !== 'PICKUP_WAREHOUSE' && quote.total > 0) {
+    const payRes = await fetch('/api/payments/charge', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            amountNet: quote.total,
+            paymentMethodId: selectedCardId,
+            serviceType,
+            description: `${serviceType}`,
+            // 🛡️ Validación de precio en servidor
+            weightLbs: calcWeight,
+            distanceMiles: quote.distanceMiles,
+            heavyVehicle: formData.heavyVehicle,
+            palletCount: formData.palletCount,
+            isPalletMode: formData.weightTier === 'w_151_plus'
+        })
+    });
 
             try {
                 const payData = await payRes.json();

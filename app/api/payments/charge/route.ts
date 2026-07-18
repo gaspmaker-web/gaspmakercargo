@@ -34,7 +34,13 @@ export async function POST(req: Request) {
         walletDiscount, 
         discountApplied,
         packageServiceType,
-        idempotencyKey // 🔥 RECIBIMOS LA LLAVE DEL FRONTEND
+        idempotencyKey,
+        // 🛡️ NUEVOS: Para validación de precio pickup en servidor
+        weightLbs,
+        distanceMiles: reqDistanceMiles,
+        heavyVehicle,
+        palletCount,
+        isPalletMode
     } = await req.json();
 
     if (!amountNet || !paymentMethodId) {
@@ -57,6 +63,67 @@ export async function POST(req: Request) {
     if (!savedCard) {
         return NextResponse.json({ message: "Tarjeta no encontrada" }, { status: 404 });
     }
+
+    // =========================================================================
+    // 🛡️ VALIDACIÓN DE PRECIO PICKUP — Recalculo en servidor ANTES de cobrar
+    // Solo aplica a servicios de pickup local (SHIPPING / DELIVERY)
+    // PICKUP_WAREHOUSE no necesita validación: el precio viene del inventario en BD
+    // =========================================================================
+    const PICKUP_SERVICE_TYPES = ['SHIPPING', 'DELIVERY'];
+    const isPickupService = PICKUP_SERVICE_TYPES.includes((serviceType || '').toUpperCase());
+
+    if (isPickupService && amountNet) {
+        const { calculateAuraLocalDelivery } = await import('@/lib/aura-engine');
+        const { getProcessingFee } = await import('@/lib/stripeCalc');
+
+        const wLbs     = Number(weightLbs) || 0;
+        const dMiles   = Number(reqDistanceMiles) || 0;
+        const vehicle  = (heavyVehicle || 'CARGO_VAN').toUpperCase();
+        const pCount   = Number(palletCount) || 1;
+
+        let serverSubtotal = 0;
+
+        if (isPalletMode) {
+            // 🔒 Lógica pallet manual — igual que el frontend (no está en Aura Engine)
+            if (vehicle === 'BOX_TRUCK') {
+                serverSubtotal = 175;
+            } else {
+                serverSubtotal = pCount === 2 ? 125 : 95;
+            }
+            // Cargo de distancia (radio base 10 mi)
+            if (dMiles > 10) {
+                const rate = vehicle === 'BOX_TRUCK' ? 2.50 : 1.75;
+                serverSubtotal += parseFloat(((dMiles - 10) * rate).toFixed(2));
+            }
+        } else if (wLbs > 0) {
+            // 🔒 Aura Engine — modo SIMULACIÓN (0-150 lbs)
+            const aura = calculateAuraLocalDelivery(
+                [{ length: 1, width: 1, height: 1, realWeight: wLbs }],
+                dMiles
+            );
+            serverSubtotal = aura.totalFare;
+        }
+
+        if (serverSubtotal > 0) {
+            const serverTotal  = parseFloat((serverSubtotal + getProcessingFee(serverSubtotal)).toFixed(2));
+            const clientTotal  = parseFloat(Number(amountNet).toFixed(2));
+
+            if (Math.abs(clientTotal - serverTotal) > 0.50) {
+                console.warn(
+                    `🚨 PRECIO MANIPULADO — usuario: ${session.user.id} | ` +
+                    `cliente envió: $${clientTotal} | servidor calculó: $${serverTotal} | ` +
+                    `weightLbs: ${wLbs} | distanceMiles: ${dMiles} | vehicle: ${vehicle} | pallets: ${pCount}`
+                );
+                return NextResponse.json(
+                    { message: 'Precio inválido. Recarga la página e intenta de nuevo.' },
+                    { status: 400 }
+                );
+            }
+
+            console.log(`✅ Precio pickup validado — cliente: $${clientTotal} | servidor: $${serverTotal}`);
+        }
+    }
+    // =========================================================================
 
     // =========================================================================
     // 🔥 1. LÓGICA DE BILLETERA (DESCUENTO DEL SALDO)
@@ -231,7 +298,7 @@ export async function POST(req: Request) {
         
         return 'en'; 
     };
-const userLang = getLanguage(user.countryCode) || 'en';
+    const userLang = getLanguage(user.countryCode) || 'en';
 
     // 1. Alerta al administrador
     await sendAdminPaymentAlert(
@@ -250,8 +317,7 @@ const userLang = getLanguage(user.countryCode) || 'en';
     else if (shopperOrderId) targetId = shopperOrderId;
     else if (pickupId) targetId = pickupId;
     
-    // Pasamos el ID completo sin recortarlo para que el buscador lo encuentre exactamente
-const searchParam = targetId || '';
+    const searchParam = targetId || '';
 
     let targetTab = 'LOCAL';
     const evalType = (packageServiceType || serviceType || '').toUpperCase();
@@ -261,7 +327,7 @@ const searchParam = targetId || '';
     else if (evalType === 'STORAGE_FEE' || evalType === 'PICKUP') targetTab = 'PAYMENTS';
     else if (evalType === 'DELIVERY' || evalType === 'SHIPPING') targetTab = 'LOCAL';
 
-   const exactHref = `/${userLang}/dashboard-cliente/historial-solicitudes?tab=${targetTab}&search=${searchParam}`;
+    const exactHref = `/${userLang}/dashboard-cliente/historial-solicitudes?tab=${targetTab}&search=${searchParam}`;
 
     // =========================================================================
     // 🌍 3. ENVÍO DE NOTIFICACIÓN EN FORMATO JSON (MULTILINGÜE DINÁMICO)
@@ -273,7 +339,8 @@ const searchParam = targetId || '';
         type: "SUCCESS",
         href: exactHref
     });
-// =========================================================================
+
+    // =========================================================================
     // 5. 💾 ACTUALIZACIÓN DE BASE DE DATOS (Versión Limpia)
     // =========================================================================
 
@@ -289,23 +356,19 @@ const searchParam = targetId || '';
 
             if (!currentTargetId) return;
 
-            // 🕵️‍♂️ PASO 1: Analizamos el shipment antes de actualizar
             const currentShipment = await prisma.consolidatedShipment.findUnique({
                 where: { id: currentTargetId },
-                include: { _count: { select: { packages: true } } } // Contamos los paquetes
+                include: { _count: { select: { packages: true } } }
             });
 
             if (!currentShipment) return;
 
-            // 🧠 PASO 2: Lógica de Identidad
-            // Si tiene solo 1 paquete y pesa 0.5 lbs o menos, es un DOCUMENTO
             const isActuallyDoc = currentShipment._count.packages === 1 && (currentShipment.weightLbs || 0) <= 0.5;
             
             const nextStatus = (currentShipment.serviceType === 'STORAGE_FEE' || currentShipment.serviceType === 'PICKUP') 
                 ? 'LISTO_PARA_RETIRO' 
                 : 'LISTO_PARA_ENVIO';
 
-            // 🚀 PASO 3: Actualización con el tipo de servicio correcto
             await prisma.consolidatedShipment.update({
                 where: { id: currentTargetId },
                 data: {
@@ -314,10 +377,7 @@ const searchParam = targetId || '';
                     selectedCourier: selectedCourier || undefined, 
                     courierService: courierService || undefined,   
                     shippingAddress: shippingAddress || undefined, 
-                    
-                    // 🔥 Aquí está la corrección:
                     serviceType: isActuallyDoc ? "DOCUMENT" : (packageServiceType || currentShipment.serviceType),
-                    
                     subtotalAmount: cleanSubtotal,
                     processingFee: cleanFee,
                     totalAmount: cleanTotal,
@@ -350,58 +410,49 @@ const searchParam = targetId || '';
         }));
 
     } else {
-       // --- CAMBIO: Bloque de Paquetes Individuales ---
-if (packageIds) {
-    const idsArray = Array.isArray(packageIds) ? packageIds : packageIds.split(',');
-    
-    for (const pkgId of idsArray) {
-        // 🕵️‍♂️ Buscamos el paquete para ver su peso
-        const pkg = await prisma.package.findUnique({ where: { id: pkgId } });
-        
-        // 🧠 Lógica: Si pesa <= 0.5 lbs y viaja solo, es un DOCUMENTO
-        const isDoc = (pkg?.weightLbs || 0) <= 0.5 && !pkg?.consolidatedShipmentId;
-        
-        await prisma.package.update({
-            where: { id: pkgId },
-            data: {
-                status: (serviceType === 'Warehousing' || serviceType === 'Pickup') ? 'LISTO_PARA_RETIRO' : 'LISTO_PARA_ENVIO',
-                stripePaymentId: paymentIntent.id,
-                shippingAddress: shippingAddress || undefined,
-                shippingTotalPaid: Number((totalToCharge / idsArray.length).toFixed(2)),
-                // 🔥 EL ARREGLO: Si no es documento, NO TOCAMOS EL TIPO (undefined)
-                 serviceType: isDoc ? 'DOCUMENT' : undefined,
-                 description: isDoc ? 'Envío de Documento' : pkg?.description
+        // --- Bloque de Paquetes Individuales ---
+        if (packageIds) {
+            const idsArray = Array.isArray(packageIds) ? packageIds : packageIds.split(',');
+            
+            for (const pkgId of idsArray) {
+                const pkg = await prisma.package.findUnique({ where: { id: pkgId } });
+                const isDoc = (pkg?.weightLbs || 0) <= 0.5 && !pkg?.consolidatedShipmentId;
+                
+                await prisma.package.update({
+                    where: { id: pkgId },
+                    data: {
+                        status: (serviceType === 'Warehousing' || serviceType === 'Pickup') ? 'LISTO_PARA_RETIRO' : 'LISTO_PARA_ENVIO',
+                        stripePaymentId: paymentIntent.id,
+                        shippingAddress: shippingAddress || undefined,
+                        shippingTotalPaid: Number((totalToCharge / idsArray.length).toFixed(2)),
+                        serviceType: isDoc ? 'DOCUMENT' : undefined,
+                        description: isDoc ? 'Envío de Documento' : pkg?.description
+                    }
+                });
             }
-        });
-    }
-}
+        }
 
-        // --- CAMBIO: Bloque de Facturas/Consolidaciones (SHIPs) ---
-if (billIds) {
-    const billsArr = Array.isArray(billIds) ? billIds : billIds.split(',');
-    
-    for (const bId of billsArr) {
-        // 🕵️‍♂️ Contamos cuántos paquetes hay dentro de este SHIP
-        const pkgCount = await prisma.package.count({ where: { consolidatedShipmentId: bId } });
-        const shipment = await prisma.consolidatedShipment.findUnique({ where: { id: bId } });
-        
-        // 🧠 Lógica Maestra: Si solo hay 1 paquete y pesa <= 0.5, FORZAMOS que sea DOCUMENT
-        // Esto es lo que enciende el botón de EasyPost en el Admin
-        const isDoc = pkgCount === 1 && (shipment?.weightLbs || 0) <= 0.5;
+        // --- Bloque de Facturas/Consolidaciones (SHIPs) ---
+        if (billIds) {
+            const billsArr = Array.isArray(billIds) ? billIds : billIds.split(',');
+            
+            for (const bId of billsArr) {
+                const pkgCount = await prisma.package.count({ where: { consolidatedShipmentId: bId } });
+                const shipment = await prisma.consolidatedShipment.findUnique({ where: { id: bId } });
+                const isDoc = pkgCount === 1 && (shipment?.weightLbs || 0) <= 0.5;
 
-        await prisma.consolidatedShipment.update({
-            where: { id: bId },
-            data: {
-                status: 'PAGADO', 
-                paymentId: paymentIntent.id,
-                shippingAddress: shippingAddress || undefined,
-                totalAmount: Number((totalToCharge / billsArr.length).toFixed(2)),
-                // 🔥 EL ARREGLO: Respetamos tu sistema original si no es documento
-                serviceType: isDoc ? "DOCUMENT" : (packageServiceType || undefined)
+                await prisma.consolidatedShipment.update({
+                    where: { id: bId },
+                    data: {
+                        status: 'PAGADO', 
+                        paymentId: paymentIntent.id,
+                        shippingAddress: shippingAddress || undefined,
+                        totalAmount: Number((totalToCharge / billsArr.length).toFixed(2)),
+                        serviceType: isDoc ? "DOCUMENT" : (packageServiceType || undefined)
+                    }
+                });
             }
-        });
-    }
-}
+        }
     }
 
     if (pickupId) {
@@ -439,7 +490,7 @@ if (billIds) {
         console.error("Error limpiando caché:", e);
     }
 
-   // =========================================================================
+    // =========================================================================
     // 🔥 6. GUARDAR SUSCRIPCIÓN DE BUZÓN (SI APLICA)
     // =========================================================================
     if (serviceType === 'MailboxSubscription' || planName || description?.includes('Buzón')) {
@@ -493,7 +544,7 @@ if (billIds) {
         }
     }
 
- // =========================================================================
+    // =========================================================================
     // 🔥 EL LIMPIADOR: Obliga a la pantalla del cliente a refrescarse al instante
     // =========================================================================
     try {

@@ -241,8 +241,7 @@ export default function CalculadoraClient() {
                 setErrorMsg('No se encontraron tarifas disponibles para esta ruta.');
             }
 
-        } catch (error) {
-            console.error(error);
+    } catch (error) {
             setErrorMsg('Error de conexión con el servidor de tarifas.');
         } finally {
             setIsLoading(false);
