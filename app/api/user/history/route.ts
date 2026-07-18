@@ -125,20 +125,27 @@ export async function GET() {
         
         const finalType = isLocal ? 'DELIVERY' : (pkg.serviceType || 'SHIPPING_INTL');
 
-        return {
+   return {
             id: pkg.id,
             createdAt: pkg.createdAt,
             status: pkg.status,
-            serviceType: finalType, // Si es Local, el frontend lo enviará a la pestaña DELIVERY
-            description: isLocal ? `Entrega Local (Aura)` : (pkg.description || `Envío Individual`),
+            serviceType: finalType,
+            description: isLocal 
+                ? `Entrega Local (Aura)` 
+                : courierSvc.includes('MARITIME') || courierSvc.includes('OCEAN') || courierSvc.includes('LAPARKAN')
+                    ? `International Shipping (Gasp Maker Cargo)`
+                    : (pkg.description || `Envío Individual`),
             totalPaid: pkg.shippingTotalPaid || 0,
             courier: pkg.courierService || pkg.selectedCourier,
+            // 🛡️ Pasamos estos campos para que el frontend detecte marítimo vs aéreo
+            courierService: pkg.courierService || '',
+            selectedCourier: pkg.selectedCourier || '',
             service: pkg.description || pkg.gmcTrackingNumber,
             tracking: pkg.finalTrackingNumber || pkg.gmcTrackingNumber,
             packagesCount: 1
         };
     });
-
+    
     // NORMALIZAR SHOPPER
     const normalizedShopper = shopperOrders.map(order => ({
         id: order.id,
