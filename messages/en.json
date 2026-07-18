@@ -821,7 +821,8 @@
     "intlPersonalShopper": "Personal Shopper",
     "intlEntregaLocal": "Local Delivery (Aura)",
     "intlBuzonBasico": "BASIC MAILBOX SUBSCRIPTION",
-    "intlBuzonPremium": "PREMIUM MAILBOX SUBSCRIPTION"
+    "intlBuzonPremium": "PREMIUM MAILBOX SUBSCRIPTION",
+    "intlEnvioMaritimo": "Maritime Shipping (Gasp Maker Cargo)"
   },
   "StorageLock": {
     "title": "Package Locked",

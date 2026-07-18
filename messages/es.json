@@ -863,7 +863,8 @@
     "intlPersonalShopper": "Personal Shopper",
     "intlEntregaLocal": "Entrega Local (Aura)",
     "intlBuzonBasico": "SUSCRIPCIÓN BUZÓN BÁSICO",
-    "intlBuzonPremium": "SUSCRIPCIÓN BUZÓN PREMIUM"
+    "intlBuzonPremium": "SUSCRIPCIÓN BUZÓN PREMIUM",
+    "intlEnvioMaritimo": "Envío Marítimo (Gasp Maker Cargo)"
   },
 "StorageLock": {
     "title": "Paquete Bloqueado",

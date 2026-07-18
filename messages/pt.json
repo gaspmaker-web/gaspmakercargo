@@ -844,7 +844,8 @@
     "intlPersonalShopper": "Personal Shopper",
     "intlEntregaLocal": "Entrega Local (Aura)",
     "intlBuzonBasico": "ASSINATURA DE CAIXA POSTAL BÁSICA",
-    "intlBuzonPremium": "ASSINATURA DE CAIXA POSTAL PREMIUM"
+    "intlBuzonPremium": "ASSINATURA DE CAIXA POSTAL PREMIUM",
+    "intlEnvioMaritimo": "Envio Marítimo (Gasp Maker Cargo)"
   },
 "StorageLock": {
     "title": "Pacote Bloqueado",

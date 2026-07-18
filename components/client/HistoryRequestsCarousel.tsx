@@ -83,9 +83,26 @@ const HistoryGroup = ({ type, requests }: { type: string, requests: any[] }) => 
                             const upperTitle = rawTitle.toUpperCase();
                             let cardTitle = rawTitle;
 
-                            if (upperTitle.includes('ENVÍO INTERNACIONAL') || upperTitle.includes('ENVIO INTERNACIONAL') || (upperTitle.includes('INTERNACIONAL') && type !== 'DELIVERY')) {
-                                cardTitle = t.has('intlEnvioInternacional') ? t('intlEnvioInternacional') : 'Envío Internacional (Gasp Maker Cargo)';
-                            } else if (upperTitle.includes('ENTREGA LOCAL') || type === 'DELIVERY') {
+                           if (upperTitle.includes('ENVÍO INTERNACIONAL') || 
+    upperTitle.includes('ENVIO INTERNACIONAL') || 
+    upperTitle.includes('INTERNATIONAL SHIPPING') ||  // ← AÑADIR
+    upperTitle.includes('INTL. SHIPMENT') ||          // ← AÑADIR
+    (upperTitle.includes('INTERNACIONAL') && type !== 'DELIVERY')) {
+    // 🚢 Detectar si es marítimo
+    const serviceText = [
+        req.courierService,
+        req.selectedCourier,
+        req.serviceType
+    ].filter(Boolean).join(' ').toUpperCase();
+
+    const isMaritime = serviceText.includes('MARITIME') || 
+                       serviceText.includes('OCEAN') || 
+                       serviceText.includes('LAPARKAN');
+
+    cardTitle = isMaritime
+        ? (t.has('intlEnvioMaritimo') ? t('intlEnvioMaritimo') : 'Maritime Shipping (Gasp Maker Cargo)')
+        : (t.has('intlEnvioInternacional') ? t('intlEnvioInternacional') : 'International Shipping (Gasp Maker Cargo)');
+} else if (upperTitle.includes('ENTREGA LOCAL') || type === 'DELIVERY') {
                                 cardTitle = t.has('intlEntregaLocal') ? t('intlEntregaLocal') : 'Entrega Local (Aura)';
                             } else if (upperTitle.includes('ALMACENAJE') || upperTitle.includes('RETIRO EN BODEGA')) {
                                 cardTitle = t.has('intlPagoAlmacenaje') ? t('intlPagoAlmacenaje') : 'Pago de almacenaje';

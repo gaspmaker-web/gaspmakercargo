@@ -844,7 +844,8 @@
     "intlPersonalShopper": "Personal Shopper",
     "intlEntregaLocal": "Livraison Locale (Aura)",
     "intlBuzonBasico": "ABONNEMENT BOÎTE AUX LETTRES DE BASE",
-    "intlBuzonPremium": "ABONNEMENT BOÎTE AUX LETTRES PREMIUM"
+    "intlBuzonPremium": "ABONNEMENT BOÎTE AUX LETTRES PREMIUM",
+    "intlEnvioMaritimo": "Expédition Maritime (Gasp Maker Cargo)"
   },
  "StorageLock": {
     "title": "Colis Bloqué",
