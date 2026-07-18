@@ -119,6 +119,7 @@ export async function GET() {
     const normalizedSinglePackages = singlePackages.map(pkg => {
         const addr = (typeof pkg.shippingAddress === 'string' ? pkg.shippingAddress : JSON.stringify(pkg.shippingAddress || '')).toUpperCase();
         const courierSvc = (pkg.courierService || '').toUpperCase();
+console.log(`🚢 PKG id: ${pkg.id.slice(0,8)} | courierService: "${pkg.courierService}" | courierSvc: "${courierSvc}"`);
         
         // 🕵️‍♂️ LECTURA DE LA CASILLA COURIER SERVICE QUE MENCIONASTE
         const isLocal = addr.includes('MIAMI') || addr.includes('FL') || addr.includes('DORAL') || addr.includes('MEDLEY') || addr.includes('AURA') || courierSvc.includes('AURA') || courierSvc.includes('LOCAL');
