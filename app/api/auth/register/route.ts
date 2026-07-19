@@ -16,6 +16,10 @@ export async function POST(req: Request) {
     const resend = new Resend(process.env.RESEND_API_KEY);
 
     const body = await req.json();
+
+    // 🏢 Tenant filter
+    const { getTenant } = await import('@/lib/tenant');
+    const tenant = await getTenant();
     
     // 🔥 AÑADIMOS 'referredBy' para recibir el código del amigo que lo invitó
     const { email, password, name, countryCode, phone, dateOfBirth, referredBy } = body;
@@ -44,6 +48,7 @@ export async function POST(req: Request) {
         password: hashedPassword,
         suiteNo,
         role: "CLIENTE",
+        tenant_id: tenant?.id || null,  // ← AÑADIR
         countryCode: country,
         phone,
         dateOfBirth: finalDate,
