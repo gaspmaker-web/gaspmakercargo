@@ -9,6 +9,16 @@ export const revalidate = 300;
 export async function GET() {
   try {
     const { default: prisma } = await import('@/lib/prisma');
+    const { auth } = await import('@/auth');
+const session = await auth();
+if (!session || session.user?.role !== 'ADMIN') {
+    return NextResponse.json({ message: "No autorizado" }, { status: 401 });
+}
+
+// 🏢 Tenant filter
+const { getTenant } = await import('@/lib/tenant');
+const tenant = await getTenant();
+const tenantFilter = tenant?.id ? { tenant_id: tenant.id } : {};
 
     const hoy = new Date();
     hoy.setHours(0, 0, 0, 0);
@@ -35,37 +45,40 @@ export async function GET() {
       facturasClientesPendientes
     ] = await Promise.all([
       prisma.package.count({
-        where: { status: { not: 'ENTREGADO' } }
+       where: { status: { not: 'ENTREGADO' }, ...tenantFilter }
       }),
       prisma.user.count({
         where: { role: 'CLIENTE' }
       }),
       prisma.consolidatedShipment.count({
-        where: { 
-            serviceType: 'CONSOLIDATION',
-            OR: [
-                { status: 'SOLICITUD_CONSOLIDACION' },
-                { status: 'EN_PROCESO_CONSOLIDACION' },
-                { totalAmount: 0 }
-            ]
-        }
+      where: { 
+    serviceType: 'CONSOLIDATION',
+    OR: [
+        { status: 'SOLICITUD_CONSOLIDACION' },
+        { status: 'EN_PROCESO_CONSOLIDACION' },
+        { totalAmount: 0 }
+    ],
+    ...tenantFilter
+}
       }),
       prisma.pickupRequest.count({
-        where: { 
-            status: 'PAGADO',
-            serviceType: { not: 'STORAGE_FEE' }
-        }
+      where: { 
+    status: 'PAGADO',
+    serviceType: { not: 'STORAGE_FEE' },
+    ...tenantFilter
+}
       }),
       prisma.consolidatedShipment.aggregate({
         _sum: { totalAmount: true },
-        where: { createdAt: { gte: haceSieteDias } }
+        where: { createdAt: { gte: haceSieteDias }, ...tenantFilter }
       }),
       prisma.pickupRequest.count({
-        where: { 
-            status: 'ENTREGADO',
-            updatedAt: { gte: hoy },
-            serviceType: { not: 'STORAGE_FEE' }
-        }
+     where: { 
+    status: 'ENTREGADO',
+    updatedAt: { gte: hoy },
+    serviceType: { not: 'STORAGE_FEE' },
+    ...tenantFilter
+}
       }),
       prisma.user.count({
         where: { 
@@ -97,11 +110,12 @@ export async function GET() {
       }),
       // 🔥 Cuenta paquetes en Miami con factura, pero cuyo valor es 0
       prisma.package.count({
-        where: {
-            status: { in: ['RECIBIDO_MIAMI', 'EN_ALMACEN'] },
-            invoiceUrl: { not: null },
-            declaredValue: { equals: 0 }
-        }
+       where: {
+    status: { in: ['RECIBIDO_MIAMI', 'EN_ALMACEN'] },
+    invoiceUrl: { not: null },
+    declaredValue: { equals: 0 },
+    ...tenantFilter
+}
       })
     ]);
 

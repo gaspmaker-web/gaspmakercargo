@@ -63,20 +63,25 @@ export async function POST(req: Request) {
     const gmcTrackingNumber = generateGmcTracking(data.countryCode);
     
     // 4. Crear el paquete
-    const newPackage = await prisma.package.create({
-      data: {
-        userId: data.userId,
-        status: "RECIBIDO_MIAMI",
-        description: data.description,
-        weightLbs: data.weightLbs,
-        carrierTrackingNumber: data.carrierTrackingNumber,
-        gmcTrackingNumber: gmcTrackingNumber,
-        lengthIn: data.lengthIn,
-        widthIn: data.widthIn,
-        heightIn: data.heightIn,
-        photoUrlMiami: data.photoUrlMiami,
-      },
-    });
+  // 🏢 Obtener tenant del admin que está creando el paquete
+const { getTenant } = await import('@/lib/tenant');
+const tenant = await getTenant();
+
+const newPackage = await prisma.package.create({
+  data: {
+    userId: data.userId,
+    status: "RECIBIDO_MIAMI",
+    description: data.description,
+    weightLbs: data.weightLbs,
+    carrierTrackingNumber: data.carrierTrackingNumber,
+    gmcTrackingNumber: gmcTrackingNumber,
+    lengthIn: data.lengthIn,
+    widthIn: data.widthIn,
+    heightIn: data.heightIn,
+    photoUrlMiami: data.photoUrlMiami,
+    tenant_id: tenant?.id || null,
+  },
+});
 
     return NextResponse.json({
         message: "Paquete registrado con éxito.",

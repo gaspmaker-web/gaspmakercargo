@@ -17,9 +17,14 @@ export async function GET() {
     // 🔥 FILTRO MAESTRO PARA INVENTARIO DE RECOGIDA 🔥
     // Buscamos paquetes que el cliente YA PAGÓ y que están marcados para retirar.
     
-    const packages = await prisma.package.findMany({
-      where: {
-        userId: session.user.id,
+    // 🏢 Obtener tenant activo
+const { getTenant } = await import('@/lib/tenant');
+const tenant = await getTenant();
+
+const packages = await prisma.package.findMany({
+  where: {
+    userId: session.user.id,
+    tenant_id: tenant?.id || undefined,
         
         // 1. Que no haya sido entregado/finalizado todavía
         status: { 
