@@ -25,6 +25,9 @@ export async function POST(req: Request) {
     if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'WAREHOUSE')) {
         return NextResponse.json({ message: "No autorizado" }, { status: 401 });
     }
+    // 🏢 Tenant filter
+    const { getTenant } = await import('@/lib/tenant');
+    const tenant = await getTenant();
 
     const { pickupId, quantity = 1 } = await req.json();
 
@@ -59,6 +62,7 @@ export async function POST(req: Request) {
                 data: {
                     gmcTrackingNumber: newTracking,
                     userId: pickup.userId,
+                    tenant_id: tenant?.id || null,  // ← AÑADIR
                     status: 'EN_PROCESAMIENTO', 
                     description: finalDescription,
                     weightLbs: 0, widthIn: 0, heightIn: 0, lengthIn: 0,
