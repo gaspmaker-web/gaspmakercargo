@@ -8,7 +8,9 @@ export async function POST(req: Request) {
     if (!session?.user?.id) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
-
+// 🏢 Tenant filter
+const { getTenant } = await import('@/lib/tenant');
+const tenant = await getTenant();
     const body = await req.json();
     const { mailItemIds, scheduledDate, scheduledTime } = body;
 
@@ -20,6 +22,7 @@ export async function POST(req: Request) {
     const pickupRequest = await prisma.mailPickupRequest.create({
       data: {
         userId: session.user.id,
+        tenant_id: tenant?.id || null,  // ← AÑADIR
         scheduledDate: new Date(scheduledDate),
         scheduledTime: scheduledTime,
         status: "PENDING",
