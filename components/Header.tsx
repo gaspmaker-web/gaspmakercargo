@@ -9,6 +9,7 @@ import ProfileButton from "@/components/ProfileButton";
 import { useSession } from "next-auth/react";
 import { useTranslations, useLocale } from 'next-intl'; 
 import NotificationBell from "@/components/ui/NotificationBell";
+import { useTenant } from '@/hooks/useTenant';
 
 interface HeaderProps {
   backButtonUrl?: string; 
@@ -23,6 +24,10 @@ export default function Header({ backButtonUrl }: HeaderProps) {
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
   const langRef = useRef<HTMLDivElement>(null);
   const { data: session } = useSession(); 
+
+  const { tenant } = useTenant();
+  const logoSrc = tenant?.logo_url || '/gaspmakercargoproject.png';
+  const companyName = tenant?.company_name || 'Gasp Maker Cargo';
 
   const isDashboard = pathname.includes('/dashboard-cliente') || pathname.includes('/menu') || pathname.includes('/account-settings');
   const isBillingPage = pathname.includes('/pagar-facturas');
@@ -160,8 +165,8 @@ export default function Header({ backButtonUrl }: HeaderProps) {
                 ) : (
                     <Link href={`/${locale}`} className="flex items-center group transition-transform hover:scale-105">
                         <Image
-                            src="/gaspmakercargoproject.png" 
-                            alt="Gasp Maker Logo"
+                            src={logoSrc}
+                            alt={companyName}
                             width={50}
                             height={50}
                             priority
@@ -176,8 +181,8 @@ export default function Header({ backButtonUrl }: HeaderProps) {
             <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 lg:hidden flex items-center justify-center">
                 <Link href={`/${locale}`} className="transition-transform hover:scale-105 active:scale-95">
                     <Image
-                        src="/gaspmakercargoproject.png" 
-                        alt="Gasp Maker Cargo Logo"
+                        src={logoSrc}
+                        alt={companyName}
                         width={45}
                         height={45}
                         priority
