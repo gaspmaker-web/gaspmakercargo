@@ -36,8 +36,7 @@ export default auth((req: any) => {
   const { pathname } = nextUrl;
   const role = req.auth?.user?.role?.trim(); 
 
-  // 🏢 DETECTAR TENANT
-  const tenantSlug = detectTenant(req);
+
 
   // ================================================================
   // 🛡️ CORRECCIÓN DE IDIOMA (Anti-Bucle / Too many redirects)
@@ -47,6 +46,16 @@ export default auth((req: any) => {
   const currentLocale = validLocales.includes(localeSegment) 
       ? localeSegment 
       : routing.defaultLocale || 'es';
+
+        // 🏢 DETECTAR TENANT
+  const tenantSlug = detectTenant(req);
+  
+  // 🏢 Si es cargoos.io → redirigir a landing
+if (tenantSlug === 'cargoos') {
+  if (!pathname.includes('/cargoos')) {
+    return NextResponse.redirect(new URL(`/${currentLocale}/cargoos`, req.url));
+  }
+}
 
   // --- 1. Definición de Áreas ---
   const isClientArea = pathname.includes('/dashboard-cliente') || 

@@ -24,13 +24,13 @@ export default function HomePage() {
   const tSteps = useTranslations('HowItWorks'); 
   const tNav = useTranslations('Navigation');
   const locale = useLocale(); 
-  // 🏢 Detectar si es cargoos.io
+   
+// 🏢 Detectar si es cargoos.io
 const headersList = headers();
 const tenantSlug = headersList.get('x-tenant-slug');
 if (tenantSlug === 'cargoos') {
-  redirect(`/${locale}/cargoos`);
+  redirect(`/en/cargoos`);  // ← usa 'en' fijo por ahora
 }
-
   const steps = [
     { id: 1, icon: Zap, color: 'text-blue-500', bg: 'bg-blue-50' },
     { id: 2, icon: ShoppingCart, color: 'text-purple-500', bg: 'bg-purple-50' },
