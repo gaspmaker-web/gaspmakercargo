@@ -98,9 +98,15 @@ export async function GET() {
             serviceType: finalType, 
             
             // EL TÍTULO
-            description: isStorage 
-                ? `Retiro en Bodega` 
-                : (isLocal ? `Entrega Local (Aura)` : (isStorePickup ? `Retiro en Tienda (${ship.selectedCourier || 'GMC'})` : `Envío Internacional (${ship.selectedCourier || 'GMC'})`)),
+         description: isStorage 
+    ? `Retiro en Bodega` 
+    : (isLocal 
+        ? `Entrega Local (Aura)` 
+        : (isStorePickup 
+            ? `Retiro en Tienda (${ship.selectedCourier || 'GMC'})` 
+            : (courierSvc.includes('MARITIME') || courierSvc.includes('OCEAN') || courierSvc.includes('LAPARKAN')
+                ? `Envío Marítimo (Gasp Maker Cargo)`
+                : `Envío Internacional (${ship.selectedCourier || 'GMC'})`))),
             
             totalPaid: ship.totalAmount,
             courier: ship.selectedCourier || ship.courierService,
@@ -119,7 +125,6 @@ export async function GET() {
     const normalizedSinglePackages = singlePackages.map(pkg => {
         const addr = (typeof pkg.shippingAddress === 'string' ? pkg.shippingAddress : JSON.stringify(pkg.shippingAddress || '')).toUpperCase();
         const courierSvc = (pkg.courierService || '').toUpperCase();
-console.log(`🚢 PKG id: ${pkg.id.slice(0,8)} | courierService: "${pkg.courierService}" | courierSvc: "${courierSvc}"`);
         
         // 🕵️‍♂️ LECTURA DE LA CASILLA COURIER SERVICE QUE MENCIONASTE
         const isLocal = addr.includes('MIAMI') || addr.includes('FL') || addr.includes('DORAL') || addr.includes('MEDLEY') || addr.includes('AURA') || courierSvc.includes('AURA') || courierSvc.includes('LOCAL');
