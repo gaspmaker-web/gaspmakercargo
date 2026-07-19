@@ -9,6 +9,9 @@ export async function POST(req: Request) {
     if (!session?.user?.role || !['ADMIN', 'SUPERADMIN'].includes(session.user.role)) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
     }
+    // 🏢 Tenant filter
+    const { getTenant } = await import('@/lib/tenant');
+    const tenant = await getTenant();
 
     const formData = await req.formData();
     const userId = formData.get('userId') as string;
@@ -47,6 +50,7 @@ export async function POST(req: Request) {
     const mailItem = await prisma.mailItem.create({
       data: {
         userId: userId,
+        tenant_id: tenant?.id || null,  // ← AÑADIR
         trackingNumber: trackingNumber, // 🔥 NUEVO: Guardamos el tracking number en la BD
         envelopeImageUrl: url,
         isDamaged: isDamaged,
