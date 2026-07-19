@@ -24,6 +24,11 @@ export async function POST(req: Request) {
         return NextResponse.json({ message: "No autorizado" }, { status: 401 });
     }
 
+    // 🏢 Tenant filter
+    const { getTenant } = await import('@/lib/tenant');
+    const tenant = await getTenant();
+    const tenantFilter = tenant?.id ? { tenant_id: tenant.id } : {};
+
     const body = await req.json();
     const { 
         packageIds, 
@@ -60,7 +65,7 @@ export async function POST(req: Request) {
     // 🚚 CASO 1: RECOGIDA EN BODEGA (PICKUP)
     // =======================================================================
     if (type === 'WAREHOUSE_PICKUP') {
-        const packages = await prisma.package.findMany({ where: { id: { in: packageIds }, userId: session.user.id } });
+        const packages = await prisma.package.findMany({ where: { id: { in: packageIds }, userId: session.user.id, ...tenantFilter } });
         
         let calculatedTotal = 0;
         
@@ -105,18 +110,19 @@ export async function POST(req: Request) {
         });
 
         const pickupShipment = await prisma.consolidatedShipment.create({
-            data: {
-                userId: session.user.id,
-                gmcShipmentNumber: `PICKUP-${Date.now().toString().slice(-6)}`,
-                status: 'PENDIENTE_PAGO',
-                destinationCountryCode: 'USA', // Un pickup siempre es en Miami
-                serviceType: 'PICKUP', 
-                courierService: `Cita: ${scheduledDate} ${scheduledTime}`,
-                totalAmount: parseFloat(calculatedTotal.toFixed(2)),
-                subtotalAmount: parseFloat(calculatedTotal.toFixed(2)), 
-                weightLbs: packages.reduce((acc, p) => acc + (p.weightLbs || 0), 0),
-                packages: { connect: packageIds.map((id: string) => ({ id })) }
-            }
+    data: {
+        userId: session.user.id,
+        tenant_id: tenant?.id || null,  // ← AÑADIR
+        gmcShipmentNumber: `PICKUP-${Date.now().toString().slice(-6)}`,
+        status: 'PENDIENTE_PAGO',
+        destinationCountryCode: 'USA',
+        serviceType: 'PICKUP', 
+        courierService: `Cita: ${scheduledDate} ${scheduledTime}`,
+        totalAmount: parseFloat(calculatedTotal.toFixed(2)),
+        subtotalAmount: parseFloat(calculatedTotal.toFixed(2)), 
+        weightLbs: packages.reduce((acc, p) => acc + (p.weightLbs || 0), 0),
+        packages: { connect: packageIds.map((id: string) => ({ id })) }
+    }
         });
 
         await prisma.package.updateMany({
@@ -136,7 +142,7 @@ export async function POST(req: Request) {
     // =======================================================================
     
     const packagesToConsolidate = await prisma.package.findMany({ 
-        where: { id: { in: packageIds }, userId: session.user.id } 
+       where: { id: { in: packageIds }, userId: session.user.id, ...tenantFilter } 
     });
 
     let normalBoxesCount = 0;
@@ -194,14 +200,15 @@ export async function POST(req: Request) {
         }
     }
 
-    const shipment = await prisma.consolidatedShipment.create({
-        data: {
-            userId: session.user.id,
-            gmcShipmentNumber: shipmentNumber,
-            status: initialStatus,
-            destinationCountryCode: finalCountryCode, // <-- ¡Respeta si Nelsom es de Trinidad!
-            serviceType: finalServiceType,            // <-- ¡Manda la señal a ConsolidationCard.tsx!
-            
+ const shipment = await prisma.consolidatedShipment.create({
+    data: {
+        userId: session.user.id,
+        tenant_id: tenant?.id || null,  // ← AÑADIR
+        gmcShipmentNumber: shipmentNumber,
+        status: initialStatus,
+        destinationCountryCode: finalCountryCode, // <-- ¡Respeta si Nelsom es de Trinidad!
+        serviceType: finalServiceType,            // <-- ¡Manda la señal a ConsolidationCard.tsx!
+        
             subtotalAmount: subtotal,
             processingFee: processingFee,
             totalAmount: totalPaid,
