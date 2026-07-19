@@ -20,17 +20,17 @@ export async function GET(req: Request) {
   if (!query || query.length < 3) {
     return NextResponse.json({ message: "Escribe al menos 3 caracteres" }, { status: 400 });
   }
+try {
+    // 🏢 Tenant filter
+    const { getTenant } = await import('@/lib/tenant');
+    const tenant = await getTenant();
+    const tenantFilter = tenant?.id ? { tenant_id: tenant.id } : {};
 
-  try {
     const users = await prisma.user.findMany({
       where: {
+        ...tenantFilter,
         OR: [
-          // CAMBIO AQUÍ: Usamos 'startsWith' para el email.
-          // Así 'd@gmail.com' NO encontrará 'dd@gmail.com', pero sí 'd@gmail.com'
           { email: { startsWith: query, mode: 'insensitive' } },
-          
-          // Para nombre y casillero mantenemos 'contains' (más flexible)
-          // Así si buscas "Gerardo", encuentra "Gerardo Soler"
           { name: { contains: query, mode: 'insensitive' } },
           { suiteNo: { contains: query, mode: 'insensitive' } },
         ]
