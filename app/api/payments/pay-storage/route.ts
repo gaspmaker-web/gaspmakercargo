@@ -16,8 +16,12 @@ export async function POST(req: Request) {
       apiVersion: '2024-06-20' as any,
     });
 
-    const session = await auth();
-    if (!session?.user?.id) return new NextResponse("Unauthorized", { status: 401 });
+   const session = await auth();
+if (!session?.user?.id) return new NextResponse("Unauthorized", { status: 401 });
+
+    // 🏢 Tenant filter
+    const { getTenant } = await import('@/lib/tenant');
+    const tenant = await getTenant();
 
     const userId = session.user.id;
     // 1. Recibimos los datos exactos del Modal (Paquete y Tarjeta seleccionada)
@@ -105,6 +109,7 @@ export async function POST(req: Request) {
       const historyRecord = await prisma.pickupRequest.create({
         data: {
             userId: userId,
+            tenant_id: tenant?.id || null,  // ← AÑADIR
             serviceType: 'STORAGE_FEE', 
             status: 'PAGADO', // Estado final, no activo
             originAddress: 'Bodega Miami',
