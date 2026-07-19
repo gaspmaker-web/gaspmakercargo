@@ -19,6 +19,10 @@ export async function POST(req: Request) {
 
     const body = await req.json();
 
+    // 🏢 Tenant filter
+    const { getTenant } = await import('@/lib/tenant');
+    const tenant = await getTenant();
+
     // 2. 🕵️‍♂️ LÓGICA DE CLIENTE FANTASMA
     let user = await prisma.user.findUnique({
       where: { email: body.senderEmail }
@@ -35,7 +39,8 @@ export async function POST(req: Request) {
           phone: body.senderPhone,
           role: 'CLIENT',
           suiteNo: randomSuite,
-          countryCode: body.receiverCountry || 'US'
+          countryCode: body.receiverCountry || 'US',
+          tenant_id: tenant?.id || null,  // ← AÑADIR
         }
       });
     }
@@ -76,8 +81,9 @@ export async function POST(req: Request) {
     const newPackage = await prisma.package.create({
       data: {
         userId: user.id,
-        gmcTrackingNumber: gmcTracking, // El interno de ustedes
-        carrierTrackingNumber: finalTracking, // El real (1Z...)
+        tenant_id: tenant?.id || null,  // ← AÑADIR
+        gmcTrackingNumber: gmcTracking,
+        carrierTrackingNumber: finalTracking,
         finalTrackingNumber: finalTracking,   
         description: `${body.description} [DROP & GO]`,
         
