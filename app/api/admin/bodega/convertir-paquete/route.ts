@@ -8,7 +8,9 @@ export async function POST(req: Request) {
     if (!session?.user?.role || !['ADMIN', 'SUPERADMIN'].includes(session.user.role)) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
     }
-
+    // 🏢 Tenant filter
+    const { getTenant } = await import('@/lib/tenant');
+    const tenant = await getTenant();
     const { mailItemId } = await req.json();
 
     if (!mailItemId) return NextResponse.json({ error: 'Falta el ID del sobre' }, { status: 400 });
@@ -29,6 +31,7 @@ export async function POST(req: Request) {
         const newPackage = await tx.package.create({
             data: {
                 userId: mailItem.userId,
+                tenant_id: tenant?.id || null,  // ← AÑADIR
                 carrierTrackingNumber: `DOC-${uniqueId}`, 
                 gmcTrackingNumber: `GMC-DOC-${uniqueId}`, 
                 courier: 'Buzón Virtual',
