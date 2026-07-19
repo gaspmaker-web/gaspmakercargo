@@ -11,17 +11,25 @@ import {
 } from 'lucide-react';
 
 import RecommendedStores from '@/components/RecommendedStores';
+import { headers } from 'next/headers';
+import { redirect } from 'next/navigation';
 
 // 🔥 ARQUITECTURA ENTERPRISE: Incremental Static Regeneration (ISR)
 // Vercel compilará esta página 1 sola vez y la guardará en su CDN mundial.
 // Se regenerará sola cada 3600 segundos (1 hora) sin consumir CPU.
-export const revalidate = 3600;
+export const dynamic = 'force-dynamic';
 
 export default function HomePage() {
   const t = useTranslations('HomePage');
   const tSteps = useTranslations('HowItWorks'); 
   const tNav = useTranslations('Navigation');
   const locale = useLocale(); 
+  // 🏢 Detectar si es cargoos.io
+const headersList = headers();
+const tenantSlug = headersList.get('x-tenant-slug');
+if (tenantSlug === 'cargoos') {
+  redirect(`/${locale}/cargoos`);
+}
 
   const steps = [
     { id: 1, icon: Zap, color: 'text-blue-500', bg: 'bg-blue-50' },

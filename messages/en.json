@@ -1428,5 +1428,37 @@
       "ancel_ba101": "ANCEL BA101 Professional Car Battery Tester 12V Automotive Alternator Diagnostic Tool",
       "borescope": "Articulating Borescope 6.6FT, 0.22in Two-Way 210° Articulating Endoscope with Bright LED"
     }
-  }
+  },
+"CargoOSPage": {
+  "hero_title": "The Operating System for Logistics Businesses",
+  "hero_subtitle": "Give your warehouse, courier, or mail center a professional platform with your own brand and domain.",
+  "hero_cta": "Request a Demo",
+  "hero_cta2": "See Plans",
+  "features_title": "Everything you need to run your logistics business",
+  "feature1_title": "Your Brand, Your Domain",
+  "feature1_desc": "Your clients see your logo and your domain. CargoOS is invisible.",
+  "feature2_title": "Multi-Carrier Shipping",
+  "feature2_desc": "DHL, FedEx, UPS, USPS integrated. Real-time rates and automatic labels.",
+  "feature3_title": "Client Portal + Mobile App",
+  "feature3_desc": "Your clients track their packages, pay online and manage their shipments.",
+  "feature4_title": "Virtual Mailbox",
+  "feature4_desc": "Offer virtual mailbox services with USPS compliance built in.",
+  "feature5_title": "Local Delivery",
+  "feature5_desc": "Route management, live driver tracking and proof of delivery.",
+  "feature6_title": "Personal Shopper",
+  "feature6_desc": "Let your clients buy from any US store and ship internationally.",
+  "pricing_title": "Simple, transparent pricing",
+  "plan_starter": "Starter",
+  "plan_growth": "Growth",
+  "plan_pro": "Pro",
+  "plan_starter_desc": "Perfect to get started",
+  "plan_growth_desc": "For growing operations",
+  "plan_pro_desc": "For serious operators",
+  "plan_cta": "Get Started",
+  "setup_fee": "$500 one-time setup fee",
+  "contact_title": "Ready to launch your logistics business?",
+  "contact_subtitle": "Contact us and we will set up your platform in days, not months.",
+  "contact_cta": "Contact Us",
+  "footer_tagline": "Powered by CargoOS"
+}
 }

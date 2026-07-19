@@ -1451,4 +1451,37 @@
       "borescope": "Boroscópio Articulado de 6.6FT, Endoscópio de Sonda Fina de 0.22in Bidirecional de 210° com Luzes LED de Alto Brilho"
 }
   }
+,
+"CargoOSPage": {
+  "hero_title": "O Sistema Operacional para Negócios de Logística",
+  "hero_subtitle": "Dê ao seu armazém, courier ou mail center uma plataforma profissional com sua própria marca e domínio.",
+  "hero_cta": "Solicitar Demo",
+  "hero_cta2": "Ver Planos",
+  "features_title": "Tudo que você precisa para operar seu negócio logístico",
+  "feature1_title": "Sua Marca, Seu Domínio",
+  "feature1_desc": "Seus clientes veem seu logo e seu domínio. CargoOS é invisível.",
+  "feature2_title": "Envios Multi-Carrier",
+  "feature2_desc": "DHL, FedEx, UPS, USPS integrados. Tarifas em tempo real e etiquetas automáticas.",
+  "feature3_title": "Portal de Clientes + App Móvel",
+  "feature3_desc": "Seus clientes rastreiam seus pacotes, pagam online e gerenciam seus envios.",
+  "feature4_title": "Caixa Postal Virtual",
+  "feature4_desc": "Ofereça serviços de caixa postal virtual com conformidade USPS integrada.",
+  "feature5_title": "Entrega Local",
+  "feature5_desc": "Gestão de rotas, rastreamento de motoristas ao vivo e comprovante de entrega.",
+  "feature6_title": "Personal Shopper",
+  "feature6_desc": "Permita que seus clientes comprem em qualquer loja dos EUA e enviem internacionalmente.",
+  "pricing_title": "Preços simples e transparentes",
+  "plan_starter": "Starter",
+  "plan_growth": "Growth",
+  "plan_pro": "Pro",
+  "plan_starter_desc": "Perfeito para começar",
+  "plan_growth_desc": "Para operações em crescimento",
+  "plan_pro_desc": "Para operadores sérios",
+  "plan_cta": "Começar",
+  "setup_fee": "$500 de configuração única",
+  "contact_title": "Pronto para lançar seu negócio de logística?",
+  "contact_subtitle": "Entre em contato e configuramos sua plataforma em dias, não meses.",
+  "contact_cta": "Contate-nos",
+  "footer_tagline": "Powered by CargoOS"
+}
 }

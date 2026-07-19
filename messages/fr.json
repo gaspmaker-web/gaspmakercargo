@@ -1450,5 +1450,37 @@
       "ancel_ba101": "Testeur de Batterie de Voiture Professionnel ANCEL BA101, Outil de Diagnostic d'Alternateur 12V",
       "borescope": "Endoscope Articulé 6.6FT, Boroscope de Sonde Mince 0.22in Bidirectionnel 210° avec Lumières LED"
     }
-  }
+  },
+"CargoOSPage": {
+  "hero_title": "Le Système d'Exploitation pour les Entreprises Logistiques",
+  "hero_subtitle": "Donnez à votre entrepôt, coursier ou centre de courrier une plateforme professionnelle avec votre propre marque et domaine.",
+  "hero_cta": "Demander une Démo",
+  "hero_cta2": "Voir les Plans",
+  "features_title": "Tout ce dont vous avez besoin pour gérer votre entreprise logistique",
+  "feature1_title": "Votre Marque, Votre Domaine",
+  "feature1_desc": "Vos clients voient votre logo et votre domaine. CargoOS est invisible.",
+  "feature2_title": "Expédition Multi-Transporteur",
+  "feature2_desc": "DHL, FedEx, UPS, USPS intégrés. Tarifs en temps réel et étiquettes automatiques.",
+  "feature3_title": "Portail Client + Application Mobile",
+  "feature3_desc": "Vos clients suivent leurs colis, paient en ligne et gèrent leurs expéditions.",
+  "feature4_title": "Boîte Postale Virtuelle",
+  "feature4_desc": "Offrez des services de boîte postale virtuelle avec conformité USPS intégrée.",
+  "feature5_title": "Livraison Locale",
+  "feature5_desc": "Gestion des itinéraires, suivi des chauffeurs en direct et preuve de livraison.",
+  "feature6_title": "Personal Shopper",
+  "feature6_desc": "Permettez à vos clients d'acheter dans n'importe quel magasin américain et d'expédier à l'international.",
+  "pricing_title": "Tarification simple et transparente",
+  "plan_starter": "Starter",
+  "plan_growth": "Growth",
+  "plan_pro": "Pro",
+  "plan_starter_desc": "Parfait pour commencer",
+  "plan_growth_desc": "Pour les opérations en croissance",
+  "plan_pro_desc": "Pour les opérateurs sérieux",
+  "plan_cta": "Commencer",
+  "setup_fee": "500$ de frais de configuration unique",
+  "contact_title": "Prêt à lancer votre entreprise logistique?",
+  "contact_subtitle": "Contactez-nous et nous configurerons votre plateforme en jours, pas en mois.",
+  "contact_cta": "Nous Contacter",
+  "footer_tagline": "Powered by CargoOS"
+}
 }
