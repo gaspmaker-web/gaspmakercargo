@@ -9,6 +9,7 @@ import Providers from '@/components/Providers';
 import HeaderWrapper from '@/components/HeaderWrapper'; 
 import CookieBanner from '@/components/ui/CookieBanner';
 import TawkLoader from '@/components/TawkLoader'; 
+import { getTenant, getTenantCSSVars } from '@/lib/tenant';
 
 // 🔥 QUITA LA IMPORTACIÓN DE ONESIGNAL DE AQUÍ 🔥
 import { auth } from "@/auth"; 
@@ -54,6 +55,8 @@ export default async function RootLayout({
 }) {
   
   const session = await auth();
+  const tenant = await getTenant();
+  const tenantStyles = getTenantCSSVars(tenant);
   
   let messages;
   try {
@@ -64,10 +67,12 @@ export default async function RootLayout({
 
   return (
     <html lang={locale}>
-      <body 
-        className={`${inter.variable} ${montserrat.variable} ${garamond.variable} font-sans bg-gray-50 flex flex-col min-h-screen`}
-        suppressHydrationWarning={true}
-      >
+     <body 
+  className={`${inter.variable} ${montserrat.variable} ${garamond.variable} font-sans bg-gray-50 flex flex-col min-h-screen`}
+  suppressHydrationWarning={true}
+  style={tenantStyles}
+>
+        
         
         {/* 🔥 QUITA LA ETIQUETA DE ONESIGNAL DE AQUÍ 🔥 */}
 
