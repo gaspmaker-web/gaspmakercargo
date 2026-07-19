@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { revalidatePath } from "next/cache"; 
 
 // 👇 VACUNA 1: Forzar modo dinámico (Vital para transacciones financieras)
 export const dynamic = 'force-dynamic';
@@ -478,16 +477,6 @@ export async function POST(req: Request) {
                 updatedAt: new Date()
             }
         });
-    }
-
-    // =========================================================================
-    // 🔥 EL LIMPIADOR DE PANTALLA (Este sí lo dejamos, es vital)
-    // =========================================================================
-    try {
-        const { revalidatePath } = await import("next/cache");
-        revalidatePath('/', 'layout');
-    } catch (e) {
-        console.error("Error limpiando caché:", e);
     }
 
     // =========================================================================
