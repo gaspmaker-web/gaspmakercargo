@@ -14,6 +14,9 @@ export async function POST(req: Request) {
     if (!session?.user?.email || !session?.user?.id) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
+// 🏢 Tenant filter
+const { getTenant } = await import('@/lib/tenant');
+const tenant = await getTenant();
 
     const body = await req.json();
     const { planType } = body;
@@ -107,6 +110,7 @@ export async function POST(req: Request) {
         await prisma.mailboxSubscription.create({
             data: {
                 userId: session.user.id,
+                tenant_id: tenant?.id || null,  // ← AÑADIR
                 planType: exactDbPlanName,
                 stripeSubscriptionId: subscription.id,
                 currentPeriodEnd: currentPeriodEnd,
