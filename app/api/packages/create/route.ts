@@ -18,6 +18,9 @@ export async function POST(req: Request) {
     if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'WAREHOUSE')) {
       return NextResponse.json({ message: "No autorizado" }, { status: 401 });
     }
+   // 🏢 Tenant filter
+    const { getTenant } = await import('@/lib/tenant');
+    const tenant = await getTenant();
 
     // 2. Recibir datos del Admin
     const body = await req.json();
@@ -113,6 +116,7 @@ export async function POST(req: Request) {
       const newPackage = await prisma.package.create({
         data: {
           userId,
+          tenant_id: tenant?.id || null,  // ← AÑADIR
           carrierTrackingNumber,
           gmcTrackingNumber: gmcTracking,
           description: description || "Paquete recibido en Miami",
