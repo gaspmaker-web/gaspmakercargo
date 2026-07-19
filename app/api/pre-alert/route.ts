@@ -15,6 +15,9 @@ export async function POST(req: Request) {
     if (!session?.user?.id) {
         return NextResponse.json({ message: "No autorizado. Por favor inicia sesión." }, { status: 401 });
     }
+    // 🏢 Tenant filter
+    const { getTenant } = await import('@/lib/tenant');
+    const tenant = await getTenant();
 
     const body = await req.json();
     const {
@@ -38,6 +41,7 @@ export async function POST(req: Request) {
     const newPackage = await prisma.package.create({
       data: {
         userId: session.user.id, 
+        tenant_id: tenant?.id || null,  // ← AÑADIR
         status: "PRE_ALERTA",
         
         // Datos de Rastreo Externo
