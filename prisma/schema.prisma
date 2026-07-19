@@ -231,7 +231,9 @@ model MailboxSubscription {
   currentPeriodEnd     DateTime?
   stripeSubscriptionId String?               @unique
   userId               String                @unique
+  tenant_id            String?               @db.Uuid
   additionalRecipients AdditionalRecipient[]
+  tenant               Tenant?               @relation(fields: [tenant_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   user                 User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
@@ -267,6 +269,8 @@ model MailItem {
   receivedAt       DateTime            @default(now())
   userId           String
   cargoPackageId   String?             @unique
+  tenant_id        String?             @db.Uuid
+  tenant           Tenant?             @relation(fields: [tenant_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   user             User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   pickupRequests   MailPickupRequest[] @relation("MailItemToMailPickupRequest")
 }
@@ -331,6 +335,8 @@ model MailPickupRequest {
   status        String     @default("PENDING")
   createdAt     DateTime   @default(now())
   completedAt   DateTime?
+  tenant_id     String?    @db.Uuid
+  tenant        Tenant?    @relation(fields: [tenant_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   user          User       @relation(fields: [userId], references: [id])
   mailItems     MailItem[] @relation("MailItemToMailPickupRequest")
 }
@@ -371,6 +377,9 @@ model Tenant {
   created_at             DateTime?              @default(now()) @db.Timestamp(6)
   updated_at             DateTime?              @default(now()) @updatedAt @db.Timestamp(6)
   consolidatedShipments  ConsolidatedShipment[]
+  mailItems              MailItem[]
+  mailPickupRequests     MailPickupRequest[]
+  mailboxSubscriptions   MailboxSubscription[]
   packages               Package[]
   pickupRequests         PickupRequest[]
   ShopperItem            ShopperItem[]
