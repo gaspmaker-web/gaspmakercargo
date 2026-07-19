@@ -47,15 +47,20 @@ export async function POST(req: Request) {
         return NextResponse.json({ message: "Máximo 7 paquetes por envío." }, { status: 400 });
     }
 
+    // 🏢 Tenant filter
+    const { getTenant } = await import('@/lib/tenant');
+    const tenant = await getTenant(); 
+
     // --- TRANSACCIÓN ---
     const transactionResult = await prisma.$transaction(async (tx) => {
       
       const validPackages = await tx.package.findMany({
-        where: {
-          id: { in: packageIds },
-          userId: userId, 
-          status: isAdmin ? undefined : "RECIBIDO_MIAMI",
-        },
+      where: {
+  id: { in: packageIds },
+  userId: userId,
+  status: isAdmin ? undefined : "RECIBIDO_MIAMI",
+  tenant_id: tenant?.id || undefined,
+},
         select: { id: true, weightLbs: true, description: true, gmcTrackingNumber: true }
       });
 
@@ -84,16 +89,17 @@ export async function POST(req: Request) {
 
       const newConsolidatedShipment = await tx.consolidatedShipment.create({
         data: {
-          gmcShipmentNumber: masterTracking,
-          status: initialStatus,
-          destinationCountryCode: countryCode,
-          userId: userId,
-          weightLbs: finalWeight ? parseFloat(finalWeight) : undefined,
-          lengthIn: finalDimensions?.length ? parseFloat(finalDimensions.length) : undefined,
-          widthIn: finalDimensions?.width ? parseFloat(finalDimensions.width) : undefined,
-          heightIn: finalDimensions?.height ? parseFloat(finalDimensions.height) : undefined,
-          declaredValue: finalValue ? parseFloat(finalValue) : 0,
-        },
+  gmcShipmentNumber: masterTracking,
+  status: initialStatus,
+  destinationCountryCode: countryCode,
+  userId: userId,
+  weightLbs: finalWeight ? parseFloat(finalWeight) : undefined,
+  lengthIn: finalDimensions?.length ? parseFloat(finalDimensions.length) : undefined,
+  widthIn: finalDimensions?.width ? parseFloat(finalDimensions.width) : undefined,
+  heightIn: finalDimensions?.height ? parseFloat(finalDimensions.height) : undefined,
+  declaredValue: finalValue ? parseFloat(finalValue) : 0,
+  tenant_id: tenant?.id || null,  // ← AÑADIR
+},
       });
 
       await tx.package.updateMany({
