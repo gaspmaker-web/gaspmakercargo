@@ -29,7 +29,8 @@ export default function Header({ backButtonUrl, tenantSlug: tenantSlugProp }: He
   const { tenant } = useTenant();
   // 🏢 Si es CargoOS landing, no mostrar header — detecta desde prop O desde tenant
   const effectiveSlug = tenantSlugProp || tenant?.slug;
-  if (effectiveSlug === 'cargoos') return null;
+console.log('🏢 Header tenantSlugProp:', tenantSlugProp, '| effectiveSlug:', effectiveSlug);
+if (effectiveSlug === 'cargoos') return null;
 
   const logoSrc = tenant?.logo_url || '/gaspmakercargoproject.png';
   const companyName = tenant?.company_name || 'Gasp Maker Cargo';
