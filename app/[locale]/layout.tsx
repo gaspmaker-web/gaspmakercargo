@@ -80,9 +80,9 @@ export default async function RootLayout({
      <NextIntlClientProvider locale={locale} messages={messages}>
   <Providers>
     
-    <HeaderWrapper tenantSlug={tenantSlug}>
-      <Header /> 
-    </HeaderWrapper>
+  <HeaderWrapper tenantSlug={tenantSlug}>
+  <Header tenantSlug={tenantSlug} /> 
+</HeaderWrapper>
     
     <main className="flex-grow"> 
       {children}

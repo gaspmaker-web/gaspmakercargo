@@ -12,10 +12,11 @@ import NotificationBell from "@/components/ui/NotificationBell";
 import { useTenant } from '@/hooks/useTenant';
 
 interface HeaderProps {
-  backButtonUrl?: string; 
+  backButtonUrl?: string;
+  tenantSlug?: string;  // ← AÑADIR
 }
 
-export default function Header({ backButtonUrl }: HeaderProps) {
+export default function Header({ backButtonUrl, tenantSlug: tenantSlugProp }: HeaderProps) {
   const t = useTranslations('Navigation'); 
   const locale = useLocale(); 
   const pathname = usePathname();
@@ -26,8 +27,10 @@ export default function Header({ backButtonUrl }: HeaderProps) {
   const { data: session } = useSession(); 
 
   const { tenant } = useTenant();
-  // 🏢 Si es CargoOS landing, no mostrar header de GaspMaker
-if (tenant?.slug === 'cargoos') return null;
+  // 🏢 Si es CargoOS landing, no mostrar header — detecta desde prop O desde tenant
+  const effectiveSlug = tenantSlugProp || tenant?.slug;
+  if (effectiveSlug === 'cargoos') return null;
+
   const logoSrc = tenant?.logo_url || '/gaspmakercargoproject.png';
   const companyName = tenant?.company_name || 'Gasp Maker Cargo';
 
