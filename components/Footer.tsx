@@ -2,11 +2,15 @@
 
 import React from 'react';
 import { useTranslations } from 'next-intl';
+import { useTenant } from '@/hooks/useTenant';
 
 export default function Footer() {
   const t = useTranslations('HomePage.Footer');
-  // 1. Agregamos el hook para llamar los textos del aviso de afiliados
   const tAffiliate = useTranslations('AffiliateDisclaimer');
+  
+  const { tenant } = useTenant();
+  // 🏢 Si es CargoOS landing, no mostrar footer de GaspMaker
+  if (tenant?.slug === 'cargoos') return null;
 
   return (
     <footer className="bg-gmc-gris-oscuro py-8 text-center mt-auto w-full border-t border-gray-800">

@@ -26,6 +26,8 @@ export default function Header({ backButtonUrl }: HeaderProps) {
   const { data: session } = useSession(); 
 
   const { tenant } = useTenant();
+  // 🏢 Si es CargoOS landing, no mostrar header de GaspMaker
+if (tenant?.slug === 'cargoos') return null;
   const logoSrc = tenant?.logo_url || '/gaspmakercargoproject.png';
   const companyName = tenant?.company_name || 'Gasp Maker Cargo';
 
