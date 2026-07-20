@@ -29,19 +29,22 @@ const CACHE_TTL = 60 * 1000; // 1 minuto
 // ==========================================
 export async function getTenant(): Promise<TenantConfig | null> {
   try {
-    const headersList = headers();
-   const host = headersList.get('x-forwarded-host') || headersList.get('host') || '';
-console.log('🏢 TENANT host:', host, '| x-tenant-slug:', headersList.get('x-tenant-slug'));
-    
-    // 🏢 Detectar tenant por host primero, luego por header
-    let slug = headersList.get('x-tenant-slug') || 'gaspmaker';
-    
-    // Override por dominio real — más confiable que el header
-    if (host.includes('cargoos.io')) {
-      slug = 'cargoos';
-    } else if (host.includes('gaspmakercargo.com') || host.includes('localhost')) {
-      slug = 'gaspmaker';
-    }
+const headersList = headers();
+const host = headersList.get('host') || '';
+
+// 🏢 1. Variable de entorno por proyecto (más confiable en Vercel)
+const envSlug = process.env.TENANT_SLUG;
+
+// 🏢 2. Fallback: detectar por host
+let slug = envSlug || headersList.get('x-tenant-slug') || 'gaspmaker';
+
+if (!envSlug) {
+  if (host.includes('cargoos.io')) {
+    slug = 'cargoos';
+  } else if (host.includes('gaspmakercargo.com') || host.includes('localhost')) {
+    slug = 'gaspmaker';
+  }
+}
 
     // Revisar cache primero
     const cached = tenantCache.get(slug);
