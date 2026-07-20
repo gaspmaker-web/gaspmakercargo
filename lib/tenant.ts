@@ -30,7 +30,17 @@ const CACHE_TTL = 60 * 1000; // 1 minuto
 export async function getTenant(): Promise<TenantConfig | null> {
   try {
     const headersList = headers();
-    const slug = headersList.get('x-tenant-slug') || 'gaspmaker';
+    const host = headersList.get('host') || '';
+    
+    // 🏢 Detectar tenant por host primero, luego por header
+    let slug = headersList.get('x-tenant-slug') || 'gaspmaker';
+    
+    // Override por dominio real — más confiable que el header
+    if (host.includes('cargoos.io')) {
+      slug = 'cargoos';
+    } else if (host.includes('gaspmakercargo.com') || host.includes('localhost')) {
+      slug = 'gaspmaker';
+    }
 
     // Revisar cache primero
     const cached = tenantCache.get(slug);
