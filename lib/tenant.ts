@@ -31,6 +31,7 @@ export async function getTenant(): Promise<TenantConfig | null> {
   try {
     const headersList = headers();
     const host = headersList.get('host') || '';
+console.log('🏢 TENANT host:', host, '| x-tenant-slug:', headersList.get('x-tenant-slug'));
     
     // 🏢 Detectar tenant por host primero, luego por header
     let slug = headersList.get('x-tenant-slug') || 'gaspmaker';
