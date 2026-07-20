@@ -49,6 +49,9 @@ export default auth((req: any) => {
 
         // 🏢 DETECTAR TENANT
   const tenantSlug = detectTenant(req);
+  // 🏢 Pasar host original para detección correcta en Vercel
+const requestHeaders = new Headers(req.headers);
+requestHeaders.set('x-forwarded-host', req.headers.get('host') || '');
   
   // 🏢 Si es cargoos.io → redirigir a landing
 if (tenantSlug === 'cargoos') {
@@ -113,12 +116,13 @@ if (tenantSlug === 'cargoos') {
     }
   }
 
-  // 🏢 Pasar tenant slug via header a todas las páginas
-  const response = intlMiddleware(req);
-  if (response) {
-    response.headers.set('x-tenant-slug', tenantSlug);
-  }
-  return response;
+// 🏢 Pasar tenant slug via header a todas las páginas
+const response = intlMiddleware(req);
+if (response) {
+  response.headers.set('x-tenant-slug', tenantSlug);
+  response.headers.set('x-forwarded-host', req.headers.get('host') || '');
+}
+return response;
 });
 
 export const config = {
