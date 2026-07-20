@@ -57,6 +57,7 @@ export default async function RootLayout({
   const session = await auth();
   const tenant = await getTenant();
   const tenantStyles = getTenantCSSVars(tenant);
+  const tenantSlug = tenant?.slug || 'gaspmaker';
   
   let messages;
   try {
@@ -76,24 +77,24 @@ export default async function RootLayout({
         
         {/* 🔥 QUITA LA ETIQUETA DE ONESIGNAL DE AQUÍ 🔥 */}
 
-        <NextIntlClientProvider locale={locale} messages={messages}>
-          <Providers>
-            
-            <HeaderWrapper>
-              <Header /> 
-            </HeaderWrapper>
-            
-            <main className="flex-grow"> 
-              {children}
-            </main>
+     <NextIntlClientProvider locale={locale} messages={messages}>
+  <Providers>
+    
+    <HeaderWrapper tenantSlug={tenantSlug}>
+      <Header /> 
+    </HeaderWrapper>
+    
+    <main className="flex-grow"> 
+      {children}
+    </main>
 
-            <Footer />
+    <Footer tenantSlug={tenantSlug} />
 
-            <CookieBanner />
-            <TawkLoader />
+    <CookieBanner />
+    <TawkLoader />
 
-          </Providers>
-        </NextIntlClientProvider>
+  </Providers>
+</NextIntlClientProvider>
       </body>
     </html>
   );
