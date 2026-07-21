@@ -12,3 +12,6 @@ npm-debug.log
 # PWA Service Worker (generado automaticamente en build)
 public/sw.js
 public/workbox-*.js
+.env.production
+.env.cargoos
+.env.cargoos.clean

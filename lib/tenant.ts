@@ -34,7 +34,6 @@ const host = headersList.get('host') || '';
 
 // 🏢 1. Variable de entorno por proyecto (más confiable en Vercel)
 const envSlug = process.env.TENANT_SLUG;
-console.log('🏢 TENANT envSlug:', envSlug, '| host:', host);
 
 // 🏢 2. Fallback: detectar por host
 let slug = envSlug || headersList.get('x-tenant-slug') || 'gaspmaker';
