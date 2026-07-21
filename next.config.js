@@ -9,8 +9,8 @@ const withPWA = require("@ducanh2912/next-pwa").default({
   disable: process.env.NODE_ENV === "development",
   register: true,
   skipWaiting: true,
+  sw: process.env.TENANT_SLUG === 'cargoos' ? 'cargoos-sw.js' : 'sw.js',
 });
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
