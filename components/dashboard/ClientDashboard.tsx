@@ -134,6 +134,7 @@ export default function ClientDashboard({
 
   const selectedPackagesData = packages.filter(p => selectedPkgs.includes(p.id));
   const totalSelectedWeight = selectedPackagesData.reduce((acc, p) => acc + (Number(p.weightLbs) || 0), 0);
+  const totalSelectedVolume = selectedPackagesData.reduce((acc, p) => acc + (Number(p.volumeCft) || 0), 0);
 
  // =========================================================================
   // 🚚 ACCIÓN 1: CONSOLIDAR / LOCAL DELIVERY / OCEAN
@@ -685,9 +686,12 @@ export default function ClientDashboard({
                     <span className="text-sm font-bold whitespace-nowrap">
                         {selectedPkgs.length} <span className="hidden sm:inline">{t('selectedCount')}</span>
                     </span>
-                    <span className="text-[10px] sm:text-xs text-gmc-dorado-principal font-bold sm:ml-2 whitespace-nowrap">
-                        ({totalSelectedWeight.toFixed(1)} lbs)
-                    </span>
+                   <span className="text-[10px] sm:text-xs text-gmc-dorado-principal font-bold sm:ml-2 whitespace-nowrap">
+    {totalSelectedWeight.toFixed(1)} lbs
+    {totalSelectedVolume > 0 && (
+        <span className="ml-1.5 text-gray-400">· {totalSelectedVolume.toFixed(2)} ft³</span>
+    )}
+</span>
                 </div>
                 
                 <div className="h-5 w-px bg-gray-600 hidden sm:block shrink-0"></div>
