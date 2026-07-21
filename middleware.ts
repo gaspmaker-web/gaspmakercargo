@@ -53,21 +53,6 @@ export default auth((req: any) => {
 const requestHeaders = new Headers(req.headers);
 requestHeaders.set('x-forwarded-host', req.headers.get('host') || '');
   
-  // 🏢 Si es cargoos.io → redirigir a landing
-if (tenantSlug === 'cargoos') {
-  // En proyecto cargoos-landing, redirigir / a /cargoos
-  // Solo redirigir si es la raíz o rutas de GaspMaker
-  const isCargoOSRoute = pathname.includes('/cargoos');
-  const isSystemRoute = pathname.includes('/dashboard') || 
-                        pathname.includes('/login') || 
-                        pathname.includes('/registro');
-if (!isCargoOSRoute && !isSystemRoute) {
-  const host = req.headers.get('host') || 'www.cargoos.io';
-  return NextResponse.redirect(
-    new URL(`/${currentLocale}/cargoos`, `https://${host}`)
-  );
-}
-}
 
   // --- 1. Definición de Áreas ---
   const isClientArea = pathname.includes('/dashboard-cliente') || 
