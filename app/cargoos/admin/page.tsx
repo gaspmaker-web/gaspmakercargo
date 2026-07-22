@@ -127,12 +127,20 @@ export default function CargoOSAdminPage() {
             <p className="text-gray-400 text-xs">{tenants.length} operadores</p>
           </div>
         </div>
-        <button
-          onClick={() => setShowNew(true)}
-          className="bg-blue-600 hover:bg-blue-500 text-white text-sm px-4 py-2 rounded-lg transition-colors"
-        >
-          + Nuevo operador
-        </button>
+       <div className="flex items-center gap-3">
+  <button
+    onClick={() => setShowNew(true)}
+    className="bg-blue-600 hover:bg-blue-500 text-white text-sm px-4 py-2 rounded-lg transition-colors"
+  >
+    + Nuevo operador
+  </button>
+  <button
+    onClick={() => { setAuthed(false); setSecret(''); setTenants([]); }}
+    className="bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white text-sm px-4 py-2 rounded-lg transition-colors"
+  >
+    Salir
+  </button>
+</div>
       </div>
 
       {/* Tabla de tenants */}
