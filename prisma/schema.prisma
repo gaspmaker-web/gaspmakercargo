@@ -1,79 +1,140 @@
+// prisma/schema.prisma
+
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
   provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  url       = env("DATABASE_URL") // Transaction Mode (Puerto 6543 - Supabase)
+  directUrl = env("DIRECT_URL")   // Session Mode (Puerto 5432 - Supabase)
 }
 
+// -----------------------------------------------------------------------------------------
+
 model User {
-  id                    String                 @id @default(uuid())
+  id                    String                @id @default(uuid())
   name                  String?
-  email                 String                 @unique
-  role                  String                 @default("CLIENTE")
-  createdAt             DateTime               @default(now())
+  
+  // ✅ CAMPO IMAGEN (Avatar)
+  image                 String?               
+
+  // ✅ EMAIL (Único)
+  email                 String                @unique
+  emailVerified         DateTime?             // 🔄 VERIFICACIÓN DE EMAIL (Auth.js)
+  
+  // 🔐 AUTENTICACIÓN (CORREGIDO)
+  password              String?
+
+  // 🔄 RECUPERACIÓN
+  resetToken            String?               @unique 
+  resetTokenExpiry      DateTime? 
+
+  role                  String                @default("CLIENTE")
+
+ // 🔥 PLAN CORPORATIVO / VIP (AÑADIR ESTA LÍNEA)
+  planType              String?               @default("STANDARD")
+  // 🔥 EXENCIÓN DE FEE DE CONSOLIDACIÓN (CLIENTES VIP ESPECIALES)
+  noConsolidationFee    Boolean               @default(false)
+  createdAt             DateTime              @default(now())
+
+  // Campos de Perfil
   countryCode           String?
-  suiteNo               String?                @unique
+  suiteNo               String?               @unique 
   dateOfBirth           DateTime?
   address               String?
   cityZip               String?
   country               String?
   phone                 String?
-  referralCode          String?                @unique
-  referredBy            String?
-  shippingBalance       Float                  @default(0.0)
-  stripeCustomerId      String?                @unique
-  image                 String?
-  password              String?
-  referralRewardPaid    Boolean                @default(false)
-  resetToken            String?                @unique
-  resetTokenExpiry      DateTime?
-  walletBalance         Float                  @default(0.0)
-  emailVerified         DateTime?
-  planType              String?                @default("STANDARD")
-  noConsolidationFee    Boolean                @default(false)
-  tenant_id             String?                @db.Uuid
-  addresses             Address[]
-  consolidatedShipments ConsolidatedShipment[]
-  mailItems             MailItem[]
-  mailPickupRequests    MailPickupRequest[]
-  mailboxSubscription   MailboxSubscription?
-  mailboxTransactions   MailboxTransaction[]
-  notifications         Notification[]
+ 
+  // 💰 BILLETERA & REFERIDOS
+  referralCode          String?               @unique 
+  referredBy          String?
+  referralRewardPaid  Boolean  @default(false) // 🔥 NUEVO: Control exacto de si ya se pagó el bono por este cliente
+  walletBalance         Float                 @default(0.0) 
+  shippingBalance       Float                 @default(0.0) 
+
+  // --- STRIPE ---
+  stripeCustomerId      String?               @unique 
+
+// 🏢 MULTI-TENANT
+  tenant_id             String?
+  tenant                Tenant?  @relation(fields: [tenant_id], references: [id])
+
+  // Relaciones
   packages              Package[]
+  consolidatedShipments ConsolidatedShipment[]
+  pickupRequests        PickupRequest[]       
   paymentMethods        PaymentMethod[]
-  assignedTasks         PickupRequest[]        @relation("DriverAssignments")
-  pickupRequests        PickupRequest[]
+  addresses             Address[]
+  
+  // Tareas asignadas como Chofer
+  assignedTasks         PickupRequest[]       @relation("DriverAssignments")
+
+  // Notificaciones
+  notifications         Notification[]
+
+  // 📭 VIRTUAL MAILBOX (NUEVO)
+  mailboxSubscription   MailboxSubscription? // 1 a 1 (Solo puede tener un plan activo)
+  mailItems             MailItem[]           // 1 a muchos (Puede tener cientos de sobres)
+  mailboxTransactions   MailboxTransaction[]
+  mailPickupRequests    MailPickupRequest[]  // 🔥 AÑADE ESTA LÍNEA AQUÍ
+
+  // 🛒 PERSONAL SHOPPER (NUEVO - Relación)
   shopperOrders         ShopperOrder[]
-  tenant                Tenant?                @relation(fields: [tenant_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
+
+// -----------------------------------------------------------------------------------------
 
 model PaymentMethod {
   id                    String   @id @default(uuid())
   createdAt             DateTime @default(now())
-  stripePaymentMethodId String   @unique
-  brand                 String
-  last4                 String
+  
+  stripePaymentMethodId String   @unique 
+  brand                 String   
+  last4                 String   
   expMonth              Int
   expYear               Int
+  
   isDefault             Boolean  @default(false)
   isBackup              Boolean  @default(false)
+
   userId                String
   user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Package {
-  id                     String                @id @default(uuid())
-  createdAt              DateTime              @default(now())
-  updatedAt              DateTime              @updatedAt
-  status                 String
+  id                     String   @id @default(uuid())
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+  
+  status                 String   
   description            String?
-  storagePaidUntil       DateTime?
-  storageDebt            Float                 @default(0.0)
-  courier                String?
-  declaredValue          Float?                @default(0.0)
+
+// 🔥 NUEVO: Etiqueta Enterprise para el historial
+  serviceType            String?  @default("SHIPPING_INTL")
+
+  storagePaidUntil       DateTime? 
+  storageDebt            Float    @default(0.0) 
+  
+  courier                String?   
+  declaredValue          Float?   @default(0.0) 
+  
+  selectedCourier        String?   
+  courierService         String? 
+  shippingAddress        String?   // 🔥 NUEVO: Dirección para paquetes individuales Nivel Amazon  
+
+  shippingSubtotal       Float?   @default(0.0) 
+  shippingProcessingFee  Float?   @default(0.0) 
+  shippingTotalPaid      Float?   @default(0.0) 
+  stripePaymentId        String?   
+
+  // 🔥 NUEVO: Para guardar la tabla detallada de aduanas (DHL/FedEx)
+  customsItems           Json? 
+
+ // 🚨 NUEVO: Para guardar Cargos Especiales (Hazmat, EEI, Prep Fee, etc.)
+  extraCharges           Json?   
+
   weightLbs              Float?
   lengthIn               Float?
   widthIn                Float?
@@ -81,72 +142,94 @@ model Package {
   photoUrlMiami          String?
   receiptUrl             String?
   invoiceUrl             String?
-  carrierTrackingNumber  String?
-  gmcTrackingNumber      String                @unique
-  estimatedArrival       DateTime?
-  userId                 String
-  consolidatedShipmentId String?
-  courierService         String?
-  customsItems           Json?
-  deliveredBy            String?
-  deliveryPhotoUrl       String?
-  deliverySignature      String?
-  finalTrackingNumber    String?
-  selectedCourier        String?
-  shippingAddress        String?
   shippingLabelUrl       String?
-  shippingProcessingFee  Float?                @default(0.0)
-  shippingSubtotal       Float?                @default(0.0)
-  shippingTotalPaid      Float?                @default(0.0)
-  stripePaymentId        String?
-  tookanLink             String?
-  serviceType            String?               @default("SHIPPING_INTL")
-  awbDocumentUrl         String?
-  extraCharges           Json?
-  tenant_id              String?               @db.Uuid
-  consolidatedShipment   ConsolidatedShipment? @relation(fields: [consolidatedShipmentId], references: [id])
-  tenant                 Tenant?               @relation(fields: [tenant_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  user                   User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  awbDocumentUrl         String?   // 🔥 NUEVO: Documento AWB/Aduana para el cliente
+  deliveryPhotoUrl       String?   
+  deliverySignature      String?   
+  deliveredBy            String?   // 🔥 NUEVO: Nombre del personal que entregó
+  tookanLink             String?   
+  
+  carrierTrackingNumber  String?   
+  gmcTrackingNumber      String    @unique 
+  
+  finalTrackingNumber    String?
+  estimatedArrival       DateTime?
+  
+  userId                 String
+  user                   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  consolidatedShipmentId String?
+  consolidatedShipment   ConsolidatedShipment? @relation(fields: [consolidatedShipmentId], references: [id])
+
+// 🏢 MULTI-TENANT
+  tenant_id             String?
+  tenant                Tenant?  @relation(fields: [tenant_id], references: [id])
+
+  // ==========================================
+  // 🚀 ÍNDICES DE RENDIMIENTO (ENTERPRISE)
+  // ==========================================
   @@index([gmcTrackingNumber])
   @@index([userId])
 }
 
 model ConsolidatedShipment {
-  id                     String    @id @default(uuid())
-  createdAt              DateTime  @default(now())
-  updatedAt              DateTime  @updatedAt
-  gmcShipmentNumber      String    @unique
+  id                     String   @id @default(uuid())
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  gmcShipmentNumber      String   @unique 
   destinationCountryCode String?
-  status                 String
+
+  // 🔥 NUEVO: Dirección exacta de entrega seleccionada Nivel Amazon
+  shippingAddress        String?
+
+  status                 String   
+  
+  serviceType            String   @default("CONSOLIDATION")
+
   storagePaidUntil       DateTime?
   selectedCourier        String?
   courierService         String?
   finalTrackingNumber    String?
   shippingLabelUrl       String?
+  awbDocumentUrl         String?   // 🔥 NUEVO: Documento AWB/BL de la carga consolidada
+  deliveredBy            String?   // 🔥 NUEVO: Nombre del personal que entregó
+
   paymentId              String?
   weightLbs              Float?
-  subtotalAmount         Float?    @default(0.0)
-  processingFee          Float?    @default(0.0)
+  
+  declaredValue          Float?   @default(0.0)
+
+  // 🔥 NUEVO: Para guardar la tabla detallada de aduanas de cajas agrupadas
+  customsItems           Json?    
+
+ // 🚨 NUEVO: Para guardar Cargos Especiales de toda la consolidación
+  extraCharges           Json?
+
+  // 🚀 NUEVO: Aquí se guardará el arreglo con Pallet 1, Pallet 2, etc.
+  auraDetails            Json?    
+
+  subtotalAmount         Float?   @default(0.0) 
+  processingFee          Float?   @default(0.0) 
   totalAmount            Float?
   widthIn                Float?
   heightIn               Float?
   lengthIn               Float?
+  
   userId                 String
-  customsItems           Json?
-  declaredValue          Float?    @default(0.0)
-  deliveredBy            String?
-  serviceType            String    @default("CONSOLIDATION")
-  shippingAddress        String?
-  awbDocumentUrl         String?
-  auraDetails            Json?
-  extraCharges           Json?
-  tenant_id              String?   @db.Uuid
-  tenant                 Tenant?   @relation(fields: [tenant_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  user                   User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user                   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   packages               Package[]
 
-  @@index([gmcShipmentNumber])
+
+// 🏢 MULTI-TENANT
+  tenant_id             String?
+  tenant                Tenant?  @relation(fields: [tenant_id], references: [id])
+
+ // ==========================================
+  // 🚀 ÍNDICES DE RENDIMIENTO (ENTERPRISE)
+  // ==========================================
+  @@index([gmcShipmentNumber]) // 🔥 CAMBIA ESTO AQUÍ
   @@index([userId])
 }
 
@@ -154,201 +237,283 @@ model PickupRequest {
   id               String   @id @default(uuid())
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
-  serviceType      String   @default("SHIPPING")
+  
+  serviceType      String   @default("SHIPPING") 
+
   originAddress    String
   originCity       String
-  pickupDate       DateTime
-  description      String
+  pickupDate       DateTime 
+  description      String   
   contactPhone     String
+
   dropOffAddress   String?
   dropOffCity      String?
   dropOffContact   String?
   dropOffPhone     String?
-  subtotal         Float?   @default(0.0)
-  processingFee    Float?   @default(0.0)
-  totalPaid        Float?   @default(0.0)
+  
+  subtotal         Float?   @default(0.0) 
+  processingFee    Float?   @default(0.0) 
+  totalPaid        Float?   @default(0.0) 
+  
   stripePaymentId  String?
   weightInfo       String?
   volumeInfo       String?
-  photoPickupUrl   String?
+
+  photoPickupUrl   String?  
   photoDeliveryUrl String?
-  status           String   @default("PENDIENTE")
+  
+  signatureUrl     String?   
+  tookanLink       String?   
+  
+  status           String   @default("PENDIENTE") 
+
+  driverId         String?  
+  driver           User?    @relation("DriverAssignments", fields: [driverId], references: [id], onDelete: SetNull)
+  
   userId           String
-  driverId         String?
-  signatureUrl     String?
-  tookanLink       String?
-  tenant_id        String?  @db.Uuid
-  driver           User?    @relation("DriverAssignments", fields: [driverId], references: [id])
-  tenant           Tenant?  @relation(fields: [tenant_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+// 🏢 MULTI-TENANT
+  tenant_id             String?
+  tenant                Tenant?  @relation(fields: [tenant_id], references: [id])
 }
 
 model Notification {
   id        String   @id @default(uuid())
   createdAt DateTime @default(now())
+  
   title     String
   message   String
   href      String?
   isRead    Boolean  @default(false)
-  type      String   @default("INFO")
+  type      String   @default("INFO") 
+
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
-  @@index([userId, isRead])
+  @@index([userId, isRead]) 
 }
 
 model Address {
-  id          String   @id @default(uuid())
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  fullName    String
-  address     String
-  cityZip     String
-  country     String
-  countryCode String?
-  phone       String?
-  isDefault   Boolean  @default(false)
-  userId      String
-  city        String?
-  state       String?
-  zip         String?
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id            String   @id @default(uuid())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  fullName      String   // Para guardar "anto sol"
+  address       String   // La calle
+
+// 🔥 NUEVOS CAMPOS ESTRUCTURADOS
+  city          String?  // Ej: "Medley"
+  state         String?  // Ej: "FL"
+  zip           String?  // Ej: "33178"
+
+  cityZip       String   // La ciudad y código postal
+  country       String   // El país
+  countryCode   String?  // Código de 2 letras (US, TT, etc)
+  phone         String?  // Teléfono del contacto
+
+  isDefault     Boolean  @default(false)
+
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 }
 
+// -----------------------------------------------------------------------------------------
+// 📭 VIRTUAL MAILBOX
+// -----------------------------------------------------------------------------------------
+
 model MailboxSubscription {
-  id                   String                @id @default(uuid())
-  createdAt            DateTime              @default(now())
-  updatedAt            DateTime              @updatedAt
-  planType             String
-  status               String                @default("PENDING_USPS")
-  uspsForm1583Url      String?
-  primaryIdUrl         String?
-  secondaryIdUrl       String?
-  rejectionReason      String?
-  currentPeriodEnd     DateTime?
-  stripeSubscriptionId String?               @unique
-  userId               String                @unique
-  tenant_id            String?               @db.Uuid
+  id                   String   @id @default(uuid())
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  planType             String   // Ej: "BASIC_799", "PREMIUM_1499"
+  status               String   @default("PENDING_USPS") // "PENDING_USPS", "ACTIVE", "CANCELLED", "PAST_DUE", "REJECTED"
+  
+  // Archivos Legales del Titular Principal
+  uspsForm1583Url      String?  
+  primaryIdUrl         String?  
+  secondaryIdUrl       String?  
+  
+  rejectionReason      String?  
+
+  // Control de facturación
+  currentPeriodEnd     DateTime? 
+  stripeSubscriptionId String?  @unique
+
+  // Relación con el Usuario
+  userId               String   @unique
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Relación con los usuarios adicionales
   additionalRecipients AdditionalRecipient[]
-  tenant               Tenant?               @relation(fields: [tenant_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  user                 User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+// 🏢 MULTI-TENANT
+  tenant_id   String?
+  tenant      Tenant?  @relation(fields: [tenant_id], references: [id])
 }
 
 model AdditionalRecipient {
-  id              String              @id @default(uuid())
-  createdAt       DateTime            @default(now())
-  updatedAt       DateTime            @updatedAt
-  fullName        String
-  email           String?
-  uspsForm1583Url String?
-  primaryIdUrl    String?
-  secondaryIdUrl  String?
-  status          String              @default("PENDING_USPS")
-  rejectionReason String?
-  subscriptionId  String
-  subscription    MailboxSubscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  id                   String   @id @default(uuid())
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  fullName             String   
+  email                String?  
+
+  uspsForm1583Url      String?  
+  primaryIdUrl         String?  
+  secondaryIdUrl       String?  
+
+  status               String   @default("PENDING_USPS") 
+  rejectionReason      String?
+
+  subscriptionId       String
+  subscription         MailboxSubscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
 }
 
 model MailItem {
-  id               String              @id @default(uuid())
-  createdAt        DateTime            @default(now())
-  updatedAt        DateTime            @updatedAt
-  trackingNumber   String?             @unique
-  senderName       String?
-  weightOz         Float?
-  lengthIn         Float?
-  widthIn          Float?
-  heightIn         Float?
-  isDamaged        Boolean             @default(false)
-  envelopeImageUrl String
-  scannedDocUrl    String?
-  status           String              @default("UNREAD")
-  receivedAt       DateTime            @default(now())
-  userId           String
-  cargoPackageId   String?             @unique
-  tenant_id        String?             @db.Uuid
-  tenant           Tenant?             @relation(fields: [tenant_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  user             User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  pickupRequests   MailPickupRequest[] @relation("MailItemToMailPickupRequest")
+  id                   String   @id @default(uuid())
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+// 🔥 NUEVO: El tracking interno corto
+  trackingNumber       String?  @unique
+  
+  senderName           String?  
+  weightOz             Float?   
+  
+  lengthIn             Float?   
+  widthIn              Float?   
+  heightIn             Float?   
+
+  isDamaged            Boolean  @default(false) 
+  
+  envelopeImageUrl     String   
+  scannedDocUrl        String?  
+  
+  status               String   @default("UNREAD") 
+  
+  receivedAt           DateTime @default(now()) 
+  
+  userId               String
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  cargoPackageId       String?  @unique
+  pickupRequests       MailPickupRequest[] // 🔥 AÑADE ESTA LÍNEA AQUÍ 
+
+// 🏢 MULTI-TENANT
+  tenant_id   String?
+  tenant      Tenant?  @relation(fields: [tenant_id], references: [id])
 }
 
 model MailboxTransaction {
   id              String   @id @default(uuid())
   createdAt       DateTime @default(now())
+  
   amount          Float
-  description     String
+  description     String   
   status          String   @default("COMPLETED")
   stripePaymentId String?
+
   userId          String
   user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-model ShopperOrder {
-  id               String        @id @default(cuid())
-  userId           String
-  status           String        @default("PENDING_QUOTE")
-  itemsSubtotal    Float         @default(0)
-  usTaxes          Float         @default(0)
-  domesticShipping Float         @default(0)
-  gmcShopperFee    Float         @default(0)
-  stripeFee        Float         @default(0)
-  totalAmount      Float         @default(0)
-  stripePaymentId  String?
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
-  serviceType      String        @default("PERSONAL_SHOPPER")
-  tenant_id        String?       @db.Uuid
-  items            ShopperItem[]
-  tenant           Tenant?       @relation(fields: [tenant_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  user             User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+// ==========================================
+// 🛒 MÓDULO: PERSONAL SHOPPER (COMPRA POR MÍ)
+// ==========================================
 
+model ShopperOrder {
+  id                String        @id @default(cuid())
+  
+  // 🔥 AÑADIDA RELACIÓN CON USER
+  userId            String        
+  user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  status            String        @default("PENDING_QUOTE")
+  
+  // 🔥 NUEVO: Etiqueta Enterprise para el historial
+  serviceType       String        @default("PERSONAL_SHOPPER")
+  
+  items             ShopperItem[]
+
+  itemsSubtotal     Float         @default(0) 
+  usTaxes           Float         @default(0) 
+  domesticShipping  Float         @default(0) 
+  gmcShopperFee     Float         @default(0) 
+  stripeFee         Float         @default(0) 
+  totalAmount       Float         @default(0) 
+
+  stripePaymentId   String?       
+  
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+// 🏢 MULTI-TENANT
+  tenant_id   String?
+  tenant      Tenant?  @relation(fields: [tenant_id], references: [id])
+
+  // ==========================================
+  // 🚀 ÍNDICE AÑADIDO AQUÍ (Correcto)
+  // ==========================================
   @@index([userId])
 }
 
 model ShopperItem {
-  id            String       @id @default(cuid())
-  orderId       String
-  storeName     String?
-  productUrl    String
-  name          String?
-  details       String?
-  quantity      Int          @default(1)
-  declaredPrice Float
-  actualPrice   Float?
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
-  tenant_id     String?      @db.Uuid
-  order         ShopperOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  tenants       Tenant?      @relation(fields: [tenant_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  id                String        @id @default(cuid())
+  orderId           String
+  order             ShopperOrder  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  
+  storeName         String?       
+  productUrl        String        @db.Text 
+  name              String?       
+  details           String?       @db.Text 
+  quantity          Int           @default(1)
+  
+  declaredPrice     Float         
+  actualPrice       Float?        
+  
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
 
+  // ==========================================
+  // 🚀 ÍNDICE CAMBIADO AQUÍ (orderId, no userId)
+  // ==========================================
   @@index([orderId])
 }
 
 model MailPickupRequest {
   id            String     @id @default(cuid())
   userId        String
+  user          User       @relation(fields: [userId], references: [id])
   scheduledDate DateTime
   scheduledTime String
-  status        String     @default("PENDING")
+  status        String     @default("PENDING") // PENDING, READY, COMPLETED
+  mailItems     MailItem[] // Relación con los sobres seleccionados
   createdAt     DateTime   @default(now())
   completedAt   DateTime?
-  tenant_id     String?    @db.Uuid
-  tenant        Tenant?    @relation(fields: [tenant_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  user          User       @relation(fields: [userId], references: [id])
-  mailItems     MailItem[] @relation("MailItemToMailPickupRequest")
+
+// 🏢 MULTI-TENANT
+  tenant_id   String?
+  tenant      Tenant?  @relation(fields: [tenant_id], references: [id])
 }
+
+// ==========================================
+// 📦 MÓDULO: MIAMI LOCKER (PRODUCTOS AFILIADOS)
+// ==========================================
 
 model AmazonProduct {
   id           String   @id @default(uuid())
-  title        String
-  price        String
-  imageUrl     String
-  affiliateUrl String
-  category     String?
-  isActive     Boolean  @default(true)
+  title        String   // Nombre del producto
+  price        String   // Precio (ej. "$29.99")
+  imageUrl     String   // Link de la imagen de SiteStripe
+  affiliateUrl String   // Tu link con el tag gaspmakercarg-20
+  category     String?  // Para filtrar por nichos luego
+  isActive     Boolean  @default(true) // Para ocultar productos sin borrarlos
+  
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -356,35 +521,32 @@ model AmazonProduct {
 }
 
 model Tenant {
-  id                     String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id                     String    @id @default(uuid())
   company_name           String
-  slug                   String                 @unique
-  custom_domain          String?                @unique
+  slug                   String    @unique
+  custom_domain          String?   @unique
   logo_url               String?
-  primary_color          String?                @default("#000000")
-  secondary_color        String?                @default("#ffffff")
+  primary_color          String    @default("#000000")
+  secondary_color        String    @default("#ffffff")
   owner_name             String?
-  owner_email            String                 @unique
+  owner_email            String    @unique
   owner_phone            String?
-  plan                   String?                @default("starter")
-  plan_status            String?                @default("active")
-  setup_fee_paid         Boolean?               @default(false)
-  monthly_fee            Decimal?               @default(149.00) @db.Decimal
-  next_billing_date      DateTime?              @db.Timestamp(6)
   easypost_api_key       String?
   stripe_publishable_key String?
   stripe_secret_key      String?
-  created_at             DateTime?              @default(now()) @db.Timestamp(6)
-  updated_at             DateTime?              @default(now()) @updatedAt @db.Timestamp(6)
-  consolidatedShipments  ConsolidatedShipment[]
-  mailItems              MailItem[]
-  mailPickupRequests     MailPickupRequest[]
-  mailboxSubscriptions   MailboxSubscription[]
-  packages               Package[]
-  pickupRequests         PickupRequest[]
-  ShopperItem            ShopperItem[]
-  shopperOrders          ShopperOrder[]
-  users                  User[]
+  created_at             DateTime  @default(now())
+  updated_at             DateTime  @updatedAt
+
+  // Relaciones
+  tenantPlan            TenantPlan?
+  users                 User[]
+  packages              Package[]
+  consolidatedShipments ConsolidatedShipment[]
+  pickupRequests        PickupRequest[]
+  shopperOrders         ShopperOrder[]
+  mailItems             MailItem[]
+  mailboxSubscriptions  MailboxSubscription[]
+  mailPickupRequests    MailPickupRequest[]
 
   @@map("tenants")
 }
@@ -395,4 +557,22 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model TenantPlan {
+  id            String    @id @default(uuid())
+  tenantId      String    @unique @map("tenant_id")
+  plan          String    @default("starter") // starter | growth | pro
+  status        String    @default("trial")   // trial | active | suspended | cancelled
+  setupPaid     Boolean   @default(false)     @map("setup_paid")
+  billingStart  DateTime? @map("billing_start") @db.Date
+  nextBilling   DateTime? @map("next_billing")  @db.Date
+  monthlyPrice  Int       @default(14900)     @map("monthly_price") // centavos
+  notes         String?
+  createdAt     DateTime  @default(now())     @map("created_at")
+  updatedAt     DateTime  @updatedAt          @map("updated_at")
+
+  tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@map("tenant_plans")
 }

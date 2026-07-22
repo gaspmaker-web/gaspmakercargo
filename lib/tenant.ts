@@ -14,10 +14,20 @@ export interface TenantConfig {
   primary_color: string;
   secondary_color: string;
   custom_domain: string | null;
-  plan: string;
-  plan_status: string;
   easypost_api_key: string | null;
   stripe_publishable_key: string | null;
+}
+
+export interface TenantPlanConfig {
+  id: string;
+  tenantId: string;
+  plan: string;
+  status: string;
+  setupPaid: boolean;
+  billingStart: Date | null;
+  nextBilling: Date | null;
+  monthlyPrice: number;
+  notes: string | null;
 }
 
 // Cache simple en memoria para evitar queries repetidas
@@ -29,22 +39,22 @@ const CACHE_TTL = 60 * 1000; // 1 minuto
 // ==========================================
 export async function getTenant(): Promise<TenantConfig | null> {
   try {
-const headersList = headers();
-const host = headersList.get('host') || '';
+    const headersList = headers();
+    const host = headersList.get('host') || '';
 
-// 🏢 1. Variable de entorno por proyecto (más confiable en Vercel)
-const envSlug = process.env.TENANT_SLUG;
+    // 🏢 1. Variable de entorno por proyecto (más confiable en Vercel)
+    const envSlug = process.env.TENANT_SLUG;
 
-// 🏢 2. Fallback: detectar por host
-let slug = envSlug || headersList.get('x-tenant-slug') || 'gaspmaker';
+    // 🏢 2. Fallback: detectar por host
+    let slug = envSlug || headersList.get('x-tenant-slug') || 'gaspmaker';
 
-if (!envSlug) {
-  if (host.includes('cargoos.io')) {
-    slug = 'cargoos';
-  } else if (host.includes('gaspmakercargo.com') || host.includes('localhost')) {
-    slug = 'gaspmaker';
-  }
-}
+    if (!envSlug) {
+      if (host.includes('cargoos.io')) {
+        slug = 'cargoos';
+      } else if (host.includes('gaspmakercargo.com') || host.includes('localhost')) {
+        slug = 'gaspmaker';
+      }
+    }
 
     // Revisar cache primero
     const cached = tenantCache.get(slug);
@@ -68,8 +78,6 @@ if (!envSlug) {
         primary_color: true,
         secondary_color: true,
         custom_domain: true,
-        plan: true,
-        plan_status: true,
         easypost_api_key: true,
         stripe_publishable_key: true,
       }
@@ -87,6 +95,20 @@ if (!envSlug) {
 
   } catch (error) {
     console.error('Error getting tenant:', error);
+    return null;
+  }
+}
+
+// ==========================================
+// 📋 GET TENANT PLAN — Para admin y billing
+// ==========================================
+export async function getTenantPlan(tenantId: string): Promise<TenantPlanConfig | null> {
+  try {
+    return await prisma.tenantPlan.findUnique({
+      where: { tenantId },
+    });
+  } catch (error) {
+    console.error('Error getting tenant plan:', error);
     return null;
   }
 }
