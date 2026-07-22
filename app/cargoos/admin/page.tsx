@@ -25,16 +25,16 @@ interface Tenant {
 }
 
 const PLAN_COLORS: Record<string, string> = {
-  starter: 'bg-blue-100 text-blue-800',
-  growth: 'bg-purple-100 text-purple-800',
-  pro: 'bg-amber-100 text-amber-800',
+  starter: 'bg-blue-900 text-blue-300',
+  growth: 'bg-purple-900 text-purple-300',
+  pro: 'bg-amber-900 text-amber-300',
 };
 
 const STATUS_COLORS: Record<string, string> = {
-  trial: 'bg-yellow-100 text-yellow-800',
-  active: 'bg-green-100 text-green-800',
-  suspended: 'bg-red-100 text-red-800',
-  cancelled: 'bg-gray-100 text-gray-800',
+  trial: 'bg-yellow-900 text-yellow-300',
+  active: 'bg-green-900 text-green-300',
+  suspended: 'bg-red-900 text-red-300',
+  cancelled: 'bg-gray-800 text-gray-400',
 };
 
 export default function CargoOSAdminPage() {

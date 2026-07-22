@@ -5,15 +5,16 @@ module.exports = {
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
   ],
-  safelist: [
-    'bg-blue-100', 'text-blue-800',
-    'bg-purple-100', 'text-purple-800',
-    'bg-amber-100', 'text-amber-800',
-    'bg-yellow-100', 'text-yellow-800',
-    'bg-green-100', 'text-green-800',
-    'bg-red-100', 'text-red-800',
-    'bg-gray-100', 'text-gray-800',
-  ],
+safelist: [
+  'bg-blue-900', 'text-blue-300',
+  'bg-purple-900', 'text-purple-300',
+  'bg-amber-900', 'text-amber-300',
+  'bg-yellow-900', 'text-yellow-300',
+  'bg-green-900', 'text-green-300',
+  'bg-red-900', 'text-red-300',
+  'bg-gray-800', 'text-gray-400',
+  'bg-gray-700', 'text-gray-300',
+],
   theme: {
     extend: {
       colors: {
