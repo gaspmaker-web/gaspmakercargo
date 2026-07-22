@@ -770,10 +770,14 @@ export default function ClientDashboard({
                             <h3 className="text-lg font-bold text-gray-800 mb-2">
                                 {t('confirmConsolidate', { count: selectedPkgs.length })}
                             </h3>
-                            <p className="text-sm font-bold text-blue-600 mb-2">
-                                {t('estimatedWeight', { weight: totalSelectedWeight.toFixed(2) })}
-                            </p>
-                            
+                           <p className="text-sm font-bold text-blue-600 mb-2">
+    {t('estimatedWeight', { weight: totalSelectedWeight.toFixed(2) })}
+</p>
+{totalSelectedVolume > 0 && (
+    <p className="text-xs font-bold text-gray-400 mb-2">
+        {totalSelectedVolume.toFixed(2)} ft³ {t.has('volumeLabel') ? t('volumeLabel') : 'estimated volume'}
+    </p>
+)}
                             <p className="text-sm text-gray-500 leading-relaxed">
                                 {consolidationType === 'LOCAL' ? (
                                     <>{t.rich('custom_text_local', {
