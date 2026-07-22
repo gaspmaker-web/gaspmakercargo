@@ -1490,6 +1490,8 @@
   "form_company": "Empresa",
   "form_country": "País / Cidade",
   "form_volume": "Volume estimado",
-  "form_email": "Email *"
+  "form_email": "Email *",
+  "form_success_title": "Mensagem recebida!",
+  "form_success_desc": "Entraremos em contato em menos de 24 horas."
 }
 }

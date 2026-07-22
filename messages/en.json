@@ -1467,6 +1467,8 @@
   "form_company": "Company",
   "form_country": "Country / City",
   "form_volume": "Estimated volume",
-  "form_email": "Email *"
+  "form_email": "Email *",
+  "form_success_title": "Message received!",
+  "form_success_desc": "We'll reach out within 24 hours."
 }
 }

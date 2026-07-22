@@ -1517,7 +1517,9 @@
   "form_company": "Empresa",
   "form_country": "País / Ciudad",
   "form_volume": "Volumen estimado",
-  "form_email": "Email *"
+  "form_email": "Email *",
+  "form_success_title": "¡Mensaje recibido!",
+  "form_success_desc": "Te contactamos en menos de 24 horas."
 }
   }
 

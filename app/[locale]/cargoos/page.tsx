@@ -164,8 +164,8 @@ async function submitDemo() {
     {demoSent ? (
       <div className="text-center py-12">
         <div className="text-5xl mb-4">✅</div>
-        <h3 className="text-xl font-bold mb-2">¡Mensaje recibido!</h3>
-        <p className="text-gray-400">Te contactamos en menos de 24 horas.</p>
+      <h3 className="text-xl font-bold mb-2">{t('form_success_title')}</h3>
+      <p className="text-gray-400">{t('form_success_desc')}</p>
       </div>
     ) : (
       <div className="space-y-4">
