@@ -24,17 +24,6 @@ export async function GET(req: NextRequest) {
     include: {
       tenantPlan: true,
     },
-    select: {
-      id: true,
-      company_name: true,
-      slug: true,
-      custom_domain: true,
-      owner_name: true,
-      owner_email: true,
-      owner_phone: true,
-      created_at: true,
-      tenantPlan: true,
-    },
   });
 
   return NextResponse.json({ tenants });
