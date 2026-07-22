@@ -4,7 +4,7 @@ import React, { useState, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ALL_COUNTRIES, Country } from '@/lib/countries';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 
 // 🔥 Importaciones de seguridad y backend
 import { Turnstile, TurnstileInstance } from '@marsidev/react-turnstile';
@@ -18,6 +18,7 @@ interface RegisterClientProps {
 export default function RegisterClient({ initialReferralCode }: RegisterClientProps) {
     const t = useTranslations('RegisterPage');
     const router = useRouter(); 
+    const locale = useLocale();
     
     // Lista de meses traducida
     const months = [
@@ -123,6 +124,7 @@ export default function RegisterClient({ initialReferralCode }: RegisterClientPr
             formData.append('phone', fullPhoneNumber);
             formData.append('dateOfBirth', isoDateOfBirth);
             formData.append('turnstileToken', turnstileToken);
+            formData.append('locale', locale);
             
             if (initialReferralCode) {
                 formData.append('referredBy', initialReferralCode);
