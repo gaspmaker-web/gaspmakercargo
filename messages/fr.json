@@ -208,6 +208,7 @@
     "alertMissingInvoice": "⚠️ IMPOSSIBLE DE TRAITER\n\nLa facture commerciale est manquante pour les colis suivants :",
     "confirmConsolidate": "Voulez-vous envoyer ces {count} colis pour groupage ?",
     "estimatedWeight": "Poids estimé : {weight} lbs",
+    "volumeLabel": "volume estimé",
     "custom_text": "En consolidant, <strong>nous regrouperons vos colis en un seul envoi</strong> pour vous faire économiser sur les frais de transport.",
     "successConsolidate": "Demande envoyée ! L'administrateur préparera votre consolidation.",
     "errorGeneric": "Erreur lors du traitement.",

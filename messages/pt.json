@@ -208,6 +208,7 @@
     "alertMissingInvoice": "⚠️ NÃO É POSSÍVEL PROCESSAR\n\nFalta a fatura comercial dos seguintes pacotes:",
     "confirmConsolidate": "Deseja enviar estes {count} pacotes para consolidação?",
     "estimatedWeight": "Peso Estimado: {weight} lbs",
+    "volumeLabel": "volume estimado",
     "custom_text": "Ao consolidar, <strong>agruparemos seus pacotes em um único envio</strong> para que você economize nos custos de transporte.",
     "successConsolidate": "Solicitação enviada! O administrador preparará sua consolidação.",
     "errorGeneric": "Erro ao processar solicitação.",

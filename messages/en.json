@@ -209,6 +209,7 @@
     "alertMissingInvoice": "⚠️ CANNOT PROCESS\n\nCommercial invoice is missing for the following packages:",
     "confirmConsolidate": "Do you want to send these {count} packages for consolidation?",
     "estimatedWeight": "Estimated Weight: {weight} lbs",
+    "volumeLabel": "estimated volume",
     "custom_text": "By consolidating, <strong>we will group your packages into a single shipment</strong> so you save on shipping costs.",
     "successConsolidate": "Request sent! Admin will prepare your consolidation.",
     "errorGeneric": "Error processing request.",
