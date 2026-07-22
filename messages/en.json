@@ -781,6 +781,8 @@
     "alertEnterPhone": "Please enter your phone number.",
     "alertSelectDob": "Please select a complete date of birth.",
     "alertSuccess": "Account created successfully! Redirecting to login.",
+    "successTitle": "Registration Successful!",
+    "btnGoToLogin": "Go to Login",
     "alertError": "Error registering:",
     "months": {
       "1": "January", "2": "February", "3": "March", "4": "April", "5": "May", "6": "June",

@@ -49,6 +49,8 @@ export default function RegisterClient({ initialReferralCode }: RegisterClientPr
     // 🔥 2. Estados y referencias de seguridad
     const [turnstileToken, setTurnstileToken] = useState<string>('');
     const turnstileRef = useRef<TurnstileInstance>(null);
+    const [successModal, setSuccessModal] = useState(false);
+    const [successMessage, setSuccessMessage] = useState('');
 
     const sortedCountries = useMemo(() => {
         return [...ALL_COUNTRIES].sort((a, b) => a.name.localeCompare(b.name));
@@ -138,12 +140,11 @@ export default function RegisterClient({ initialReferralCode }: RegisterClientPr
                 alert(resultado.error);
                 turnstileRef.current?.reset();
                 setTurnstileToken('');
-            } else if (resultado.success) {
-                // Alerta de éxito, limpieza de formulario y redirección original
-                alert(resultado.message!);
-                form.reset(); 
-                router.push('/login-cliente');
-            }
+   } else if (resultado.success) {
+    form.reset();
+    setSuccessMessage(resultado.message!);
+    setSuccessModal(true);
+}
     
         } catch (error: any) {
             console.error(error);
@@ -307,11 +308,33 @@ export default function RegisterClient({ initialReferralCode }: RegisterClientPr
                         {isLoading ? t('btnRegistering') : t('btnRegister')}
                     </button>
                 </form>
-
-                <p className="text-center text-sm mt-4 text-gray-600">
+<p className="text-center text-sm mt-4 text-gray-600">
                     {t('alreadyAccount')} <Link href="/login-cliente" className="text-gasp-maker-gold hover:underline">{t('loginLink')}</Link>
                 </p>
             </div>
+
+            {/* 🔥 MODAL DE ÉXITO */}
+            {successModal && (
+                <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-8 text-center animate-in zoom-in-95 duration-200">
+                        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <span className="text-3xl">✅</span>
+                        </div>
+                        <h3 className="text-xl font-bold text-gray-800 mb-3">
+                            {t('successTitle')}
+                        </h3>
+                        <p className="text-gray-600 text-sm leading-relaxed mb-6">
+                            {successMessage}
+                        </p>
+                        <button
+                            onClick={() => router.push('/login-cliente')}
+                            className="w-full py-3 bg-gasp-maker-gold text-white font-bold rounded-lg hover:bg-gasp-maker-light-beige hover:text-gasp-maker-dark-gray transition-colors"
+                        >
+                            {t('btnGoToLogin')}
+                        </button>
+                    </div>
+                </div>
+            )}
         </main>
     );
 }

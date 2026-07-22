@@ -804,6 +804,8 @@
     "alertEnterPhone": "Por favor, insira seu número de telefone.",
     "alertSelectDob": "Por favor, selecione uma data de nascimento completa.",
     "alertSuccess": "Conta criada com sucesso! Você será redirecionado para fazer login.",
+    "successTitle": "Registro Concluído!",
+    "btnGoToLogin": "Ir para o Login",
     "alertError": "Erro ao registrar:",
     "months": {
       "1": "Janeiro", "2": "Fevereiro", "3": "Março", "4": "Abril", "5": "Maio", "6": "Junho",

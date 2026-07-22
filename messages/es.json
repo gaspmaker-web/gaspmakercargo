@@ -823,6 +823,8 @@
     "alertEnterPhone": "Por favor, introduce tu número de teléfono.",
     "alertSelectDob": "Por favor, selecciona una fecha de nacimiento completa.",
     "alertSuccess": "¡Cuenta creada exitosamente! Serás redirigido para iniciar sesión.",
+    "successTitle": "¡Registro Exitoso!",
+    "btnGoToLogin": "Ir al Login",
     "alertError": "Error al registrarse:",
     "months": {
       "1": "Enero", "2": "Febrero", "3": "Marzo", "4": "Abril", "5": "Mayo", "6": "Junio",
