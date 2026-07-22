@@ -1512,7 +1512,12 @@
   "contact_title": "¿Listo para lanzar tu negocio de logística?",
   "contact_subtitle": "Contáctanos y configuramos tu plataforma en días, no meses.",
   "contact_cta": "Contáctanos",
-  "footer_tagline": "Powered by CargoOS"
+  "footer_tagline": "Powered by CargoOS",
+  "form_name": "Tu nombre *",
+  "form_company": "Empresa",
+  "form_country": "País / Ciudad",
+  "form_volume": "Volumen estimado",
+  "form_email": "Email *"
 }
   }
 

@@ -1462,6 +1462,11 @@
   "contact_title": "Ready to launch your logistics business?",
   "contact_subtitle": "Contact us and we will set up your platform in days, not months.",
   "contact_cta": "Contact Us",
-  "footer_tagline": "Powered by CargoOS"
+  "footer_tagline": "Powered by CargoOS",
+  "form_name": "Your name *",
+  "form_company": "Company",
+  "form_country": "Country / City",
+  "form_volume": "Estimated volume",
+  "form_email": "Email *"
 }
 }

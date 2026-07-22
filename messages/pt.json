@@ -1485,6 +1485,11 @@
   "contact_title": "Pronto para lançar seu negócio de logística?",
   "contact_subtitle": "Entre em contato e configuramos sua plataforma em dias, não meses.",
   "contact_cta": "Contate-nos",
-  "footer_tagline": "Powered by CargoOS"
+  "footer_tagline": "Powered by CargoOS",
+  "form_name": "Seu nome *",
+  "form_company": "Empresa",
+  "form_country": "País / Cidade",
+  "form_volume": "Volume estimado",
+  "form_email": "Email *"
 }
 }

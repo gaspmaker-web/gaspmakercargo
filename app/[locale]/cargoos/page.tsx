@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Package, Globe, Smartphone, Mail, Truck, ShoppingBag, Check } from 'lucide-react';
+import { useState } from 'react';
 
 export default function CargoOSLandingPage() {
   const t = useTranslations('CargoOSPage');
@@ -22,7 +23,31 @@ export default function CargoOSLandingPage() {
     { name: t('plan_growth'), price: '$299', desc: t('plan_growth_desc'), features: ['1 warehouse', 'Unlimited clients', 'Local delivery', 'Priority support'], highlight: true },
     { name: t('plan_pro'), price: '$499', desc: t('plan_pro_desc'), features: ['2 warehouses', 'Multiple admins', 'Live driver tracking', 'Custom integrations'] },
   ];
+const [demoForm, setDemoForm] = useState({ name: '', company: '', country: '', volume: '', email: '' });
+const [demoLoading, setDemoLoading] = useState(false);
+const [demoSent, setDemoSent] = useState(false);
+const [demoError, setDemoError] = useState('');
 
+async function submitDemo() {
+  setDemoLoading(true);
+  setDemoError('');
+  try {
+    const res = await fetch('/api/cargoos/demo', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(demoForm),
+    });
+    if (!res.ok) {
+      setDemoError('Error al enviar. Intenta de nuevo.');
+      return;
+    }
+    setDemoSent(true);
+  } catch {
+    setDemoError('Error de conexión.');
+  } finally {
+    setDemoLoading(false);
+  }
+}
   return (
     <div className="min-h-screen bg-white font-sans">
 
@@ -128,17 +153,78 @@ export default function CargoOSLandingPage() {
         </div>
       </section>
 
-      {/* CONTACT */}
-      <section id="contact" className="py-20 px-6 bg-black text-white">
-        <div className="max-w-2xl mx-auto text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">{t('contact_title')}</h2>
-          <p className="text-gray-400 text-lg mb-10">{t('contact_subtitle')}</p>
-          <a href="mailto:hello@cargoos.io" className="inline-block bg-white text-black px-8 py-4 rounded-xl font-semibold text-lg hover:bg-gray-100 transition">
-            {t('contact_cta')} →
-          </a>
-          <p className="text-gray-600 text-sm mt-8">hello@cargoos.io</p>
+    {/* CONTACT */}
+<section id="contact" className="py-20 px-6 bg-black text-white">
+  <div className="max-w-xl mx-auto">
+    <div className="text-center mb-10">
+      <h2 className="text-3xl md:text-4xl font-bold mb-4">{t('contact_title')}</h2>
+      <p className="text-gray-400 text-lg">{t('contact_subtitle')}</p>
+    </div>
+
+    {demoSent ? (
+      <div className="text-center py-12">
+        <div className="text-5xl mb-4">✅</div>
+        <h3 className="text-xl font-bold mb-2">¡Mensaje recibido!</h3>
+        <p className="text-gray-400">Te contactamos en menos de 24 horas.</p>
+      </div>
+    ) : (
+      <div className="space-y-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <input
+            type="text"
+            placeholder={t('form_name')}
+            value={demoForm.name}
+            onChange={(e) => setDemoForm({ ...demoForm, name: e.target.value })}
+            className="w-full bg-white/10 border border-white/20 text-white placeholder-gray-500 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-white/50"
+          />
+          <input
+            type="text"
+            placeholder={t('form_company')}
+            value={demoForm.company}
+            onChange={(e) => setDemoForm({ ...demoForm, company: e.target.value })}
+            className="w-full bg-white/10 border border-white/20 text-white placeholder-gray-500 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-white/50"
+          />
         </div>
-      </section>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <input
+            type="text"
+            placeholder={t('form_country')}
+            value={demoForm.country}
+            onChange={(e) => setDemoForm({ ...demoForm, country: e.target.value })}
+            className="w-full bg-white/10 border border-white/20 text-white placeholder-gray-500 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-white/50"
+          />
+          <select
+            value={demoForm.volume}
+            onChange={(e) => setDemoForm({ ...demoForm, volume: e.target.value })}
+            className="w-full bg-white/10 border border-white/20 text-white rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-white/50"
+          >
+            <option value="" className="bg-gray-900">{t('form_volume')}</option>
+            <option value="1-50" className="bg-gray-900">1–50 paquetes/mes</option>
+            <option value="51-200" className="bg-gray-900">51–200 paquetes/mes</option>
+            <option value="201-500" className="bg-gray-900">201–500 paquetes/mes</option>
+            <option value="500+" className="bg-gray-900">500+ paquetes/mes</option>
+          </select>
+        </div>
+        <input
+          type="email"
+          placeholder={t('form_email')}
+          value={demoForm.email}
+          onChange={(e) => setDemoForm({ ...demoForm, email: e.target.value })}
+          className="w-full bg-white/10 border border-white/20 text-white placeholder-gray-500 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-white/50"
+        />
+        {demoError && <p className="text-red-400 text-sm">{demoError}</p>}
+        <button
+          onClick={submitDemo}
+          disabled={demoLoading}
+          className="w-full bg-white text-black py-4 rounded-xl font-semibold text-lg hover:bg-gray-100 transition disabled:opacity-50"
+        >
+          {demoLoading ? 'Enviando...' : `${t('contact_cta')} →`}
+        </button>
+        <p className="text-center text-gray-600 text-xs">hello@cargoos.io</p>
+      </div>
+    )}
+  </div>
+</section>
 
       {/* FOOTER */}
       <footer className="py-8 px-6 border-t border-gray-100 text-center">
