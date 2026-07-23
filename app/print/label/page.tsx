@@ -28,40 +28,82 @@ function PrintLabelContent() {
   const pageSizeCss = format === '30334' ? '2.25in 1.25in' : '4in 6in';
 
   useEffect(() => {
-    setIsReady(true);
-    // Esperamos un momento breve para asegurar que el código de barras se renderizó
-    const timer = setTimeout(() => {
-      window.print();
-      // Opcional: window.close(); // Si quieres que se cierre sola después de imprimir
-    }, 500);
-    return () => clearTimeout(timer);
-  }, []);
+  setIsReady(true);
+}, []);
 
-  if (!isReady) return <div style={{ padding: 20, fontFamily: 'sans-serif' }}>Generando etiqueta...</div>;
+const handlePrint = () => {
+  window.print();
+};
 
-  return (
-    <div style={{ 
-      display: 'flex', 
-      justifyContent: 'center', 
-      alignItems: 'flex-start', 
-      minHeight: '100vh',
-      margin: 0,
-      padding: 0
-    }}>
+const handleDownloadPDF = async () => {
+  const { jsPDF } = await import('jspdf');
+  const html2canvas = (await import('html2canvas')).default;
+  const element = document.getElementById('label-content');
+  if (!element) return;
+
+  const canvas = await html2canvas(element, { scale: 3 });
+  const imgData = canvas.toDataURL('image/png');
+
+  const isSmall = format === '30334';
+  const pdfWidth = isSmall ? 57.15 : 101.6;
+  const pdfHeight = isSmall ? 31.75 : 152.4;
+
+  const pdf = new jsPDF({
+    orientation: 'portrait',
+    unit: 'mm',
+    format: [pdfWidth, pdfHeight],
+  });
+
+  pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+  pdf.save(`label-${data.tracking}.pdf`);
+};
+
+if (!isReady) return <div style={{ padding: 20, fontFamily: 'sans-serif' }}>Generando etiqueta...</div>;
+
+return (
+  <div style={{ 
+    display: 'flex', 
+    flexDirection: 'column',
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    minHeight: '100vh',
+    margin: 0,
+    padding: '20px',
+    background: '#f5f5f5'
+  }}>
+    <div id="label-content">
       <ShippingLabel data={data} />
-      
-      <style jsx global>{`
-        @page {
-          size: ${pageSizeCss};
-          margin: 0;
-        }
-        body {
-          margin: 0;
-          padding: 0;
-        }
-      `}</style>
     </div>
-  );
+
+    <div className="no-print" style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
+      <button
+        onClick={handlePrint}
+        style={{ padding: '12px 24px', background: '#000', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '16px', cursor: 'pointer' }}
+      >
+        🖨️ Imprimir
+      </button>
+      <button
+        onClick={handleDownloadPDF}
+        style={{ padding: '12px 24px', background: '#2563eb', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '16px', cursor: 'pointer' }}
+      >
+        📥 Descargar PDF
+      </button>
+    </div>
+    
+    <style jsx global>{`
+      @page {
+        size: ${pageSizeCss};
+        margin: 0;
+      }
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      .no-print { display: flex; }
+      @media print { .no-print { display: none !important; } }
+    `}</style>
+  </div>
+);
 }
 
 export default function PrintLabelPage() {
