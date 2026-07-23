@@ -54,11 +54,11 @@ export default async function RootLayout({
   params: { locale: string };
 }) {
   
-  const session = await auth();
-  const tenant = await getTenant();
-  const tenantStyles = getTenantCSSVars(tenant);
-  const tenantSlug = tenant?.slug || 'gaspmaker';
-  
+ const session = await auth();
+const tenant = await getTenant();
+const tenantStyles = getTenantCSSVars(tenant);
+const tenantSlug = tenant?.slug || process.env.TENANT_SLUG || 'gaspmaker';
+
   let messages;
   try {
     messages = (await import(`../../messages/${locale}.json`)).default;
