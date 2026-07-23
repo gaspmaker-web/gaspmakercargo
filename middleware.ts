@@ -46,13 +46,17 @@ export default auth((req: any) => {
   const currentLocale = validLocales.includes(localeSegment) 
       ? localeSegment 
       : routing.defaultLocale || 'es';
+// 🏢 DETECTAR TENANT
+const tenantSlug = detectTenant(req);
 
-        // 🏢 DETECTAR TENANT
-  const tenantSlug = detectTenant(req);
-  // 🏢 Pasar host original para detección correcta en Vercel
+// 🏢 Si es cargoos.io y la ruta es /, redirigir a /en/cargoos
+if (tenantSlug === 'cargoos' && (pathname === '/' || pathname === '')) {
+  return NextResponse.redirect(new URL('/en/cargoos', req.url));
+}
+
+// 🏢 Pasar host original para detección correcta en Vercel
 const requestHeaders = new Headers(req.headers);
 requestHeaders.set('x-forwarded-host', req.headers.get('host') || '');
-  
 
   // --- 1. Definición de Áreas ---
   const isClientArea = pathname.includes('/dashboard-cliente') || 
