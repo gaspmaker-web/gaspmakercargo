@@ -120,5 +120,5 @@ return response;
 });
 
 export const config = {
-  matcher: ['/((?!api|_next|_vercel|print|cargoos|.*\\..*).*)']
+  matcher: ['/((?!api|_next|_vercel|print|cargoos|admin|.*\\..*).*)']
 };
