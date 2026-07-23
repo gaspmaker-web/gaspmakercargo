@@ -1,8 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
-import { X, Camera, Loader2, ScanLine, AlertTriangle } from 'lucide-react';
+import { X, Camera, Loader2, ScanLine } from 'lucide-react';
 
 interface BarcodeScannerModalProps {
   isOpen: boolean;
@@ -11,199 +10,115 @@ interface BarcodeScannerModalProps {
 }
 
 export default function BarcodeScannerModal({ isOpen, onClose, onScan }: BarcodeScannerModalProps) {
-  const [processing, setProcessing] = useState(false);
-  const [status, setStatus] = useState('');
   const [error, setError] = useState('');
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [loading, setLoading] = useState(true);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const controlsRef = useRef<any>(null);
 
   useEffect(() => {
-    if (isOpen) {
-      setError('');
-      setStatus('');
-      setProcessing(false);
-    }
-  }, [isOpen]);
+    if (!isOpen) return;
 
-  // --- FUNCIÓN MÁGICA: PROCESADO DE IMAGEN ---
-  const processImage = (file: File): Promise<File> => {
-    return new Promise((resolve, reject) => {
-        const img = new Image();
-        img.onload = () => {
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            
-            // 1. Redimensionar (Max 1000px para que sea rápido y nítido)
-            const MAX_WIDTH = 1000;
-            const scale = MAX_WIDTH / img.width;
-            canvas.width = MAX_WIDTH;
-            canvas.height = img.height * scale;
-
-            if (!ctx) { reject(new Error("Error de canvas")); return; }
-
-            // Dibujar imagen redimensionada
-            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-            // 2. Convertir a Blanco y Negro (Alto Contraste)
-            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            const data = imageData.data;
-            for (let i = 0; i < data.length; i += 4) {
-                const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
-                // Umbralización simple: Si es oscuro es negro, si es claro es blanco
-                const color = avg < 128 ? 0 : 255;
-                data[i] = color;     // R
-                data[i + 1] = color; // G
-                data[i + 2] = color; // B
-            }
-            ctx.putImageData(imageData, 0, 0);
-
-            // Devolver imagen procesada
-            canvas.toBlob((blob) => {
-                if (blob) {
-                    const processedFile = new File([blob], "processed.jpg", { type: "image/jpeg" });
-                    resolve(processedFile);
-                } else {
-                    reject(new Error("Error al procesar imagen"));
-                }
-            }, 'image/jpeg', 0.9);
-        };
-        img.onerror = (e) => reject(e);
-        img.src = URL.createObjectURL(file);
-    });
-  };
-
-  const handleCapture = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setProcessing(true);
+    let active = true;
     setError('');
-    setStatus('Optimizando imagen...');
+    setLoading(true);
 
-    try {
-      // PASO 1: Procesar la imagen (Blanco y Negro)
-      const optimizedFile = await processImage(file);
-      
-      setStatus('Analizando código...');
-
-      // PASO 2: Escanear la imagen optimizada
-const formats = [
-  Html5QrcodeSupportedFormats.CODE_128,    
-  Html5QrcodeSupportedFormats.DATA_MATRIX, 
-  Html5QrcodeSupportedFormats.CODE_39,
-  Html5QrcodeSupportedFormats.EAN_13,
-  Html5QrcodeSupportedFormats.UPC_A,
-  Html5QrcodeSupportedFormats.PDF_417,
-  Html5QrcodeSupportedFormats.QR_CODE,
-  Html5QrcodeSupportedFormats.AZTEC,
-  Html5QrcodeSupportedFormats.ITF,
-  Html5QrcodeSupportedFormats.CODE_93,
-];
-
-const html5QrCode = new Html5Qrcode("reader-hidden", { 
-  formatsToSupport: formats,
-  verbose: false 
-});
-      // Intento 1: imagen procesada en B&N
+    const startScanner = async () => {
       try {
-        const result = await html5QrCode.scanFileV2(optimizedFile, true);
-        if (result && result.decodedText) {
-          if (navigator.vibrate) navigator.vibrate(200);
-          onScan(result.decodedText);
-          onClose();
+        const { BrowserMultiFormatReader } = await import('@zxing/browser');
+        const reader = new BrowserMultiFormatReader();
+        controlsRef.current = reader;
+
+        const devices = await BrowserMultiFormatReader.listVideoInputDevices();
+        const backCamera = devices.find(d =>
+          d.label.toLowerCase().includes('back') ||
+          d.label.toLowerCase().includes('rear') ||
+          d.label.toLowerCase().includes('environment')
+        ) || devices[devices.length - 1];
+
+        if (!backCamera) {
+          setError('No se encontró cámara');
           return;
         }
-      } catch {
-        // Intento 2: imagen original sin procesar
-        try {
-          const result2 = await html5QrCode.scanFileV2(file, true);
-          if (result2 && result2.decodedText) {
-            if (navigator.vibrate) navigator.vibrate(200);
-            onScan(result2.decodedText);
-            onClose();
-            return;
+
+        setLoading(false);
+
+        await reader.decodeFromVideoDevice(
+          backCamera.deviceId,
+          videoRef.current!,
+          (result, err) => {
+            if (!active) return;
+            if (result) {
+              if (navigator.vibrate) navigator.vibrate(200);
+              onScan(result.getText());
+              onClose();
+            }
           }
-        } catch {
-          throw new Error("No se encontró código");
-        }
+        );
+      } catch (e) {
+        console.error(e);
+        setError('No se pudo acceder a la cámara. Verifica los permisos.');
+        setLoading(false);
       }
+    };
 
-    } catch (err: any) {
-      console.error(err);
-      setError("No pudimos leer el código. Intenta de nuevo acercándote más.");
-    } finally {
-      setProcessing(false);
-      setStatus('');
-      if (fileInputRef.current) fileInputRef.current.value = '';
-    }
-  };
+    startScanner();
 
-  const openNativeCamera = () => {
-    fileInputRef.current?.click();
-  };
+    return () => {
+      active = false;
+      if (controlsRef.current?.reset) {
+        controlsRef.current.reset();
+      }
+    };
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[9999] bg-black/95 flex flex-col items-center justify-center animate-fadeIn p-4">
-      
-      <div id="reader-hidden" className="hidden"></div>
+    <div className="fixed inset-0 z-[9999] bg-black flex flex-col">
+      <div className="flex items-center justify-between p-4 bg-black">
+        <div className="flex items-center gap-2 text-white">
+          <ScanLine size={20} className="text-yellow-400" />
+          <span className="font-bold">Escáner</span>
+        </div>
+        <button onClick={onClose} className="bg-white/10 text-white p-2 rounded-full">
+          <X size={22} />
+        </button>
+      </div>
 
-      <button 
-        onClick={onClose}
-        className="absolute top-6 right-6 bg-white/10 text-white p-3 rounded-full hover:bg-white/20 z-50 backdrop-blur-md"
-      >
-        <X size={24} />
-      </button>
+      <div className="relative flex-1 overflow-hidden">
+        <video
+          ref={videoRef}
+          className="w-full h-full object-cover"
+        />
 
-      <div className="w-full max-w-sm bg-white rounded-3xl overflow-hidden shadow-2xl relative">
-        
-        <div className="bg-gray-900 p-8 text-center relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-full h-1 bg-yellow-400"></div>
-            <ScanLine size={48} className="text-yellow-400 mx-auto mb-3" />
-            <h3 className="text-xl font-bold text-white">Escáner Mejorado</h3>
-            <p className="text-gray-400 text-xs mt-1 uppercase tracking-widest">Con Alto Contraste</p>
+        {/* Línea de escaneo animada */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div className="w-72 h-40 border-2 border-yellow-400 rounded-lg relative">
+            <div className="absolute top-0 left-0 w-6 h-6 border-t-4 border-l-4 border-yellow-400 rounded-tl"></div>
+            <div className="absolute top-0 right-0 w-6 h-6 border-t-4 border-r-4 border-yellow-400 rounded-tr"></div>
+            <div className="absolute bottom-0 left-0 w-6 h-6 border-b-4 border-l-4 border-yellow-400 rounded-bl"></div>
+            <div className="absolute bottom-0 right-0 w-6 h-6 border-b-4 border-r-4 border-yellow-400 rounded-br"></div>
+            <div className="absolute w-full h-0.5 bg-yellow-400 animate-scan top-1/2"></div>
+          </div>
         </div>
 
-        <div className="p-8 text-center">
-            <p className="text-gray-600 text-sm mb-6 leading-relaxed">
-                Este modo convierte tu foto a <b>Blanco y Negro</b> automáticamente para detectar mejor los códigos difíciles.
-            </p>
+        {loading && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80">
+            <Loader2 size={40} className="text-yellow-400 animate-spin mb-3" />
+            <p className="text-white text-sm">Iniciando cámara...</p>
+          </div>
+        )}
 
-            {/* CONSEJO CLAVE */}
-            <div className="bg-yellow-50 border border-yellow-100 p-3 rounded-lg mb-6 text-left flex gap-3">
-                <AlertTriangle size={20} className="text-yellow-600 shrink-0" />
-                <p className="text-xs text-yellow-800">
-                    <b>Importante:</b> Toma la foto de cerca (15cm). El código debe ocupar gran parte de la imagen.
-                </p>
-            </div>
+        {error && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/90 p-6 text-center">
+            <Camera size={40} className="text-red-400 mb-3" />
+            <p className="text-white text-sm">{error}</p>
+          </div>
+        )}
+      </div>
 
-            <button 
-                onClick={openNativeCamera}
-                disabled={processing}
-                className="w-full bg-yellow-400 text-black py-5 rounded-2xl font-bold text-lg shadow-lg active:scale-95 transition-all flex items-center justify-center gap-3 mb-4 hover:bg-yellow-300 disabled:opacity-70 disabled:grayscale"
-            >
-                {processing ? (
-                    <><Loader2 className="animate-spin" size={24} /> {status}</>
-                ) : (
-                    <><Camera size={28} /> TOMAR FOTO</>
-                )}
-            </button>
-            
-            <input 
-                type="file"
-                accept="image/*"
-                capture="environment" 
-                ref={fileInputRef}
-                onChange={handleCapture}
-                className="hidden"
-            />
-
-            {error && (
-                <div className="bg-red-50 text-red-600 p-4 rounded-xl text-sm font-medium border border-red-100 animate-fadeIn text-center">
-                    {error}
-                </div>
-            )}
-        </div>
+      <div className="p-4 bg-black text-center">
+        <p className="text-gray-400 text-xs">Apunta la cámara al código de barras</p>
       </div>
     </div>
   );
