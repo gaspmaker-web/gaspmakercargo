@@ -55,10 +55,8 @@ async function submitDemo() {
       <nav className="fixed top-0 w-full bg-white/90 backdrop-blur-md border-b border-gray-100 z-50">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center">
-              <Package size={18} className="text-white" />
-            </div>
-            <span className="font-bold text-xl text-black">CargoOS</span>
+            <img src="/favicon.png" alt="CargoOS" className="w-8 h-8 rounded-lg" />
+<span className="font-bold text-xl text-black">CargoOS</span>
           </div>
           <div className="flex items-center gap-4">
             <a href="#pricing" className="text-gray-600 hover:text-black text-sm font-medium">
