@@ -1491,6 +1491,10 @@
   "form_volume": "Volume estimé",
   "form_email": "Email *",
   "form_success_title": "Message reçu !",
-  "form_success_desc": "Nous vous contacterons dans les 24 heures."
+  "form_success_desc": "Nous vous contacterons dans les 24 heures.",
+  "volume_1": "1-50 colis/mois",
+"volume_2": "51-200 colis/mois",
+"volume_3": "201-500 colis/mois",
+"volume_4": "500+ colis/mois"
 }
 }

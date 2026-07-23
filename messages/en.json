@@ -1469,6 +1469,10 @@
   "form_volume": "Estimated volume",
   "form_email": "Email *",
   "form_success_title": "Message received!",
-  "form_success_desc": "We'll reach out within 24 hours."
+  "form_success_desc": "We'll reach out within 24 hours.",
+  "volume_1": "1-50 packages/month",
+"volume_2": "51-200 packages/month",
+"volume_3": "201-500 packages/month",
+"volume_4": "500+ packages/month"
 }
 }

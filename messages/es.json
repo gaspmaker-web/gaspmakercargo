@@ -1519,7 +1519,11 @@
   "form_volume": "Volumen estimado",
   "form_email": "Email *",
   "form_success_title": "¡Mensaje recibido!",
-  "form_success_desc": "Te contactamos en menos de 24 horas."
+  "form_success_desc": "Te contactamos en menos de 24 horas.",
+  "volume_1": "1-50 paquetes/mes",
+"volume_2": "51-200 paquetes/mes",
+"volume_3": "201-500 paquetes/mes",
+"volume_4": "500+ paquetes/mes"
 }
   }
 
