@@ -91,33 +91,23 @@ export default function CreatePackageForm() {
       }
   };
   // ========================================================================
+// --- FUNCIÓN IMPRIMIR ---
+const openPrintWindow = (format: '4x6' | '30334') => {
+  if (!createdPackage) return;
+  
+  const params = new URLSearchParams({
+    tracking: createdPackage.tracking,
+    clientName: createdPackage.clientName,
+    suite: createdPackage.suite,
+    weight: createdPackage.weight.toString(),
+    countryCode: createdPackage.countryCode,
+    description: createdPackage.description,
+    date: createdPackage.date,
+    format: format
+  });
 
-  // --- FUNCIÓN IMPRIMIR ---
-  const openPrintWindow = (format: '4x6' | '30334') => {
-    if (!createdPackage) return;
-    
-    const params = new URLSearchParams({
-        tracking: createdPackage.tracking,
-        clientName: createdPackage.clientName,
-        suite: createdPackage.suite,
-        weight: createdPackage.weight.toString(),
-        countryCode: createdPackage.countryCode,
-        description: createdPackage.description,
-        date: createdPackage.date,
-        format: format
-    });
-
-    const w = format === '30334' ? 350 : 450;
-    const h = format === '30334' ? 300 : 650;
-
-    // En móvil abrir en la misma pestaña, en desktop popup
-if (/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)) {
-  window.location.href = `/print/label?${params.toString()}`;
-} else {
-  window.open(`/print/label?${params.toString()}`, 'Imprimir Etiqueta', `width=${w},height=${h},scrollbars=no`);
-}
-  };
-
+  window.open(`/print/label?${params.toString()}`, '_blank');
+};
   const handleSearchUser = async (e?: React.FormEvent) => {
     if(e) e.preventDefault();
     const input = document.getElementById('userSearch') as HTMLInputElement;
