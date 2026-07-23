@@ -110,7 +110,12 @@ export default function CreatePackageForm() {
     const w = format === '30334' ? 350 : 450;
     const h = format === '30334' ? 300 : 650;
 
-    window.open(`/print/label?${params.toString()}`, 'Imprimir Etiqueta', `width=${w},height=${h},scrollbars=no`);
+    // En móvil abrir en la misma pestaña, en desktop popup
+if (/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)) {
+  window.location.href = `/print/label?${params.toString()}`;
+} else {
+  window.open(`/print/label?${params.toString()}`, 'Imprimir Etiqueta', `width=${w},height=${h},scrollbars=no`);
+}
   };
 
   const handleSearchUser = async (e?: React.FormEvent) => {
