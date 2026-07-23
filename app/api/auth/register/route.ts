@@ -18,13 +18,13 @@ export async function POST(req: Request) {
     const body = await req.json();
 
   // 🏢 Tenant — leer directo de env var (confiable en Vercel API routes)
+const TENANT_IDS: Record<string, string> = {
+  'gaspmaker': '654f5866-247c-4463-b7c7-5e4400c17bc2',
+  'cargoos': '9ce9bad5-54fc-4cd7-9e3d-446ab395336b',
+};
 const slug = process.env.TENANT_SLUG || 'gaspmaker';
-const tenantRecord = await prisma.tenant.findFirst({ 
-  where: { slug } 
-});
-console.log('TENANT_SLUG:', slug);
-console.log('tenantRecord:', tenantRecord);
-    
+const tenantId = TENANT_IDS[slug] || null;
+
     // 🔥 AÑADIMOS 'referredBy' para recibir el código del amigo que lo invitó
     const { email, password, name, countryCode, phone, dateOfBirth, referredBy } = body;
 
@@ -52,7 +52,7 @@ console.log('tenantRecord:', tenantRecord);
         password: hashedPassword,
         suiteNo,
         role: "CLIENTE",
-        tenant_id: tenantRecord?.id || null,  // ← AÑADIR
+        tenant_id: tenantId, // ← AÑADIR
         countryCode: country,
         phone,
         dateOfBirth: finalDate,
