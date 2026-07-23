@@ -3,6 +3,10 @@ import '../globals.css';
 
 export const metadata: Metadata = {
   title: 'CargoOS Admin',
+  icons: {
+    icon: '/favicon.png',
+    apple: '/favicon.png',
+  },
 };
 
 export default function CargoOSLayout({
