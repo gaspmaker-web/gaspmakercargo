@@ -49,7 +49,7 @@ export default function BarcodeScannerModal({ isOpen, onClose, onScan }: Barcode
             for (let i = 0; i < data.length; i += 4) {
                 const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
                 // Umbralización simple: Si es oscuro es negro, si es claro es blanco
-                const color = avg < 100 ? 0 : 255; 
+                const color = avg < 128 ? 0 : 255;
                 data[i] = color;     // R
                 data[i + 1] = color; // G
                 data[i + 2] = color; // B
@@ -86,28 +86,45 @@ export default function BarcodeScannerModal({ isOpen, onClose, onScan }: Barcode
       setStatus('Analizando código...');
 
       // PASO 2: Escanear la imagen optimizada
-      const html5QrCode = new Html5Qrcode("reader-hidden");
-      
-      const formats = [
-        Html5QrcodeSupportedFormats.CODE_128,    
-        Html5QrcodeSupportedFormats.DATA_MATRIX, 
-        Html5QrcodeSupportedFormats.CODE_39,
-        Html5QrcodeSupportedFormats.EAN_13,
-        Html5QrcodeSupportedFormats.UPC_A,
-        Html5QrcodeSupportedFormats.PDF_417
-      ];
+const formats = [
+  Html5QrcodeSupportedFormats.CODE_128,    
+  Html5QrcodeSupportedFormats.DATA_MATRIX, 
+  Html5QrcodeSupportedFormats.CODE_39,
+  Html5QrcodeSupportedFormats.EAN_13,
+  Html5QrcodeSupportedFormats.UPC_A,
+  Html5QrcodeSupportedFormats.PDF_417,
+  Html5QrcodeSupportedFormats.QR_CODE,
+  Html5QrcodeSupportedFormats.AZTEC,
+  Html5QrcodeSupportedFormats.ITF,
+  Html5QrcodeSupportedFormats.CODE_93,
+];
 
-      // Intentamos leer
-      const result = await html5QrCode.scanFileV2(optimizedFile, true);
-      
-      console.log("SCAN RESULT:", result);
-      
-      if (result && result.decodedText) {
+const html5QrCode = new Html5Qrcode("reader-hidden", { 
+  formatsToSupport: formats,
+  verbose: false 
+});
+      // Intento 1: imagen procesada en B&N
+      try {
+        const result = await html5QrCode.scanFileV2(optimizedFile, true);
+        if (result && result.decodedText) {
           if (navigator.vibrate) navigator.vibrate(200);
           onScan(result.decodedText);
-          onClose(); 
-      } else {
+          onClose();
+          return;
+        }
+      } catch {
+        // Intento 2: imagen original sin procesar
+        try {
+          const result2 = await html5QrCode.scanFileV2(file, true);
+          if (result2 && result2.decodedText) {
+            if (navigator.vibrate) navigator.vibrate(200);
+            onScan(result2.decodedText);
+            onClose();
+            return;
+          }
+        } catch {
           throw new Error("No se encontró código");
+        }
       }
 
     } catch (err: any) {
