@@ -98,6 +98,14 @@ export async function registrarUsuario(formData: FormData) {
     return { error: tx.errorCaptcha };
   }
 
+ // 🏢 Tenant
+  const TENANT_IDS: Record<string, string> = {
+    'gaspmaker': '654f5866-247c-4463-b7c7-5e4400c17bc2',
+    'cargoos': '9ce9bad5-54fc-4cd7-9e3d-446ab395336b',
+  };
+  const slug = process.env.TENANT_SLUG || 'gaspmaker';
+  const tenantId = TENANT_IDS[slug] || null;
+
   try {
     // 3. Duplicados
     const existingUser = await prisma.user.findUnique({ where: { email } });
@@ -113,19 +121,20 @@ export async function registrarUsuario(formData: FormData) {
     const suiteNo = generateLockerNumber(country);
     const finalDate = dateOfBirth ? new Date(dateOfBirth) : null;
 
-    await prisma.$transaction([
-      prisma.user.create({
-        data: {
-          email, name, password: hashedPassword, suiteNo,
-          role: "CLIENTE", countryCode: country, phone,
-          dateOfBirth: finalDate, referredBy: referredBy || null,
-          emailVerified: null,
-        },
-      }),
-      prisma.verificationToken.create({
-        data: { identifier: email, token, expires: expirationDate },
-      }),
-    ]);
+   await prisma.$transaction([
+prisma.user.create({
+  data: {
+    email, name, password: hashedPassword, suiteNo,
+    role: "CLIENTE", countryCode: country, phone,
+    dateOfBirth: finalDate, referredBy: referredBy || null,
+    emailVerified: null,
+    tenant_id: tenantId, // ← AGREGAR
+  },
+}),
+  prisma.verificationToken.create({
+    data: { identifier: email, token, expires: expirationDate },
+  }),
+]);
 
     // 5. Email en el idioma del cliente
     const confirmLink = `${process.env.NEXT_PUBLIC_BASE_URL}/api/auth/verify-email?token=${token}`;
