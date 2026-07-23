@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
     }
 
     await resend.emails.send({
-      from: 'CargoOS <hello@cargoos.io>',
+    from: 'CargoOS <no-reply@gaspmakercargo.com>',
       to: 'hello@cargoos.io',
       subject: `🚢 Nueva solicitud de demo — ${company || name}`,
       html: `
