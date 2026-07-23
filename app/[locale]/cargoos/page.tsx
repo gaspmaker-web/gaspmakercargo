@@ -59,13 +59,13 @@ async function submitDemo() {
 <span className="font-bold text-xl text-black">CargoOS</span>
           </div>
           <div className="flex items-center gap-4">
-            <a href="#pricing" className="text-gray-600 hover:text-black text-sm font-medium">
-              {t('hero_cta2')}
-            </a>
-            <a href="#contact" className="bg-black text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition">
-              {t('hero_cta')}
-            </a>
-          </div>
+  <a href="#pricing" className="hidden sm:block text-gray-600 hover:text-black text-sm font-medium">
+    {t('hero_cta2')}
+  </a>
+  <a href="#contact" className="bg-black text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition">
+    {t('hero_cta')}
+  </a>
+</div>
         </div>
       </nav>
 
