@@ -90,7 +90,7 @@ const tenantSlug = tenant?.slug || process.env.TENANT_SLUG || 'gaspmaker';
 
     <Footer tenantSlug={tenantSlug} />
 
-    <CookieBanner />
+    {tenantSlug !== 'cargoos' && <CookieBanner />}
     <TawkLoader />
 
   </Providers>
