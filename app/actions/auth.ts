@@ -98,13 +98,10 @@ export async function registrarUsuario(formData: FormData) {
     return { error: tx.errorCaptcha };
   }
 
- // 🏢 Tenant
-  const TENANT_IDS: Record<string, string> = {
-    'gaspmaker': '654f5866-247c-4463-b7c7-5e4400c17bc2',
-    'cargoos': '9ce9bad5-54fc-4cd7-9e3d-446ab395336b',
-  };
-  const slug = process.env.TENANT_SLUG || 'gaspmaker';
-  const tenantId = TENANT_IDS[slug] || null;
+// 🏢 Tenant — Upstash Redis cache
+const { getTenantId } = await import('@/lib/tenant-cache');
+const slug = process.env.TENANT_SLUG || 'gaspmaker';
+const tenantId = await getTenantId(slug);
 
   try {
     // 3. Duplicados
