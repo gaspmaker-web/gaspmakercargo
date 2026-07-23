@@ -22,6 +22,8 @@ const slug = process.env.TENANT_SLUG || 'gaspmaker';
 const tenantRecord = await prisma.tenant.findFirst({ 
   where: { slug } 
 });
+console.log('TENANT_SLUG:', slug);
+console.log('tenantRecord:', tenantRecord);
     
     // 🔥 AÑADIMOS 'referredBy' para recibir el código del amigo que lo invitó
     const { email, password, name, countryCode, phone, dateOfBirth, referredBy } = body;
