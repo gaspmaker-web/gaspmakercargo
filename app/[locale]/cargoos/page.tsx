@@ -196,11 +196,10 @@ async function submitDemo() {
             onChange={(e) => setDemoForm({ ...demoForm, volume: e.target.value })}
             className="w-full bg-white/10 border border-white/20 text-white rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-white/50"
           >
-            <option value="" className="bg-gray-900">{t('form_volume')}</option>
-            <option value="1-50" className="bg-gray-900">1–50 paquetes/mes</option>
-            <option value="51-200" className="bg-gray-900">51–200 paquetes/mes</option>
-            <option value="201-500" className="bg-gray-900">201–500 paquetes/mes</option>
-            <option value="500+" className="bg-gray-900">500+ paquetes/mes</option>
+           <option value="1-50" className="bg-gray-900">{t('volume_1')}</option>
+           <option value="51-200" className="bg-gray-900">{t('volume_2')}</option>
+           <option value="201-500" className="bg-gray-900">{t('volume_3')}</option>
+           <option value="500+" className="bg-gray-900">{t('volume_4')}</option>
           </select>
         </div>
         <input
