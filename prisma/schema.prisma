@@ -547,6 +547,7 @@ model Tenant {
   mailItems             MailItem[]
   mailboxSubscriptions  MailboxSubscription[]
   mailPickupRequests    MailPickupRequest[]
+  tenantRates           TenantRate[]
 
   @@map("tenants")
 }
@@ -575,4 +576,18 @@ model TenantPlan {
   tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@map("tenant_plans")
+}
+
+model TenantRate {
+  id          String   @id @default(uuid())
+  tenantId    String   @map("tenant_id")
+  concept     String
+  value       Decimal  @db.Decimal(10, 4)
+  countryCode String?  @map("country_code")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, concept, countryCode])
+  @@map("tenant_rates")
 }
