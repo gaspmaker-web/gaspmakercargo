@@ -5,25 +5,204 @@ import { Save, Plus, Trash2, Key, Globe, Truck, Package, AlertTriangle } from 'l
 
 // Países disponibles
 const COUNTRIES = [
-  { code: 'DO', name: '🇩🇴 República Dominicana' },
-  { code: 'TT', name: '🇹🇹 Trinidad y Tobago' },
+  { code: 'AF', name: '🇦🇫 Afghanistan' },
+  { code: 'AL', name: '🇦🇱 Albania' },
+  { code: 'DZ', name: '🇩🇿 Algeria' },
+  { code: 'AD', name: '🇦🇩 Andorra' },
+  { code: 'AO', name: '🇦🇴 Angola' },
+  { code: 'AG', name: '🇦🇬 Antigua and Barbuda' },
+  { code: 'AR', name: '🇦🇷 Argentina' },
+  { code: 'AM', name: '🇦🇲 Armenia' },
+  { code: 'AU', name: '🇦🇺 Australia' },
+  { code: 'AT', name: '🇦🇹 Austria' },
+  { code: 'AZ', name: '🇦🇿 Azerbaijan' },
+  { code: 'BS', name: '🇧🇸 Bahamas' },
+  { code: 'BH', name: '🇧🇭 Bahrain' },
+  { code: 'BD', name: '🇧🇩 Bangladesh' },
   { code: 'BB', name: '🇧🇧 Barbados' },
-  { code: 'JM', name: '🇯🇲 Jamaica' },
-  { code: 'GD', name: '🇬🇩 Granada' },
-  { code: 'VE', name: '🇻🇪 Venezuela' },
-  { code: 'CO', name: '🇨🇴 Colombia' },
-  { code: 'MX', name: '🇲🇽 México' },
-  { code: 'PA', name: '🇵🇦 Panamá' },
+  { code: 'BY', name: '🇧🇾 Belarus' },
+  { code: 'BE', name: '🇧🇪 Belgium' },
+  { code: 'BZ', name: '🇧🇿 Belize' },
+  { code: 'BJ', name: '🇧🇯 Benin' },
+  { code: 'BT', name: '🇧🇹 Bhutan' },
+  { code: 'BO', name: '🇧🇴 Bolivia' },
+  { code: 'BA', name: '🇧🇦 Bosnia and Herzegovina' },
+  { code: 'BW', name: '🇧🇼 Botswana' },
+  { code: 'BR', name: '🇧🇷 Brazil' },
+  { code: 'BN', name: '🇧🇳 Brunei' },
+  { code: 'BG', name: '🇧🇬 Bulgaria' },
+  { code: 'BF', name: '🇧🇫 Burkina Faso' },
+  { code: 'BI', name: '🇧🇮 Burundi' },
+  { code: 'CV', name: '🇨🇻 Cape Verde' },
+  { code: 'KH', name: '🇰🇭 Cambodia' },
+  { code: 'CM', name: '🇨🇲 Cameroon' },
+  { code: 'CA', name: '🇨🇦 Canada' },
+  { code: 'CF', name: '🇨🇫 Central African Republic' },
+  { code: 'TD', name: '🇹🇩 Chad' },
   { code: 'CL', name: '🇨🇱 Chile' },
-  { code: 'VI', name: '🇻🇮 St. Thomas' },
+  { code: 'CN', name: '🇨🇳 China' },
+  { code: 'CO', name: '🇨🇴 Colombia' },
+  { code: 'KM', name: '🇰🇲 Comoros' },
+  { code: 'CG', name: '🇨🇬 Congo' },
+  { code: 'CR', name: '🇨🇷 Costa Rica' },
+  { code: 'HR', name: '🇭🇷 Croatia' },
   { code: 'CU', name: '🇨🇺 Cuba' },
-  { code: 'AG', name: '🇦🇬 Antigua' },
+  { code: 'CY', name: '🇨🇾 Cyprus' },
+  { code: 'CZ', name: '🇨🇿 Czech Republic' },
+  { code: 'DK', name: '🇩🇰 Denmark' },
+  { code: 'DJ', name: '🇩🇯 Djibouti' },
   { code: 'DM', name: '🇩🇲 Dominica' },
+  { code: 'DO', name: '🇩🇴 Dominican Republic' },
+  { code: 'EC', name: '🇪🇨 Ecuador' },
+  { code: 'EG', name: '🇪🇬 Egypt' },
+  { code: 'SV', name: '🇸🇻 El Salvador' },
+  { code: 'GQ', name: '🇬🇶 Equatorial Guinea' },
+  { code: 'ER', name: '🇪🇷 Eritrea' },
+  { code: 'EE', name: '🇪🇪 Estonia' },
+  { code: 'SZ', name: '🇸🇿 Eswatini' },
+  { code: 'ET', name: '🇪🇹 Ethiopia' },
+  { code: 'FJ', name: '🇫🇯 Fiji' },
+  { code: 'FI', name: '🇫🇮 Finland' },
+  { code: 'FR', name: '🇫🇷 France' },
+  { code: 'GA', name: '🇬🇦 Gabon' },
+  { code: 'GM', name: '🇬🇲 Gambia' },
+  { code: 'GE', name: '🇬🇪 Georgia' },
+  { code: 'DE', name: '🇩🇪 Germany' },
+  { code: 'GH', name: '🇬🇭 Ghana' },
+  { code: 'GR', name: '🇬🇷 Greece' },
+  { code: 'GD', name: '🇬🇩 Grenada' },
+  { code: 'GT', name: '🇬🇹 Guatemala' },
+  { code: 'GN', name: '🇬🇳 Guinea' },
+  { code: 'GW', name: '🇬🇼 Guinea-Bissau' },
   { code: 'GY', name: '🇬🇾 Guyana' },
-  { code: 'LC', name: '🇱🇨 St. Lucia' },
-  { code: 'VC', name: '🇻🇨 St. Vincent' },
-  { code: 'MF', name: '🇸🇽 St. Maarten' },
+  { code: 'HT', name: '🇭🇹 Haiti' },
+  { code: 'HN', name: '🇭🇳 Honduras' },
+  { code: 'HU', name: '🇭🇺 Hungary' },
+  { code: 'IS', name: '🇮🇸 Iceland' },
+  { code: 'IN', name: '🇮🇳 India' },
+  { code: 'ID', name: '🇮🇩 Indonesia' },
+  { code: 'IR', name: '🇮🇷 Iran' },
+  { code: 'IQ', name: '🇮🇶 Iraq' },
+  { code: 'IE', name: '🇮🇪 Ireland' },
+  { code: 'IL', name: '🇮🇱 Israel' },
+  { code: 'IT', name: '🇮🇹 Italy' },
+  { code: 'JM', name: '🇯🇲 Jamaica' },
+  { code: 'JP', name: '🇯🇵 Japan' },
+  { code: 'JO', name: '🇯🇴 Jordan' },
+  { code: 'KZ', name: '🇰🇿 Kazakhstan' },
+  { code: 'KE', name: '🇰🇪 Kenya' },
+  { code: 'KI', name: '🇰🇮 Kiribati' },
+  { code: 'KW', name: '🇰🇼 Kuwait' },
+  { code: 'KG', name: '🇰🇬 Kyrgyzstan' },
+  { code: 'LA', name: '🇱🇦 Laos' },
+  { code: 'LV', name: '🇱🇻 Latvia' },
+  { code: 'LB', name: '🇱🇧 Lebanon' },
+  { code: 'LS', name: '🇱🇸 Lesotho' },
+  { code: 'LR', name: '🇱🇷 Liberia' },
+  { code: 'LY', name: '🇱🇾 Libya' },
+  { code: 'LI', name: '🇱🇮 Liechtenstein' },
+  { code: 'LT', name: '🇱🇹 Lithuania' },
+  { code: 'LU', name: '🇱🇺 Luxembourg' },
+  { code: 'MG', name: '🇲🇬 Madagascar' },
+  { code: 'MW', name: '🇲🇼 Malawi' },
+  { code: 'MY', name: '🇲🇾 Malaysia' },
+  { code: 'MV', name: '🇲🇻 Maldives' },
+  { code: 'ML', name: '🇲🇱 Mali' },
+  { code: 'MT', name: '🇲🇹 Malta' },
+  { code: 'MH', name: '🇲🇭 Marshall Islands' },
+  { code: 'MR', name: '🇲🇷 Mauritania' },
+  { code: 'MU', name: '🇲🇺 Mauritius' },
+  { code: 'MX', name: '🇲🇽 Mexico' },
+  { code: 'FM', name: '🇫🇲 Micronesia' },
+  { code: 'MD', name: '🇲🇩 Moldova' },
+  { code: 'MC', name: '🇲🇨 Monaco' },
+  { code: 'MN', name: '🇲🇳 Mongolia' },
+  { code: 'ME', name: '🇲🇪 Montenegro' },
+  { code: 'MA', name: '🇲🇦 Morocco' },
+  { code: 'MZ', name: '🇲🇿 Mozambique' },
+  { code: 'MM', name: '🇲🇲 Myanmar' },
+  { code: 'NA', name: '🇳🇦 Namibia' },
+  { code: 'NR', name: '🇳🇷 Nauru' },
+  { code: 'NP', name: '🇳🇵 Nepal' },
+  { code: 'NL', name: '🇳🇱 Netherlands' },
+  { code: 'NZ', name: '🇳🇿 New Zealand' },
+  { code: 'NI', name: '🇳🇮 Nicaragua' },
+  { code: 'NE', name: '🇳🇪 Niger' },
+  { code: 'NG', name: '🇳🇬 Nigeria' },
+  { code: 'NO', name: '🇳🇴 Norway' },
+  { code: 'OM', name: '🇴🇲 Oman' },
+  { code: 'PK', name: '🇵🇰 Pakistan' },
+  { code: 'PW', name: '🇵🇼 Palau' },
+  { code: 'PA', name: '🇵🇦 Panama' },
+  { code: 'PG', name: '🇵🇬 Papua New Guinea' },
+  { code: 'PY', name: '🇵🇾 Paraguay' },
+  { code: 'PE', name: '🇵🇪 Peru' },
+  { code: 'PH', name: '🇵🇭 Philippines' },
+  { code: 'PL', name: '🇵🇱 Poland' },
+  { code: 'PT', name: '🇵🇹 Portugal' },
+  { code: 'QA', name: '🇶🇦 Qatar' },
+  { code: 'RO', name: '🇷🇴 Romania' },
+  { code: 'RU', name: '🇷🇺 Russia' },
+  { code: 'RW', name: '🇷🇼 Rwanda' },
+  { code: 'KN', name: '🇰🇳 Saint Kitts and Nevis' },
+  { code: 'LC', name: '🇱🇨 Saint Lucia' },
+  { code: 'VC', name: '🇻🇨 Saint Vincent and the Grenadines' },
+  { code: 'WS', name: '🇼🇸 Samoa' },
+  { code: 'SM', name: '🇸🇲 San Marino' },
+  { code: 'ST', name: '🇸🇹 Sao Tome and Principe' },
+  { code: 'SA', name: '🇸🇦 Saudi Arabia' },
+  { code: 'SN', name: '🇸🇳 Senegal' },
+  { code: 'RS', name: '🇷🇸 Serbia' },
+  { code: 'SC', name: '🇸🇨 Seychelles' },
+  { code: 'SL', name: '🇸🇱 Sierra Leone' },
+  { code: 'SG', name: '🇸🇬 Singapore' },
+  { code: 'SK', name: '🇸🇰 Slovakia' },
+  { code: 'SI', name: '🇸🇮 Slovenia' },
+  { code: 'SB', name: '🇸🇧 Solomon Islands' },
+  { code: 'SO', name: '🇸🇴 Somalia' },
+  { code: 'ZA', name: '🇿🇦 South Africa' },
+  { code: 'SS', name: '🇸🇸 South Sudan' },
+  { code: 'ES', name: '🇪🇸 Spain' },
+  { code: 'LK', name: '🇱🇰 Sri Lanka' },
+  { code: 'SD', name: '🇸🇩 Sudan' },
   { code: 'SR', name: '🇸🇷 Suriname' },
+  { code: 'SE', name: '🇸🇪 Sweden' },
+  { code: 'CH', name: '🇨🇭 Switzerland' },
+  { code: 'SY', name: '🇸🇾 Syria' },
+  { code: 'TW', name: '🇹🇼 Taiwan' },
+  { code: 'TJ', name: '🇹🇯 Tajikistan' },
+  { code: 'TZ', name: '🇹🇿 Tanzania' },
+  { code: 'TH', name: '🇹🇭 Thailand' },
+  { code: 'TL', name: '🇹🇱 Timor-Leste' },
+  { code: 'TG', name: '🇹🇬 Togo' },
+  { code: 'TO', name: '🇹🇴 Tonga' },
+  { code: 'TT', name: '🇹🇹 Trinidad and Tobago' },
+  { code: 'TN', name: '🇹🇳 Tunisia' },
+  { code: 'TR', name: '🇹🇷 Turkey' },
+  { code: 'TM', name: '🇹🇲 Turkmenistan' },
+  { code: 'TV', name: '🇹🇻 Tuvalu' },
+  { code: 'UG', name: '🇺🇬 Uganda' },
+  { code: 'UA', name: '🇺🇦 Ukraine' },
+  { code: 'AE', name: '🇦🇪 United Arab Emirates' },
+  { code: 'GB', name: '🇬🇧 United Kingdom' },
+  { code: 'US', name: '🇺🇸 United States' },
+  { code: 'UY', name: '🇺🇾 Uruguay' },
+  { code: 'UZ', name: '🇺🇿 Uzbekistan' },
+  { code: 'VU', name: '🇻🇺 Vanuatu' },
+  { code: 'VE', name: '🇻🇪 Venezuela' },
+  { code: 'VN', name: '🇻🇳 Vietnam' },
+  { code: 'YE', name: '🇾🇪 Yemen' },
+  { code: 'ZM', name: '🇿🇲 Zambia' },
+  { code: 'ZW', name: '🇿🇼 Zimbabwe' },
+  // Territorios especiales
+  { code: 'VI', name: '🇻🇮 U.S. Virgin Islands' },
+  { code: 'PR', name: '🇵🇷 Puerto Rico' },
+  { code: 'MF', name: '🇸🇽 Sint Maarten' },
+  { code: 'GP', name: '🇬🇵 Guadeloupe' },
+  { code: 'MQ', name: '🇲🇶 Martinique' },
+  { code: 'GF', name: '🇬🇫 French Guiana' },
+  { code: 'CW', name: '🇨🇼 Curaçao' },
+  { code: 'AW', name: '🇦🇼 Aruba' },
 ];
 
 interface Rate {
@@ -85,17 +264,18 @@ export default function ConfiguracionPage() {
   };
 
   const addCountry = () => {
-    if (!newCountry) return;
-    const exists = rates.some(r => r.countryCode === newCountry && r.concept === 'air_per_lb');
-    if (!exists) {
-      setRates(prev => [...prev,
-        { concept: 'air_per_lb', countryCode: newCountry, value: 0 },
-        { concept: 'min_rate', countryCode: newCountry, value: 0 },
-        { concept: 'ocean_per_cuft', countryCode: newCountry, value: 0 },
-      ]);
-    }
-    setNewCountry('');
-  };
+  if (!newCountry) return;
+  const exists = rates.some(r => r.countryCode === newCountry && r.concept === 'air_per_lb');
+  if (!exists) {
+    setRates(prev => [...prev,
+      { concept: 'air_per_lb', countryCode: newCountry, value: 0 },
+      { concept: 'min_rate', countryCode: newCountry, value: 0 },
+      { concept: 'ocean_per_cuft', countryCode: newCountry, value: 0 },
+      { concept: 'ocean_min_1_5cuft', countryCode: newCountry, value: 0 },
+    ]);
+  }
+  setNewCountry('');
+};
 
   const save = async () => {
     setSaving(true);
@@ -183,44 +363,57 @@ const internationalCountries = Array.from(new Set(
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead className="bg-gray-50">
-                  <tr>
-                    <th className="text-left p-4 font-medium text-gray-500">País</th>
-                    <th className="text-center p-4 font-medium text-gray-500">Aéreo /lb</th>
-                    <th className="text-center p-4 font-medium text-gray-500">Marítimo /ft³</th>
-                    <th className="text-center p-4 font-medium text-gray-500">Mínimo</th>
-                    <th className="p-4"></th>
-                  </tr>
-                </thead>
+  <tr>
+    <th className="text-left p-4 font-medium text-gray-500">País</th>
+    <th className="text-center p-4 font-medium text-gray-500">Aéreo /lb</th>
+    <th className="text-center p-4 font-medium text-gray-500">Mín. Aéreo</th>
+    <th className="text-center p-4 font-medium text-gray-500">Marítimo /ft³</th>
+    <th className="text-center p-4 font-medium text-gray-500">Mín. Marítimo</th>
+    <th className="p-4"></th>
+  </tr>
+</thead>
                 <tbody>
                   {internationalCountries.map(code => {
                     const country = COUNTRIES.find(c => c.code === code);
                     return (
                       <tr key={code} className="border-t border-gray-50">
                         <td className="p-4 font-medium">{country?.name || code}</td>
-                        <td className="p-4">
-                          <div className="flex items-center justify-center gap-1">
-                            <span className="text-gray-400">$</span>
-                            <input
-                              type="number"
-                              step="0.01"
-                              value={getRate('air_per_lb', code)}
-                              onChange={e => setRate('air_per_lb', code, parseFloat(e.target.value) || 0)}
-                              className="w-20 text-center border border-gray-200 rounded-lg px-2 py-1"
-                            />
-                          </div>
-                        </td>
-                        <td className="p-4">
-                          <div className="flex items-center justify-center gap-1">
-                            <span className="text-gray-400">$</span>
-                            <input
-                              type="number"
-                              step="0.01"
-                              value={getRate('ocean_per_cuft', code)}
-                              onChange={e => setRate('ocean_per_cuft', code, parseFloat(e.target.value) || 0)}
-                              className="w-20 text-center border border-gray-200 rounded-lg px-2 py-1"
-                            />
-                          </div>
-                        </td>
+                    <td className="p-4">
+  <div className="flex items-center justify-center gap-1">
+    <span className="text-gray-400">$</span>
+    <input
+      type="number"
+      step="0.01"
+      value={getRate('min_rate', code)}
+      onChange={e => setRate('min_rate', code, parseFloat(e.target.value) || 0)}
+      className="w-20 text-center border border-gray-200 rounded-lg px-2 py-1"
+    />
+  </div>
+</td>
+<td className="p-4">
+  <div className="flex items-center justify-center gap-1">
+    <span className="text-gray-400">$</span>
+    <input
+      type="number"
+      step="0.01"
+      value={getRate('ocean_per_cuft', code)}
+      onChange={e => setRate('ocean_per_cuft', code, parseFloat(e.target.value) || 0)}
+      className="w-20 text-center border border-gray-200 rounded-lg px-2 py-1"
+    />
+  </div>
+</td>
+<td className="p-4">
+  <div className="flex items-center justify-center gap-1">
+    <span className="text-gray-400">$</span>
+    <input
+      type="number"
+      step="0.01"
+      value={getRate('ocean_min_1_5cuft', code)}
+      onChange={e => setRate('ocean_min_1_5cuft', code, parseFloat(e.target.value) || 0)}
+      className="w-20 text-center border border-gray-200 rounded-lg px-2 py-1"
+    />
+  </div>
+</td>
                         <td className="p-4">
                           <div className="flex items-center justify-center gap-1">
                             <span className="text-gray-400">$</span>
