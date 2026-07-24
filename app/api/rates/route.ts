@@ -553,71 +553,69 @@ const auraResult = calculateAuraLocalDelivery(auraBoxes, safeDistanceMiles);
         totalCuft = 1; 
     }
 
-if (targetCountryCode === 'BB') {
-        if (showAir) {
-            const priceAir = (isVipWholesale && chargeableWeight >= 230) 
-                ? chargeableWeight * 2.80 
-                : calculateRate_BB(chargeableWeight);
-            rawRates.push({ id: 'GMC-BB-AIR', carrier: 'Gasp Maker Cargo', service: 'Barbados Direct (Air)', price: priceAir, days: '3-5 days', logo: gmcLogo });
-        }
-        
-        if (showOcean) {
-            const priceOcean = calculateOceanRate_BB(totalCuft);
-            rawRates.push({ id: 'GMC-BB-OCEAN', carrier: 'Gasp Maker Cargo', service: 'Barbados Maritime', price: parseFloat(priceOcean.toFixed(2)), days: '14-21 days', logo: gmcLogo });
-        }
-    }
-    
-    if (targetCountryCode === 'TT') {
-        if (showAir) {
-            const priceAir = (isVipWholesale && chargeableWeight >= 230) 
-                ? chargeableWeight * 2.80 
-                : calculateRate_TT(chargeableWeight);
-            rawRates.push({ id: 'GMC-TT-AIR', carrier: 'Gasp Maker Cargo', service: 'Trinidad Direct (Air)', price: priceAir, days: '3-5 days', logo: gmcLogo });
-        }
-        
-        if (showOcean) {
-            const priceOcean = calculateOceanRate_TT(totalCuft);
-            rawRates.push({ id: 'GMC-TT-OCEAN', carrier: 'Gasp Maker Cargo', service: 'Trinidad Maritime', price: parseFloat(priceOcean.toFixed(2)), days: '14-21 days', logo: gmcLogo });
-        }
-    }
+// 🏢 TARIFAS CARIBE AÉREO DINÁMICAS — desde tenant_rates
+const airCountries = ['BB', 'TT', 'JM', 'GD', 'VI', 'CU'];
+const airServiceNames: Record<string, string> = {
+    'BB': 'Barbados Direct (Air)',
+    'TT': 'Trinidad Direct (Air)',
+    'JM': 'Jamaica Direct',
+    'GD': 'Grenada Direct (Air)',
+    'VI': 'St. Thomas Direct',
+    'CU': 'Aerovaradero',
+};
+const airDays: Record<string, string> = {
+    'BB': '3-5 days', 'TT': '3-5 days', 'JM': '3-5 days',
+    'GD': '3-5 days', 'VI': '3-5 days', 'CU': '15-21 days',
+};
 
-    // 🌊 NUEVOS DESTINOS MARÍTIMOS
-    const oceanRoutes: Record<string, {fn: (c: number) => number, service: string}> = {
-        'GD': { fn: calculateOceanRate_GD,       service: 'Grenada Maritime' },
-        'JM': { fn: calculateOceanRate_JM_Ocean,  service: 'Jamaica Maritime' },
-        'AG': { fn: calculateOceanRate_AG,        service: 'Antigua Maritime' },
-        'DM': { fn: calculateOceanRate_DM,        service: 'Dominica Maritime' },
-        'GY': { fn: calculateOceanRate_GY,        service: 'Guyana Maritime' },
-        'LC': { fn: calculateOceanRate_LC,        service: 'St. Lucia Maritime' },
-        'VC': { fn: calculateOceanRate_VC,        service: 'St. Vincent Maritime' },
-        'MF': { fn: calculateOceanRate_MF,        service: 'St. Maarten Maritime' },
-        'SR': { fn: calculateOceanRate_SR,        service: 'Suriname Maritime' },
-    };
+const targetForAir = isStThomas ? 'VI' : targetCountryCode;
 
-    if (showOcean && oceanRoutes[targetCountryCode]) {
-        const route = oceanRoutes[targetCountryCode];
-        const priceOcean = route.fn(totalCuft);
+if (showAir && airCountries.includes(targetForAir)) {
+    const airPerLb = rate('air_per_lb', targetForAir, 0);
+    const minRate = rate('min_rate', targetForAir, 0);
+    if (airPerLb > 0) {
+        let priceAir = Math.max(chargeableWeight * airPerLb, minRate);
+        if (isVipWholesale && chargeableWeight >= 230) {
+            priceAir = chargeableWeight * 2.80;
+        }
+        rawRates.push({
+            id: `GMC-${targetForAir}-AIR`,
+            carrier: 'Gasp Maker Cargo',
+            service: airServiceNames[targetForAir] || `${targetForAir} Direct (Air)`,
+            price: parseFloat(priceAir.toFixed(2)),
+            days: airDays[targetForAir] || '3-5 days',
+            logo: gmcLogo
+        });
+    }
+}
+
+// 🌊 MARÍTIMO DINÁMICO — desde tenant_rates
+const oceanCountries = ['BB', 'TT', 'GD', 'JM', 'AG', 'DM', 'GY', 'LC', 'VC', 'MF', 'SR'];
+const oceanServiceNames: Record<string, string> = {
+    'BB': 'Barbados Maritime', 'TT': 'Trinidad Maritime', 'GD': 'Grenada Maritime',
+    'JM': 'Jamaica Maritime', 'AG': 'Antigua Maritime', 'DM': 'Dominica Maritime',
+    'GY': 'Guyana Maritime', 'LC': 'St. Lucia Maritime', 'VC': 'St. Vincent Maritime',
+    'MF': 'St. Maarten Maritime', 'SR': 'Suriname Maritime',
+};
+
+if (showOcean && oceanCountries.includes(targetCountryCode)) {
+    const oceanPerCuft = rate('ocean_per_cuft', targetCountryCode, 0);
+    const oceanMin = rate('ocean_min_1_5cuft', targetCountryCode, 0);
+    if (oceanPerCuft > 0) {
+        const safeCuft = Math.max(1, totalCuft);
+        const priceOcean = safeCuft <= 5
+            ? oceanMin
+            : parseFloat((safeCuft * oceanPerCuft).toFixed(2));
         rawRates.push({
             id: `GMC-${targetCountryCode}-OCEAN`,
             carrier: 'Gasp Maker Cargo',
-            service: route.service,
+            service: oceanServiceNames[targetCountryCode] || `${targetCountryCode} Maritime`,
             price: parseFloat(priceOcean.toFixed(2)),
             days: '14-21 days',
             logo: gmcLogo
         });
     }
-    
-    if (showAir) {
-        if (targetCountryCode === 'JM') {
-            rawRates.push({ id: 'GMC-JM', carrier: 'Gasp Maker Cargo', service: 'Jamaica Direct', price: calculateRate_JM(chargeableWeight), days: '3-5 days', logo: gmcLogo });
-        }
-        if (targetCountryCode === 'CU') {
-            rawRates.push({ id: 'GMC-CU', carrier: 'Gasp Maker Cargo', service: 'Aerovaradero', price: calculateRate_CU(chargeableWeight), days: '15-21 days', logo: gmcLogo });
-        }
-        if (isStThomas) {
-            rawRates.push({ id: 'GMC-VI', carrier: 'Gasp Maker Cargo', service: 'St. Thomas Direct', price: calculateRate_VI(chargeableWeight), days: '3-5 days', logo: gmcLogo });
-        }
-    }
+}
 
  // ==========================================
     // 8. FILTRO Y LIMPIEZA FINAL
