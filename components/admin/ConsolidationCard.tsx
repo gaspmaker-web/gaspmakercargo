@@ -41,15 +41,53 @@ export default function ConsolidationCard({ request }: { request: any }) {
       }
   }, [finalValue]);
 
+  // 🏢 TARIFAS DINÁMICAS DESDE BD
+const [hazmatRates, setHazmatRates] = useState({
+  hazmat_prep_fee: 120.00,
+  hazmat_shipping_line_fee: 180.00,
+  air_hazmat_fee: 275.00,
+  eei_fee: 40.00,
+  container_eh: 20.00,
+  container_e: 30.00,
+  container_d: 60.00,
+  container_jumbo_fiber: 50.00,
+  container_caja_regular: 7.00,
+});
+
+useEffect(() => {
+  fetch('/api/admin/rates')
+    .then(r => r.json())
+    .then(data => {
+      if (data.rates) {
+        const getRate = (concept: string) => {
+          const r = data.rates.find((r: any) => r.concept === concept && !r.countryCode);
+          return r ? Number(r.value) : null;
+        };
+        setHazmatRates({
+          hazmat_prep_fee: getRate('hazmat_prep_fee') ?? 120.00,
+          hazmat_shipping_line_fee: getRate('hazmat_shipping_line_fee') ?? 180.00,
+          air_hazmat_fee: getRate('air_hazmat_fee') ?? 275.00,
+          eei_fee: getRate('eei_fee') ?? 40.00,
+          container_eh: getRate('container_eh') ?? 20.00,
+          container_e: getRate('container_e') ?? 30.00,
+          container_d: getRate('container_d') ?? 60.00,
+          container_jumbo_fiber: getRate('container_jumbo_fiber') ?? 50.00,
+          container_caja_regular: getRate('container_caja_regular') ?? 7.00,
+        });
+      }
+    })
+    .catch(() => {});
+}, []);
+
   // 🚢 ESTADO PARA CONTAINER MARÍTIMO
 const [containerType, setContainerType] = useState<string | null>(null);
 
 const CONTAINER_OPTIONS = [
-    { id: 'EH', label: 'EH Container', price: 20 },
-    { id: 'E',  label: 'E Container',  price: 30 },
-    { id: 'D',  label: 'D Container',  price: 60 },
-    { id: 'JUMBO_FIBER', label: 'Jumbo Fiber', price: 50 },
-    { id: 'REGULAR', label: 'Caja Regular', price: 7 },
+  { id: 'EH', label: 'EH Container', price: hazmatRates.container_eh },
+  { id: 'E', label: 'E Container', price: hazmatRates.container_e },
+  { id: 'D', label: 'D Container', price: hazmatRates.container_d },
+  { id: 'JUMBO_FIBER', label: 'Jumbo Fiber', price: hazmatRates.container_jumbo_fiber },
+  { id: 'REGULAR', label: 'Caja Regular', price: hazmatRates.container_caja_regular },
 ];
   // =================================================================
   // 🚚🚢 ESTADO PARA LOCAL DELIVERY Y OCEAN (Múltiples Pallets Físicos)
@@ -401,7 +439,7 @@ const CONTAINER_OPTIONS = [
                             <input type="checkbox" checked={specialCharges.hazmatPrepFee} onChange={() => toggleCharge('hazmatPrepFee')} className="w-4 h-4 text-orange-600 rounded shrink-0" />
                             <div className="min-w-0 flex-1">
                                 <p className="text-[10px] font-bold text-gray-800 uppercase leading-tight truncate">HAZMAT PREP FEE</p>
-                                <p className="text-[10px] text-orange-600 font-bold mt-0.5">+$120.00</p>
+                                <p className="text-[10px] text-orange-600 font-bold mt-0.5">+${hazmatRates.hazmat_prep_fee.toFixed(2)}</p>
                             </div>
                         </label>
 
@@ -410,7 +448,7 @@ const CONTAINER_OPTIONS = [
                             <input type="checkbox" checked={specialCharges.hazmatShippingLineFee} onChange={() => toggleCharge('hazmatShippingLineFee')} className="w-4 h-4 text-orange-600 rounded shrink-0" />
                             <div className="min-w-0 flex-1">
                                 <p className="text-[10px] font-bold text-gray-800 uppercase leading-tight truncate">SHIPPING LINE FEE</p>
-                                <p className="text-[10px] text-orange-600 font-bold mt-0.5">+$180.00</p>
+                                <p className="text-[10px] text-orange-600 font-bold mt-0.5">+${hazmatRates.hazmat_shipping_line_fee.toFixed(2)}</p>
                             </div>
                         </label>
 
@@ -419,7 +457,7 @@ const CONTAINER_OPTIONS = [
                             <input type="checkbox" checked={specialCharges.airHazmat} onChange={() => toggleCharge('airHazmat')} className="w-4 h-4 text-orange-600 rounded shrink-0" />
                             <div>
                                 <p className="text-[10px] font-bold text-gray-800 uppercase leading-tight">AIR HAZMAT COMPLIANCE</p>
-                                <p className="text-[10px] text-orange-600 font-bold mt-0.5">+$275.00</p>
+                                <p className="text-[10px] text-orange-600 font-bold mt-0.5">+${hazmatRates.air_hazmat_fee.toFixed(2)}</p>
                             </div>
                         </label>
 
