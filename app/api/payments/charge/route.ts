@@ -140,9 +140,15 @@ export async function POST(req: Request) {
         console.log(`💰 Aplicando descuento de billetera: -$${appliedWallet.toFixed(2)}`);
     }
 
-    const STRIPE_PERCENTAGE = 0.044; 
-    const STRIPE_FIXED_FEE = 0.30;
-    
+   const { getTenantId } = await import('@/lib/tenant-cache');
+const { getTenantRate } = await import('@/lib/tenant-rates');
+const tenantSlug = process.env.TENANT_SLUG || 'gaspmaker';
+const tenantId = await getTenantId(tenantSlug);
+const STRIPE_PERCENTAGE = tenantId 
+  ? (await getTenantRate(tenantId, 'processing_fee_pct')) ?? 0.044
+  : 0.044;
+const STRIPE_FIXED_FEE = 0.30;
+
     const impliedSubtotal = (totalToCharge * (1 - STRIPE_PERCENTAGE)) - STRIPE_FIXED_FEE;
     const feeAmount = totalToCharge - impliedSubtotal;
     let amountInCents = Math.round(totalToCharge * 100);
