@@ -239,6 +239,19 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
     const { weight, weightLbs, dimensions, destination, distanceMiles, auraDetails, serviceType } = body;
+
+    // 🏢 TENANT RATES — Motor dinámico
+    const { getTenantId } = await import('@/lib/tenant-cache');
+    const { getTenantRates } = await import('@/lib/tenant-rates');
+    const tenantSlug = process.env.TENANT_SLUG || 'gaspmaker';
+    const tenantId = await getTenantId(tenantSlug);
+    const tenantRates = tenantId ? await getTenantRates(tenantId) : {};
+
+    // Helper para leer tarifas con fallback
+    const rate = (concept: string, countryCode?: string, fallback: number = 0) => {
+      const key = countryCode ? `${concept}__${countryCode}` : concept;
+      return tenantRates[key] ?? fallback;
+    };
     
     // --- 🛡️ SANITIZACIÓN BÁSICA ---
     let finalWeightLbs = parseFloat(weightLbs || weight);
@@ -487,25 +500,25 @@ const auraResult = calculateAuraLocalDelivery(auraBoxes, safeDistanceMiles);
                 to_address: toAddress, from_address: fromAddress, parcel: parcel,
             });
 
-            if (shipment.rates) {
-                const easyPostRates = shipment.rates.map((rate: any) => {
+    if (shipment.rates) {
+                const easyPostRates = shipment.rates.map((epRate: any) => {
                     let logoUrl = null;
-                    const carrierUpper = (rate.carrier || '').toUpperCase();
+                    const carrierUpper = (epRate.carrier || '').toUpperCase();
                     if (carrierUpper.includes('USPS') || carrierUpper.includes('POSTAL')) logoUrl = '/usps-logo.svg';
                     else if (carrierUpper.includes('FEDEX')) logoUrl = '/fedex-express-6.svg';
                     else if (carrierUpper.includes('DHL')) logoUrl = '/dhl-1.svg';
                     else if (carrierUpper.includes('UPS')) logoUrl = '/ups-united-parcel-service.svg';
 
-                    const basePrice = parseFloat(rate.rate);
-                    const priceWithMarkup = basePrice * 1.30; 
+                    const basePrice = parseFloat(epRate.rate);
+                    const priceWithMarkup = basePrice * rate('easypost_markup', undefined, 1.30);
 
                     return {
-                        id: rate.id, 
-                        carrier: rate.carrier, 
-                        service: rate.service,
+                        id: epRate.id, 
+                        carrier: epRate.carrier, 
+                        service: epRate.service,
                         price: parseFloat(priceWithMarkup.toFixed(2)), 
-                        currency: rate.currency,
-                        days: rate.delivery_days ? `${rate.delivery_days} days` : '3-7 days', 
+                        currency: epRate.currency,
+                        days: epRate.delivery_days ? `${epRate.delivery_days} days` : '3-7 days', 
                         logo: logoUrl 
                     };
                 });
@@ -606,12 +619,12 @@ if (targetCountryCode === 'BB') {
         }
     }
 
-    // ==========================================
+ // ==========================================
     // 8. FILTRO Y LIMPIEZA FINAL
     // ==========================================
-    rawRates = rawRates.filter(rate => {
-        if (!rate.price || rate.price < 1) return false;
-        if (rate.service && (rate.service.toUpperCase().includes('TRINIDAD DIRECT') || rate.service.toUpperCase().includes('AIR FREIGHT')) && !rate.id.startsWith('GMC')) { 
+    rawRates = rawRates.filter(r => {
+        if (!r.price || r.price < 1) return false;
+        if (r.service && (r.service.toUpperCase().includes('TRINIDAD DIRECT') || r.service.toUpperCase().includes('AIR FREIGHT')) && !r.id.startsWith('GMC')) { 
             return false;
         }
         return true;
