@@ -44,6 +44,34 @@ export default function CreatePackageForm() {
       eei: false
   });
 
+  // 🏢 TARIFAS DINÁMICAS DESDE BD
+const [hazmatRates, setHazmatRates] = useState({
+  hazmat_prep_fee: 120.00,
+  hazmat_shipping_line_fee: 180.00,
+  air_hazmat_fee: 275.00,
+  eei_fee: 40.00,
+});
+
+useEffect(() => {
+  fetch('/api/admin/rates')
+    .then(r => r.json())
+    .then(data => {
+      if (data.rates) {
+        const getRate = (concept: string) => {
+          const r = data.rates.find((r: any) => r.concept === concept && !r.countryCode);
+          return r ? Number(r.value) : null;
+        };
+        setHazmatRates({
+          hazmat_prep_fee: getRate('hazmat_prep_fee') ?? 120.00,
+          hazmat_shipping_line_fee: getRate('hazmat_shipping_line_fee') ?? 180.00,
+          air_hazmat_fee: getRate('air_hazmat_fee') ?? 275.00,
+          eei_fee: getRate('eei_fee') ?? 40.00,
+        });
+      }
+    })
+    .catch(() => {});
+}, []);
+
   const toggleCharge = (charge: keyof typeof specialCharges) => {
       setSpecialCharges(prev => ({ ...prev, [charge]: !prev[charge] }));
   };
@@ -535,7 +563,7 @@ const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
                         <input type="checkbox" checked={specialCharges.hazmatPrepFee} onChange={() => toggleCharge('hazmatPrepFee')} className="w-5 h-5 text-orange-600 rounded border-gray-300 focus:ring-orange-500" />
                         <div>
                             <p className="text-sm font-bold text-gray-800">HAZMAT PREPARATION FEE</p>
-                            <p className="text-xs text-orange-600 font-bold mt-0.5">+$120.00</p>
+                           <p className="text-xs text-orange-600 font-bold mt-0.5">+${hazmatRates.hazmat_prep_fee.toFixed(2)}</p>
                         </div>
                     </label>
 
@@ -544,7 +572,7 @@ const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
                         <input type="checkbox" checked={specialCharges.hazmatShippingLineFee} onChange={() => toggleCharge('hazmatShippingLineFee')} className="w-5 h-5 text-orange-600 rounded border-gray-300 focus:ring-orange-500" />
                         <div>
                             <p className="text-sm font-bold text-gray-800">HAZMAT SHIPPING LINE FEE</p>
-                            <p className="text-xs text-orange-600 font-bold mt-0.5">+$180.00</p>
+                            <p className="text-xs text-orange-600 font-bold mt-0.5">+${hazmatRates.hazmat_shipping_line_fee.toFixed(2)}</p>
                         </div>
                     </label>
 
@@ -554,7 +582,7 @@ const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
                         <div>
                             <p className="text-sm font-bold text-gray-800">Air Hazmat Compliance Fee</p>
                             <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">Inspección, reempaque ONU, DGD y etiquetado.</p>
-                            <p className="text-xs text-orange-600 font-bold mt-1">+$275.00</p>
+                            <p className="text-xs text-orange-600 font-bold mt-1">+${hazmatRates.air_hazmat_fee.toFixed(2)}</p>
                         </div>
                     </label>
 
@@ -563,13 +591,13 @@ const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
                         <input type="checkbox" checked={specialCharges.eei} onChange={() => toggleCharge('eei')} className="w-5 h-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500" />
                         <div>
                             <div className="flex items-center gap-2">
-                                <p className="text-sm font-bold text-gray-800">Trámite EEI (Aduana)</p>
+                                <p className="text-sm font-bold text-gray-800">EEI Filing (Customs)</p>
                                 {specialCharges.eei && parseFloat(customsItems.reduce((acc, item) => acc + (Number(item.qty) * Number(item.value || 0)), 0).toString()) > 2500 && (
                                     <span className="text-[9px] bg-blue-500 text-white px-1.5 py-0.5 rounded uppercase font-bold tracking-wider">Auto</span>
                                 )}
                             </div>
                             {/* 👇 El cambio está aquí abajo: &gt; en lugar del símbolo > */}
-                            <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">Declaración obligatoria (Valor &gt; $2,500).</p>
+                            <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">Required declaration (Valor &gt; $2,500).</p>
                             <p className="text-xs text-blue-600 font-bold mt-1">+$40.00</p>
                         </div>
                     </label>
