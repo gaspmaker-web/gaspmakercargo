@@ -289,10 +289,14 @@ export default function ConfiguracionPage() {
     setTimeout(() => setSaved(false), 3000);
   };
 
-  // Países únicos con tarifas internacionales
+// Países únicos con tarifas internacionales
 const internationalCountries = Array.from(new Set(
   rates
-    .filter((r): r is Rate & { countryCode: string } => r.countryCode !== null && r.countryCode !== undefined && r.concept === 'air_per_lb')
+    .filter((r): r is Rate & { countryCode: string } => 
+      r.countryCode !== null && 
+      r.countryCode !== undefined && 
+      ['air_per_lb', 'ocean_per_cuft'].includes(r.concept)
+    )
     .map(r => r.countryCode)
 ));
   if (loading) return <div className="p-8 text-center text-gray-500">Cargando configuración...</div>;

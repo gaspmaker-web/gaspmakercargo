@@ -54,39 +54,46 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { rates, apiKeys } = body;
 
-    // Upsert tarifas
-    if (rates && Array.isArray(rates)) {
-      for (const rate of rates) {
-        await prisma.tenantRate.upsert({
-          where: {
-            tenantId_concept_countryCode: {
-              tenantId: tenant.id,
-              concept: rate.concept,
-              countryCode: rate.countryCode ?? null,
-            }
-          },
-          update: { value: rate.value },
-          create: {
-            tenantId: tenant.id,
-            concept: rate.concept,
-            countryCode: rate.countryCode ?? null,
-            value: rate.value,
-          }
-        });
+  // Upsert tarifas
+if (rates && Array.isArray(rates)) {
+  for (const rate of rates) {
+    const existing = await prisma.tenantRate.findFirst({
+      where: {
+        tenantId: tenant.id,
+        concept: rate.concept,
+        countryCode: rate.countryCode ?? null,
       }
-    }
+    });
 
-    // Actualizar API keys si vienen
-    if (apiKeys) {
-      await prisma.tenant.update({
-        where: { id: tenant.id },
+    if (existing) {
+      await prisma.tenantRate.update({
+        where: { id: existing.id },
+        data: { value: rate.value },
+      });
+    } else {
+      await prisma.tenantRate.create({
         data: {
-          ...(apiKeys.easypost_api_key !== undefined && { easypost_api_key: apiKeys.easypost_api_key }),
-          ...(apiKeys.stripe_publishable_key !== undefined && { stripe_publishable_key: apiKeys.stripe_publishable_key }),
-          ...(apiKeys.stripe_secret_key !== undefined && { stripe_secret_key: apiKeys.stripe_secret_key }),
+          tenantId: tenant.id,
+          concept: rate.concept,
+          countryCode: rate.countryCode ?? null,
+          value: rate.value,
         }
       });
     }
+  }
+}
+
+// Actualizar API keys si vienen
+if (apiKeys) {
+  await prisma.tenant.update({
+    where: { id: tenant.id },
+    data: {
+      ...(apiKeys.easypost_api_key !== undefined && { easypost_api_key: apiKeys.easypost_api_key }),
+      ...(apiKeys.stripe_publishable_key !== undefined && { stripe_publishable_key: apiKeys.stripe_publishable_key }),
+      ...(apiKeys.stripe_secret_key !== undefined && { stripe_secret_key: apiKeys.stripe_secret_key }),
+    }
+  });
+}
 
     // Invalidar cache Redis
     await invalidateTenantRatesCache(tenant.id);
