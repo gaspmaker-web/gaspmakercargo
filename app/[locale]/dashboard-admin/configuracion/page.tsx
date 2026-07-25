@@ -531,34 +531,6 @@ const internationalCountries = Array.from(new Set(
           </div>
         )}
 
-        {/* Contenedores Marítimos */}
-<div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-  <h2 className="font-bold text-gray-900 mb-4">Maritime Containers</h2>
-  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-    {[
-      { concept: 'container_eh', label: 'EH Container' },
-      { concept: 'container_e', label: 'E Container' },
-      { concept: 'container_d', label: 'D Container' },
-      { concept: 'container_jumbo_fiber', label: 'Jumbo Fiber' },
-      { concept: 'container_caja_regular', label: 'Regular Box' },
-    ].map(({ concept, label }) => (
-      <div key={concept}>
-        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 block">{label}</label>
-        <div className="flex items-center gap-2">
-          <span className="text-gray-400">$</span>
-          <input
-            type="number"
-            step="0.01"
-            value={getRate(concept)}
-            onChange={e => setRate(concept, null, parseFloat(e.target.value) || 0)}
-            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
-          />
-        </div>
-      </div>
-    ))}
-  </div>
-</div>
-
         {/* TAB: DELIVERY LOCAL */}
         {activeTab === 'local' && (
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
