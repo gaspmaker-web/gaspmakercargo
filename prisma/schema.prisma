@@ -584,6 +584,7 @@ model TenantRate {
   concept     String
   value       Decimal  @db.Decimal(10, 4)
   countryCode String?  @map("country_code")
+  textValue   String?  @map("text_value")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)

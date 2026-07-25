@@ -15,11 +15,11 @@ const CACHE_TTL = 300; // 5 minutos
 // ==========================================
 // 🔍 GET ALL RATES FOR A TENANT
 // ==========================================
-export async function getTenantRates(tenantId: string): Promise<Record<string, number>> {
+export async function getTenantRates(tenantId: string): Promise<Record<string, number | string>> {
   try {
     // 1. Buscar en cache
     const cacheKey = `rates:${tenantId}`;
-    const cached = await redis.get<Record<string, number>>(cacheKey);
+    const cached = await redis.get<Record<string, number | string>>(cacheKey);
     if (cached) return cached;
 
     // 2. Buscar en BD
@@ -29,12 +29,16 @@ export async function getTenantRates(tenantId: string): Promise<Record<string, n
 
     // 3. Convertir a objeto key-value
     // Key format: concept__countryCode (ej: air_per_lb__DO) o concept (ej: insurance_pct)
-    const ratesMap: Record<string, number> = {};
+    const ratesMap: Record<string, number | string> = {};
     rates.forEach(rate => {
       const key = rate.countryCode 
         ? `${rate.concept}__${rate.countryCode}` 
         : rate.concept;
       ratesMap[key] = Number(rate.value);
+      // Guardar texto si existe (ej: días de entrega)
+      if (rate.textValue) {
+        ratesMap[`${key}__text`] = rate.textValue;
+      }
     });
 
     // 4. Guardar en cache
@@ -48,7 +52,7 @@ export async function getTenantRates(tenantId: string): Promise<Record<string, n
 }
 
 // ==========================================
-// 🔍 GET SINGLE RATE
+// 🔍 GET SINGLE RATE (numérico)
 // ==========================================
 export async function getTenantRate(
   tenantId: string,
@@ -58,7 +62,27 @@ export async function getTenantRate(
   try {
     const rates = await getTenantRates(tenantId);
     const key = countryCode ? `${concept}__${countryCode}` : concept;
-    return rates[key] ?? null;
+    const val = rates[key];
+    if (val === undefined || val === null) return null;
+    return Number(val);
+  } catch {
+    return null;
+  }
+}
+
+// ==========================================
+// 🔍 GET SINGLE TEXT RATE (texto)
+// ==========================================
+export async function getTenantTextRate(
+  tenantId: string,
+  concept: string,
+  countryCode?: string
+): Promise<string | null> {
+  try {
+    const rates = await getTenantRates(tenantId);
+    const key = countryCode ? `${concept}__${countryCode}__text` : `${concept}__text`;
+    const val = rates[key];
+    return typeof val === 'string' ? val : null;
   } catch {
     return null;
   }

@@ -1,0 +1,1 @@
+ALTER TABLE "tenant_rates" ADD COLUMN IF NOT EXISTS "text_value" TEXT DEFAULT NULL;
