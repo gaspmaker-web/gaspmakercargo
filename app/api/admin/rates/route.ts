@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { rates, apiKeys } = body;
 
-  // Upsert tarifas
+// Upsert tarifas
 if (rates && Array.isArray(rates)) {
   for (const rate of rates) {
     const existing = await prisma.tenantRate.findFirst({
@@ -66,10 +66,16 @@ if (rates && Array.isArray(rates)) {
     });
 
     if (existing) {
-      await prisma.tenantRate.update({
-        where: { id: existing.id },
-        data: { value: rate.value },
-      });
+      // No sobrescribir con 0 si ya tiene un valor real
+      if (Number(rate.value) === 0 && Number(existing.value) > 0) {
+        continue;
+      }
+      if (Number(existing.value) !== Number(rate.value)) {
+        await prisma.tenantRate.update({
+          where: { id: existing.id },
+          data: { value: rate.value },
+        });
+      }
     } else {
       await prisma.tenantRate.create({
         data: {
