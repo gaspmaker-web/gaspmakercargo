@@ -372,69 +372,70 @@ const internationalCountries = Array.from(new Set(
     <th className="p-4"></th>
   </tr>
 </thead>
-                <tbody>
-                  {internationalCountries.map(code => {
-                    const country = COUNTRIES.find(c => c.code === code);
-                    return (
-                      <tr key={code} className="border-t border-gray-50">
-                        <td className="p-4 font-medium">{country?.name || code}</td>
-                    <td className="p-4">
-  <div className="flex items-center justify-center gap-1">
-    <span className="text-gray-400">$</span>
-    <input
-      type="number"
-      step="0.01"
-      value={getRate('min_rate', code)}
-      onChange={e => setRate('min_rate', code, parseFloat(e.target.value) || 0)}
-      className="w-20 text-center border border-gray-200 rounded-lg px-2 py-1"
-    />
-  </div>
-</td>
-<td className="p-4">
-  <div className="flex items-center justify-center gap-1">
-    <span className="text-gray-400">$</span>
-    <input
-      type="number"
-      step="0.01"
-      value={getRate('ocean_per_cuft', code)}
-      onChange={e => setRate('ocean_per_cuft', code, parseFloat(e.target.value) || 0)}
-      className="w-20 text-center border border-gray-200 rounded-lg px-2 py-1"
-    />
-  </div>
-</td>
-<td className="p-4">
-  <div className="flex items-center justify-center gap-1">
-    <span className="text-gray-400">$</span>
-    <input
-      type="number"
-      step="0.01"
-      value={getRate('ocean_min_1_5cuft', code)}
-      onChange={e => setRate('ocean_min_1_5cuft', code, parseFloat(e.target.value) || 0)}
-      className="w-20 text-center border border-gray-200 rounded-lg px-2 py-1"
-    />
-  </div>
-</td>
-                        <td className="p-4">
-                          <div className="flex items-center justify-center gap-1">
-                            <span className="text-gray-400">$</span>
-                            <input
-                              type="number"
-                              step="0.01"
-                              value={getRate('min_rate', code)}
-                              onChange={e => setRate('min_rate', code, parseFloat(e.target.value) || 0)}
-                              className="w-20 text-center border border-gray-200 rounded-lg px-2 py-1"
-                            />
-                          </div>
-                        </td>
-                        <td className="p-4">
-                          <button onClick={() => deleteCountry(code)} className="text-red-400 hover:text-red-600">
-                            <Trash2 size={14} />
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
+      <tbody>
+  {internationalCountries.map(code => {
+    const country = COUNTRIES.find(c => c.code === code);
+    return (
+      <tr key={code} className="border-t border-gray-50">
+        <td className="p-4 font-medium">{country?.name || code}</td>
+
+        {/* Aéreo /lb */}
+        <td className="p-4">
+          <div className="flex items-center justify-center gap-1">
+            <span className="text-gray-400">$</span>
+            <input type="number" step="0.01"
+              value={getRate('air_per_lb', code)}
+              onChange={e => setRate('air_per_lb', code, parseFloat(e.target.value) || 0)}
+              className="w-20 text-center border border-gray-200 rounded-lg px-2 py-1"
+            />
+          </div>
+        </td>
+
+        {/* Mín. Aéreo */}
+        <td className="p-4">
+          <div className="flex items-center justify-center gap-1">
+            <span className="text-gray-400">$</span>
+            <input type="number" step="0.01"
+              value={getRate('min_rate', code)}
+              onChange={e => setRate('min_rate', code, parseFloat(e.target.value) || 0)}
+              className="w-20 text-center border border-gray-200 rounded-lg px-2 py-1"
+            />
+          </div>
+        </td>
+
+        {/* Marítimo /ft³ */}
+        <td className="p-4">
+          <div className="flex items-center justify-center gap-1">
+            <span className="text-gray-400">$</span>
+            <input type="number" step="0.01"
+              value={getRate('ocean_per_cuft', code)}
+              onChange={e => setRate('ocean_per_cuft', code, parseFloat(e.target.value) || 0)}
+              className="w-20 text-center border border-gray-200 rounded-lg px-2 py-1"
+            />
+          </div>
+        </td>
+
+        {/* Mín. Marítimo */}
+        <td className="p-4">
+          <div className="flex items-center justify-center gap-1">
+            <span className="text-gray-400">$</span>
+            <input type="number" step="0.01"
+              value={getRate('ocean_min_1_5cuft', code)}
+              onChange={e => setRate('ocean_min_1_5cuft', code, parseFloat(e.target.value) || 0)}
+              className="w-20 text-center border border-gray-200 rounded-lg px-2 py-1"
+            />
+          </div>
+        </td>
+
+        <td className="p-4">
+          <button onClick={() => deleteCountry(code)} className="text-red-400 hover:text-red-600">
+            <Trash2 size={14} />
+          </button>
+        </td>
+      </tr>
+    );
+  })}
+</tbody>
               </table>
             </div>
           </div>
