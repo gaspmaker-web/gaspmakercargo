@@ -188,9 +188,12 @@ if (isFloridaLocal && isOceanRequest) {
         message: 'El servicio marítimo no está disponible para direcciones locales en Florida.'
     });
 }
- // 🔒 Cerrando los candados finales
-    // 🔥 Países con opción marítima disponible para paquetes individuales también
-const oceanEligibleCountries = ['BB', 'TT', 'GD', 'JM', 'AG', 'DM', 'GY', 'LC', 'VC', 'MF', 'SR'];
+// 🔒 Cerrando los candados finales
+// 🏢 PAÍSES CON OPCIÓN MARÍTIMA — dinámico desde tenant_rates
+const oceanEligibleCountries = Object.keys(tenantRates)
+  .filter(k => k.startsWith('ocean_per_cuft__'))
+  .map(k => k.replace('ocean_per_cuft__', ''))
+  .filter(code => Number(tenantRates[`ocean_per_cuft__${code}`] ?? 0) > 0);
 const showOcean = isOceanRequest || (isSinglePackage && oceanEligibleCountries.includes(targetCountryCode));
 
     // 🛡️ GUARD MARÍTIMO: bloquea cotización ocean sin dimensiones reales.
