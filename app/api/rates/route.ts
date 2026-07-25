@@ -91,11 +91,17 @@ export async function POST(req: Request) {
     const tenantId = await getTenantId(tenantSlug);
     const tenantRates = tenantId ? await getTenantRates(tenantId) : {};
 
-    // Helper para leer tarifas con fallback
-    const rate = (concept: string, countryCode?: string, fallback: number = 0) => {
-      const key = countryCode ? `${concept}__${countryCode}` : concept;
-      return tenantRates[key] ?? fallback;
-    };
+  const rate = (concept: string, countryCode?: string, fallback: number = 0): number => {
+  const key = countryCode ? `${concept}__${countryCode}` : concept;
+  const val = tenantRates[key] ?? fallback;
+  return Number(val);
+};
+
+const rateText = (concept: string, countryCode?: string, fallback: string = ''): string => {
+  const key = countryCode ? `${concept}__${countryCode}__text` : `${concept}__text`;
+  const val = tenantRates[key];
+  return typeof val === 'string' ? val : fallback;
+};
     
     // --- 🛡️ SANITIZACIÓN BÁSICA ---
     let finalWeightLbs = parseFloat(weightLbs || weight);
@@ -398,7 +404,11 @@ const auraResult = calculateAuraLocalDelivery(auraBoxes, safeDistanceMiles);
     }
 
 // 🏢 TARIFAS CARIBE AÉREO DINÁMICAS — desde tenant_rates
-const airCountries = ['BB', 'TT', 'JM', 'GD', 'VI', 'CU'];
+// 🏢 TODOS LOS PAÍSES CON RATE AÉREO — dinámico desde tenant_rates
+const airCountries = Object.keys(tenantRates)
+  .filter(k => k.startsWith('air_per_lb__'))
+  .map(k => k.replace('air_per_lb__', ''))
+  .filter(code => (tenantRates[`air_per_lb__${code}`] ?? 0) > 0);
 const airServiceNames: Record<string, string> = {
     'BB': 'Barbados Direct (Air)',
     'TT': 'Trinidad Direct (Air)',
@@ -434,7 +444,11 @@ if (showAir && airCountries.includes(targetForAir)) {
 }
 
 // 🌊 MARÍTIMO DINÁMICO — desde tenant_rates
-const oceanCountries = ['BB', 'TT', 'GD', 'JM', 'AG', 'DM', 'GY', 'LC', 'VC', 'MF', 'SR'];
+// 🏢 TODOS LOS PAÍSES CON RATE MARÍTIMO — dinámico
+const oceanCountries = Object.keys(tenantRates)
+  .filter(k => k.startsWith('ocean_per_cuft__'))
+  .map(k => k.replace('ocean_per_cuft__', ''))
+  .filter(code => (tenantRates[`ocean_per_cuft__${code}`] ?? 0) > 0);
 const oceanServiceNames: Record<string, string> = {
     'BB': 'Barbados Maritime', 'TT': 'Trinidad Maritime', 'GD': 'Grenada Maritime',
     'JM': 'Jamaica Maritime', 'AG': 'Antigua Maritime', 'DM': 'Dominica Maritime',
