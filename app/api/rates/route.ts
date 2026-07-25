@@ -408,7 +408,7 @@ const auraResult = calculateAuraLocalDelivery(auraBoxes, safeDistanceMiles);
 const airCountries = Object.keys(tenantRates)
   .filter(k => k.startsWith('air_per_lb__'))
   .map(k => k.replace('air_per_lb__', ''))
-  .filter(code => (tenantRates[`air_per_lb__${code}`] ?? 0) > 0);
+  .filter(code => Number(tenantRates[`ocean_per_cuft__${code}`] ?? 0) > 0);
 const airServiceNames: Record<string, string> = {
     'BB': 'Barbados Direct (Air)',
     'TT': 'Trinidad Direct (Air)',
@@ -448,7 +448,7 @@ if (showAir && airCountries.includes(targetForAir)) {
 const oceanCountries = Object.keys(tenantRates)
   .filter(k => k.startsWith('ocean_per_cuft__'))
   .map(k => k.replace('ocean_per_cuft__', ''))
-  .filter(code => (tenantRates[`ocean_per_cuft__${code}`] ?? 0) > 0);
+  .filter(code => Number(tenantRates[`ocean_per_cuft__${code}`] ?? 0) > 0);
 const oceanServiceNames: Record<string, string> = {
     'BB': 'Barbados Maritime', 'TT': 'Trinidad Maritime', 'GD': 'Grenada Maritime',
     'JM': 'Jamaica Maritime', 'AG': 'Antigua Maritime', 'DM': 'Dominica Maritime',
