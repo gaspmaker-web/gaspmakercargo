@@ -463,12 +463,24 @@ const oceanServiceNames: Record<string, string> = {
 
 if (showOcean && oceanCountries.includes(targetCountryCode)) {
     const oceanPerCuft = rate('ocean_per_cuft', targetCountryCode, 0);
-    const oceanMin = rate('ocean_min_1_5cuft', targetCountryCode, 0);
     if (oceanPerCuft > 0) {
         const safeCuft = Math.max(1, totalCuft);
-        const priceOcean = safeCuft <= 5
-            ? oceanMin
-            : parseFloat((safeCuft * oceanPerCuft).toFixed(2));
+
+        // 🏢 Rangos dinámicos desde tenant_rates
+        const min_1_5   = rate('ocean_min_1_5cuft',   targetCountryCode, 0);
+        const min_6_10  = rate('ocean_min_6_10cuft',  targetCountryCode, 0);
+        const min_11_15 = rate('ocean_min_11_15cuft', targetCountryCode, 0);
+        const min_16_20 = rate('ocean_min_16_20cuft', targetCountryCode, 0);
+        const min_21_25 = rate('ocean_min_21_25cuft', targetCountryCode, 0);
+
+        let priceOcean: number;
+        if      (safeCuft <= 5  && min_1_5   > 0) priceOcean = min_1_5;
+        else if (safeCuft <= 10 && min_6_10  > 0) priceOcean = min_6_10;
+        else if (safeCuft <= 15 && min_11_15 > 0) priceOcean = min_11_15;
+        else if (safeCuft <= 20 && min_16_20 > 0) priceOcean = min_16_20;
+        else if (safeCuft <= 25 && min_21_25 > 0) priceOcean = min_21_25;
+        else priceOcean = parseFloat((safeCuft * oceanPerCuft).toFixed(2));
+
         rawRates.push({
             id: `GMC-${targetCountryCode}-OCEAN`,
             carrier: 'Gasp Maker Cargo',
