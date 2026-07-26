@@ -33,7 +33,15 @@ const isMaritimeRate = (rate: any) =>
     (rate?.id && String(rate.id).includes('OCEAN')) ||
     (rate?.service && /maritime/i.test(String(rate.service)));
 
-export default function CalculadoraClient() { 
+interface CalculadoraProps {
+  initialAirCountries?: string[];
+  initialOceanCountries?: string[];
+}
+
+export default function CalculadoraClient({ 
+  initialAirCountries = [], 
+  initialOceanCountries = [] 
+}: CalculadoraProps) {
     const t = useTranslations('CalculatorPage'); 
     const router = useRouter(); 
     const tPkg = useTranslations('PackageDetail');
@@ -41,11 +49,15 @@ export default function CalculadoraClient() {
 
     // 🏢 Países dinámicos desde tenant_rates
 const oceanDestinations = useMemo(() => {
-  return tenantRates.ocean_countries.map(code => {
+  const countries = initialOceanCountries.length > 0 
+    ? initialOceanCountries 
+    : tenantRates.ocean_countries;
+  
+  return countries.map(code => {
     const country = ALL_COUNTRIES.find(c => c.code.toUpperCase() === code.toUpperCase());
     return { code: code.toLowerCase(), name: country?.name || code };
   }).sort((a, b) => a.name.localeCompare(b.name));
-}, [tenantRates.ocean_countries]);
+}, [initialOceanCountries, tenantRates.ocean_countries]);
 
 const oceanCodes = useMemo(() => 
   oceanDestinations.map(d => d.code),
