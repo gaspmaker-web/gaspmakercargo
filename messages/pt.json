@@ -386,7 +386,9 @@
     "5_7_days": "5-7 dias",
     "7_14_days": "7-14 dias",
     "14_21_days": "14-21 dias",
-    "15_21_days": "15-21 dias"
+    "15_21_days": "15-21 dias",
+    "day": "dia",
+    "days": "dias"
   },
   "PendingBills": {
     "title": "Faturas Pendentes",
