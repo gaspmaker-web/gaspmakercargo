@@ -497,30 +497,46 @@ const internationalCountries = Array.from(new Set(
                 ))}
         </div>
 
-              {/* Días de entrega */}
+            {/* Días de entrega */}
               <p className="text-xs font-bold text-green-700 uppercase tracking-wider mb-3 mt-4">
                 ✈️ Días Aéreo / 🚢 Días Marítimo
               </p>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-xs text-green-600 font-bold block mb-1">Días Aéreo</label>
-                  <input
-                    type="text"
-                    placeholder="ej: 3-5 days"
+                  <select
                     value={getTextRate('air_days', code)}
                     onChange={e => setTextRate('air_days', code, e.target.value)}
                     className="w-full border border-green-200 rounded-lg px-2 py-1.5 text-sm bg-white"
-                  />
+                  >
+                    <option value="">— Select —</option>
+                    <option value="same_day">Same day</option>
+                    <option value="next_day">Next day</option>
+                    <option value="2_3_days">2-3 days</option>
+                    <option value="3_5_days">3-5 days</option>
+                    <option value="5_7_days">5-7 days</option>
+                    <option value="7_14_days">7-14 days</option>
+                    <option value="14_21_days">14-21 days</option>
+                    <option value="15_21_days">15-21 days</option>
+                  </select>
                 </div>
                 <div>
                   <label className="text-xs text-green-600 font-bold block mb-1">Días Marítimo</label>
-                  <input
-                    type="text"
-                    placeholder="ej: 14-21 days"
+                  <select
                     value={getTextRate('ocean_days', code)}
                     onChange={e => setTextRate('ocean_days', code, e.target.value)}
                     className="w-full border border-green-200 rounded-lg px-2 py-1.5 text-sm bg-white"
-                  />
+                  >
+                    <option value="">— Select —</option>
+                    <option value="same_day">Same day</option>
+                    <option value="next_day">Next day</option>
+                    <option value="2_3_days">2-3 days</option>
+                    <option value="3_5_days">3-5 days</option>
+                    <option value="5_7_days">5-7 days</option>
+                    <option value="7_14_days">7-14 days</option>
+                    <option value="14_21_days">14-21 days</option>
+                    <option value="15_21_days">15-21 days</option>
+                  </select>
                 </div>
               </div>
             </td>
@@ -684,7 +700,7 @@ const internationalCountries = Array.from(new Set(
       </div>
     </div>
 
-    {/* Días de entrega por vehículo */}
+  {/* Días de entrega por vehículo */}
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
       <h2 className="font-bold text-gray-900 mb-4">🚗 Días de Entrega por Vehículo</h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -696,13 +712,21 @@ const internationalCountries = Array.from(new Set(
         ].map(({ code, label }) => (
           <div key={code}>
             <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 block">{label}</label>
-            <input
-              type="text"
-              placeholder="ej: Same day"
+            <select
               value={getTextRate('local_days', code)}
               onChange={e => setTextRate('local_days', code, e.target.value)}
               className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
-            />
+            >
+              <option value="">— Select —</option>
+              <option value="same_day">Same day</option>
+              <option value="next_day">Next day</option>
+              <option value="2_3_days">2-3 days</option>
+              <option value="3_5_days">3-5 days</option>
+              <option value="5_7_days">5-7 days</option>
+              <option value="7_14_days">7-14 days</option>
+              <option value="14_21_days">14-21 days</option>
+              <option value="15_21_days">15-21 days</option>
+            </select>
           </div>
         ))}
       </div>

@@ -375,7 +375,15 @@
     "hazmatShippingFee": "Cargo de Envío Hazmat",
     "airHazmatCompliance": "Cumplimiento Hazmat Aéreo",
     "eeiCustomsFee": "Trámite Aduanal EEI",
-    "specialHandling": "Manejo Especial"
+    "specialHandling": "Manejo Especial",
+    "same_day": "Mismo día",
+    "next_day": "Al día siguiente",
+    "2_3_days": "2-3 días",
+    "3_5_days": "3-5 días",
+    "5_7_days": "5-7 días",
+    "7_14_days": "7-14 días",
+    "14_21_days": "14-21 días",
+    "15_21_days": "15-21 días"
   },
   "PendingBills": {
     "title": "Facturas Pendientes",

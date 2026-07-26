@@ -379,7 +379,15 @@
     "hazmatShippingFee": "Hazmat Shipping Fee",
     "airHazmatCompliance": "Air Hazmat Compliance",
     "eeiCustomsFee": "EEI Customs Fee",
-    "specialHandling": "Special Handling"
+    "specialHandling": "Special Handling",
+    "same_day": "Same day",
+    "next_day": "Next day",
+    "2_3_days": "2-3 days",
+    "3_5_days": "3-5 days",
+    "5_7_days": "5-7 days",
+    "7_14_days": "7-14 days",
+    "14_21_days": "14-21 days",
+    "15_21_days": "15-21 days"
   },
   "PendingBills": {
     "title": "Pending Bills",
