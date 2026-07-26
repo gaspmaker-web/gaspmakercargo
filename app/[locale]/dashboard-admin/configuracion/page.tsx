@@ -652,38 +652,63 @@ const internationalCountries = Array.from(new Set(
             </div>
           </div>
         )}
-
-        {/* TAB: DELIVERY LOCAL */}
-        {activeTab === 'local' && (
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-            <h2 className="font-bold text-gray-900 mb-4">Delivery Local Miami</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {[
-                { concept: 'local_base_radius_miles', label: 'Radio base incluido (millas)' },
-                { concept: 'local_per_mile_car_suv', label: 'Por milla — Car/SUV' },
-                { concept: 'local_per_mile_minivan', label: 'Por milla — Minivan' },
-                { concept: 'local_per_mile_cargo_van', label: 'Por milla — Cargo Van' },
-                { concept: 'local_per_mile_box_truck', label: 'Por milla — Box Truck' },
-                { concept: 'local_pre_built_pallet_flat', label: 'Pallet pre-armado (flat)' },
-                { concept: 'local_pre_built_radius_miles', label: 'Radio pallet pre-armado (millas)' },
-              ].map(({ concept, label }) => (
-                <div key={concept}>
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 block">{label}</label>
-                  <div className="flex items-center gap-2">
-                    <span className="text-gray-400">$</span>
-                    <input
-                      type="number"
-                      step="0.01"
-                      value={getRate(concept)}
-                      onChange={e => setRate(concept, null, parseFloat(e.target.value) || 0)}
-                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
-                    />
-                  </div>
-                </div>
-              ))}
+{/* TAB: DELIVERY LOCAL */}
+{activeTab === 'local' && (
+  <div className="space-y-4">
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+      <h2 className="font-bold text-gray-900 mb-4">Delivery Local Miami</h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {[
+          { concept: 'local_base_radius_miles', label: 'Radio base incluido (millas)' },
+          { concept: 'local_per_mile_car_suv', label: 'Por milla — Car/SUV' },
+          { concept: 'local_per_mile_minivan', label: 'Por milla — Minivan' },
+          { concept: 'local_per_mile_cargo_van', label: 'Por milla — Cargo Van' },
+          { concept: 'local_per_mile_box_truck', label: 'Por milla — Box Truck' },
+          { concept: 'local_pre_built_pallet_flat', label: 'Pallet pre-armado (flat)' },
+          { concept: 'local_pre_built_radius_miles', label: 'Radio pallet pre-armado (millas)' },
+        ].map(({ concept, label }) => (
+          <div key={concept}>
+            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 block">{label}</label>
+            <div className="flex items-center gap-2">
+              <span className="text-gray-400">$</span>
+              <input
+                type="number"
+                step="0.01"
+                value={getRate(concept)}
+                onChange={e => setRate(concept, null, parseFloat(e.target.value) || 0)}
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
+              />
             </div>
           </div>
-        )}
+        ))}
+      </div>
+    </div>
+
+    {/* Días de entrega por vehículo */}
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+      <h2 className="font-bold text-gray-900 mb-4">🚗 Días de Entrega por Vehículo</h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {[
+          { code: 'car_suv', label: 'Car/SUV' },
+          { code: 'minivan', label: 'Minivan' },
+          { code: 'cargo_van', label: 'Cargo Van' },
+          { code: 'box_truck', label: 'Box Truck' },
+        ].map(({ code, label }) => (
+          <div key={code}>
+            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 block">{label}</label>
+            <input
+              type="text"
+              placeholder="ej: Same day"
+              value={getTextRate('local_days', code)}
+              onChange={e => setTextRate('local_days', code, e.target.value)}
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
+            />
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+)}
 
         {/* TAB: API KEYS */}
         {activeTab === 'apis' && (
