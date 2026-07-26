@@ -420,10 +420,9 @@ const airServiceNames: Record<string, string> = {
     'VI': 'St. Thomas Direct',
     'CU': 'Aerovaradero',
 };
-const airDays: Record<string, string> = {
-    'BB': '3-5 days', 'TT': '3-5 days', 'JM': '3-5 days',
-    'GD': '3-5 days', 'VI': '3-5 days', 'CU': '15-21 days',
-};
+// 🏢 Días de entrega dinámicos desde tenant_rates
+const getAirDays = (code: string) => rateText('air_days', code, '3-5 days');
+const getOceanDays = (code: string) => rateText('ocean_days', code, '14-21 days');
 
 const targetForAir = isStThomas ? 'VI' : targetCountryCode;
 
@@ -440,7 +439,7 @@ if (showAir && airCountries.includes(targetForAir)) {
             carrier: 'Gasp Maker Cargo',
             service: airServiceNames[targetForAir] || `${targetForAir} Direct (Air)`,
             price: parseFloat(priceAir.toFixed(2)),
-            days: airDays[targetForAir] || '3-5 days',
+            days: getAirDays(targetForAir),
             logo: gmcLogo
         });
     }
@@ -484,7 +483,7 @@ if (showOcean && oceanCountries.includes(targetCountryCode)) {
             carrier: 'Gasp Maker Cargo',
             service: oceanServiceNames[targetCountryCode] || `${targetCountryCode} Maritime`,
             price: parseFloat(priceOcean.toFixed(2)),
-            days: '14-21 days',
+            days: getOceanDays(targetCountryCode),
             logo: gmcLogo
         });
     }
