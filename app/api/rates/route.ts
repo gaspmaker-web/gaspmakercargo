@@ -195,7 +195,6 @@ const oceanEligibleCountries = Object.keys(tenantRates)
   .map(k => k.replace('ocean_per_cuft__', ''))
   .filter(code => Number(tenantRates[`ocean_per_cuft__${code}`] ?? 0) > 0);
 const showOcean = isOceanRequest || (isSinglePackage && oceanEligibleCountries.includes(targetCountryCode));
-console.log('DEBUG:', { targetCountryCode, oceanEligibleCountries, showOcean });
 
     // 🛡️ GUARD MARÍTIMO: bloquea cotización ocean sin dimensiones reales.
     // Sin L×W×H, el cuft cae a 1 y devolvería el mínimo del tramo (precio irreal).
@@ -453,7 +452,6 @@ const oceanCountries = Object.keys(tenantRates)
   .filter(k => k.startsWith('ocean_per_cuft__'))
   .map(k => k.replace('ocean_per_cuft__', ''))
   .filter(code => Number(tenantRates[`ocean_per_cuft__${code}`] ?? 0) > 0);
-  console.log('OCEAN DEBUG:', { oceanCountries, targetCountryCode, includes: oceanCountries.includes(targetCountryCode) });
 const oceanServiceNames: Record<string, string> = {
     'BB': 'Barbados Maritime', 'TT': 'Trinidad Maritime', 'GD': 'Grenada Maritime',
     'JM': 'Jamaica Maritime', 'AG': 'Antigua Maritime', 'DM': 'Dominica Maritime',

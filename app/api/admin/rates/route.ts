@@ -65,11 +65,7 @@ if (rates && Array.isArray(rates)) {
       }
     });
 
-    if (existing) {
-      // No sobrescribir con 0 si ya tiene un valor real
-      if (Number(rate.value) === 0 && Number(existing.value) > 0) {
-        continue;
-      }
+if (existing) {
       if (Number(existing.value) !== Number(rate.value)) {
         await prisma.tenantRate.update({
           where: { id: existing.id },
