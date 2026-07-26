@@ -11,6 +11,7 @@ import {
 
 // 🔥 IMPORTAMOS TU DICCIONARIO MAESTRO DE PAÍSES 🔥
 import { ALL_COUNTRIES } from '@/lib/countries';
+import { formatDays } from '@/lib/formatDays';
 
 // --- HELPER: Limpiar nombres de Carriers (Ej: UPSDAP -> UPS) ---
 const cleanCarrierName = (name: string) => {
@@ -22,7 +23,7 @@ const cleanCarrierName = (name: string) => {
     if (n.includes('USPS')) return 'USPS';
     if (n.includes('GMC') || n.includes('GASP')) return 'Gasp Maker Cargo';
     return name; // Si no coincide con ninguno, devuelve el original
-};
+}
 
 // 🌊 DESTINOS CON RUTA MARÍTIMA (Laparkan)
 // ⚠️ Los códigos DEBEN calzar con `oceanEligibleCountries` en /api/rates.
@@ -51,6 +52,7 @@ const isMaritimeRate = (rate: any) =>
 export default function CalculadoraClient() { 
     const t = useTranslations('CalculatorPage'); 
     const router = useRouter(); 
+    const tPkg = useTranslations('PackageDetail');
 
     // Estados de entrada
     const [length, setLength] = useState<number | ''>('');
@@ -484,7 +486,7 @@ export default function CalculadoraClient() {
                                                 {isMaritimeRate(rate)
                                                     ? <Ship size={14} className="text-gmc-dorado-principal shrink-0"/>
                                                     : <Truck size={14} className="text-gmc-dorado-principal shrink-0"/>}
-                                                <span>{rate.days}</span>
+                                                <span>{formatDays(rate.days || '', tPkg)}</span>
                                             </div>
                                             
                                             <div className="flex flex-col text-right gap-0.5">

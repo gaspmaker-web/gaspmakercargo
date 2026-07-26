@@ -6,20 +6,22 @@ import Link from 'next/link';
 import { Package, Plane, ArrowLeft, CheckCircle, CreditCard, Loader2, Info, Check, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react';
 import { getProcessingFee } from '@/lib/stripeCalc';
 import { useTenantRates } from '@/hooks/useTenantRates';
+import { formatDays } from '@/lib/formatDays';
+import { useTranslations } from 'next-intl';
 
 // --- CONFIGURACIÓN DE LÍMITES ---
 const MAX_WEIGHT_PER_BOX = 100; // Límite de 100 lbs por caja consolidada
 
 // --- TARIFAS SIMULADAS ---
 const COURIER_RATES = {
-    'DHL': { name: 'DHL Express', base: 45.00, perLb: 4.50, days: '2-4 días' },
-    'FEDEX': { name: 'FedEx Priority', base: 40.00, perLb: 4.20, days: '3-5 días' },
-    'ECONOMY': { name: 'Aéreo Económico', base: 15.00, perLb: 2.50, days: '7-10 días' }
+    'DHL': { name: 'DHL Express', base: 45.00, perLb: 4.50, days: '2_3_days' },
+    'FEDEX': { name: 'FedEx Priority', base: 40.00, perLb: 4.20, days: '3_5_days' },
+    'ECONOMY': { name: 'Aéreo Económico', base: 15.00, perLb: 2.50, days: '7_14_days' }
 };
-
 export default function ConsolidateShipmentPage() {
   const router = useRouter();
   const tenantRates = useTenantRates();
+  const t = useTranslations('PackageDetail');
   
   // Referencia para el Auto-Scroll hacia el pago
   const paymentSectionRef = useRef<HTMLDivElement>(null);
@@ -255,7 +257,7 @@ export default function ConsolidateShipmentPage() {
                                 >
                                     <div className="flex justify-between items-start mb-2">
                                         <Plane size={20} className={selectedCourier === key ? 'text-gmc-dorado-principal' : 'text-gray-400'}/>
-                                        <span className="text-xs font-bold bg-white px-2 py-1 rounded border shadow-sm">{rate.days}</span>
+                                        <span className="text-xs font-bold bg-white px-2 py-1 rounded border shadow-sm">{formatDays(rate.days || '', t)}</span>
                                     </div>
                                     <p className="font-bold text-gray-800 text-sm">{rate.name}</p>
                                     <p className="text-xs text-gray-500 mt-1">

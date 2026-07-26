@@ -32,6 +32,7 @@ import { useTenantRates } from '@/hooks/useTenantRates';
 import { useTranslations } from "next-intl";
 import CourierLogo from "@/components/CourierLogo";
 import InteractiveEvidence from "@/components/client/InteractiveEvidence";
+import { formatDays } from '@/lib/formatDays';
 
 const getCarrierLogo = (carrier: string): string => {
   const c = (carrier || '').toLowerCase();
@@ -689,28 +690,7 @@ export default function PackageDetailClient({
                               <h3 className="font-black text-gray-800 text-sm uppercase leading-tight truncate">{cleanCarrierName(rate.carrier)}</h3>
                               <p className="text-[11px] text-gray-500 font-medium leading-tight mt-0.5 line-clamp-2 break-words">{cleanServiceName(rate.service)}</p>
                               <p className="text-[10px] text-gray-400 font-bold mt-1 flex items-center gap-1">
-  <Clock size={10} /> {(() => {
-    const d = rate.days || '';
-    // Códigos predefinidos traducibles
-    const codes: Record<string, string> = {
-      'same_day': t('same_day'),
-      'next_day': t('next_day'),
-      '2_3_days': t('2_3_days'),
-      '3_5_days': t('3_5_days'),
-      '5_7_days': t('5_7_days'),
-      '7_14_days': t('7_14_days'),
-      '14_21_days': t('14_21_days'),
-      '15_21_days': t('15_21_days'),
-    };
-    if (codes[d]) return codes[d];
-    // Días numéricos de EasyPost
-    const match = d.match(/^(\d+)/);
-    if (match) {
-      const count = parseInt(match[1]);
-      return `${count} ${count === 1 ? t('day') : t('days')}`;
-    }
-    return d;
-  })()}
+  <Clock size={10} /> {formatDays(rate.days || '', t)}
 </p>
                             </div>
                             <div className="text-right pl-2">
