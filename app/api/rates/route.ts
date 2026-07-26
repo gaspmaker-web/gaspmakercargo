@@ -194,7 +194,7 @@ const oceanEligibleCountries = Object.keys(tenantRates)
   .filter(k => k.startsWith('ocean_per_cuft__'))
   .map(k => k.replace('ocean_per_cuft__', ''))
   .filter(code => Number(tenantRates[`ocean_per_cuft__${code}`] ?? 0) > 0);
-const showOcean = isOceanRequest || (isSinglePackage && oceanEligibleCountries.includes(targetCountryCode));
+console.log('DEBUG:', { targetCountryCode, oceanEligibleCountries, showOcean: isOceanRequest || (isSinglePackage && oceanEligibleCountries.includes(targetCountryCode)) });
 
     // 🛡️ GUARD MARÍTIMO: bloquea cotización ocean sin dimensiones reales.
     // Sin L×W×H, el cuft cae a 1 y devolvería el mínimo del tramo (precio irreal).
