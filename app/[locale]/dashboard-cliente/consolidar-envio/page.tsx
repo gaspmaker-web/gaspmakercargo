@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Package, Plane, ArrowLeft, CheckCircle, CreditCard, Loader2, Info, Check, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react';
 import { getProcessingFee } from '@/lib/stripeCalc';
+import { useTenantRates } from '@/hooks/useTenantRates';
 
 // --- CONFIGURACIÓN DE LÍMITES ---
 const MAX_WEIGHT_PER_BOX = 100; // Límite de 100 lbs por caja consolidada
@@ -18,6 +19,7 @@ const COURIER_RATES = {
 
 export default function ConsolidateShipmentPage() {
   const router = useRouter();
+  const tenantRates = useTenantRates();
   
   // Referencia para el Auto-Scroll hacia el pago
   const paymentSectionRef = useRef<HTMLDivElement>(null);
@@ -81,7 +83,7 @@ export default function ConsolidateShipmentPage() {
           shippingCost = rate.base + (rate.perLb * totalWeight);
       }
 
-      const fee = shippingCost > 0 ? getProcessingFee(shippingCost) : 0;
+      const fee = shippingCost > 0 ? getProcessingFee(shippingCost, tenantRates.processing_fee_pct) : 0;
       const isOverweight = totalWeight > MAX_WEIGHT_PER_BOX;
       
       return { 

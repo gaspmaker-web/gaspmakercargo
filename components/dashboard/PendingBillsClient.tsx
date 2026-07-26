@@ -10,6 +10,7 @@ import {
     ExternalLink, Plus, Clock, Info, Tag, XCircle, MapPin, AlertTriangle, Ship
 } from 'lucide-react';
 import { getProcessingFee } from '@/lib/stripeCalc';
+import { useTenantRates } from '@/hooks/useTenantRates';
 import { useTranslations } from 'next-intl';
 
 // --- Helper para logos de Couriers ---
@@ -66,7 +67,7 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
   const t = useTranslations('PendingBills');
   const tPickup = useTranslations('Pickup'); 
   const tPackage = useTranslations('PackageDetail'); 
-
+  const tenantRates = useTenantRates();
   const router = useRouter();
   const paymentSectionRef = useRef<HTMLDivElement>(null);
 
@@ -390,7 +391,7 @@ const handleSelectRate = (billId: string, rate: Rate) => {
           }
       });
 
-      const fee = (isVip && !isPayingAura) ? 0 : getProcessingFee(taxableAmount);
+     const fee = (isVip && !isPayingAura) ? 0 : getProcessingFee(taxableAmount, tenantRates.processing_fee_pct);
       
       let finalTotal = Math.max(0, taxableAmount + fee - discount);
       let appliedWallet = 0;

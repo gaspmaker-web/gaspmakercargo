@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { useJsApiLoader, Autocomplete } from '@react-google-maps/api';
 import { getProcessingFee } from '@/lib/stripeCalc';
+import { useTenantRates } from '@/hooks/useTenantRates';
 import { useTranslations } from 'next-intl';
 
 // 🔥 IMPORTAMOS EL MOTOR AURA ENTERPRISE
@@ -46,7 +47,7 @@ export default function SolicitarPickupPage() {
   const t = useTranslations('Pickup');
   const tBills = useTranslations('PendingBills');
   const router = useRouter();
-
+  const tenantRates = useTenantRates();
   const inventorySectionRef = useRef<HTMLDivElement>(null);
   const routeSectionRef = useRef<HTMLDivElement>(null);
 
@@ -226,7 +227,7 @@ if (isPalletMode) {
             subtotal = baseFare + distanceSurcharge;
         }
 
-        const fee = subtotal > 0 ? getProcessingFee(subtotal) : 0;
+        const fee = subtotal > 0 ? getProcessingFee(subtotal, tenantRates.processing_fee_pct) : 0;
 
         setQuote(prev => ({
             ...prev,

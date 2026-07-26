@@ -28,6 +28,7 @@ import {
 import Image from "next/image";
 import { useRouter, useParams } from "next/navigation";
 import { getProcessingFee } from "@/lib/stripeCalc";
+import { useTenantRates } from '@/hooks/useTenantRates';
 import { useTranslations } from "next-intl";
 import CourierLogo from "@/components/CourierLogo";
 import InteractiveEvidence from "@/components/client/InteractiveEvidence";
@@ -83,6 +84,7 @@ export default function PackageDetailClient({
   const t = useTranslations("PackageDetail");
   const tPickup = useTranslations("Pickup");
   const tBills = useTranslations("PendingBills");
+  const tenantRates = useTenantRates();
 
   const router = useRouter();
   const params = useParams();
@@ -340,7 +342,7 @@ export default function PackageDetailClient({
 
     const servicePrice = selectedRate.price;
     const baseAmount = servicePrice + handlingFee + insuranceCost + totalSpecialCharges;
-    const fee = getProcessingFee ? getProcessingFee(baseAmount) : baseAmount * 0.0727;
+    const fee = getProcessingFee ? getProcessingFee(baseAmount, tenantRates.processing_fee_pct) : baseAmount * 0.0727;
     const total = finalTotalAmount;
 
     const formattedAddress = `${currentDestination.name} | ${currentDestination.address}, ${currentDestination.cityZip}, ${currentDestination.countryCode || currentDestination.countryName} | Tel: ${currentDestination.phone || 'N/A'}`;
@@ -425,7 +427,7 @@ export default function PackageDetailClient({
 
   const servicePrice = selectedRate ? selectedRate.price : 0; 
   const baseAmount = servicePrice + handlingFee + insuranceCost + totalSpecialCharges;
-  const processingFee = selectedRate ? (getProcessingFee ? getProcessingFee(baseAmount) : baseAmount * 0.0727) : 0;
+ const processingFee = selectedRate ? (getProcessingFee ? getProcessingFee(baseAmount, tenantRates.processing_fee_pct) : baseAmount * 0.0727) : 0;
   
   let finalTotalAmount = Math.max(0, servicePrice + processingFee + handlingFee + insuranceCost + totalSpecialCharges - discount);
   let appliedWalletAmount = 0;
