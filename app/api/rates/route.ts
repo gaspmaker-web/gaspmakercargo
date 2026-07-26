@@ -278,7 +278,7 @@ const auraResult = calculateAuraLocalDelivery(auraBoxes, safeDistanceMiles);
             carrier: 'Gasp Maker Cargo',
             service: 'Local Delivery (Aura)',
             price: parseFloat(auraResult.totalFare.toFixed(2)),
-            days: 'Same Day - 1 Day Delivery', 
+            days: rateText('local_days', auraResult.vehicleType?.toLowerCase() || 'car_suv', 'Same Day - 1 Day Delivery'),
             logo: gmcLogo,
             auraDetails: auraResult 
         });
