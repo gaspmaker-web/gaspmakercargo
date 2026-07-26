@@ -74,22 +74,25 @@ if (effectiveSlug === 'cargoos') return null;
     { code: 'pt', name: 'Português', flag: 'https://flagcdn.com/w20/br.png' },
   ];
   
-  const currentLang = languages.find(l => l.code === locale) || languages[0];
+const currentLang = languages.find(l => l.code === locale) || languages[0];
 
-  const handleLanguageChange = (code: string) => {
-    if (code === locale) {
-        setIsLangMenuOpen(false);
-        return;
-    }
-    const segments = pathname.split('/');
-    if (languages.some(l => l.code === segments[1])) {
-        segments[1] = code;
-    } else {
-        segments.splice(1, 0, code);
-    }
-    const newPath = segments.join('/') || `/${code}`;
-    window.location.href = newPath; 
-  };
+const handleLanguageChange = (code: string) => {
+  if (code === locale) {
+    setIsLangMenuOpen(false);
+    return;
+  }
+  // Guardar preferencia en cookie para que persista
+  document.cookie = `NEXT_LOCALE=${code}; path=/; max-age=31536000`;
+  
+  const segments = pathname.split('/');
+  if (languages.some(l => l.code === segments[1])) {
+    segments[1] = code;
+  } else {
+    segments.splice(1, 0, code);
+  }
+  const newPath = segments.join('/') || `/${code}`;
+  window.location.href = newPath;
+};
 
   // 🔥 2. LÓGICA DE NAVEGACIÓN BLINDADA 🔥
   const handleBackNavigation = () => {
