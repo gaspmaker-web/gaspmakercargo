@@ -18,6 +18,61 @@ export interface AuraResult {
   distanceRate: number;
 }
 
+export interface AuraRates {
+  // Base fares por peso
+  base_0_40: number;
+  base_41_50: number;
+  base_51_60: number;
+  base_61_70: number;
+  base_71_80: number;
+  base_81_90: number;
+  base_91_100: number;
+  base_101_110: number;
+  base_111_120: number;
+  base_121_130: number;
+  base_131_140: number;
+  base_141_150: number;
+  base_151_500: number;
+  base_501_600: number;
+  base_601_800: number;
+  base_801plus: number;
+  // Vehicle rates por milla
+  rate_car_suv: number;
+  rate_minivan: number;
+  rate_cargo_van: number;
+  rate_box_truck: number;
+  // Pre-built pallet
+  pre_built_flat: number;
+  pre_built_radius: number;
+  base_radius: number;
+}
+
+export const DEFAULT_AURA_RATES: AuraRates = {
+  base_0_40: 30.00,
+  base_41_50: 35.00,
+  base_51_60: 40.00,
+  base_61_70: 45.00,
+  base_71_80: 50.00,
+  base_81_90: 55.00,
+  base_91_100: 60.00,
+  base_101_110: 65.00,
+  base_111_120: 70.00,
+  base_121_130: 75.00,
+  base_131_140: 80.00,
+  base_141_150: 85.00,
+  base_151_500: 150.00,
+  base_501_600: 175.00,
+  base_601_800: 225.00,
+  base_801plus: 300.00,
+  rate_car_suv: 1.25,
+  rate_minivan: 1.50,
+  rate_cargo_van: 1.75,
+  rate_box_truck: 2.50,
+  pre_built_flat: 163.95,
+  pre_built_radius: 20,
+  base_radius: 10,
+};
+
 interface Layer {
   areaUsed: number;
   maxHeight: number;
@@ -53,53 +108,41 @@ interface PalletSimulator {
 // 601-800 lbs → $225   | Box Truck  | $2.50/mi
 // 801+ lbs    → $300   | Box Truck  | $2.50/mi
 
-export function getBaseFareByWeight(weight: number): number {
-  if (weight <= 40) return 30.00;
-  if (weight <= 50) return 35.00;
-  if (weight <= 60) return 40.00;
-  if (weight <= 70) return 45.00;
-  if (weight <= 80) return 50.00;
-  if (weight <= 90) return 55.00;
-  if (weight <= 100) return 60.00;
-  if (weight <= 110) return 65.00;
-  if (weight <= 120) return 70.00;
-  if (weight <= 130) return 75.00;
-  if (weight <= 140) return 80.00;
-  if (weight <= 150) return 85.00;
-  if (weight <= 500) return 150.00;   // Pallet flat
-  if (weight <= 600) return 175.00;   // Tope 1
-  if (weight <= 800) return 225.00;   // Tope 2
-  return 300.00;                       // 801+ lbs (Box Truck)
+export function getBaseFareByWeight(weight: number, rates: AuraRates = DEFAULT_AURA_RATES): number {
+  if (weight <= 40)  return rates.base_0_40;
+  if (weight <= 50)  return rates.base_41_50;
+  if (weight <= 60)  return rates.base_51_60;
+  if (weight <= 70)  return rates.base_61_70;
+  if (weight <= 80)  return rates.base_71_80;
+  if (weight <= 90)  return rates.base_81_90;
+  if (weight <= 100) return rates.base_91_100;
+  if (weight <= 110) return rates.base_101_110;
+  if (weight <= 120) return rates.base_111_120;
+  if (weight <= 130) return rates.base_121_130;
+  if (weight <= 140) return rates.base_131_140;
+  if (weight <= 150) return rates.base_141_150;
+  if (weight <= 500) return rates.base_151_500;
+  if (weight <= 600) return rates.base_501_600;
+  if (weight <= 800) return rates.base_601_800;
+  return rates.base_801plus;
 }
 
 // ==========================================
 // 🚗 AUTO VEHICLE ASSIGNMENT — By Weight
 // ==========================================
-export function getVehicleByWeight(weight: number): { type: string; rate: number; maxLength: string; maxHeight: string } {
-  if (weight <= 50) {
-    return { type: 'CAR_SUV', rate: 1.25, maxLength: '4 ft', maxHeight: '' };
-  }
-  if (weight <= 150) {
-    return { type: 'MINIVAN', rate: 1.50, maxLength: '7 ft', maxHeight: '4 ft' };
-  }
-  if (weight <= 800) {
-    return { type: 'CARGO_VAN', rate: 1.75, maxLength: '12 ft', maxHeight: '6 ft' };
-  }
-  return { type: 'BOX_TRUCK', rate: 2.50, maxLength: '20 ft', maxHeight: '8 ft' };
+export function getVehicleByWeight(weight: number, rates: AuraRates = DEFAULT_AURA_RATES): { type: string; rate: number; maxLength: string; maxHeight: string } {
+  if (weight <= 50)  return { type: 'CAR_SUV',   rate: rates.rate_car_suv,   maxLength: '4 ft',  maxHeight: '' };
+  if (weight <= 150) return { type: 'MINIVAN',   rate: rates.rate_minivan,   maxLength: '7 ft',  maxHeight: '4 ft' };
+  if (weight <= 800) return { type: 'CARGO_VAN', rate: rates.rate_cargo_van, maxLength: '12 ft', maxHeight: '6 ft' };
+  return              { type: 'BOX_TRUCK', rate: rates.rate_box_truck, maxLength: '20 ft', maxHeight: '8 ft' };
 }
 
 // Vehicle info for pre-built mode (by total weight + pallet count)
-function getVehicleInfo(totalWeight: number, palletCount: number): { type: string; rate: number } {
-  if (totalWeight > 800 || palletCount > 2) {
-    return { type: 'BOX_TRUCK', rate: 2.50 };
-  }
-  if (totalWeight > 150 || palletCount > 1) {
-    return { type: 'CARGO_VAN', rate: 1.75 };
-  }
-  if (totalWeight > 100) {
-    return { type: 'MINIVAN', rate: 1.50 };
-  }
-  return { type: 'CAR_SUV', rate: 1.25 };
+function getVehicleInfo(totalWeight: number, palletCount: number, rates: AuraRates = DEFAULT_AURA_RATES): { type: string; rate: number } {
+  if (totalWeight > 800 || palletCount > 2) return { type: 'BOX_TRUCK',  rate: rates.rate_box_truck };
+  if (totalWeight > 150 || palletCount > 1) return { type: 'CARGO_VAN',  rate: rates.rate_cargo_van };
+  if (totalWeight > 100)                    return { type: 'MINIVAN',    rate: rates.rate_minivan };
+  return                                           { type: 'CAR_SUV',    rate: rates.rate_car_suv };
 }
 
 // ==========================================
@@ -142,7 +185,8 @@ function isFullPallet(length: number, width: number, height: number, realWeight:
  */
 export function calculateAuraLocalDelivery(
   boxes: AuraBox[],
-  distanceMiles: number = 0
+  distanceMiles: number = 0,
+  rates: AuraRates = DEFAULT_AURA_RATES
 ): AuraResult {
   let totalBillableWeight = 0;
 
@@ -152,7 +196,6 @@ export function calculateAuraLocalDelivery(
   const MAX_HEIGHT = 72;
 
   let pallets: PalletSimulator[] = [];
-
   // ==========================================
   // DETECCIÓN DE MODO
   // ==========================================
@@ -207,12 +250,12 @@ export function calculateAuraLocalDelivery(
 
  if (isPreBuiltMode) {
     // ==========================================
-    // 🚚 PRE-ARMADO: $163.95 flat por pallet dentro de 20mi
-    // Fuera de 20mi: $163.95 + millas extra × tarifa por pallet
-    // Cajas sueltas: rate table normal + distancia desde 10mi
+    // 🚚 PRE-ARMADO: flat por pallet dentro del radio
+    // Fuera del radio: flat + millas extra × tarifa por pallet
+    // Cajas sueltas: rate table normal + distancia desde base_radius
     // ==========================================
-    const PRE_BUILT_PALLET_FLAT = 163.95;
-    const PRE_BUILT_RADIUS = 20;
+    const PRE_BUILT_PALLET_FLAT = rates.pre_built_flat;
+    const PRE_BUILT_RADIUS = rates.pre_built_radius;
 
     let palletCountForFlat = 0;
 
@@ -221,26 +264,26 @@ export function calculateAuraLocalDelivery(
             baseFare += PRE_BUILT_PALLET_FLAT;
             palletCountForFlat++;
         } else {
-            baseFare += getBaseFareByWeight(pallet.billableWeight);
+            baseFare += getBaseFareByWeight(pallet.billableWeight, rates);
         }
     });
 
-    const vehicle = getVehicleInfo(totalBillableWeight, palletCount);
+    const vehicle = getVehicleInfo(totalBillableWeight, palletCount, rates);
     vehicleType = vehicle.type;
     distanceRate = vehicle.rate;
 
-    // Distancia pallets: solo cobra millas FUERA del radio de 18mi
+    // Distancia pallets: solo cobra millas FUERA del radio pre-built
     if (distanceMiles > PRE_BUILT_RADIUS && palletCountForFlat > 0) {
         distanceSurcharge = (distanceMiles - PRE_BUILT_RADIUS) * vehicle.rate * palletCountForFlat;
     }
-   // Distancia cajas sueltas: solo si NO hay pallets en el mismo envío
-if (distanceMiles > 10 && palletCountForFlat === 0 && palletCount > palletCountForFlat) {
-    distanceSurcharge += (distanceMiles - 10) * vehicle.rate;
-}
+    // Distancia cajas sueltas: solo si NO hay pallets en el mismo envío
+    if (distanceMiles > rates.base_radius && palletCountForFlat === 0 && palletCount > palletCountForFlat) {
+        distanceSurcharge += (distanceMiles - rates.base_radius) * vehicle.rate;
+    }
 
     appliedStrategy = palletCount > 1 ? 'PRE_BUILT_LINEAR' : 'PRE_BUILT_SINGLE';
 
-  } else {
+} else {
     // ==========================================
     // 📱 SIMULACIÓN: Peso del cliente → rate table
     // Vehículo auto por peso → distancia
@@ -248,16 +291,16 @@ if (distanceMiles > 10 && palletCountForFlat === 0 && palletCount > palletCountF
     const clientWeight = totalBillableWeight;
 
     // Base fare del rate table
-    baseFare = getBaseFareByWeight(clientWeight);
+    baseFare = getBaseFareByWeight(clientWeight, rates);
 
     // Vehículo auto-asignado por peso
-    const vehicle = getVehicleByWeight(clientWeight);
+    const vehicle = getVehicleByWeight(clientWeight, rates);
     vehicleType = vehicle.type;
     distanceRate = vehicle.rate;
 
     // Distancia UNA vez
-    if (distanceMiles > 10) {
-      distanceSurcharge = (distanceMiles - 10) * vehicle.rate;
+    if (distanceMiles > rates.base_radius) {
+      distanceSurcharge = (distanceMiles - rates.base_radius) * vehicle.rate;
     }
 
     appliedStrategy = 'WEIGHT_BASED_AUTO_VEHICLE';

@@ -271,7 +271,35 @@ const showAir = isAirConsolidation || isSinglePackage || isOceanRequest;
 
     const safeDistanceMiles = Math.max(0, calculatedMiles);
 
-const auraResult = calculateAuraLocalDelivery(auraBoxes, safeDistanceMiles);
+// 🏢 Construir AuraRates desde tenant_rates
+const { DEFAULT_AURA_RATES } = await import('@/lib/aura-engine');
+const auraRates = {
+  base_0_40:    rate('local_base_0_40lbs',    undefined, DEFAULT_AURA_RATES.base_0_40),
+  base_41_50:   rate('local_base_41_50lbs',   undefined, DEFAULT_AURA_RATES.base_41_50),
+  base_51_60:   rate('local_base_51_60lbs',   undefined, DEFAULT_AURA_RATES.base_51_60),
+  base_61_70:   rate('local_base_61_70lbs',   undefined, DEFAULT_AURA_RATES.base_61_70),
+  base_71_80:   rate('local_base_71_80lbs',   undefined, DEFAULT_AURA_RATES.base_71_80),
+  base_81_90:   rate('local_base_81_90lbs',   undefined, DEFAULT_AURA_RATES.base_81_90),
+  base_91_100:  rate('local_base_91_100lbs',  undefined, DEFAULT_AURA_RATES.base_91_100),
+  base_101_110: rate('local_base_101_110lbs', undefined, DEFAULT_AURA_RATES.base_101_110),
+  base_111_120: rate('local_base_111_120lbs', undefined, DEFAULT_AURA_RATES.base_111_120),
+  base_121_130: rate('local_base_121_130lbs', undefined, DEFAULT_AURA_RATES.base_121_130),
+  base_131_140: rate('local_base_131_140lbs', undefined, DEFAULT_AURA_RATES.base_131_140),
+  base_141_150: rate('local_base_141_150lbs', undefined, DEFAULT_AURA_RATES.base_141_150),
+  base_151_500: rate('local_base_151_500lbs', undefined, DEFAULT_AURA_RATES.base_151_500),
+  base_501_600: rate('local_base_501_600lbs', undefined, DEFAULT_AURA_RATES.base_501_600),
+  base_601_800: rate('local_base_601_800lbs', undefined, DEFAULT_AURA_RATES.base_601_800),
+  base_801plus: rate('local_base_801plus',    undefined, DEFAULT_AURA_RATES.base_801plus),
+  rate_car_suv:   rate('local_per_mile_car_suv',   undefined, DEFAULT_AURA_RATES.rate_car_suv),
+  rate_minivan:   rate('local_per_mile_minivan',   undefined, DEFAULT_AURA_RATES.rate_minivan),
+  rate_cargo_van: rate('local_per_mile_cargo_van', undefined, DEFAULT_AURA_RATES.rate_cargo_van),
+  rate_box_truck: rate('local_per_mile_box_truck', undefined, DEFAULT_AURA_RATES.rate_box_truck),
+  pre_built_flat:   rate('local_pre_built_pallet_flat',   undefined, DEFAULT_AURA_RATES.pre_built_flat),
+  pre_built_radius: rate('local_pre_built_radius_miles',  undefined, DEFAULT_AURA_RATES.pre_built_radius),
+  base_radius:      rate('local_base_radius_miles',       undefined, DEFAULT_AURA_RATES.base_radius),
+};
+
+const auraResult = calculateAuraLocalDelivery(auraBoxes, safeDistanceMiles, auraRates);
 
         rawRates.push({
             id: 'GMC-AURA-LOCAL',
