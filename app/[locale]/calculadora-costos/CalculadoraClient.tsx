@@ -12,6 +12,7 @@ import {
 // 🔥 IMPORTAMOS TU DICCIONARIO MAESTRO DE PAÍSES 🔥
 import { ALL_COUNTRIES } from '@/lib/countries';
 import { formatDays } from '@/lib/formatDays';
+import { useTenantRates } from '@/hooks/useTenantRates';
 
 // --- HELPER: Limpiar nombres de Carriers (Ej: UPSDAP -> UPS) ---
 const cleanCarrierName = (name: string) => {
@@ -25,24 +26,7 @@ const cleanCarrierName = (name: string) => {
     return name; // Si no coincide con ninguno, devuelve el original
 }
 
-// 🌊 DESTINOS CON RUTA MARÍTIMA (Laparkan)
-// ⚠️ Los códigos DEBEN calzar con `oceanEligibleCountries` en /api/rates.
-// Nota: St. Maarten usa el código MF en el rate engine (no SX).
-const OCEAN_DESTINATIONS = [
-    { code: 'bb', name: 'Barbados' },
-    { code: 'tt', name: 'Trinidad & Tobago' },
-    { code: 'gd', name: 'Grenada' },
-    { code: 'jm', name: 'Jamaica' },
-    { code: 'ag', name: 'Antigua & Barbuda' },
-    { code: 'dm', name: 'Dominica' },
-    { code: 'gy', name: 'Guyana' },
-    { code: 'lc', name: 'St. Lucia' },
-    { code: 'vc', name: 'St. Vincent & the Grenadines' },
-    { code: 'mf', name: 'St. Maarten' },
-    { code: 'sr', name: 'Suriname' },
-].sort((a, b) => a.name.localeCompare(b.name));
 
-const OCEAN_CODES = OCEAN_DESTINATIONS.map(d => d.code);
 
 // --- HELPER: Identificar si una tarifa devuelta es marítima ---
 const isMaritimeRate = (rate: any) =>
@@ -53,6 +37,20 @@ export default function CalculadoraClient() {
     const t = useTranslations('CalculatorPage'); 
     const router = useRouter(); 
     const tPkg = useTranslations('PackageDetail');
+    const tenantRates = useTenantRates();
+
+    // 🏢 Países dinámicos desde tenant_rates
+const oceanDestinations = useMemo(() => {
+  return tenantRates.ocean_countries.map(code => {
+    const country = ALL_COUNTRIES.find(c => c.code.toUpperCase() === code.toUpperCase());
+    return { code: code.toLowerCase(), name: country?.name || code };
+  }).sort((a, b) => a.name.localeCompare(b.name));
+}, [tenantRates.ocean_countries]);
+
+const oceanCodes = useMemo(() => 
+  oceanDestinations.map(d => d.code),
+  [oceanDestinations]
+);
 
     // Estados de entrada
     const [length, setLength] = useState<number | ''>('');
@@ -95,7 +93,7 @@ export default function CalculadoraClient() {
 
     // 🌊 TRADUCIMOS Y ORDENAMOS LA LISTA MARÍTIMA
     const oceanDestinationsTranslated = useMemo(() => {
-        return OCEAN_DESTINATIONS.map(country => {
+        return oceanDestinations.map(country => {
             let translatedName = country.name;
             try {
                 const translated = t(`destinations.${country.code.toUpperCase()}` as any);
@@ -152,7 +150,7 @@ export default function CalculadoraClient() {
         setTransportMode(mode);
         setErrorMsg('');
         // Si el país actual no tiene ruta marítima, saltamos a un destino ocean válido
-        if (mode === 'ocean' && !OCEAN_CODES.includes(country)) {
+        if (mode === 'ocean' && !oceanCodes.includes(country)) {
             setCountry('bb');
         }
     };
@@ -191,7 +189,7 @@ export default function CalculadoraClient() {
         // 2. Obtener Nombre del País
         const selectedCountry =
             ALL_COUNTRIES.find(c => c.code.toLowerCase() === country.toLowerCase())
-            || OCEAN_DESTINATIONS.find(c => c.code.toLowerCase() === country.toLowerCase());
+            || oceanDestinations.find(c => c.code.toLowerCase() === country.toLowerCase());
 
         try {
             const res = await fetch('/api/rates', {

@@ -9,6 +9,8 @@ interface TenantRatesPublic {
   ttd_exchange_rate: number;
   storage_per_cuft_per_month: number;
   storage_free_days: number;
+  air_countries: string[];
+  ocean_countries: string[];
 }
 
 const DEFAULT_RATES: TenantRatesPublic = {
@@ -19,6 +21,8 @@ const DEFAULT_RATES: TenantRatesPublic = {
   ttd_exchange_rate: 7.30,
   storage_per_cuft_per_month: 2.25,
   storage_free_days: 30,
+  air_countries: [],
+  ocean_countries: [],
 };
 
 export function useTenantRates(): TenantRatesPublic {
@@ -28,7 +32,7 @@ export function useTenantRates(): TenantRatesPublic {
     fetch('/api/tenant/rates-public')
       .then(r => r.json())
       .then(data => setRates({ ...DEFAULT_RATES, ...data }))
-      .catch(() => {}); // fallback a defaults
+      .catch(() => {});
   }, []);
 
   return rates;
