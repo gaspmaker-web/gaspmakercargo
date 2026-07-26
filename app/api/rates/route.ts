@@ -163,7 +163,7 @@ const rateText = (concept: string, countryCode?: string, fallback: string = ''):
     let isOceanRequest = reqType === 'OCEAN_CONSOLIDATION';
     let isLocalRequest = reqType === 'LOCAL_DELIVERY';
     let isAirConsolidation = reqType === 'CONSOLIDATION';
-    const isSinglePackage = reqType === 'SHIPPING_INTL';
+    const isSinglePackage = reqType === 'SHIPPING_INTL' || reqType === 'SINGLE_SHIPMENT';
 
     // 🛡️ REGLA ESTRICTA: Si cambia la dirección en el checkout, el sistema corrige el servicio
     if (!isFloridaLocal && isLocalRequest) {
