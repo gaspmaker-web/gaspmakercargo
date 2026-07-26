@@ -223,6 +223,7 @@ export default function ConfiguracionPage() {
   const [apiKeys, setApiKeys] = useState<ApiKeys>({ easypost_api_key: '', stripe_publishable_key: '', stripe_secret_key: '' });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [expandedCountry, setExpandedCountry] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [activeTab, setActiveTab] = useState<'international' | 'global' | 'local' | 'apis'>('international');
   const [newCountry, setNewCountry] = useState('');
@@ -376,67 +377,111 @@ const internationalCountries = Array.from(new Set(
     <th className="p-4"></th>
   </tr>
 </thead>
-      <tbody>
+<tbody>
   {internationalCountries.map(code => {
     const country = COUNTRIES.find(c => c.code === code);
+    const isExpanded = expandedCountry === code;
     return (
-      <tr key={code} className="border-t border-gray-50">
-        <td className="p-4 font-medium">{country?.name || code}</td>
+      <>
+        <tr key={code} className="border-t border-gray-50">
+          <td className="p-4 font-medium">
+            <button
+              onClick={() => setExpandedCountry(isExpanded ? null : code)}
+              className="flex items-center gap-2 hover:text-blue-600 transition-colors"
+            >
+              {country?.name || code}
+              <span className="text-xs text-gray-400">{isExpanded ? '▲' : '▼'}</span>
+            </button>
+          </td>
 
-        {/* Aéreo /lb */}
-        <td className="p-4">
-          <div className="flex items-center justify-center gap-1">
-            <span className="text-gray-400">$</span>
-            <input type="number" step="0.01"
-              value={getRate('air_per_lb', code)}
-              onChange={e => setRate('air_per_lb', code, parseFloat(e.target.value) || 0)}
-              className="w-20 text-center border border-gray-200 rounded-lg px-2 py-1"
-            />
-          </div>
-        </td>
+          {/* Aéreo /lb */}
+          <td className="p-4">
+            <div className="flex items-center justify-center gap-1">
+              <span className="text-gray-400">$</span>
+              <input type="number" step="0.01"
+                value={getRate('air_per_lb', code)}
+                onChange={e => setRate('air_per_lb', code, parseFloat(e.target.value) || 0)}
+                className="w-20 text-center border border-gray-200 rounded-lg px-2 py-1"
+              />
+            </div>
+          </td>
 
-        {/* Mín. Aéreo */}
-        <td className="p-4">
-          <div className="flex items-center justify-center gap-1">
-            <span className="text-gray-400">$</span>
-            <input type="number" step="0.01"
-              value={getRate('min_rate', code)}
-              onChange={e => setRate('min_rate', code, parseFloat(e.target.value) || 0)}
-              className="w-20 text-center border border-gray-200 rounded-lg px-2 py-1"
-            />
-          </div>
-        </td>
+          {/* Mín. Aéreo */}
+          <td className="p-4">
+            <div className="flex items-center justify-center gap-1">
+              <span className="text-gray-400">$</span>
+              <input type="number" step="0.01"
+                value={getRate('min_rate', code)}
+                onChange={e => setRate('min_rate', code, parseFloat(e.target.value) || 0)}
+                className="w-20 text-center border border-gray-200 rounded-lg px-2 py-1"
+              />
+            </div>
+          </td>
 
-        {/* Marítimo /ft³ */}
-        <td className="p-4">
-          <div className="flex items-center justify-center gap-1">
-            <span className="text-gray-400">$</span>
-            <input type="number" step="0.01"
-              value={getRate('ocean_per_cuft', code)}
-              onChange={e => setRate('ocean_per_cuft', code, parseFloat(e.target.value) || 0)}
-              className="w-20 text-center border border-gray-200 rounded-lg px-2 py-1"
-            />
-          </div>
-        </td>
+          {/* Marítimo /ft³ */}
+          <td className="p-4">
+            <div className="flex items-center justify-center gap-1">
+              <span className="text-gray-400">$</span>
+              <input type="number" step="0.01"
+                value={getRate('ocean_per_cuft', code)}
+                onChange={e => setRate('ocean_per_cuft', code, parseFloat(e.target.value) || 0)}
+                className="w-20 text-center border border-gray-200 rounded-lg px-2 py-1"
+              />
+            </div>
+          </td>
 
-        {/* Mín. Marítimo */}
-        <td className="p-4">
-          <div className="flex items-center justify-center gap-1">
-            <span className="text-gray-400">$</span>
-            <input type="number" step="0.01"
-              value={getRate('ocean_min_1_5cuft', code)}
-              onChange={e => setRate('ocean_min_1_5cuft', code, parseFloat(e.target.value) || 0)}
-              className="w-20 text-center border border-gray-200 rounded-lg px-2 py-1"
-            />
-          </div>
-        </td>
+          {/* Mín. Marítimo (1-5 cuft) */}
+          <td className="p-4">
+            <div className="flex items-center justify-center gap-1">
+              <span className="text-gray-400">$</span>
+              <input type="number" step="0.01"
+                value={getRate('ocean_min_1_5cuft', code)}
+                onChange={e => setRate('ocean_min_1_5cuft', code, parseFloat(e.target.value) || 0)}
+                className="w-20 text-center border border-gray-200 rounded-lg px-2 py-1"
+              />
+            </div>
+          </td>
 
-        <td className="p-4">
-          <button onClick={() => deleteCountry(code)} className="text-red-400 hover:text-red-600">
-            <Trash2 size={14} />
-          </button>
-        </td>
-      </tr>
+          <td className="p-4">
+            <button onClick={() => deleteCountry(code)} className="text-red-400 hover:text-red-600">
+              <Trash2 size={14} />
+            </button>
+          </td>
+        </tr>
+
+        {/* Fila expandible — rangos marítimos */}
+        {isExpanded && (
+          <tr key={`${code}-expanded`} className="bg-blue-50 border-t border-blue-100">
+            <td colSpan={6} className="px-6 py-4">
+              <p className="text-xs font-bold text-blue-700 uppercase tracking-wider mb-3">
+                🚢 Rangos Marítimos (cuft fijos)
+              </p>
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                {[
+                  { concept: 'ocean_min_6_10cuft',  label: '6-10 cuft' },
+                  { concept: 'ocean_min_11_15cuft', label: '11-15 cuft' },
+                  { concept: 'ocean_min_16_20cuft', label: '16-20 cuft' },
+                  { concept: 'ocean_min_21_25cuft', label: '21-25 cuft' },
+                ].map(({ concept, label }) => (
+                  <div key={concept}>
+                    <label className="text-xs text-blue-600 font-bold block mb-1">{label}</label>
+                    <div className="flex items-center gap-1">
+                      <span className="text-gray-400 text-sm">$</span>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={getRate(concept, code)}
+                        onChange={e => setRate(concept, code, parseFloat(e.target.value) || 0)}
+                        className="w-full border border-blue-200 rounded-lg px-2 py-1.5 text-sm bg-white"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </td>
+          </tr>
+        )}
+      </>
     );
   })}
 </tbody>
