@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Save, Plus, Trash2, Key, Globe, Truck, Package, AlertTriangle } from 'lucide-react';
 
 // Países disponibles
@@ -381,18 +381,18 @@ const internationalCountries = Array.from(new Set(
   {internationalCountries.map(code => {
     const country = COUNTRIES.find(c => c.code === code);
     const isExpanded = expandedCountry === code;
-    return (
-      <>
-        <tr key={code} className="border-t border-gray-50">
-          <td className="p-4 font-medium">
-            <button
-              onClick={() => setExpandedCountry(isExpanded ? null : code)}
-              className="flex items-center gap-2 hover:text-blue-600 transition-colors"
-            >
-              {country?.name || code}
-              <span className="text-xs text-gray-400">{isExpanded ? '▲' : '▼'}</span>
-            </button>
-          </td>
+   return (
+  <React.Fragment key={code}>
+    <tr className="border-t border-gray-50">
+      <td className="p-4 font-medium">
+        <button
+          onClick={() => setExpandedCountry(isExpanded ? null : code)}
+          className="flex items-center gap-2 hover:text-blue-600 transition-colors"
+        >
+          {country?.name || code}
+          <span className="text-xs text-gray-400">{isExpanded ? '▲' : '▼'}</span>
+        </button>
+      </td>
 
           {/* Aéreo /lb */}
           <td className="p-4">
@@ -468,7 +468,7 @@ const internationalCountries = Array.from(new Set(
                     <div className="flex items-center gap-1">
                       <span className="text-gray-400 text-sm">$</span>
                       <input
-                        type="number"
+          type="number"
                         step="0.01"
                         value={getRate(concept, code)}
                         onChange={e => setRate(concept, code, parseFloat(e.target.value) || 0)}
@@ -481,7 +481,7 @@ const internationalCountries = Array.from(new Set(
             </td>
           </tr>
         )}
-      </>
+      </React.Fragment>
     );
   })}
 </tbody>
