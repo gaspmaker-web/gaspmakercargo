@@ -14,13 +14,7 @@ import { useTenantRates } from '@/hooks/useTenantRates';
 import { useTranslations } from 'next-intl';
 
 // 🔥 IMPORTAMOS EL MOTOR AURA ENTERPRISE
-import { calculateAuraLocalDelivery, getVehicleByWeight, AuraBox } from '@/lib/aura-engine';
-
-// --- CONFIGURACIÓN DE TARIFAS (HANDLING RATES SOLO PARA BODEGA) ---
-const FEE_MINI = 2.50;       // 0-10 lbs
-const FEE_STANDARD = 5.00;   // 11-50 lbs
-const FEE_HEAVY = 12.50;     // 51-150 lbs
-const FEE_PALLET = 30.00;    // +150 lbs
+import { calculateAuraLocalDelivery, getVehicleByWeight, AuraBox } from '@/lib/aura-engine'; 
 
 const GMC_WAREHOUSE_ADDRESS = "1861 NW 22nd St, Miami, FL 33142";
 const ALLOWED_COUNTIES = ['Miami-Dade County', 'Broward County'];
@@ -191,10 +185,10 @@ export default function SolicitarPickupPage() {
              if (inventory && inventory.length > 0) {
                  inventory.forEach(pkg => {
                      const weight = pkg.weight || pkg.peso || 1;
-                     if (weight <= 10) totalHandling += FEE_MINI;
-                     else if (weight <= 50) totalHandling += FEE_STANDARD;
-                     else if (weight <= 150) totalHandling += FEE_HEAVY;
-                     else totalHandling += FEE_PALLET;
+                    if (weight <= 10) totalHandling += tenantRates.handling_mini_0_10lbs;
+                    else if (weight <= 50) totalHandling += tenantRates.handling_standard_11_50lbs;
+                    else if (weight <= 150) totalHandling += tenantRates.handling_heavy_51_150lbs;
+                    else totalHandling += tenantRates.handling_pallet_150plus;
                  });
              }
              subtotal = totalHandling;
@@ -592,10 +586,10 @@ if (isPalletMode) {
                             <div className="mt-6 bg-yellow-50 p-4 rounded-lg border border-yellow-100 text-xs text-yellow-800">
                                 <p className="font-bold mb-2 flex items-center gap-2"><Info size={14}/> {t('handlingRatesTitle')}</p>
                                 <ul className="space-y-1 pl-1">
-                                    <li>• 0-10 lbs (Mini): <strong>${FEE_MINI.toFixed(2)}</strong></li>
-                                    <li>• 11-50 lbs (Estándar): <strong>${FEE_STANDARD.toFixed(2)}</strong></li>
-                                    <li>• 51-150 lbs (Pesado): <strong>${FEE_HEAVY.toFixed(2)}</strong></li>
-                                    <li>• +150 lbs (Carga/Pallet): <strong>${FEE_PALLET.toFixed(2)}</strong></li>
+                                   <li>• 0-10 lbs (Mini): <strong>${tenantRates.handling_mini_0_10lbs.toFixed(2)}</strong></li>
+                                   <li>• 11-50 lbs (Estándar): <strong>${tenantRates.handling_standard_11_50lbs.toFixed(2)}</strong></li>
+                                   <li>• 51-150 lbs (Pesado): <strong>${tenantRates.handling_heavy_51_150lbs.toFixed(2)}</strong></li>
+                                   <li>• +150 lbs (Carga/Pallet): <strong>${tenantRates.handling_pallet_150plus.toFixed(2)}</strong></li>
                                 </ul>
                             </div>
                         </div>

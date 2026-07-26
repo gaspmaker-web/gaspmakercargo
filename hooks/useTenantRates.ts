@@ -11,6 +11,10 @@ interface TenantRatesPublic {
   storage_free_days: number;
   air_countries: string[];
   ocean_countries: string[];
+  handling_mini_0_10lbs: number;
+  handling_standard_11_50lbs: number;
+  handling_heavy_51_150lbs: number;
+  handling_pallet_150plus: number;
 }
 
 const DEFAULT_RATES: TenantRatesPublic = {
@@ -23,6 +27,10 @@ const DEFAULT_RATES: TenantRatesPublic = {
   storage_free_days: 30,
   air_countries: [],
   ocean_countries: [],
+  handling_mini_0_10lbs: 2.50,
+  handling_standard_11_50lbs: 5.00,
+  handling_heavy_51_150lbs: 12.50,
+  handling_pallet_150plus: 30.00,
 };
 
 export function useTenantRates(): TenantRatesPublic {
