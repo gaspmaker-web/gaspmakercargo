@@ -210,6 +210,7 @@ interface Rate {
   concept: string;
   countryCode: string | null | undefined;
   value: number;
+  textValue?: string;
 }
 
 interface ApiKeys {
@@ -237,6 +238,23 @@ export default function ConfiguracionPage() {
         setLoading(false);
       });
   }, []);
+
+  const getTextRate = (concept: string, countryCode: string | null = null) => {
+  const r = rates.find(r => r.concept === concept && r.countryCode === countryCode);
+  return r?.textValue ?? '';
+};
+
+const setTextRate = (concept: string, countryCode: string | null, value: string) => {
+  setRates(prev => {
+    const exists = prev.findIndex(r => r.concept === concept && r.countryCode === countryCode);
+    if (exists >= 0) {
+      const updated = [...prev];
+      updated[exists] = { ...updated[exists], textValue: value };
+      return updated;
+    }
+    return [...prev, { concept, countryCode, value: 0, textValue: value }];
+  });
+};
 
   const getRate = (concept: string, countryCode: string | null = null) => {
     const r = rates.find(r => r.concept === concept && r.countryCode === countryCode);
@@ -477,6 +495,33 @@ const internationalCountries = Array.from(new Set(
                     </div>
                   </div>
                 ))}
+        </div>
+
+              {/* Días de entrega */}
+              <p className="text-xs font-bold text-green-700 uppercase tracking-wider mb-3 mt-4">
+                ✈️ Días Aéreo / 🚢 Días Marítimo
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs text-green-600 font-bold block mb-1">Días Aéreo</label>
+                  <input
+                    type="text"
+                    placeholder="ej: 3-5 days"
+                    value={getTextRate('air_days', code)}
+                    onChange={e => setTextRate('air_days', code, e.target.value)}
+                    className="w-full border border-green-200 rounded-lg px-2 py-1.5 text-sm bg-white"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-green-600 font-bold block mb-1">Días Marítimo</label>
+                  <input
+                    type="text"
+                    placeholder="ej: 14-21 days"
+                    value={getTextRate('ocean_days', code)}
+                    onChange={e => setTextRate('ocean_days', code, e.target.value)}
+                    className="w-full border border-green-200 rounded-lg px-2 py-1.5 text-sm bg-white"
+                  />
+                </div>
               </div>
             </td>
           </tr>

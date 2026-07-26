@@ -66,22 +66,28 @@ if (rates && Array.isArray(rates)) {
     });
 
 if (existing) {
-      if (Number(existing.value) !== Number(rate.value)) {
-        await prisma.tenantRate.update({
-          where: { id: existing.id },
-          data: { value: rate.value },
-        });
-      }
-    } else {
-      await prisma.tenantRate.create({
-        data: {
-          tenantId: tenant.id,
-          concept: rate.concept,
-          countryCode: rate.countryCode ?? null,
-          value: rate.value,
-        }
-      });
+  const valueChanged = Number(existing.value) !== Number(rate.value);
+  const textChanged = existing.textValue !== (rate.textValue ?? null);
+  if (valueChanged || textChanged) {
+    await prisma.tenantRate.update({
+      where: { id: existing.id },
+      data: { 
+        value: rate.value,
+        ...(rate.textValue !== undefined && { textValue: rate.textValue }),
+      },
+    });
+  }
+} else {
+  await prisma.tenantRate.create({
+    data: {
+      tenantId: tenant.id,
+      concept: rate.concept,
+      countryCode: rate.countryCode ?? null,
+      value: rate.value,
+      ...(rate.textValue !== undefined && { textValue: rate.textValue }),
     }
+  });
+}
   }
 }
 
