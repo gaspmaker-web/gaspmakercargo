@@ -28,6 +28,14 @@ export async function POST(req: Request) {
 
     const sub = user?.mailboxSubscription;
 
+    // 🏢 Tarifas dinámicas desde tenant_rates
+const { getTenantId } = await import('@/lib/tenant-cache');
+const { getTenantRate } = await import('@/lib/tenant-rates');
+const tenantSlug = process.env.TENANT_SLUG || 'gaspmaker';
+const tenantId = await getTenantId(tenantSlug);
+const scanPrice = tenantId ? Math.round(((await getTenantRate(tenantId, 'mailbox_scan_per_envelope')) ?? 1.50) * 100) : 150;
+const shredPrice = tenantId ? Math.round(((await getTenantRate(tenantId, 'mailbox_shred_per_envelope')) ?? 0.50) * 100) : 50;
+
     if (!mailItem || mailItem.userId !== session.user.id || !user || !sub) {
       return NextResponse.json({ error: "Sobre no encontrado" }, { status: 404 });
     }
@@ -59,13 +67,13 @@ export async function POST(req: Request) {
       if (isPremium && scansThisMonth < 30) {
         priceAmount = 0; // ¡Aún le quedan escaneos gratis!
       } else {
-        priceAmount = 150; // $1.50 (Básico o Premium que superó el límite)
+        priceAmount = scanPrice; // $1.50 (Básico o Premium que superó el límite)
       }
 
     } else if (action === 'SHRED' || action === 'REQUEST_SHRED') {
       newStatus = 'SHRED_REQUESTED';
       description = `TRITURACIÓN SEGURA #${mailItem.id.substring(0,6).toUpperCase()}`;
-      priceAmount = isPremium ? 0 : 50; // La trituración sigue siendo ilimitada para Premium
+      priceAmount = isPremium ? 0 : shredPrice; // La trituración sigue siendo ilimitada para Premium
     } else if (action === 'MOVE_TO_CARGO' || action === 'CARGO') {
       newStatus = 'CARGO_REQUESTED'; 
       priceAmount = 0;

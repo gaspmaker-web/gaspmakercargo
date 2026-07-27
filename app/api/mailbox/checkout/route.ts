@@ -22,18 +22,34 @@ const tenant = await getTenant();
     const { planType } = body;
     console.log("📦 Plan recibido del frontend:", planType);
 
-    // 🔥 1. FORZAMOS EL NOMBRE EXACTO PARA SUPABASE
+ // 🏢 Leer Price IDs y precios desde tenant
+    const tenantFull = await prisma.tenant.findUnique({
+      where: { id: tenant?.id || '' },
+      select: {
+        stripe_mailbox_basic_price_id: true,
+        stripe_mailbox_premium_price_id: true,
+      }
+    });
+
+    const { getTenantId } = await import('@/lib/tenant-cache');
+    const { getTenantRate } = await import('@/lib/tenant-rates');
+    const tenantSlug = process.env.TENANT_SLUG || 'gaspmaker';
+    const tenantId = await getTenantId(tenantSlug);
+
+    const basicPrice = tenantId ? (await getTenantRate(tenantId, 'mailbox_basic_monthly')) ?? 7.99 : 7.99;
+    const premiumPrice = tenantId ? (await getTenantRate(tenantId, 'mailbox_premium_monthly')) ?? 14.99 : 14.99;
+
     let priceId = "";
-    let amountToSave = 0; 
-    let exactDbPlanName = ""; 
+    let amountToSave = 0;
+    let exactDbPlanName = "";
 
     if (planType === "BASIC_799" || planType === "Digital Basic") {
-      priceId = "price_1TBrULJwbF2jSvCs6ouoqK77"; 
-      amountToSave = 7.99;
-      exactDbPlanName = "Digital Basic"; // Exactamente como está en tp56
+      priceId = tenantFull?.stripe_mailbox_basic_price_id || "price_1TBrULJwbF2jSvCs6ouoqK77";
+      amountToSave = basicPrice;
+      exactDbPlanName = "Digital Basic";
     } else if (planType === "PREMIUM_1499" || planType === "Premium Cargo") {
-      priceId = "price_1TBrV9JwbF2jSvCs8hx6RhSA"; 
-      amountToSave = 14.99;
+      priceId = tenantFull?.stripe_mailbox_premium_price_id || "price_1TBrV9JwbF2jSvCs8hx6RhSA";
+      amountToSave = premiumPrice;
       exactDbPlanName = "Premium Cargo";
     } else {
       return NextResponse.json({ error: "Plan inválido" }, { status: 400 });

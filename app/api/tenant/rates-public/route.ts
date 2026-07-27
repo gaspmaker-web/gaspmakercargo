@@ -36,6 +36,10 @@ return NextResponse.json({
   ttd_exchange_rate: Number(rates['ttd_exchange_rate'] ?? 7.30),
   storage_per_cuft_per_month: Number(rates['storage_per_cuft_per_month'] ?? 2.25),
   storage_free_days: Number(rates['storage_free_days'] ?? 30),
+  mailbox_basic_monthly: Number(rates['mailbox_basic_monthly'] ?? 7.99),
+  mailbox_premium_monthly: Number(rates['mailbox_premium_monthly'] ?? 14.99),
+  mailbox_scan_per_envelope: Number(rates['mailbox_scan_per_envelope'] ?? 1.50),
+  mailbox_shred_per_envelope: Number(rates['mailbox_shred_per_envelope'] ?? 0.50),
   air_countries: airCountries,
   ocean_countries: oceanCountries,
 });

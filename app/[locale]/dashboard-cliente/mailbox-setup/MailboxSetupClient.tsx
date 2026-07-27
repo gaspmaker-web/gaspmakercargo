@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { CheckCircle2, ShieldCheck, ArrowRight, FileText, Smartphone, Clock } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl';
+import { useTenantRates } from '@/hooks/useTenantRates';
 
 // 🔥 IMPORTAMOS NUESTRO NUEVO MODAL
 import MailboxCheckoutModal from '@/components/dashboard/MailboxCheckoutModal';
@@ -14,6 +15,7 @@ interface MailboxSetupClientProps {
 
 export default function MailboxSetupClient({ savedCards = [] }: MailboxSetupClientProps) {
   const router = useRouter();
+  const tenantRates = useTenantRates();
   const locale = useLocale(); // Necesario para la redirección dinámica
   const t = useTranslations('MailboxSetup');
   
@@ -59,7 +61,7 @@ export default function MailboxSetupClient({ savedCards = [] }: MailboxSetupClie
           <div className="bg-white rounded-2xl shadow-md border border-gray-200 p-8 flex flex-col hover:shadow-xl transition-shadow relative h-full">
             <h2 className="text-xl font-bold text-gray-800 mb-2">{t('basicPlan.title')}</h2>
             <p className="text-sm text-gray-500 mb-6 min-h-[40px]">{t('basicPlan.description')}</p>
-            <div className="mb-6"><span className="text-4xl font-extrabold text-gray-900">$7.99</span><span className="text-gray-500 font-medium">{t('perMonth')}</span></div>
+            ${tenantRates.mailbox_basic_monthly.toFixed(2)}
             
             <ul className="space-y-4 mb-8 flex-1">
               <li className="flex items-start gap-3 text-sm text-gray-700"><CheckCircle2 className="text-green-500" size={20} /><span>{t('basicPlan.feature1')}</span></li>
@@ -71,7 +73,7 @@ export default function MailboxSetupClient({ savedCards = [] }: MailboxSetupClie
             </ul>
 
             <button 
-              onClick={() => handleSelectPlan(t('basicPlan.title'), 7.99)}
+              onClick={() => handleSelectPlan(t('basicPlan.title'), tenantRates.mailbox_basic_monthly)}
               className="w-full mt-auto bg-gray-900 hover:bg-gray-800 text-white font-bold py-3 px-4 rounded-xl transition-colors flex justify-center gap-2"
             >
               {t('basicPlan.button')}
@@ -83,7 +85,7 @@ export default function MailboxSetupClient({ savedCards = [] }: MailboxSetupClie
             <div className="absolute top-0 right-0 bg-yellow-400 text-yellow-900 text-xs font-bold px-3 py-1 rounded-bl-lg uppercase">{t('premiumPlan.badge')}</div>
             <h2 className="text-xl font-bold text-white mb-2">{t('premiumPlan.title')}</h2>
             <p className="text-sm text-blue-100 mb-6 min-h-[40px]">{t('premiumPlan.description')}</p>
-            <div className="mb-6"><span className="text-4xl font-extrabold text-white">$14.99</span><span className="text-blue-200 font-medium">{t('perMonth')}</span></div>
+            ${tenantRates.mailbox_premium_monthly.toFixed(2)}
             
             <ul className="space-y-4 mb-8 flex-1">
               <li className="flex items-start gap-3 text-sm text-white"><CheckCircle2 className="text-yellow-400" size={20} /><span>{t('premiumPlan.feature1')}</span></li>
@@ -97,7 +99,7 @@ export default function MailboxSetupClient({ savedCards = [] }: MailboxSetupClie
             </ul>
 
             <button 
-              onClick={() => handleSelectPlan(t('premiumPlan.title'), 14.99)}
+              onClick={() => handleSelectPlan(t('premiumPlan.title'), tenantRates.mailbox_premium_monthly)}
               className="w-full mt-auto bg-yellow-400 hover:bg-yellow-500 text-yellow-900 font-bold py-3 px-4 rounded-xl shadow-lg flex justify-center items-center gap-2"
             >
               <>{t('premiumPlan.button')} <ArrowRight size={18} /></>

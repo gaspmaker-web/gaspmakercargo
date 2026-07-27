@@ -12,8 +12,21 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // 🔴 IMPORTANTE: Reemplaza esto con el ID real de tu precio Premium en Stripe
-    const PREMIUM_PRICE_ID = 'price_12345_premium'; 
+    // 🏢 Price ID dinámico desde tenant
+    const { getTenant } = await import('@/lib/tenant');
+    const tenant = await getTenant();
+    const tenantFull = tenant ? await prisma.tenant.findUnique({
+      where: { id: tenant.id },
+      select: { stripe_mailbox_premium_price_id: true }
+    }) : null;
+    
+    const { getTenantId } = await import('@/lib/tenant-cache');
+    const { getTenantRate } = await import('@/lib/tenant-rates');
+    const tenantSlug = process.env.TENANT_SLUG || 'gaspmaker';
+    const tenantId = await getTenantId(tenantSlug);
+    const premiumPrice = tenantId ? (await getTenantRate(tenantId, 'mailbox_premium_monthly')) ?? 14.99 : 14.99;
+
+    const PREMIUM_PRICE_ID = tenantFull?.stripe_mailbox_premium_price_id || 'price_1TBrV9JwbF2jSvCs8hx6RhSA';
 
     // 1. OBTENER AL USUARIO Y SU PLAN ACTUAL
     const user = await prisma.user.findUnique({
@@ -92,7 +105,7 @@ export async function POST(req: Request) {
       prisma.mailboxTransaction.create({
         data: {
           userId: user.id,
-          amount: 14.99,
+          amount: premiumPrice,
           description: "UPGRADE A PREMIUM CARGO",
           stripePaymentId: paymentIntent.id,
           status: "COMPLETADO"

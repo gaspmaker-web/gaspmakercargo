@@ -4,6 +4,7 @@ import React, { useState, useRef } from 'react';
 import { FileText, Trash2, Loader2, Clock, CheckCircle2, PackagePlus, Plane, AlertTriangle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
+import { useTenantRates } from '@/hooks/useTenantRates';
 
 interface Props {
   mailItemId: string;
@@ -15,6 +16,7 @@ interface Props {
 export default function MailItemActions({ mailItemId, currentStatus, isPremium = false, hasFreeScansLeft = false }: Props) {
   const router = useRouter();
   const t = useTranslations('Buzon'); 
+  const tenantRates = useTenantRates();
   const [loadingAction, setLoadingAction] = useState<string | null>(null);
 
   // 🔥 NUEVO ESTADO PARA EL MODAL PERSONALIZADO
@@ -120,7 +122,7 @@ export default function MailItemActions({ mailItemId, currentStatus, isPremium =
               {hasFreeScansLeft ? (
                   <span className="bg-green-100 text-green-700 border border-green-300 px-1.5 py-0.5 rounded text-[10px] uppercase font-black group-hover:bg-white group-hover:text-blue-600 transition-colors">Free</span>
               ) : (
-                  <span className="opacity-75 font-mono">($1.50)</span>
+                  <span className="opacity-75 font-mono">(${tenantRates.mailbox_scan_per_envelope.toFixed(2)})</span>
               )}
             </span>
           </button>
@@ -156,7 +158,7 @@ export default function MailItemActions({ mailItemId, currentStatus, isPremium =
               {isPremium ? (
                   <span className="bg-green-100 text-green-700 border border-green-300 px-1.5 py-0.5 rounded text-[10px] uppercase font-black group-hover:bg-white group-hover:text-red-600 transition-colors">Free</span>
               ) : (
-                  <span className="opacity-75 font-mono">($0.50)</span>
+                  <span className="opacity-75 font-mono">(${tenantRates.mailbox_shred_per_envelope.toFixed(2)})</span>
               )}
             </span>
           </button>

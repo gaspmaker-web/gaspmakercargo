@@ -15,6 +15,10 @@ interface TenantRatesPublic {
   handling_standard_11_50lbs: number;
   handling_heavy_51_150lbs: number;
   handling_pallet_150plus: number;
+  mailbox_basic_monthly: number;
+  mailbox_premium_monthly: number;
+  mailbox_scan_per_envelope: number;
+  mailbox_shred_per_envelope: number;
 }
 
 const DEFAULT_RATES: TenantRatesPublic = {
@@ -31,6 +35,10 @@ const DEFAULT_RATES: TenantRatesPublic = {
   handling_standard_11_50lbs: 5.00,
   handling_heavy_51_150lbs: 12.50,
   handling_pallet_150plus: 30.00,
+  mailbox_basic_monthly: 7.99,
+  mailbox_premium_monthly: 14.99,
+  mailbox_scan_per_envelope: 1.50,
+  mailbox_shred_per_envelope: 0.50,
 };
 
 export function useTenantRates(): TenantRatesPublic {

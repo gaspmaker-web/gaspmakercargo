@@ -15,7 +15,15 @@ export async function generateMetadata({ params: { locale } }: { params: { local
 export default async function MailboxLandingPage({ params: { locale } }: { params: { locale: string } }) {
   
   // 🔥 Activamos el hook de traducciones para Server Components
-  const t = await getTranslations({ locale, namespace: 'MailboxPublic' });
+  
+  const t = await getTranslations({ locale, namespace: 'MailboxPublic' }); // línea 18
+
+const { getTenantId } = await import('@/lib/tenant-cache');
+const { getTenantRate } = await import('@/lib/tenant-rates');
+const tenantSlug = process.env.TENANT_SLUG || 'gaspmaker';
+const tenantId = await getTenantId(tenantSlug);
+const basicPrice = tenantId ? (await getTenantRate(tenantId, 'mailbox_basic_monthly')) ?? 7.99 : 7.99;
+const premiumPrice = tenantId ? (await getTenantRate(tenantId, 'mailbox_premium_monthly')) ?? 14.99 : 14.99;
 
   return (
     <div className="min-h-screen bg-gray-50 font-montserrat selection:bg-gmc-dorado-principal selection:text-black">
@@ -91,7 +99,7 @@ export default async function MailboxLandingPage({ params: { locale } }: { param
             <h3 className="text-2xl font-bold text-gray-800 mb-2">{t('planBasicName')}</h3>
             <p className="text-sm text-gray-500 mb-6 h-10">{t('planBasicDesc')}</p>
             <div className="mb-6">
-              <span className="text-5xl font-black text-gray-900">$7.99</span>
+              <span className="text-5xl font-black text-gray-900">${basicPrice.toFixed(2)}</span>
               <span className="text-gray-500 font-bold">/mes</span>
             </div>
             <ul className="space-y-4 mb-8 flex-1">
@@ -115,7 +123,7 @@ export default async function MailboxLandingPage({ params: { locale } }: { param
             <h3 className="text-2xl font-bold text-white mb-2">{t('planPremiumName')}</h3>
             <p className="text-sm text-gray-400 mb-6 h-10">{t('planPremiumDesc')}</p>
             <div className="mb-6">
-              <span className="text-5xl font-black text-gmc-dorado-principal">$14.99</span>
+              <span className="text-5xl font-black text-gmc-dorado-principal">${premiumPrice.toFixed(2)}</span>
               <span className="text-gray-400 font-bold">/mes</span>
             </div>
             <ul className="space-y-4 mb-8 flex-1">

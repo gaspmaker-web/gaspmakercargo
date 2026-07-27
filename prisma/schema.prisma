@@ -534,6 +534,8 @@ model Tenant {
   easypost_api_key       String?
   stripe_publishable_key String?
   stripe_secret_key      String?
+  stripe_mailbox_basic_price_id   String?
+  stripe_mailbox_premium_price_id String?
   created_at             DateTime  @default(now())
   updated_at             DateTime  @updatedAt
 
