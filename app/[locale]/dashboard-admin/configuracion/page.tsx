@@ -228,16 +228,24 @@ export default function ConfiguracionPage() {
   const [saved, setSaved] = useState(false);
   const [activeTab, setActiveTab] = useState<'international' | 'global' | 'local' | 'apis'>('international');
   const [newCountry, setNewCountry] = useState('');
+  const [mailboxPriceIds, setMailboxPriceIds] = useState({
+  stripe_mailbox_basic_price_id: '',
+  stripe_mailbox_premium_price_id: '',
+});
 
-  useEffect(() => {
-    fetch('/api/admin/rates')
-      .then(r => r.json())
-      .then(data => {
-        setRates(data.rates || []);
-        setApiKeys(data.apiKeys || {});
-        setLoading(false);
+useEffect(() => {
+  fetch('/api/admin/rates')
+    .then(r => r.json())
+    .then(data => {
+      setRates(data.rates || []);
+      setApiKeys(data.apiKeys || {});
+      setMailboxPriceIds({
+        stripe_mailbox_basic_price_id: data.mailboxPriceIds?.stripe_mailbox_basic_price_id || '',
+        stripe_mailbox_premium_price_id: data.mailboxPriceIds?.stripe_mailbox_premium_price_id || '',
       });
-  }, []);
+      setLoading(false);
+    });
+}, []);
 
   const getTextRate = (concept: string, countryCode: string | null = null) => {
   const r = rates.find(r => r.concept === concept && r.countryCode === countryCode);
@@ -301,7 +309,7 @@ const setTextRate = (concept: string, countryCode: string | null, value: string)
     await fetch('/api/admin/rates', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ rates, apiKeys }),
+      body: JSON.stringify({ rates, apiKeys, mailboxPriceIds }),
     });
     setSaving(false);
     setSaved(true);
@@ -668,6 +676,59 @@ const internationalCountries = Array.from(new Set(
             </div>
           </div>
         )}
+
+        {/* Buzón Virtual */}
+<div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+  <h2 className="font-bold text-gray-900 mb-4">📬 Virtual Mailbox</h2>
+  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    {[
+      { concept: 'mailbox_basic_monthly', label: 'Basic Plan ($/month)' },
+      { concept: 'mailbox_premium_monthly', label: 'Premium Plan ($/month)' },
+      { concept: 'mailbox_scan_per_envelope', label: 'Scan per envelope ($)' },
+      { concept: 'mailbox_shred_per_envelope', label: 'Shred per envelope ($)' },
+      { concept: 'mailbox_storage_free_days', label: 'Basic free storage (days)' },
+      { concept: 'mailbox_premium_storage_free_days', label: 'Premium free storage (days)' },
+    ].map(({ concept, label }) => (
+      <div key={concept}>
+        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 block">{label}</label>
+        <div className="flex items-center gap-2">
+          <span className="text-gray-400">$</span>
+          <input
+            type="number"
+            step="0.01"
+            value={getRate(concept)}
+            onChange={e => setRate(concept, null, parseFloat(e.target.value) || 0)}
+            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
+          />
+        </div>
+      </div>
+    ))}
+  </div>
+
+  {/* Stripe Price IDs */}
+  <div className="mt-4 pt-4 border-t border-gray-100">
+    <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Stripe Price IDs</p>
+    <p className="text-xs text-gray-400 mb-3">These must match your Stripe dashboard price IDs.</p>
+    <div className="space-y-3">
+      {[
+        { key: 'stripe_mailbox_basic_price_id', label: 'Basic Plan Price ID' },
+        { key: 'stripe_mailbox_premium_price_id', label: 'Premium Plan Price ID' },
+      ].map(({ key, label }) => (
+        <div key={key}>
+          <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 block">{label}</label>
+          <input
+            type="text"
+            placeholder="price_..."
+            value={mailboxPriceIds[key as keyof typeof mailboxPriceIds] || ''}
+            onChange={e => setMailboxPriceIds(prev => ({ ...prev, [key]: e.target.value }))}
+            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm font-mono"
+          />
+        </div>
+      ))}
+    </div>
+  </div>
+</div>
+
 {/* TAB: DELIVERY LOCAL */}
 {activeTab === 'local' && (
   <div className="space-y-4">

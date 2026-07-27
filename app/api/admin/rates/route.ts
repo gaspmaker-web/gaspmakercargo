@@ -18,21 +18,29 @@ export async function GET(req: NextRequest) {
     const tenant = await getTenant();
     if (!tenant) return NextResponse.json({ error: 'Tenant no encontrado' }, { status: 404 });
 
-    const tenantFull = await prisma.tenant.findUnique({
-      where: { id: tenant.id },
-      select: {
-        easypost_api_key: true,
-        stripe_publishable_key: true,
-        stripe_secret_key: true,
-      }
-    });
+const tenantFull = await prisma.tenant.findUnique({
+  where: { id: tenant.id },
+  select: {
+    easypost_api_key: true,
+    stripe_publishable_key: true,
+    stripe_secret_key: true,
+    stripe_mailbox_basic_price_id: true,
+    stripe_mailbox_premium_price_id: true,
+  }
+});
 
-    const rates = await prisma.tenantRate.findMany({
-      where: { tenantId: tenant.id },
-      orderBy: [{ concept: 'asc' }, { countryCode: 'asc' }],
-    });
+const rates = await prisma.tenantRate.findMany({
+  where: { tenantId: tenant.id },
+  orderBy: [{ concept: 'asc' }, { countryCode: 'asc' }],
+});
 
-    return NextResponse.json({ rates, apiKeys: tenantFull });
+const mailboxPriceIds = {
+  stripe_mailbox_basic_price_id: tenantFull?.stripe_mailbox_basic_price_id || '',
+  stripe_mailbox_premium_price_id: tenantFull?.stripe_mailbox_premium_price_id || '',
+};
+
+return NextResponse.json({ rates, apiKeys: tenantFull, mailboxPriceIds });
+
   } catch (error) {
     console.error('Error loading rates:', error);
     return NextResponse.json({ error: 'Error interno' }, { status: 500 });
@@ -52,7 +60,7 @@ export async function POST(req: NextRequest) {
     if (!tenant) return NextResponse.json({ error: 'Tenant no encontrado' }, { status: 404 });
 
     const body = await req.json();
-    const { rates, apiKeys } = body;
+    const { rates, apiKeys, mailboxPriceIds } = body;
 
 // Upsert tarifas
 if (rates && Array.isArray(rates)) {
@@ -99,6 +107,21 @@ if (apiKeys) {
       ...(apiKeys.easypost_api_key !== undefined && { easypost_api_key: apiKeys.easypost_api_key }),
       ...(apiKeys.stripe_publishable_key !== undefined && { stripe_publishable_key: apiKeys.stripe_publishable_key }),
       ...(apiKeys.stripe_secret_key !== undefined && { stripe_secret_key: apiKeys.stripe_secret_key }),
+    }
+  });
+}
+
+// Actualizar Stripe Price IDs del buzón
+if (mailboxPriceIds) {
+  await prisma.tenant.update({
+    where: { id: tenant.id },
+    data: {
+      ...(mailboxPriceIds.stripe_mailbox_basic_price_id !== undefined && { 
+        stripe_mailbox_basic_price_id: mailboxPriceIds.stripe_mailbox_basic_price_id || null 
+      }),
+      ...(mailboxPriceIds.stripe_mailbox_premium_price_id !== undefined && { 
+        stripe_mailbox_premium_price_id: mailboxPriceIds.stripe_mailbox_premium_price_id || null 
+      }),
     }
   });
 }
