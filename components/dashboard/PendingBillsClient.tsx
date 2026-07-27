@@ -261,7 +261,7 @@ const handleSelectRate = (billId: string, rate: Rate) => {
 
      const isVip = planType === 'VIP_WHOLESALE';
      const noFee = userProfile?.noConsolidationFee === true;
-     const defaultHandlingRate = isVip ? 0.50 : 0.60;
+     const defaultHandlingRate = isVip ? tenantRates.handling_vip : tenantRates.handling_standard;
 
       selectedBillIds.forEach(id => {
           const bill = bills.find(b => b.id === id);
