@@ -19,7 +19,38 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { calculateAuraLocalDelivery } = await import('@/lib/aura-engine');
+    const { calculateAuraLocalDelivery, DEFAULT_AURA_RATES } = await import('@/lib/aura-engine');
+    const { getTenantId } = await import('@/lib/tenant-cache');
+    const { getTenantRates } = await import('@/lib/tenant-rates');
+    const tenantSlug = process.env.TENANT_SLUG || 'gaspmaker';
+    const tenantIdAura = await getTenantId(tenantSlug);
+    const tenantRatesData = tenantIdAura ? await getTenantRates(tenantIdAura) : {};
+    const auraRates = {
+  ...DEFAULT_AURA_RATES,
+  base_0_40:    Number(tenantRatesData['local_base_0_40lbs']    ?? DEFAULT_AURA_RATES.base_0_40),
+  base_41_50:   Number(tenantRatesData['local_base_41_50lbs']   ?? DEFAULT_AURA_RATES.base_41_50),
+  base_51_60:   Number(tenantRatesData['local_base_51_60lbs']   ?? DEFAULT_AURA_RATES.base_51_60),
+  base_61_70:   Number(tenantRatesData['local_base_61_70lbs']   ?? DEFAULT_AURA_RATES.base_61_70),
+  base_71_80:   Number(tenantRatesData['local_base_71_80lbs']   ?? DEFAULT_AURA_RATES.base_71_80),
+  base_81_90:   Number(tenantRatesData['local_base_81_90lbs']   ?? DEFAULT_AURA_RATES.base_81_90),
+  base_91_100:  Number(tenantRatesData['local_base_91_100lbs']  ?? DEFAULT_AURA_RATES.base_91_100),
+  base_101_110: Number(tenantRatesData['local_base_101_110lbs'] ?? DEFAULT_AURA_RATES.base_101_110),
+  base_111_120: Number(tenantRatesData['local_base_111_120lbs'] ?? DEFAULT_AURA_RATES.base_111_120),
+  base_121_130: Number(tenantRatesData['local_base_121_130lbs'] ?? DEFAULT_AURA_RATES.base_121_130),
+  base_131_140: Number(tenantRatesData['local_base_131_140lbs'] ?? DEFAULT_AURA_RATES.base_131_140),
+  base_141_150: Number(tenantRatesData['local_base_141_150lbs'] ?? DEFAULT_AURA_RATES.base_141_150),
+  base_151_500: Number(tenantRatesData['local_base_151_500lbs'] ?? DEFAULT_AURA_RATES.base_151_500),
+  base_501_600: Number(tenantRatesData['local_base_501_600lbs'] ?? DEFAULT_AURA_RATES.base_501_600),
+  base_601_800: Number(tenantRatesData['local_base_601_800lbs'] ?? DEFAULT_AURA_RATES.base_601_800),
+  base_801plus: Number(tenantRatesData['local_base_801plus']    ?? DEFAULT_AURA_RATES.base_801plus),
+  rate_car_suv:   Number(tenantRatesData['local_per_mile_car_suv']   ?? DEFAULT_AURA_RATES.rate_car_suv),
+  rate_minivan:   Number(tenantRatesData['local_per_mile_minivan']   ?? DEFAULT_AURA_RATES.rate_minivan),
+  rate_cargo_van: Number(tenantRatesData['local_per_mile_cargo_van'] ?? DEFAULT_AURA_RATES.rate_cargo_van),
+  rate_box_truck: Number(tenantRatesData['local_per_mile_box_truck'] ?? DEFAULT_AURA_RATES.rate_box_truck),
+  pre_built_flat:   Number(tenantRatesData['local_pre_built_pallet_flat']  ?? DEFAULT_AURA_RATES.pre_built_flat),
+  pre_built_radius: Number(tenantRatesData['local_pre_built_radius_miles'] ?? DEFAULT_AURA_RATES.pre_built_radius),
+  base_radius:      Number(tenantRatesData['local_base_radius_miles']      ?? DEFAULT_AURA_RATES.base_radius),
+};
 
 // ==========================================
     // 🛡️ RECÁLCULO DE PRECIO EN EL SERVIDOR
@@ -54,9 +85,10 @@ export async function POST(request: Request) {
         } else if (wLbs > 0) {
             // 🔒 Aura Engine — modo SIMULACIÓN (0-150 lbs)
             const aura = calculateAuraLocalDelivery(
-                [{ length: 1, width: 1, height: 1, realWeight: wLbs }],
-                dMiles
-            );
+    [{ length: 1, width: 1, height: 1, realWeight: wLbs }],
+    dMiles,
+    auraRates
+);
             subtotal = aura.totalFare;
         } else {
             return NextResponse.json({ message: 'Peso inválido' }, { status: 400 });
