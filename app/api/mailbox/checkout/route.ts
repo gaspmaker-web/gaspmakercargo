@@ -1,11 +1,8 @@
 import { NextResponse } from "next/server";
-import Stripe from "stripe";
 import { auth } from "@/auth";
 import prisma from "@/lib/prisma";
+import { getTenantStripe } from '@/lib/tenant-stripe';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
-  apiVersion: "2025-11-17.clover",
-});
 
 export async function POST(req: Request) {
   try {
@@ -17,6 +14,7 @@ export async function POST(req: Request) {
 // 🏢 Tenant filter
 const { getTenant } = await import('@/lib/tenant');
 const tenant = await getTenant();
+const stripe = await getTenantStripe(process.env.TENANT_SLUG || 'gaspmaker');
 
     const body = await req.json();
     const { planType } = body;

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import easypost from '@/lib/easypost';
+import { getTenantEasyPost } from '@/lib/tenant-easypost';
 import { calculateAuraLocalDelivery, AuraBox } from '@/lib/aura-engine';
 
 export const dynamic = 'force-dynamic';
@@ -312,9 +312,10 @@ const auraResult = calculateAuraLocalDelivery(auraBoxes, safeDistanceMiles, aura
         });
     }
 
-    // ==========================================
+ // ==========================================
     // 6. EASYPOST (Para resto de USA / Exportaciones selectas)
     // ==========================================
+    const easypost = await getTenantEasyPost(process.env.TENANT_SLUG || 'gaspmaker');
     if (targetCountryCode !== 'CU' && showAir) {
         try {
             let finalState = destination?.state;
@@ -335,6 +336,7 @@ const auraResult = calculateAuraLocalDelivery(auraBoxes, safeDistanceMiles, aura
             if (easyPostCountryCode === 'US') {
                 const fullAddressString = `${rawCityInput} ${rawZip}`.replace(/\s+/g, ' ').trim();
                 const addressMatch = fullAddressString.match(/^(.*?)[,\s]+([A-Za-z]{2})[\s,]+(\d{5}(?:-\d{4})?)/);
+                
 
                 if (addressMatch) {
                     finalCity = addressMatch[1].trim();        

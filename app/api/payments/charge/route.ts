@@ -8,7 +8,8 @@ export async function POST(req: Request) {
     // 👇 VACUNA 2: Imports dentro de la función (Lazy Loading)
     const { auth } = await import("@/auth");
     const prisma = (await import("@/lib/prisma")).default;
-    const { stripe } = await import("@/lib/stripe");
+    const { getTenantStripe } = await import("@/lib/tenant-stripe");
+    const stripe = await getTenantStripe();
     
     // 🔥 IMPORTAMOS LA LIBRERÍA DE NOTIFICACIONES
     const { sendPaymentReceiptEmail, sendAdminPaymentAlert, sendNotification, getT } = await import("@/lib/notifications");

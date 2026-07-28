@@ -1,13 +1,13 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import prisma from '@/lib/prisma';
-import Stripe from 'stripe';
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2025-11-17.clover' });
+import { getTenantStripe } from '@/lib/tenant-stripe';
+import type Stripe from 'stripe';
 
 export async function POST(req: Request) {
   try {
     const session = await auth();
+    const stripe = await getTenantStripe(process.env.TENANT_SLUG || 'gaspmaker');
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

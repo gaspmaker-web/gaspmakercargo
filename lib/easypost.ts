@@ -1,13 +1,14 @@
 import EasyPost from '@easypost/api';
+import { getTenantEasyPost } from '@/lib/tenant-easypost';
 
-// Usamos la variable de entorno
+// Cliente EasyPost default (GaspMaker) — para compatibilidad
 const apiKey = process.env.EASYPOST_API_KEY;
 
 if (!apiKey) {
-  console.warn("⚠️ Advertencia: No se detectó EASYPOST_API_KEY. EasyPost fallará si intentas usarlo.");
+  console.warn("⚠️ Advertencia: No se detectó EASYPOST_API_KEY.");
 }
 
-// Inicializamos el cliente (ponemos string vacío si falla para evitar crash en build time)
 const easypost = new EasyPost(apiKey || 'TEST_KEY_PLACEHOLDER');
 
 export default easypost;
+export { getTenantEasyPost };

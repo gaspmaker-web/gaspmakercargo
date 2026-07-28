@@ -8,7 +8,8 @@ export async function POST(req: Request) {
   try {
     const { auth } = await import("@/auth");
     const prisma = (await import("@/lib/prisma")).default;
-    const easypost = (await import("@/lib/easypost")).default;
+   const { getTenantEasyPost } = await import('@/lib/tenant-easypost');
+   const easypost = await getTenantEasyPost(process.env.TENANT_SLUG || 'gaspmaker');
 
     const session = await auth();
     if (!session?.user) return NextResponse.json({ message: "No autorizado" }, { status: 401 });

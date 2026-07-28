@@ -1,15 +1,13 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import prisma from '@/lib/prisma';
-import Stripe from 'stripe';
+import { getTenantStripe } from '@/lib/tenant-stripe';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
-  apiVersion: "2025-11-17.clover",
-});
 
 export async function POST(req: Request) {
   try {
     const session = await auth();
+    const stripe = await getTenantStripe(process.env.TENANT_SLUG || 'gaspmaker');
     if (!session?.user?.id) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
     const { mailItemId, action } = await req.json();
