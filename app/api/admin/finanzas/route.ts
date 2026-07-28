@@ -58,8 +58,16 @@ export async function GET(req: NextRequest) {
       }) : Promise.resolve([]),
     ]);
 
+    // 🏢 Tarifas dinámicas de almacenaje desde tenant_rates
+const { getTenantId } = await import('@/lib/tenant-cache');
+const { getTenantRate } = await import('@/lib/tenant-rates');
+const tenantSlug = process.env.TENANT_SLUG || 'gaspmaker';
+const tenantIdForRates = await getTenantId(tenantSlug);
+const storageRate = tenantIdForRates ? (await getTenantRate(tenantIdForRates, 'storage_per_cuft_per_month')) ?? 2.25 : 2.25;
+const storageFreeDays = tenantIdForRates ? (await getTenantRate(tenantIdForRates, 'storage_free_days')) ?? 30 : 30;
+
   const all = [
-      ...packages.map(p => ({
+    ...packages.map(p => ({
         id: p.gmcTrackingNumber,
         type: 'Paquete',
         date: p.createdAt,
@@ -69,12 +77,13 @@ export async function GET(req: NextRequest) {
           const daysInWarehouse = Math.floor((new Date().getTime() - new Date(p.createdAt).getTime()) / msPerDay);
           let storageDebt = p.storageDebt || 0;
           const isDelivered = ['ENTREGADO', 'DELIVERED', 'COMPLETADO', 'ENVIADO', 'SHIPPED'].includes(p.status);
-          if (storageDebt === 0 && daysInWarehouse > 30 && !isDelivered) {
+          if (storageDebt === 0 && daysInWarehouse > storageFreeDays && !isDelivered) {
             const volumeFt3 = ((p.lengthIn || 10) * (p.widthIn || 10) * (p.heightIn || 10)) / 1728;
-            const monthsOverdue = Math.ceil((daysInWarehouse - 30) / 30);
-            storageDebt = monthsOverdue * 2.25 * volumeFt3;
+            const monthsOverdue = Math.ceil((daysInWarehouse - storageFreeDays) / 30);
+            storageDebt = monthsOverdue * storageRate * volumeFt3;
           }
-          return Math.max(0, storageDebt + ((p.shippingSubtotal || 0) - (p.shippingTotalPaid || 0)));
+          const calculatedDebt = Math.max(0, storageDebt + ((p.shippingSubtotal || 0) - (p.shippingTotalPaid || 0)));
+          return calculatedDebt >= 1.00 ? calculatedDebt : 0;
         })(),
         status: p.status,
         client: p.user.name || p.user.email,

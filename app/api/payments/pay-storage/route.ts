@@ -57,10 +57,10 @@ if (!session?.user?.id) return new NextResponse("Unauthorized", { status: 401 })
     console.log(`🟢 Procesando pago Storage para paquete: ${pkg.gmcTrackingNumber}`);
     console.log(`💰 Monto: $${finalAmount}`);
 
-    if (finalAmount < 0.50) {
-       // Stripe no procesa menos de 0.50, asumimos éxito interno si es micro-deuda o lanzamos error
+    if (finalAmount < 1.00) {
+       // Stripe no procesa menos de 1.00, asumimos éxito interno si es micro-deuda o lanzamos error
        // En este caso lanzamos error para que no falle Stripe
-       return NextResponse.json({ message: "El monto es inferior al mínimo procesable ($0.50)." }, { status: 400 });
+       return NextResponse.json({ message: "El monto es inferior al mínimo procesable ($1.00)." }, { status: 400 });
     }
 
     // 4. Obtener el ID real de la tarjeta en Stripe
