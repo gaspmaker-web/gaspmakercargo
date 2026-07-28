@@ -758,10 +758,37 @@ const internationalCountries = Array.from(new Set(
             </div>
           </div>
         ))}
+  </div>
+    </div>
+
+    {/* Tarifas Pickup por Pallet */}
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+      <h2 className="font-bold text-gray-900 mb-4">📦 Pickup por Pallet (151+ lbs)</h2>
+      <p className="text-xs text-gray-400 mb-4">Precio base por vehículo — transporte puro sin servicio de almacén.</p>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {[
+          { concept: 'local_pallet_cargo_van_1', label: 'Cargo Van — 1 Pallet' },
+          { concept: 'local_pallet_cargo_van_2', label: 'Cargo Van — 2 Pallets' },
+          { concept: 'local_pallet_box_truck', label: 'Box Truck — 3-6 Pallets' },
+        ].map(({ concept, label }) => (
+          <div key={concept}>
+            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 block">{label}</label>
+            <div className="flex items-center gap-2">
+              <span className="text-gray-400">$</span>
+              <input
+                type="number"
+                step="0.01"
+                value={getRate(concept)}
+                onChange={e => setRate(concept, null, parseFloat(e.target.value) || 0)}
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
+              />
+            </div>
+          </div>
+        ))}
       </div>
     </div>
 
-  {/* Días de entrega por vehículo */}
+    {/* Días de entrega por vehículo */}
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
       <h2 className="font-bold text-gray-900 mb-4">🚗 Días de Entrega por Vehículo</h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
