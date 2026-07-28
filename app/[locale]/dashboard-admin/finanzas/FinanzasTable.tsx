@@ -71,9 +71,9 @@ export default function FinanzasTable({ grandTotal }: FinanzasTableProps) {
   };
 
 return (
-    <div className="space-y-4">
+  <div className="space-y-4">
       {/* KPIs dinámicos por filtro */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
           <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Total Global</p>
           <p className="text-xl font-bold text-gray-800">{formatCurrency(grandTotal)}</p>
@@ -90,6 +90,10 @@ return (
         <div className="bg-white p-4 rounded-xl border border-purple-100 shadow-sm">
           <p className="text-[10px] font-bold text-purple-400 uppercase tracking-wider mb-1">Buzón Virtual</p>
           <p className="text-xl font-bold text-gray-800">{formatCurrency(totals.buzon)}</p>
+        </div>
+        <div className="bg-white p-4 rounded-xl border border-red-100 shadow-sm">
+          <p className="text-[10px] font-bold text-red-400 uppercase tracking-wider mb-1">Por Cobrar</p>
+          <p className="text-xl font-bold text-red-600">{formatCurrency(totals.deuda)}</p>
         </div>
       </div>
 
