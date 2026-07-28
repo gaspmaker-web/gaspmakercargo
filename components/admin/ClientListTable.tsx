@@ -83,13 +83,15 @@ export default function ClientListTable({ clients, locale }: ClientListTableProp
 
                   {/* Rol */}
                   <td className="p-4">
-                    <span className={`text-xs font-bold px-3 py-1 rounded-full ${
-                      client.role === 'ADMIN' ? 'bg-purple-100 text-purple-700' :
-                      client.role === 'WAREHOUSE' ? 'bg-orange-100 text-orange-700' :
-                      'bg-blue-100 text-blue-700'
-                    }`}>
-                      {client.role}
-                    </span>
+                  <span className={`text-xs font-bold px-3 py-1 rounded-full ${
+                 client.role === 'ADMIN' ? 'bg-gray-900 text-white' :
+                 client.role === 'WAREHOUSE' ? 'bg-orange-500 text-white' :
+                 client.role === 'DRIVER' ? 'bg-green-500 text-white' :
+                 client.role === 'VIP' ? 'bg-yellow-400 text-yellow-900' :
+                  'bg-blue-100 text-blue-700'
+                 }`}>
+                 {client.role}
+                </span>
                   </td>
 
                   {/* Botón Acción */}
