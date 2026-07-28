@@ -71,6 +71,8 @@ export async function POST(request: Request) {
         const pCount   = parseInt(body.palletCount) || 1;
         const palletMode = Boolean(body.isPalletMode);
 
+
+console.log('PICKUP DEBUG:', { wLbs, dMiles, vehicle, palletMode, serviceType: body.serviceType, isPickupService });
         if (palletMode) {
             // 🔒 Lógica pallet — igual que frontend y charge/route.ts
             if (vehicle === 'BOX_TRUCK') {

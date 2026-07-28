@@ -458,19 +458,22 @@ if (isPalletMode) {
             }
         }
 
-        const payload = {
-            ...formData,
-            serviceType,
-            status: 'PAGADO',
-            originAddress: serviceType === 'PICKUP_WAREHOUSE' ? GMC_WAREHOUSE_ADDRESS : formData.originAddress,
-            dropOffAddress: serviceType === 'DELIVERY' ? formData.dropOffAddress : GMC_WAREHOUSE_ADDRESS,
-            subtotal: paymentData.subtotal,
-            processingFee: paymentData.fee,
-            totalPaid: paymentData.total,
-            stripePaymentId: paymentData.paymentId,
-            description: serviceType === 'PICKUP_WAREHOUSE' ? 'Retiro Personal en Bodega' : formData.description,
-            weightInfo: formData.weightTier,
-        };
+      const payload = {
+    ...formData,
+    serviceType,
+    status: 'PAGADO',
+    originAddress: serviceType === 'PICKUP_WAREHOUSE' ? GMC_WAREHOUSE_ADDRESS : formData.originAddress,
+    dropOffAddress: serviceType === 'DELIVERY' ? formData.dropOffAddress : GMC_WAREHOUSE_ADDRESS,
+    subtotal: paymentData.subtotal,
+    processingFee: paymentData.fee,
+    totalPaid: paymentData.total,
+    stripePaymentId: paymentData.paymentId,
+    description: serviceType === 'PICKUP_WAREHOUSE' ? 'Retiro Personal en Bodega' : formData.description,
+    weightInfo: formData.weightTier,
+    weightLbs: calcWeight,
+    distanceMiles: quote.distanceMiles,
+    isPalletMode: formData.weightTier === 'w_151_plus',
+};
 
         const orderRes = await fetch('/api/pickup', {
             method: 'POST',
