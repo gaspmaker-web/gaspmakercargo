@@ -674,14 +674,12 @@ const internationalCountries = Array.from(new Set(
                 ))}
               </div>
             </div>
-          </div>
-        )}
 
-        {/* Buzón Virtual */}
-<div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-  <h2 className="font-bold text-gray-900 mb-4">📬 Virtual Mailbox</h2>
-  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-    {[
+            {/* Buzón Virtual */}
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+              <h2 className="font-bold text-gray-900 mb-4">📬 Virtual Mailbox</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+       {[
       { concept: 'mailbox_basic_monthly', label: 'Basic Plan ($/month)' },
       { concept: 'mailbox_premium_monthly', label: 'Premium Plan ($/month)' },
       { concept: 'mailbox_scan_per_envelope', label: 'Scan per envelope ($)' },
@@ -728,8 +726,10 @@ const internationalCountries = Array.from(new Set(
     </div>
   </div>
 </div>
+          </div>
+        )}
 
-{/* TAB: DELIVERY LOCAL */}
+        {/* TAB: DELIVERY LOCAL */}
 {activeTab === 'local' && (
   <div className="space-y-4">
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
