@@ -1,5 +1,6 @@
 import React from 'react';
 import ExportButton from './ExportButton';
+import FinanzasTable from './FinanzasTable';
 import { prisma } from '@/lib/prisma';
 import { 
   DollarSign, 
@@ -344,81 +345,9 @@ export default async function FinanzasPage() {
 
       </div>
 
-      {/* Tabla de Movimientos */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="p-6 border-b border-gray-100 flex flex-col sm:flex-row gap-4 justify-between items-center bg-gray-50/50">
-          <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-             <CreditCard size={20} className="text-gray-400"/> Actividad Financiera Reciente
-          </h3>
-        </div>
+{/* Tabla con paginación y filtros */}
+      <FinanzasTable />
 
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-white text-xs text-gray-400 font-bold uppercase tracking-wider text-left border-b border-gray-100">
-              <tr>
-                <th className="px-6 py-4">ID / Tracking</th>
-                <th className="px-6 py-4">Cliente</th>
-                <th className="px-6 py-4">Concepto</th>
-                <th className="px-6 py-4">Fecha</th>
-                <th className="px-6 py-4">Pagado</th>
-                <th className="px-6 py-4">Deuda</th>
-                <th className="px-6 py-4">Estado</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50 text-sm">
-              {recentTransactions.length === 0 ? (
-                 <tr><td colSpan={7} className="px-6 py-8 text-center text-gray-400">Sin datos registrados</td></tr>
-              ) : (
-                recentTransactions.map((tx, i) => (
-                  <tr key={`${tx.id}-${i}`} className="hover:bg-gray-50/50 transition-colors">
-                    <td className="px-6 py-4 font-mono font-bold text-gray-700 text-xs">{tx.id || 'N/A'}</td>
-                    <td className="px-6 py-4 text-gray-600 font-medium">{tx.client}</td>
-                    <td className="px-6 py-4">
-                        <div className="flex flex-col">
-                            <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase w-fit ${
-                                tx.type.includes('Buzón') ? 'bg-indigo-50 text-indigo-600 border border-indigo-100' : 
-                                tx.type.includes('Documento') ? 'bg-purple-50 text-purple-600 border border-purple-100' : 
-                                tx.type === 'Consolidación' ? 'bg-blue-50 text-blue-600 border border-blue-100' : 
-                                'bg-gray-100 text-gray-600'
-                            }`}>
-                                {tx.type}
-                            </span>
-                            {/* Mostramos la descripción exacta si es un pago de buzón (Ej: UPGRADE A PREMIUM) */}
-                            {tx.description && (
-                                <span className="text-[10px] text-gray-500 mt-1 font-medium">{tx.description}</span>
-                            )}
-                        </div>
-                    </td>
-                    <td className="px-6 py-4 text-gray-500 text-xs">{formatDate(tx.date)}</td>
-                    
-                    {/* Columna Pagado */}
-                    <td className="px-6 py-4 font-bold text-green-600">
-                        {formatCurrency(tx.amount)}
-                    </td>
-                    
-                    {/* Columna Deuda */}
-                    <td className="px-6 py-4 font-bold">
-                        {tx.debt > 0 ? (
-                            <span className="text-red-500 bg-red-50 px-2 py-1 rounded border border-red-100 text-xs">
-                                {formatCurrency(tx.debt)}
-                            </span>
-                        ) : (
-                            <span className="text-gray-300">-</span>
-                        )}
-                    </td>
-
-                    <td className="px-6 py-4">
-                      <span className="px-2 py-1 bg-gray-50 rounded border border-gray-200 text-[10px] font-bold text-gray-500 uppercase">
-                        {tx.status}
-                      </span>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
     </div>
   );
 }
