@@ -9,6 +9,7 @@ import {
 } from 'lucide-react'; 
 
 export default function AdminDashboardClient({ locale }: { locale: string }) {
+  const [activities, setActivities] = useState<any[]>([]);
   const { data: session } = useSession();
   const [loading, setLoading] = useState(true);
   
@@ -27,7 +28,7 @@ export default function AdminDashboardClient({ locale }: { locale: string }) {
     facturasClientes: 0 
   });
 
-  useEffect(() => {
+useEffect(() => {
     fetch('/api/admin/stats')
       .then(res => res.json())
       .then(data => {
@@ -37,6 +38,11 @@ export default function AdminDashboardClient({ locale }: { locale: string }) {
       })
       .catch(err => console.error("Error cargando stats:", err))
       .finally(() => setLoading(false));
+
+    // Cargar actividad reciente
+    fetch('/api/admin/activity')
+      .then(res => res.json())
+      .then(data => setActivities(data.activities || []));
   }, []);
 
   if (loading) {
@@ -115,20 +121,22 @@ export default function AdminDashboardClient({ locale }: { locale: string }) {
             </div>
           </Link>
 
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center border-b-4 border-b-gmc-dorado-principal">
-            <div>
-              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Ventas (Semana)</p>
-              <h3 className="text-4xl font-extrabold text-gmc-gris-oscuro tracking-tight font-montserrat lining-nums">
-                  ${(stats.ventas || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </h3>
-            </div>
-            <div className="p-3 bg-yellow-50 text-yellow-600 rounded-lg">
-              <DollarSign size={24} strokeWidth={2.5} />
-            </div>
-          </div>
-        </div>
+   <Link href={`/${locale}/dashboard-admin/finanzas`} className="block group">
+  <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center border-b-4 border-b-gmc-dorado-principal hover:shadow-md transition-all cursor-pointer">
+    <div>
+      <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Ventas (Semana)</p>
+      <h3 className="text-4xl font-extrabold text-gmc-gris-oscuro tracking-tight font-montserrat lining-nums group-hover:text-yellow-600 transition-colors">
+          ${(stats.ventas || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+      </h3>
+    </div>
+    <div className="p-3 bg-yellow-50 text-yellow-600 rounded-lg group-hover:bg-yellow-100 transition-colors">
+      <DollarSign size={24} strokeWidth={2.5} />
+    </div>
+  </div>
+</Link>
+</div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+<div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
           {/* 2. ACCIONES DISPONIBLES */}
           <div className="lg:col-span-2 space-y-6">
@@ -383,10 +391,33 @@ export default function AdminDashboardClient({ locale }: { locale: string }) {
             </div>
 
              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mt-6">
-                <h3 className="font-bold text-gmc-gris-oscuro mb-4 uppercase text-xs tracking-wider">Log de Actividad</h3>
-                <div className="text-sm text-gray-400 text-center py-8 bg-gray-50 rounded-lg border border-dashed border-gray-200 font-medium">
-                  No hay actividad reciente registrada hoy.
-                </div>
+                <h3 className="font-bold text-gmc-gris-oscuro mb-4 uppercase text-xs tracking-wider flex items-center gap-2">
+                  <Activity size={14} className="text-gmc-dorado-principal" /> Log de Actividad
+                </h3>
+                {activities.length === 0 ? (
+                  <div className="text-sm text-gray-400 text-center py-8 bg-gray-50 rounded-lg border border-dashed border-gray-200 font-medium">
+                    No hay actividad reciente registrada hoy.
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {activities.map((activity) => (
+                      <div key={activity.id} className="flex items-start gap-3 p-2 hover:bg-gray-50 rounded-lg transition-colors">
+                        <div className={`w-2 h-2 rounded-full mt-2 shrink-0 ${
+                          activity.color === 'blue' ? 'bg-blue-500' :
+                          activity.color === 'green' ? 'bg-green-500' :
+                          activity.color === 'purple' ? 'bg-purple-500' : 'bg-gray-400'
+                        }`} />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-bold text-gray-700 truncate">{activity.title}</p>
+                          <p className="text-xs text-gray-400 truncate">{activity.subtitle}</p>
+                        </div>
+                        <span className="text-[10px] text-gray-400 shrink-0">
+                          {new Date(activity.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
              </div>
           </div>
 
