@@ -58,13 +58,24 @@ export async function GET(req: NextRequest) {
       }) : Promise.resolve([]),
     ]);
 
-    const all = [
+  const all = [
       ...packages.map(p => ({
         id: p.gmcTrackingNumber,
         type: 'Paquete',
         date: p.createdAt,
         amount: p.shippingTotalPaid || 0,
-        debt: Math.max(0, p.storageDebt + ((p.shippingSubtotal || 0) - (p.shippingTotalPaid || 0))),
+        debt: (() => {
+          const msPerDay = 1000 * 60 * 60 * 24;
+          const daysInWarehouse = Math.floor((new Date().getTime() - new Date(p.createdAt).getTime()) / msPerDay);
+          let storageDebt = p.storageDebt || 0;
+          const isDelivered = ['ENTREGADO', 'DELIVERED', 'COMPLETADO', 'ENVIADO', 'SHIPPED'].includes(p.status);
+          if (storageDebt === 0 && daysInWarehouse > 30 && !isDelivered) {
+            const volumeFt3 = ((p.lengthIn || 10) * (p.widthIn || 10) * (p.heightIn || 10)) / 1728;
+            const monthsOverdue = Math.ceil((daysInWarehouse - 30) / 30);
+            storageDebt = monthsOverdue * 2.25 * volumeFt3;
+          }
+          return Math.max(0, storageDebt + ((p.shippingSubtotal || 0) - (p.shippingTotalPaid || 0)));
+        })(),
         status: p.status,
         client: p.user.name || p.user.email,
         description: null,
