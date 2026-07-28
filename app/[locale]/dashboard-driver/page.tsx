@@ -54,7 +54,7 @@ export default async function DriverDashboardPage(props: any) {
     );
   }
 
-  const isMiamiDriver = driverZone === 'US';
+  const isMiamiDriver = driverZone?.toUpperCase() === 'US';
 
   // =================================================================================
   // 🧠 SMART FLOW LOGIC

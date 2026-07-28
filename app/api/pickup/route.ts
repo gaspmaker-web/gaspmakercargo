@@ -71,19 +71,20 @@ export async function POST(request: Request) {
         const pCount   = parseInt(body.palletCount) || 1;
         const palletMode = Boolean(body.isPalletMode);
 
+       if (palletMode) {
+    const palletBoxTruck = Number(tenantRatesData['local_pallet_box_truck'] ?? 175);
+    const palletCargoVan2 = Number(tenantRatesData['local_pallet_cargo_van_2'] ?? 125);
+    const palletCargoVan1 = Number(tenantRatesData['local_pallet_cargo_van_1'] ?? 95);
 
-console.log('PICKUP DEBUG:', { wLbs, dMiles, vehicle, palletMode, serviceType: body.serviceType, isPickupService });
-        if (palletMode) {
-            // 🔒 Lógica pallet — igual que frontend y charge/route.ts
-            if (vehicle === 'BOX_TRUCK') {
-                subtotal = 175;
-            } else {
-                subtotal = pCount === 2 ? 125 : 95;
-            }
-            if (dMiles > 10) {
-                const rate = vehicle === 'BOX_TRUCK' ? 2.50 : 1.75;
-                subtotal += parseFloat(((dMiles - 10) * rate).toFixed(2));
-            }
+    if (vehicle === 'BOX_TRUCK') {
+        subtotal = palletBoxTruck;
+    } else {
+        subtotal = pCount === 2 ? palletCargoVan2 : palletCargoVan1;
+    }
+    if (dMiles > auraRates.base_radius) {
+        const rate = vehicle === 'BOX_TRUCK' ? auraRates.rate_box_truck : auraRates.rate_cargo_van;
+        subtotal += parseFloat(((dMiles - auraRates.base_radius) * rate).toFixed(2));
+    }
         } else if (wLbs > 0) {
             // 🔒 Aura Engine — modo SIMULACIÓN (0-150 lbs)
             const aura = calculateAuraLocalDelivery(
