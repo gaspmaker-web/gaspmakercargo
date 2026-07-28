@@ -104,11 +104,23 @@ export async function GET(req: NextRequest) {
     const total = all.length;
     const paginated = all.slice(skip, skip + limit);
 
+    // Calcular totales según el filtro activo
+    const totalCarga = all.filter(t => t.type === 'Paquete' || t.type === 'Consolidación').reduce((s, t) => s + t.amount, 0);
+    const totalPickups = all.filter(t => t.type === 'Pickup' || t.type === 'Almacenaje').reduce((s, t) => s + t.amount, 0);
+    const totalBuzon = all.filter(t => t.type === 'Buzón Virtual').reduce((s, t) => s + t.amount, 0);
+    const totalDeuda = all.reduce((s, t) => s + t.debt, 0);
+
     return NextResponse.json({ 
       transactions: paginated, 
       total,
       page,
-      totalPages: Math.ceil(total / limit)
+      totalPages: Math.ceil(total / limit),
+      totals: {
+        carga: totalCarga,
+        pickups: totalPickups,
+        buzon: totalBuzon,
+        deuda: totalDeuda,
+      }
     });
 
   } catch (error) {

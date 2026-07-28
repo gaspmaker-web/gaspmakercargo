@@ -346,7 +346,7 @@ export default async function FinanzasPage() {
       </div>
 
 {/* Tabla con paginación y filtros */}
-      <FinanzasTable />
+      <FinanzasTable grandTotal={grandTotalIncome} />
 
     </div>
   );

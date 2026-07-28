@@ -20,8 +20,13 @@ interface Transaction {
   description?: string | null;
 }
 
-export default function FinanzasTable() {
+interface FinanzasTableProps {
+  grandTotal: number;
+}
+
+export default function FinanzasTable({ grandTotal }: FinanzasTableProps) {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [totals, setTotals] = useState({ carga: 0, pickups: 0, buzon: 0, deuda: 0 });
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -44,6 +49,7 @@ export default function FinanzasTable() {
       setTransactions(data.transactions || []);
       setTotalPages(data.totalPages || 1);
       setTotal(data.total || 0);
+      setTotals(data.totals || { carga: 0, pickups: 0, buzon: 0, deuda: 0 });
     } catch (error) {
       console.error('Error:', error);
     } finally {
@@ -64,8 +70,30 @@ export default function FinanzasTable() {
     'Almacenaje': 'bg-amber-50 text-amber-600 border border-amber-100',
   };
 
-  return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+return (
+    <div className="space-y-4">
+      {/* KPIs dinámicos por filtro */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Total Global</p>
+          <p className="text-xl font-bold text-gray-800">{formatCurrency(grandTotal)}</p>
+          <p className="text-[10px] text-gray-400 mt-1">Todos los servicios</p>
+        </div>
+        <div className="bg-white p-4 rounded-xl border border-blue-100 shadow-sm">
+          <p className="text-[10px] font-bold text-blue-400 uppercase tracking-wider mb-1">Carga Tradicional</p>
+          <p className="text-xl font-bold text-gray-800">{formatCurrency(totals.carga)}</p>
+        </div>
+        <div className="bg-white p-4 rounded-xl border border-orange-100 shadow-sm">
+          <p className="text-[10px] font-bold text-orange-400 uppercase tracking-wider mb-1">Pickups</p>
+          <p className="text-xl font-bold text-gray-800">{formatCurrency(totals.pickups)}</p>
+        </div>
+        <div className="bg-white p-4 rounded-xl border border-purple-100 shadow-sm">
+          <p className="text-[10px] font-bold text-purple-400 uppercase tracking-wider mb-1">Buzón Virtual</p>
+          <p className="text-xl font-bold text-gray-800">{formatCurrency(totals.buzon)}</p>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
       {/* Header con filtros */}
       <div className="p-6 border-b border-gray-100 bg-gray-50/50">
         <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
@@ -184,7 +212,8 @@ export default function FinanzasTable() {
             </button>
           </div>
         </div>
-      )}
+)}
+    </div>
     </div>
   );
 }
