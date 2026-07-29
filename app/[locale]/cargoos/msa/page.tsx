@@ -69,8 +69,8 @@ export default function CargoOSMSAPage() {
           <div className="space-y-3 text-gray-600 leading-relaxed">
             <p><strong className="text-gray-900">4.1 Operator as Data Controller:</strong> The Operator is the sole Data Controller of all End User data processed through the Platform. CargoOS acts exclusively as a Data Processor.</p>
             <p><strong className="text-gray-900">4.2 CargoOS Obligations:</strong> CargoOS shall process End User data only as instructed by the Operator and only to the extent necessary to provide the Platform services. CargoOS shall not use End User data for its own marketing, analytics beyond platform operations, or any commercial purpose.</p>
-            <p><strong className="text-gray-900">4.3 Data Export:</strong> Upon written request, CargoOS shall provide the Operator with a complete export of their data in a standard machine-readable format (CSV/JSON) within 30 business days.</p>
-            <p><strong className="text-gray-900">4.4 Data Deletion:</strong> Upon termination of this Agreement, CargoOS shall permanently delete all Operator and End User data from its systems within 90 days of the subscription end date, provided that a data export has been delivered to the Operator or waived in writing.</p>
+            <p><strong className="text-gray-900">4.3 Data Export & Migration:</strong> Upon written request, CargoOS shall provide the Operator with a complete export of their data including: client records, shipment history, financial transactions, mailbox records, proof of delivery photos, and uploaded documents. Data will be delivered in standard machine-readable formats (CSV and JSON) within 30 business days. There are no fees or penalties for data export. CargoOS will not withhold or delay data export as a means of retaining Operators.</p>
+            <p><strong className="text-gray-900">4.4 Data Deletion:</strong> Upon termination, CargoOS will first deliver the complete data export to the Operator. After written confirmation of receipt — or written waiver by the Operator — CargoOS shall permanently delete all Operator and End User data from its systems within 90 days. CargoOS will provide written confirmation of deletion upon request.</p>
             <p><strong className="text-gray-900">4.5 Subprocessors:</strong> CargoOS uses the following subprocessors: Supabase (database), Vercel (hosting), Stripe (payments), EasyPost (shipping), Resend (email). CargoOS shall notify the Operator at least 30 days before adding new subprocessors.</p>
           </div>
         </section>
@@ -103,17 +103,29 @@ export default function CargoOSMSAPage() {
         </section>
 
         <section>
-          <h2 className="text-lg font-bold text-gray-900 mb-3">8. Limitation of Liability</h2>
-          <div className="space-y-3 text-gray-600 leading-relaxed">
-            <p>To the maximum extent permitted by applicable law, CargoOS's total liability under this Agreement shall not exceed the total fees paid by the Operator in the three (3) months immediately preceding the claim.</p>
-            <p>In no event shall CargoOS be liable for indirect, incidental, consequential, or punitive damages, including lost profits, lost data, or business interruption, even if advised of the possibility of such damages.</p>
-          </div>
-        </section>
+        <h2 className="text-lg font-bold text-gray-900 mb-3">8. Service Availability & Support (SLA)</h2>
+        <div className="space-y-3 text-gray-600 leading-relaxed">
+           <p><strong className="text-gray-900">Uptime Target:</strong> CargoOS targets 99.5% monthly uptime, excluding scheduled maintenance. Our infrastructure providers — Vercel and Supabase — maintain 99.9%+ uptime on their end.</p>
+          <p><strong className="text-gray-900">Incident Response:</strong> In the event of a platform outage affecting core functionality (shipment management, proof of delivery, client portal), CargoOS will acknowledge the incident within 4 business hours and provide status updates every 2 hours until resolution.</p>
+          <p><strong className="text-gray-900">Scheduled Maintenance:</strong> At least 24 hours advance notice will be provided. Maintenance windows are typically 2:00 AM – 5:00 AM EST.</p>
+          <p><strong className="text-gray-900">Support Response Times:</strong></p>
+        <ul className="list-disc list-inside space-y-1 ml-4">
+         <li><strong className="text-gray-900">Starter:</strong> Within 2 business days</li>
+         <li><strong className="text-gray-900">Growth:</strong> Within 1 business day</li>
+         <li><strong className="text-gray-900">Pro:</strong> Within 4 business hours</li>
+        </ul>
+         <p><strong className="text-gray-900">SLA Credits:</strong> If monthly uptime falls below 99.5%, Growth and Pro Operators are eligible for a service credit of 10% of their monthly fee per full percentage point below target, up to 30% maximum. Credits apply to the next billing cycle upon written request to hello@cargoos.io.</p>
+        <p className="text-xs text-gray-400 mt-2">CargoOS does not currently hold third-party SLA certification. Uptime targets are based on infrastructure provider commitments from Vercel and Supabase.</p>
+       </div>
+       </section>
 
         <section>
           <h2 className="text-lg font-bold text-gray-900 mb-3">9. Indemnification</h2>
           <p className="text-gray-600 leading-relaxed">
             The Operator agrees to indemnify, defend, and hold harmless <span className="whitespace-nowrap">Gasp Maker LLC</span> and its officers, employees, and agents from any claims, damages, or expenses (including reasonable attorney's fees) arising from: (a) the Operator's use of the Platform in violation of this Agreement; (b) the Operator's violation of applicable law; or (c) claims by End Users related to the Operator's business operations.
+          </p>
+          <p className="text-gray-600 leading-relaxed mt-3">
+            Notwithstanding the above, SLA credits as described in Section 8 are the Operator's sole and exclusive remedy for service interruptions or downtime.
           </p>
         </section>
 
