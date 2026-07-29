@@ -228,7 +228,7 @@ async function submitDemo() {
   <p className="text-gray-400 text-sm">
     {t('footer_tagline')} · © {new Date().getFullYear()} CargoOS by Gasp Maker LLC
     {' · '}
-    <a href="./privacy" className="hover:text-gray-600 underline transition-colors">
+<a href="/en/cargoos/privacy" className="hover:text-gray-600 underline transition-colors">
   Privacy Policy
 </a>
   </p>

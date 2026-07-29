@@ -16,7 +16,7 @@ export default function CargoOSPrivacyPage() {
             <Shield className="text-gmc-dorado-principal" size={32} />
             <h1 className="text-3xl font-bold">Privacy Policy</h1>
           </div>
-          <p className="text-gray-400">CargoOS by Gasp Maker — Last updated: July 2026</p>
+          <p className="text-gray-400">CargoOS by Gasp Maker LLC — Last updated: July 2026</p>
         </div>
       </div>
 
