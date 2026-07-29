@@ -16,7 +16,7 @@ export default function CargoOSPrivacyPage() {
             <Shield className="text-white" size={28} />
             <h1 className="text-3xl font-bold">Privacy Policy</h1>
           </div>
-          <p className="text-gray-400 text-sm">CargoOS by Gasp Maker LLC — Last updated: July 2026</p>
+          <p className="text-gray-400 text-sm whitespace-nowrap">CargoOS by Gasp Maker LLC — Last updated: July 2026</p>
         </div>
       </div>
 
@@ -26,7 +26,9 @@ export default function CargoOSPrivacyPage() {
         <section>
           <h2 className="text-lg font-bold text-gray-900 mb-3">1. Introduction</h2>
           <p className="text-gray-600 leading-relaxed">
-            CargoOS ("we", "our", "us") is a Software-as-a-Service (SaaS) platform operated by Gasp Maker LLC. This Privacy Policy explains how we collect, use, and protect information when you use our platform at cargoos.io.
+            CargoOS ("we", "our", "us") is a Software-as-a-Service (SaaS) platform operated by{' '}
+<span className="whitespace-nowrap">Gasp Maker LLC.</span>{' '}
+This Privacy Policy explains how we collect, use, and protect information when you use our platform at cargoos.io.
           </p>
         </section>
 
