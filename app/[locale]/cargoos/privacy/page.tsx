@@ -16,7 +16,7 @@ export default function CargoOSPrivacyPage() {
             <Shield className="text-gmc-dorado-principal" size={32} />
             <h1 className="text-3xl font-bold">Privacy Policy</h1>
           </div>
-          <p className="text-gray-400">CargoOS by GaspMaker Cargo — Last updated: July 2026</p>
+          <p className="text-gray-400">CargoOS by Gasp Maker — Last updated: July 2026</p>
         </div>
       </div>
 
@@ -26,7 +26,7 @@ export default function CargoOSPrivacyPage() {
         <section>
           <h2 className="text-xl font-bold text-gray-800 mb-3">1. Introduction</h2>
           <p className="text-gray-600 leading-relaxed">
-            CargoOS ("we", "our", "us") is a Software-as-a-Service (SaaS) platform operated by GaspMaker Cargo LLC. This Privacy Policy explains how we collect, use, and protect information when you use our platform at cargoos.io.
+            CargoOS ("we", "our", "us") is a Software-as-a-Service (SaaS) platform operated by Gasp Maker LLC. This Privacy Policy explains how we collect, use, and protect information when you use our platform at cargoos.io.
           </p>
         </section>
 
@@ -112,7 +112,7 @@ export default function CargoOSPrivacyPage() {
             For privacy-related questions or requests:
           </p>
           <div className="mt-3 p-4 bg-gray-100 rounded-xl text-sm text-gray-600">
-            <p><strong>GaspMaker Cargo LLC — CargoOS</strong></p>
+            <p><strong>Gasp Maker LLC — CargoOS</strong></p>
             <p>1861 NW 22nd St, Miami, FL 33142</p>
             <p>Email: <a href="mailto:hello@cargoos.io" className="text-blue-600 hover:underline">hello@cargoos.io</a></p>
             <p>Website: <a href="https://cargoos.io" className="text-blue-600 hover:underline">cargoos.io</a></p>
@@ -123,7 +123,7 @@ export default function CargoOSPrivacyPage() {
 
       {/* Footer */}
       <div className="border-t border-gray-200 py-8 text-center text-sm text-gray-400">
-        © 2026 CargoOS by GaspMaker Cargo LLC. All rights reserved.
+        © 2026 CargoOS by Gasp Maker LLC. All rights reserved.
       </div>
 
     </div>
