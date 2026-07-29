@@ -223,14 +223,16 @@ async function submitDemo() {
   </div>
 </section>
 
-      {/* FOOTER */}
+     {/* FOOTER */}
     <footer className="py-8 px-6 border-t border-gray-100 text-center">
   <p className="text-gray-400 text-sm">
     {t('footer_tagline')} · © {new Date().getFullYear()} CargoOS by Gasp Maker LLC
     {' · '}
-<a href="/en/cargoos/privacy" className="hover:text-gray-600 underline transition-colors">
-  Privacy Policy
-</a>
+    <a href="/en/cargoos/privacy" className="hover:text-gray-600 underline transition-colors">Privacy Policy</a>
+    {' · '}
+    <a href="/en/cargoos/terms" className="hover:text-gray-600 underline transition-colors">Terms of Service</a>
+    {' · '}
+    <a href="/en/cargoos/msa" className="hover:text-gray-600 underline transition-colors">MSA</a>
   </p>
 </footer>
 
