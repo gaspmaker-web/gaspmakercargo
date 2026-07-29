@@ -44,8 +44,24 @@ const nextConfig = {
       },
     ],
   },
-  // -----------------------------------------------
+ // -----------------------------------------------
+  async redirects() {
+    if (process.env.TENANT_SLUG === 'cargoos') {
+      return [
+        {
+          source: '/',
+          destination: '/en/cargoos',
+          permanent: false,
+        },
+        {
+          source: '/en',
+          destination: '/en/cargoos',
+          permanent: false,
+        },
+      ];
+    }
+    return [];
+  },
 };
-
 // 🔥 CAMBIO CLAVE: Exportamos envolviendo nextConfig primero en withPWA y luego en withNextIntl
 module.exports = withNextIntl(withPWA(nextConfig));
