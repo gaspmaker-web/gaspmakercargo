@@ -141,20 +141,26 @@ export default function CargoOSMSAPage() {
         </section>
 
       {/* Signature Block */}
-        <section className="bg-gray-50 rounded-xl border border-gray-200 p-6 text-center">
-          <h2 className="text-lg font-bold text-gray-900 mb-2">Ready to Sign?</h2>
-          <p className="text-gray-600 text-sm mb-4">
-            Request a countersigned copy of this MSA. We will send you a DocuSign document within 1 business day.
-          </p>
-          <a 
-            href="mailto:gm@gaspmakercargo.com?subject=MSA Request — CargoOS&body=Company name: %0AContact name: %0APhone: %0AWebsite: " 
-            className="inline-block bg-black text-white px-6 py-3 rounded-xl font-bold text-sm hover:bg-gray-800 transition-colors"
-          >
-            Request MSA Signature →
-          </a>
-          <p className="text-xs text-gray-400 mt-3">Powered by DocuSign · Legally binding in Florida and most jurisdictions</p>
-        </section>
-
+      <section className="bg-gray-50 rounded-xl border border-gray-200 p-6 text-center">
+  <h2 className="text-lg font-bold text-gray-900 mb-2">Ready to Sign?</h2>
+  <p className="text-gray-600 text-sm mb-4">
+    Request a countersigned copy of this MSA. We will send you a DocuSign document within 1 business day.
+  </p>
+  <a 
+    href="mailto:gm@gaspmakercargo.com?subject=MSA Request — CargoOS&body=Company name: %0AContact name: %0APhone: %0AWebsite: " 
+    className="inline-block bg-black text-white px-6 py-3 rounded-xl font-bold text-sm hover:bg-gray-800 transition-colors"
+  >
+    Request MSA Signature →
+  </a>
+  <p className="text-sm text-gray-500 mt-4">
+    Or email us directly at{' '}
+    <a href="mailto:gm@gaspmakercargo.com" className="text-black underline font-bold">
+      gm@gaspmakercargo.com
+    </a>
+    {' '}with subject: <span className="font-mono text-xs bg-gray-200 px-2 py-0.5 rounded">MSA Request — CargoOS</span>
+  </p>
+  <p className="text-xs text-gray-400 mt-3">Powered by DocuSign · Legally binding in Florida and most jurisdictions</p>
+</section>
       </div>
 
       {/* Footer */}
