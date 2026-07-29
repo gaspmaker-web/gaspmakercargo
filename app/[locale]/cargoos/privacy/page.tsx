@@ -64,12 +64,23 @@ This Privacy Policy explains how we collect, use, and protect information when y
           </ul>
         </section>
 
-        <section>
-          <h2 className="text-lg font-bold text-gray-900 mb-3">5. Data Security</h2>
-          <p className="text-gray-600 leading-relaxed">
-            We implement industry-standard security measures including encrypted data transmission (TLS), secure database hosting, and role-based access controls. API credentials provided by Operators are stored encrypted and are never exposed in plaintext.
-          </p>
-        </section>
+    <section>
+  <h2 className="text-lg font-bold text-gray-900 mb-3">5. Data Security</h2>
+  <p className="text-gray-600 leading-relaxed">
+    We implement the following security measures to protect your data:
+  </p>
+  <ul className="list-disc list-inside space-y-2 text-gray-600 leading-relaxed mt-3 ml-4">
+    <li><strong className="text-gray-900">Encryption in transit:</strong> All data transmitted between your browser and our servers is encrypted using TLS.</li>
+    <li><strong className="text-gray-900">Supabase (Database):</strong> SOC 2 Type II certified hosting with encryption at rest.</li>
+    <li><strong className="text-gray-900">Vercel (Hosting):</strong> SOC 2 Type II certified infrastructure.</li>
+    <li><strong className="text-gray-900">Stripe (Payments):</strong> PCI DSS Level 1 certified. We never store raw card numbers.</li>
+    <li><strong className="text-gray-900">API Credentials:</strong> Operator API keys are stored encrypted and never exposed in plaintext or logs.</li>
+    <li><strong className="text-gray-900">Access Control:</strong> Role-based access limits what each user can see and do within the platform.</li>
+    </ul>
+    <p className="text-gray-600 leading-relaxed mt-3">
+    CargoOS itself does not hold SOC 2 or ISO 27001 certification at this time. We rely on the certified infrastructure of our service providers listed above.
+    </p>
+  </section>
 
         <section>
           <h2 className="text-lg font-bold text-gray-900 mb-3">6. Data Retention</h2>
@@ -92,13 +103,20 @@ This Privacy Policy explains how we collect, use, and protect information when y
           </p>
         </section>
 
-        <section>
-          <h2 className="text-lg font-bold text-gray-900 mb-3">9. Your Rights</h2>
-          <p className="text-gray-600 leading-relaxed">
-            Depending on your location, you may have rights to access, correct, or delete your personal data. To exercise these rights, contact us at <a href="mailto:hello@cargoos.io" className="text-black underline hover:text-gray-600">hello@cargoos.io</a>.
-          </p>
-        </section>
-
+       <section>
+  <h2 className="text-lg font-bold text-gray-900 mb-3">9. Your Rights</h2>
+  <p className="text-gray-600 leading-relaxed">
+    CargoOS is operated by Gasp Maker LLC, a company registered in Florida, USA. We process data under applicable U.S. law.
+  </p>
+  <ul className="list-disc list-inside space-y-2 text-gray-600 leading-relaxed mt-3 ml-4">
+    <li><strong className="text-gray-900">Florida residents:</strong> You have the right to request access to or deletion of your personal data.</li>
+    <li><strong className="text-gray-900">California residents (CCPA):</strong> You have the right to know what data we collect, request deletion, and opt out of sale. We do not sell personal data.</li>
+    <li><strong className="text-gray-900">International users:</strong> We respect data subject rights on a best-effort basis. We do not currently hold GDPR Data Processing Agreements but will cooperate with reasonable requests.</li>
+  </ul>
+  <p className="text-gray-600 leading-relaxed mt-3">
+    To exercise any of these rights, contact us at <a href="mailto:hello@cargoos.io" className="text-black underline">hello@cargoos.io</a>.
+  </p>
+</section>
         <section>
           <h2 className="text-lg font-bold text-gray-900 mb-3">10. Changes to This Policy</h2>
           <p className="text-gray-600 leading-relaxed">
