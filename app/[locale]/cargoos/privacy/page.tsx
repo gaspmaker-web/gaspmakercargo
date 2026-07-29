@@ -7,7 +7,7 @@ export default function CargoOSPrivacyPage() {
     <div className="border-t border-gray-200 py-8 text-center text-sm text-gray-400 bg-[#1a1f2e] text-gray-500">
       
       {/* Header */}
-      <div className="bg-[#1a1f2e] text-white py-16 px-6">
+      <div className="bg-black text-white py-16 px-6">
         <div className="max-w-4xl mx-auto">
          <Link href="/en/cargoos" className="inline-flex items-center gap-2 text-gray-400 hover:text-white text-sm mb-8 transition-colors">
             <ArrowLeft size={16} /> Back to CargoOS
@@ -122,7 +122,7 @@ export default function CargoOSPrivacyPage() {
       </div>
 
       {/* Footer */}
-      <div className="border-t border-gray-200 py-8 text-center text-sm text-gray-400">
+      <div className="bg-black py-8 text-center text-sm text-gray-500">
         © 2026 CargoOS by Gasp Maker LLC. All rights reserved.
       </div>
 
