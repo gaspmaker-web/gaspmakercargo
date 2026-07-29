@@ -4,12 +4,12 @@ import { Shield, ArrowLeft } from 'lucide-react';
 
 export default function CargoOSPrivacyPage() {
   return (
-    <div className="min-h-screen bg-gray-50 font-montserrat">
+    <div className="border-t border-gray-200 py-8 text-center text-sm text-gray-400 bg-[#1a1f2e] text-gray-500">
       
       {/* Header */}
       <div className="bg-[#1a1f2e] text-white py-16 px-6">
         <div className="max-w-4xl mx-auto">
-          <Link href="/cargoos" className="inline-flex items-center gap-2 text-gray-400 hover:text-white text-sm mb-8 transition-colors">
+         <Link href="/en/cargoos" className="inline-flex items-center gap-2 text-gray-400 hover:text-white text-sm mb-8 transition-colors">
             <ArrowLeft size={16} /> Back to CargoOS
           </Link>
           <div className="flex items-center gap-3 mb-4">
