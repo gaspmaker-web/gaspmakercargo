@@ -53,16 +53,32 @@ This Privacy Policy explains how we collect, use, and protect information when y
         </section>
 
         <section>
-          <h2 className="text-lg font-bold text-gray-900 mb-3">4. Data Sharing</h2>
-          <p className="text-gray-600 leading-relaxed mb-3">We do not sell personal data. We share data only with:</p>
-          <ul className="list-disc list-inside space-y-2 text-gray-600 leading-relaxed ml-4">
-            <li><strong className="text-gray-900">Stripe</strong> — payment processing</li>
-            <li><strong className="text-gray-900">EasyPost</strong> — shipping label generation and carrier rate quotes</li>
-            <li><strong className="text-gray-900">Supabase</strong> — secure database hosting</li>
-            <li><strong className="text-gray-900">Vercel</strong> — platform hosting and deployment</li>
-            <li><strong className="text-gray-900">Resend</strong> — transactional email delivery</li>
-          </ul>
-        </section>
+  <h2 className="text-lg font-bold text-gray-900 mb-3">4. Data Sharing</h2>
+  <p className="text-gray-600 leading-relaxed mb-3">We do not sell personal data. We share data only with:</p>
+  <ul className="list-disc list-inside space-y-2 text-gray-600 leading-relaxed ml-4">
+    <li><strong className="text-gray-900">Stripe</strong> — payment processing. Card numbers are never stored on CargoOS servers. Stripe is PCI DSS Level 1 certified.</li>
+    <li><strong className="text-gray-900">EasyPost</strong> — shipping label generation. End User shipping addresses and package details are shared with EasyPost and transmitted to the selected carrier (FedEx, UPS, DHL, USPS) solely to fulfill the shipment.</li>
+    <li><strong className="text-gray-900">Supabase</strong> — secure SOC 2 Type II certified database hosting.</li>
+    <li><strong className="text-gray-900">Vercel</strong> — SOC 2 Type II certified platform hosting.</li>
+    <li><strong className="text-gray-900">Resend</strong> — transactional email delivery for operational notifications only.</li>
+  </ul>
+  <p className="text-gray-600 leading-relaxed mt-3">
+    CargoOS does not contact End Users directly for marketing or any purpose other than platform operations. End User data belongs to the Operator.
+  </p>
+</section>
+
+<section>
+  <h2 className="text-lg font-bold text-gray-900 mb-3">4B. Identity Documents & USPS Compliance</h2>
+  <p className="text-gray-600 leading-relaxed">
+    Operators who offer Virtual Mailbox services are required by U.S. law (USPS Regulation 39 CFR Part 111) to collect a completed USPS Form 1583 from each mailbox holder, including government-issued photo identification.
+  </p>
+  <ul className="list-disc list-inside space-y-2 text-gray-600 leading-relaxed mt-3 ml-4">
+    <li>Identity documents uploaded to the platform are transmitted and stored using TLS encryption.</li>
+    <li>Access to identity documents is restricted to the Operator and authorized platform administrators only.</li>
+    <li>CargoOS does not use identity documents for any purpose other than USPS compliance verification.</li>
+    <li>Operators are solely responsible for maintaining USPS Form 1583 compliance for their mailbox customers.</li>
+  </ul>
+</section>
 
     <section>
   <h2 className="text-lg font-bold text-gray-900 mb-3">5. Data Security</h2>
@@ -95,6 +111,19 @@ This Privacy Policy explains how we collect, use, and protect information when y
             Operators are responsible for obtaining proper consent from their End Users for data collection and processing. CargoOS acts as a data processor on behalf of Operators, who serve as data controllers for their customers' information.
           </p>
         </section>
+
+        <section>
+  <h2 className="text-lg font-bold text-gray-900 mb-3">7B. Data Ownership & Portability</h2>
+  <p className="text-gray-600 leading-relaxed">
+    <strong className="text-gray-900">Operators are the Data Controllers</strong> of their End Users' data. CargoOS acts solely as a Data Processor on behalf of Operators.
+  </p>
+  <ul className="list-disc list-inside space-y-2 text-gray-600 leading-relaxed mt-3 ml-4">
+    <li>End User data — including names, addresses, shipping history, and payment records — belongs to the Operator, not to CargoOS.</li>
+    <li>CargoOS will never contact End Users directly for marketing, upselling, or any commercial purpose.</li>
+    <li>Upon cancellation of an Operator's subscription, CargoOS will provide a full data export within 30 days upon written request.</li>
+    <li>After data export delivery, CargoOS will permanently delete the Operator's data from its servers within 90 days.</li>
+  </ul>
+</section>
 
         <section>
           <h2 className="text-lg font-bold text-gray-900 mb-3">8. Cookies</h2>
