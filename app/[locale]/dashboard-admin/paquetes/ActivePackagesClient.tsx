@@ -351,14 +351,18 @@ export default function ActivePackagesClient({ allItems, currentLocale }: Packag
                                             <span className="text-[10px] font-bold px-2 py-1 rounded-full border bg-orange-100 text-orange-700 border-orange-200 flex items-center justify-center gap-1">
                                                 <Ruler size={10}/> PENDING MEASUREMENT
                                             </span>
-                                       ) : pkg.status === 'RECIBIDO_MIAMI' || pkg.status === 'RECIBIDO MIAMI' ? (
+                                        ) : pkg.status === 'RECIBIDO_MIAMI' || pkg.status === 'RECIBIDO MIAMI' ? (
                                             <span className="text-[10px] font-bold px-2 py-1 rounded-full border bg-yellow-100 text-yellow-800 border-yellow-200 flex items-center justify-center gap-1">
                                                 <Box size={10}/> RCVD MIAMI 
                                             </span>
-                                      ) : pkg.status === 'EN_ALMACEN' || pkg.status === 'EN ALMACEN' ? (
+                                        ) : pkg.status === 'EN_ALMACEN' || pkg.status === 'EN ALMACEN' ? (
                                            <span className="text-[10px] font-bold px-2 py-1 rounded-full border bg-yellow-100 text-yellow-800 border-yellow-200 flex items-center justify-center gap-1">
                                                <Box size={10}/> IN WAREHOUSE
                                             </span>
+                                        ) : pkg.status === 'EN_PROCESO_CONSOLIDACION' || pkg.status === 'EN PROCESO CONSOLIDACION' ? (
+                                            <span className="text-[10px] font-bold px-2 py-1 rounded-full border bg-purple-100 text-purple-800 border-purple-200 flex items-center justify-center gap-1">
+                                               <Box size={10}/> IN CONSOLIDATION
+                                           </span>
                                         ) : (
                                             <span className="text-[10px] font-bold px-2 py-1 rounded-full border bg-gray-50 text-gray-600 border-gray-200">
                                                 {pkg.status.replace(/_/g, ' ')}
