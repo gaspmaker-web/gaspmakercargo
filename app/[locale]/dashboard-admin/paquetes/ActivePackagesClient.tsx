@@ -91,7 +91,7 @@ export default function ActivePackagesClient({ allItems, currentLocale }: Packag
       <div className="max-w-7xl mx-auto">
         
         <div className="mb-6 flex justify-between items-center">
-          <BackButton href={`/${currentLocale}/dashboard-admin`} label="Volver al Panel" />
+          <BackButton href={`/${currentLocale}/dashboard-admin`} label="Back to Panel" />
         </div>
 
         <div className="flex flex-col md:flex-row justify-between items-end gap-4 mb-8">
