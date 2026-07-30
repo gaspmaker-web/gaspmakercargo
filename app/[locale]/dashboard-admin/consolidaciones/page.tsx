@@ -95,13 +95,13 @@ export default async function ConsolidacionesPage({
                     className="inline-flex items-center text-gray-500 hover:text-blue-600 transition-colors font-medium text-sm mb-2"
                 >
                     <ArrowLeft size={18} className="mr-2" />
-                    Volver al Panel
+                    Back to Panel
                 </Link>
                 <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
                     <PackageOpen className="text-blue-600" />
                     Consolidation Management
                 </h1>
-                <p className="text-gray-500 mt-1">Ciclo Activo: Solicitud ➝ Medidas ➝ Pago ➝ Despacho.</p>
+                <p className="text-gray-500 mt-1">Pago ➝ Despacho.	Active Cycle: Request ➝ Measurements ➝ Payment ➝ Dispatch.</p>
             </div>
             <SearchConsolidations />
         </div>
@@ -112,7 +112,7 @@ export default async function ConsolidacionesPage({
                 <div className="bg-white rounded-2xl p-6 shadow-md border-l-4 border-orange-500 relative overflow-hidden">
                     <div className="flex justify-between items-center mb-4">
                         <h2 className="text-xl font-bold flex items-center gap-2 text-orange-800">
-                            <AlertCircle className="text-orange-600"/> Pendientes de Procesar ({pendientesProcesar.length})
+                            <AlertCircle className="text-orange-600"/> Pending Processing ({pendientesProcesar.length})
                         </h2>
                     </div>
                     <div className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-4 -mx-2 px-2 scroll-smooth">
@@ -137,7 +137,7 @@ export default async function ConsolidacionesPage({
             {esperandoPago.length > 0 && (
                 <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
                     <h2 className="text-lg font-bold mb-4 flex items-center gap-2 text-gray-700">
-                        <Clock className="text-yellow-500"/> Esperando Pago ({esperandoPago.length})
+                        <Clock className="text-yellow-500"/> Awaiting Payment ({esperandoPago.length})
                     </h2>
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                          {esperandoPago.map((envio) => {
@@ -166,7 +166,7 @@ export default async function ConsolidacionesPage({
                                     </div>
                                     <div className="text-right shrink-0 ml-2">
                                          <p className="text-lg font-bold text-gray-800">${envio.totalAmount?.toFixed(2)}</p>
-                                         <p className="text-[10px] text-gray-400 uppercase">Por Cobrar</p>
+                                         <p className="text-[10px] text-gray-400 uppercase">Outstanding</p>
                                     </div>
                                 </div>
                              )
