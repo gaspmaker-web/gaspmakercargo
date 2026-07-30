@@ -326,7 +326,7 @@ const internationalCountries = Array.from(new Set(
     )
     .map(r => r.countryCode)
 ));
-  if (loading) return <div className="p-8 text-center text-gray-500">Cargando configuración...</div>;
+  if (loading) return <div className="p-8 text-center text-gray-500">Loading configuration...</div>;
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
@@ -335,8 +335,8 @@ const internationalCountries = Array.from(new Set(
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Configuración</h1>
-            <p className="text-sm text-gray-500 mt-1">Tarifas, cargos y conexiones</p>
+            <h1 className="text-2xl font-bold text-gray-900">Configuration</h1>
+            <p className="text-sm text-gray-500 mt-1">Rates, charges and connections</p>
           </div>
           <button
             onClick={save}
@@ -344,16 +344,16 @@ const internationalCountries = Array.from(new Set(
             className="flex items-center gap-2 bg-black text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-gray-800 transition disabled:opacity-50"
           >
             <Save size={16} />
-            {saving ? 'Guardando...' : saved ? '✅ Guardado' : 'Guardar Todo'}
+            {saving ? 'Saving...' : saved ? '✅ Saved' : 'Save All'}
           </button>
         </div>
 
         {/* Tabs */}
         <div className="flex gap-2 mb-6 overflow-x-auto pb-1">
           {[
-            { id: 'international', label: 'Internacional', icon: Globe },
-            { id: 'global', label: 'Variables', icon: Package },
-            { id: 'local', label: 'Delivery Local', icon: Truck },
+            { id: 'international', label: 'International', icon: Globe },
+            { id: 'global', label: 'Variables ✅', icon: Package },
+            { id: 'local', label: 'Local Delivery', icon: Truck },
             { id: 'apis', label: 'API Keys', icon: Key },
           ].map(({ id, label, icon: Icon }) => (
             <button
@@ -373,14 +373,14 @@ const internationalCountries = Array.from(new Set(
         {activeTab === 'international' && (
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
             <div className="p-5 border-b border-gray-100 flex items-center justify-between">
-              <h2 className="font-bold text-gray-900">Tarifas por País</h2>
+              <h2 className="font-bold text-gray-900">Rates by Country</h2>
               <div className="flex gap-2">
                 <select
                   value={newCountry}
                   onChange={e => setNewCountry(e.target.value)}
                   className="text-sm border border-gray-200 rounded-lg px-3 py-2"
                 >
-                  <option value="">+ Agregar país</option>
+                  <option value="">+ Add country</option>
                   {COUNTRIES.filter(c => !internationalCountries.includes(c.code)).map(c => (
                     <option key={c.code} value={c.code}>{c.name}</option>
                   ))}
@@ -395,11 +395,11 @@ const internationalCountries = Array.from(new Set(
               <table className="w-full text-sm">
                 <thead className="bg-gray-50">
   <tr>
-    <th className="text-left p-4 font-medium text-gray-500">País</th>
-    <th className="text-center p-4 font-medium text-gray-500">Aéreo /lb</th>
-    <th className="text-center p-4 font-medium text-gray-500">Mín. Aéreo</th>
-    <th className="text-center p-4 font-medium text-gray-500">Marítimo /ft³</th>
-    <th className="text-center p-4 font-medium text-gray-500">Mín. Marítimo</th>
+    <th className="text-left p-4 font-medium text-gray-500">Country</th>
+    <th className="text-center p-4 font-medium text-gray-500">Air /lb</th>
+    <th className="text-center p-4 font-medium text-gray-500">Min. Air</th>
+    <th className="text-center p-4 font-medium text-gray-500">Ocean /ft³</th>
+    <th className="text-center p-4 font-medium text-gray-500">Min. Ocean</th>
     <th className="p-4"></th>
   </tr>
 </thead>
@@ -480,7 +480,7 @@ const internationalCountries = Array.from(new Set(
           <tr key={`${code}-expanded`} className="bg-blue-50 border-t border-blue-100">
             <td colSpan={6} className="px-6 py-4">
               <p className="text-xs font-bold text-blue-700 uppercase tracking-wider mb-3">
-                🚢 Rangos Marítimos (cuft fijos)
+                🚢 Ocean Ranges (fixed cuft)
               </p>
               <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
                 {[
@@ -507,11 +507,11 @@ const internationalCountries = Array.from(new Set(
 
             {/* Días de entrega */}
               <p className="text-xs font-bold text-green-700 uppercase tracking-wider mb-3 mt-4">
-                ✈️ Días Aéreo / 🚢 Días Marítimo
+                ✈️ Air Days / 🚢 Ocean Days
               </p>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs text-green-600 font-bold block mb-1">Días Aéreo</label>
+                  <label className="text-xs text-green-600 font-bold block mb-1">	Air Days</label>
                   <select
                     value={getTextRate('air_days', code)}
                     onChange={e => setTextRate('air_days', code, e.target.value)}
@@ -529,7 +529,7 @@ const internationalCountries = Array.from(new Set(
                   </select>
                 </div>
                 <div>
-                  <label className="text-xs text-green-600 font-bold block mb-1">Días Marítimo</label>
+                  <label className="text-xs text-green-600 font-bold block mb-1">Ocean Days</label>
                   <select
                     value={getTextRate('ocean_days', code)}
                     onChange={e => setTextRate('ocean_days', code, e.target.value)}
@@ -563,16 +563,16 @@ const internationalCountries = Array.from(new Set(
         {activeTab === 'global' && (
           <div className="space-y-4">
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-              <h2 className="font-bold text-gray-900 mb-4">Variables Globales</h2>
+              <h2 className="font-bold text-gray-900 mb-4">Global Variables</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {[
-                  { concept: 'insurance_pct', label: 'Seguro (%)', multiplier: 100, suffix: '%' },
+                  { concept: 'insurance_pct', label: 'Insurance (%)', multiplier: 100, suffix: '%' },
                   { concept: 'easypost_markup', label: 'Markup EasyPost (multiplicador)', multiplier: 1, suffix: 'x' },
-                  { concept: 'handling_standard', label: 'Handling Estándar /lb', multiplier: 1, suffix: '$' },
-                  { concept: 'handling_vip', label: 'Handling VIP /lb', multiplier: 1, suffix: '$' },
-                  { concept: 'ttd_exchange_rate', label: 'Tasa TTD (TT$)', multiplier: 1, suffix: 'TT$' },
-                  { concept: 'storage_per_cuft_per_month', label: 'Almacenaje /ft³/mes', multiplier: 1, suffix: '$' },
-                  { concept: 'storage_free_days', label: 'Días gratis almacenaje', multiplier: 1, suffix: 'días' },
+                  { concept: 'handling_standard', label: 'Standard Handling /lb', multiplier: 1, suffix: '$' },
+                  { concept: 'handling_vip', label: '	VIP Handling /lb', multiplier: 1, suffix: '$' },
+                  { concept: 'ttd_exchange_rate', label: 'TTD Exchange Rate (TT$)', multiplier: 1, suffix: 'TT$' },
+                  { concept: 'storage_per_cuft_per_month', label: 'Storage /ft³/month', multiplier: 1, suffix: '$' },
+                  { concept: 'storage_free_days', label: 'Free storage days', multiplier: 1, suffix: 'days' },
                   { concept: 'processing_fee_pct', label: 'Stripe Processing Fee (%)', multiplier: 100, suffix: '%' },
                 ].map(({ concept, label, multiplier, suffix }) => (
                   <div key={concept}>
@@ -595,14 +595,14 @@ const internationalCountries = Array.from(new Set(
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
               <h2 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
                 <AlertTriangle size={16} className="text-orange-500" />
-                Cargos Especiales / Hazmat
+                Special Charges / Hazmat
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {[
                   { concept: 'hazmat_prep_fee', label: 'Hazmat Prep Fee' },
                   { concept: 'hazmat_shipping_line_fee', label: 'Hazmat Shipping Line Fee' },
                   { concept: 'air_hazmat_fee', label: 'Air Hazmat Compliance Fee' },
-                  { concept: 'eei_fee', label: 'Trámite EEI (Aduana)' },
+                  { concept: 'eei_fee', label: 'EEI Filing (Customs)' },
                 ].map(({ concept, label }) => (
                   <div key={concept}>
                     <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 block">{label}</label>
@@ -622,12 +622,12 @@ const internationalCountries = Array.from(new Set(
             </div>
 
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-              <h2 className="font-bold text-gray-900 mb-4">Handling Bodega (Retiro Físico)</h2>
+              <h2 className="font-bold text-gray-900 mb-4">Warehouse Handling (Physical Pickup)</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {[
                   { concept: 'handling_mini_0_10lbs', label: 'Mini (0-10 lbs)' },
-                  { concept: 'handling_standard_11_50lbs', label: 'Estándar (11-50 lbs)' },
-                  { concept: 'handling_heavy_51_150lbs', label: 'Pesado (51-150 lbs)' },
+                  { concept: 'handling_standard_11_50lbs', label: '	Standard (11-50 lbs)' },
+                  { concept: 'handling_heavy_51_150lbs', label: 'Heavy (51-150 lbs)' },
                   { concept: 'handling_pallet_150plus', label: 'Pallet (+150 lbs)' },
                 ].map(({ concept, label }) => (
                   <div key={concept}>
@@ -733,16 +733,16 @@ const internationalCountries = Array.from(new Set(
 {activeTab === 'local' && (
   <div className="space-y-4">
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-      <h2 className="font-bold text-gray-900 mb-4">Delivery Local Miami</h2>
+      <h2 className="font-bold text-gray-900 mb-4">Local Delivery Miami</h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {[
-          { concept: 'local_base_radius_miles', label: 'Radio base incluido (millas)' },
-          { concept: 'local_per_mile_car_suv', label: 'Por milla — Car/SUV' },
-          { concept: 'local_per_mile_minivan', label: 'Por milla — Minivan' },
-          { concept: 'local_per_mile_cargo_van', label: 'Por milla — Cargo Van' },
-          { concept: 'local_per_mile_box_truck', label: 'Por milla — Box Truck' },
-          { concept: 'local_pre_built_pallet_flat', label: 'Pallet pre-armado (flat)' },
-          { concept: 'local_pre_built_radius_miles', label: 'Radio pallet pre-armado (millas)' },
+          { concept: 'local_base_radius_miles', label: 'Base radius included (miles)' },
+          { concept: 'local_per_mile_car_suv', label: '	Per mile — Car/SUV' },
+          { concept: 'local_per_mile_minivan', label: 'Per mile — Minivan' },
+          { concept: 'local_per_mile_cargo_van', label: 'Per mile — Cargo Van' },
+          { concept: 'local_per_mile_box_truck', label: 'Per mile — Box Truck' },
+          { concept: 'local_pre_built_pallet_flat', label: 'Pre-built pallet (flat)' },
+          { concept: 'local_pre_built_radius_miles', label: 'Pre-built pallet radius (miles)' },
         ].map(({ concept, label }) => (
           <div key={concept}>
             <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 block">{label}</label>
@@ -763,8 +763,8 @@ const internationalCountries = Array.from(new Set(
 
     {/* Tarifas Pickup por Pallet */}
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-      <h2 className="font-bold text-gray-900 mb-4">📦 Pickup por Pallet (151+ lbs)</h2>
-      <p className="text-xs text-gray-400 mb-4">Precio base por vehículo — transporte puro sin servicio de almacén.</p>
+      <h2 className="font-bold text-gray-900 mb-4">📦 Pallet Pickup (151+ lbs)</h2>
+      <p className="text-xs text-gray-400 mb-4">Base price per vehicle — pure transport without warehouse service.</p>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[
           { concept: 'local_pallet_cargo_van_1', label: 'Cargo Van — 1 Pallet' },
@@ -790,7 +790,7 @@ const internationalCountries = Array.from(new Set(
 
     {/* Días de entrega por vehículo */}
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-      <h2 className="font-bold text-gray-900 mb-4">🚗 Días de Entrega por Vehículo</h2>
+      <h2 className="font-bold text-gray-900 mb-4">🚗 Delivery Days by Vehicle</h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {[
           { code: 'car_suv', label: 'Car/SUV' },
@@ -825,8 +825,8 @@ const internationalCountries = Array.from(new Set(
         {/* TAB: API KEYS */}
         {activeTab === 'apis' && (
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-            <h2 className="font-bold text-gray-900 mb-1">Conexiones API</h2>
-            <p className="text-sm text-gray-500 mb-5">Tus credenciales se guardan de forma segura y nunca se comparten.</p>
+            <h2 className="font-bold text-gray-900 mb-1">API Connections</h2>
+            <p className="text-sm text-gray-500 mb-5">Your credentials are stored securely and never shared.</p>
             <div className="space-y-4">
               {[
                 { key: 'easypost_api_key', label: 'EasyPost API Key', placeholder: 'EZTKxxxxxxx...' },
