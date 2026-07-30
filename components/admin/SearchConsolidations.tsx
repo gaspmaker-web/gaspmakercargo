@@ -22,10 +22,10 @@ export default function SearchConsolidations() {
 
   return (
     <div className="relative flex-1 max-w-md">
-      <label htmlFor="search" className="sr-only">Buscar</label>
+      <label htmlFor="search" className="sr-only">Search</label>
       <input
         className="peer block w-full rounded-xl border border-gray-200 py-[9px] pl-10 text-sm outline-2 placeholder:text-gray-500 focus:border-blue-500 focus:ring-blue-500"
-        placeholder="Buscar por cliente o tracking..."
+        placeholder="Search by client or tracking..."
         onChange={(e) => handleSearch(e.target.value)}
         defaultValue={searchParams.get('q')?.toString()}
       />
