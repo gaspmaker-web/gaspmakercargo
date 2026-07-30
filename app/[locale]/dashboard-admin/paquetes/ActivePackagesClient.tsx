@@ -353,7 +353,7 @@ export default function ActivePackagesClient({ allItems, currentLocale }: Packag
                                             </span>
                                         ) : pkg.status === 'RECIBIDO_MIAMI' || pkg.status === 'RECIBIDO MIAMI' ? (
                                             <span className="text-[10px] font-bold px-2 py-1 rounded-full border bg-yellow-100 text-yellow-800 border-yellow-200 flex items-center justify-center gap-1">
-                                                <Package size={10}/> RECEIVED MIAMI
+                                                <Box size={10}/> RECEIVED MIAMI
                                             </span>
                                         ) : (
                                             <span className="text-[10px] font-bold px-2 py-1 rounded-full border bg-gray-50 text-gray-600 border-gray-200">
