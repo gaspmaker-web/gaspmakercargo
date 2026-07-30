@@ -251,7 +251,7 @@ const CONTAINER_OPTIONS = [
 
         <div className="p-6">
             <h4 className="text-sm font-bold text-gray-400 uppercase mb-3 flex items-center gap-2">
-                <Package size={14} /> {request.packages?.length || 0} Cajas a {isLocalDelivery ? 'Armar (Pallet)' : isOcean ? 'Agrupar en Pallets' : 'Agrupar'}:
+                <<Package size={14} /> {request.packages?.length || 0} Boxes to {isLocalDelivery ? 'Build (Pallet)' : isOcean ? 'Group in Pallets' : 'Group'}:
             </h4>
             
             <div className="space-y-2 mb-6 max-h-40 overflow-y-auto pr-2 custom-scrollbar">
@@ -322,7 +322,7 @@ const CONTAINER_OPTIONS = [
                 {/* 💰 CAMPO DE VALOR DECLARADO TOTAL (SIEMPRE VISIBLE) */}
                 <div className="mb-4">
                     <label className="block text-xs font-bold text-blue-600 uppercase mb-1 flex items-center gap-1">
-                        <DollarSign size={12}/> Valor Declarado Total ($)
+                        <DollarSign size={12}/> Total Declared Value ($)
                     </label>
                     <input 
                         type="number" 
@@ -342,7 +342,7 @@ const CONTAINER_OPTIONS = [
                             <div key={index} className={`p-3 rounded-xl border relative shadow-sm ${isOcean ? 'bg-blue-50/10 border-blue-200' : 'bg-white border-gray-300'}`}>
                                 <div className="flex justify-between items-center mb-3">
                                     <span className={`text-xs font-bold uppercase px-2 py-1 rounded ${isOcean ? 'text-blue-800 bg-blue-100' : 'text-gray-800 bg-gray-100'}`}>
-                                        Pallet / Bulto {index + 1}
+                                        Pallet / Bundle {index + 1}
                                     </span>
                                     {index > 0 && (
                                         <button onClick={() => handleRemovePiece(index)} className="text-red-400 hover:text-red-600 transition-colors">
@@ -392,7 +392,7 @@ const CONTAINER_OPTIONS = [
                 /* ============================================================== */
                     <>
                         <div className="mb-4">
-                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Peso Final (Lbs)</label>
+                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Final Weight (Lbs)</label>
                             <input 
                                 type="number" 
                                 value={finalWeight}
@@ -404,17 +404,17 @@ const CONTAINER_OPTIONS = [
 
                         <div className="grid grid-cols-3 gap-2 mb-4">
                             <div>
-                                <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1 flex items-center gap-1"><Ruler size={10}/> Largo</label>
+                                <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1 flex items-center gap-1"><Ruler size={10}/> Length</label>
                                 <input type="number" placeholder="In" className="w-full border p-2 rounded-lg text-center font-mono"
                                     value={dims.length} onChange={(e) => setDims({...dims, length: e.target.value})} />
                             </div>
                             <div>
-                                <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Ancho</label>
+                                <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Width</label>
                                 <input type="number" placeholder="In" className="w-full border p-2 rounded-lg text-center font-mono"
                                     value={dims.width} onChange={(e) => setDims({...dims, width: e.target.value})} />
                             </div>
                             <div>
-                                <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Alto</label>
+                                <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Height</label>
                                 <input type="number" placeholder="In" className="w-full border p-2 rounded-lg text-center font-mono"
                                     value={dims.height} onChange={(e) => setDims({...dims, height: e.target.value})} />
                             </div>
@@ -429,7 +429,7 @@ const CONTAINER_OPTIONS = [
                     <div className="flex items-center gap-2 mb-3">
                         <AlertTriangle size={16} className="text-orange-500" />
                         <label className="text-xs font-bold text-orange-800 uppercase tracking-wider">
-                            Cargos Especiales y Hazmat
+                            Special Charges & Hazmat
                         </label>
                     </div>
 
@@ -482,7 +482,7 @@ const CONTAINER_OPTIONS = [
         <div className="flex items-center gap-2 mb-3">
             <Ship size={16} className="text-blue-600" />
             <label className="text-xs font-bold text-blue-800 uppercase tracking-wider">
-                Container Usado
+                Container Used
             </label>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
