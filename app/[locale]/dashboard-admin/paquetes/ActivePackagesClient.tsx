@@ -347,9 +347,13 @@ export default function ActivePackagesClient({ allItems, currentLocale }: Packag
                                             <span className="text-[10px] font-bold px-2 py-1 rounded-full border bg-purple-100 text-purple-800 border-purple-200 animate-pulse flex items-center justify-center gap-1 shadow-sm">
                                                 <AlertCircle size={10}/> PRE ALERT
                                             </span>
-                                        ) : isProcessing ? (
+                                   ) : isProcessing ? (
                                             <span className="text-[10px] font-bold px-2 py-1 rounded-full border bg-orange-100 text-orange-700 border-orange-200 flex items-center justify-center gap-1">
                                                 <Ruler size={10}/> PENDING MEASUREMENT
+                                            </span>
+                                        ) : pkg.status === 'RECIBIDO_MIAMI' || pkg.status === 'RECIBIDO MIAMI' ? (
+                                            <span className="text-[10px] font-bold px-2 py-1 rounded-full border bg-yellow-100 text-yellow-800 border-yellow-200 flex items-center justify-center gap-1">
+                                                <Package size={10}/> RECEIVED MIAMI
                                             </span>
                                         ) : (
                                             <span className="text-[10px] font-bold px-2 py-1 rounded-full border bg-gray-50 text-gray-600 border-gray-200">
