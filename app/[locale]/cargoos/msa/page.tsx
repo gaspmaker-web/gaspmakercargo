@@ -116,7 +116,10 @@ export default function CargoOSMSAPage() {
         </ul>
          <p><strong className="text-gray-900">SLA Credits:</strong> If monthly uptime falls below 99.5%, Growth and Pro Operators are eligible for a service credit of 10% of their monthly fee per full percentage point below target, up to 30% maximum. Credits apply to the next billing cycle upon written request to hello@cargoos.io.</p>
         <p className="text-xs text-gray-400 mt-2">CargoOS does not currently hold third-party SLA certification. Uptime targets are based on infrastructure provider commitments from Vercel and Supabase.</p>
-       </div>
+        </div>
+        <p><strong className="text-gray-900">Live Status:</strong> Operators can monitor real-time platform status at{' '}
+        <a href="https://cargoos.betteruptime.com" target="_blank" className="text-black underline">cargoos.betteruptime.com</a>
+        </p>
        </section>
 
         <section>
