@@ -172,7 +172,7 @@ const CONTAINER_OPTIONS = [
             // Validación Aéreo (Bulto único)
             if (!finalWeight || !dims.length || !dims.width || !dims.height) {
                 setIsSaving(false);
-                return alert("⚠️ Por favor ingresa el Peso y las 3 Medidas reales de la carga.");
+                return alert("⚠️ Please enter the Weight and 3 real dimensions of the cargo.");
             }
             payload.finalWeight = parseFloat(finalWeight);
             payload.finalDimensions = {
@@ -195,7 +195,7 @@ const CONTAINER_OPTIONS = [
             setShowModal(false);
             router.refresh(); 
         } else {
-            alert("Error: " + (data.message || "Error desconocido"));
+            alert("Error: " + (data.message || "Unknown error"));
         }
     } catch (e) {
         console.error(e);
@@ -251,7 +251,7 @@ const CONTAINER_OPTIONS = [
 
         <div className="p-6">
             <h4 className="text-sm font-bold text-gray-400 uppercase mb-3 flex items-center gap-2">
-                <<Package size={14} /> {request.packages?.length || 0} Boxes to {isLocalDelivery ? 'Build (Pallet)' : isOcean ? 'Group in Pallets' : 'Group'}:
+                <Package size={14} /> {request.packages?.length || 0} Boxes to {isLocalDelivery ? 'Build (Pallet)' : isOcean ? 'Group in Pallets' : 'Group'}:
             </h4>
             
             <div className="space-y-2 mb-6 max-h-40 overflow-y-auto pr-2 custom-scrollbar">
