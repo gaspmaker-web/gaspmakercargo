@@ -524,7 +524,7 @@ export default function PackageActions({ pkg, locale, onDeliverStore }: PackageA
                         </div>
 
                         <button onClick={handleConsolidate} disabled={isSaving} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 transition-all">
-                            {isSaving ? <Loader2 className="animate-spin"/> : <Box size={18}/>} Guardar y Habilitar Pago
+                            {isSaving ? <Loader2 className="animate-spin"/> : <Box size={18}/>} Save and Enable Payment
                         </button>
                     </>
                 )}

@@ -191,7 +191,7 @@ const CONTAINER_OPTIONS = [
         const data = await res.json();
         
         if (res.ok) {
-            alert(`✅ Consolidación procesada exitosamente. El cliente ya puede pagar.`);
+            alert(`✅ Consolidation processed successfully. Client can now pay.`);
             setShowModal(false);
             router.refresh(); 
         } else {
@@ -199,7 +199,7 @@ const CONTAINER_OPTIONS = [
         }
     } catch (e) {
         console.error(e);
-        alert("Error de conexión");
+        alert("Connection error");
     } finally {
         setIsSaving(false);
     }
@@ -234,11 +234,11 @@ const CONTAINER_OPTIONS = [
                     </div>
                 ) : isOcean ? (
                     <div className="flex items-center gap-1.5 font-bold text-white bg-blue-600 px-2 py-1 rounded text-xs shadow-sm border border-blue-700">
-                        <Ship size={14} /> {request.destinationCountryCode || 'DESTINO'} (MARÍTIMO)
+                        <Ship size={14} /> {request.destinationCountryCode || 'DESTINATION'} (OCEAN)
                     </div>
                 ) : (
                     <div className="flex items-center gap-1.5 font-bold text-indigo-700 bg-indigo-100 px-2 py-1 rounded text-xs border border-indigo-200">
-                        <Plane size={14} /> {request.destinationCountryCode || 'DESTINO'} (AÉREO)
+                        <Plane size={14} /> {request.destinationCountryCode || 'DESTINATION'} (AIR)
                     </div>
                 )}
                 
@@ -260,7 +260,7 @@ const CONTAINER_OPTIONS = [
                         isLocalDelivery ? 'bg-white border-gray-200' : 'bg-gray-50 border-gray-100'
                     }`}>
                         <div>
-                            <p className="font-bold text-gmc-gris-oscuro text-sm">{pkg.description || 'Sin descripción'}</p>
+                            <p className="font-bold text-gmc-gris-oscuro text-sm">{pkg.description || 'No description'}</p>
                             <p className="text-xs text-gray-500 font-mono">{pkg.gmcTrackingNumber}</p>
                         </div>
                         <div className="text-right">
@@ -285,7 +285,7 @@ const CONTAINER_OPTIONS = [
                             : 'bg-indigo-600 text-white hover:bg-indigo-700'
                     }`}
                 >
-                    {isLocalDelivery ? 'Medir Pallets Aura' : isOcean ? 'Medir Pallets Marítimos' : 'Procesar Aéreo'} <ArrowRight size={16} />
+                    {isLocalDelivery ? 'Measure Aura Pallets' : isOcean ? 'Measure Ocean Pallets' : 'Process Air'} <ArrowRight size={16} />
                 </button>
             </div>
         </div>
@@ -299,7 +299,7 @@ const CONTAINER_OPTIONS = [
                     <h3 className={`text-lg font-bold flex items-center gap-2 ${
                         isLocalDelivery ? 'text-black' : isOcean ? 'text-blue-900' : 'text-indigo-900'
                     }`}>
-                        {isDynamicPalletMode ? <><Box size={20}/> Datos de los Pallets</> : 'Datos Finales'}
+                        {isDynamicPalletMode ? <><Box size={20}/> Pallet Data</> : 'Final Data'}
                     </h3>
                     <button onClick={() => setShowModal(false)}><X size={20} className="text-gray-400 hover:text-red-500"/></button>
                 </div>
@@ -311,12 +311,12 @@ const CONTAINER_OPTIONS = [
                         ? 'bg-blue-50 border-blue-100 text-blue-800' 
                         : 'bg-indigo-50 border-indigo-100 text-indigo-800'
                 }`}>
-                    <p>
-                        {isDynamicPalletMode ? <Truck size={14} className="inline mr-1"/> : '📦 '} 
-                        Estás preparando <strong>{request.packages?.length} paquetes</strong> para {
-                            isLocalDelivery ? 'AURA LOGISTICS' : isOcean ? 'ENVÍO MARÍTIMO (OCEAN)' : 'ENVÍO INTERNACIONAL (AIR)'
-                        }. Arma los pallets en bodega e ingresa las medidas de cada uno.
-                    </p>
+                   <p>
+                  {isDynamicPalletMode ? <Truck size={14} className="inline mr-1"/> : '📦 '} 
+                   You are preparing <strong>{request.packages?.length} packages</strong> for {
+                   isLocalDelivery ? 'AURA LOGISTICS' : isOcean ? 'OCEAN SHIPMENT' : 'INTERNATIONAL SHIPMENT (AIR)'
+                   }. Build pallets in warehouse and enter measurements for each one.
+                 </p>
                 </div>
 
                 {/* 💰 CAMPO DE VALOR DECLARADO TOTAL (SIEMPRE VISIBLE) */}
@@ -383,7 +383,7 @@ const CONTAINER_OPTIONS = [
                                 : 'border-gray-300 text-gray-500 hover:border-black hover:text-black'
                             }`}
                         >
-                            <Plus size={16} /> Agregar Pallet / Bulto Adicional
+                            <Plus size={16} /> Add Additional Pallet / Bundle
                         </button>
                     </div>
                 ) : (
@@ -466,7 +466,7 @@ const CONTAINER_OPTIONS = [
                             <input type="checkbox" checked={specialCharges.eei} onChange={() => toggleCharge('eei')} className="w-4 h-4 text-blue-600 rounded shrink-0" />
                             <div className="flex-1">
                                 <div className="flex items-center justify-between">
-                                    <p className="text-[10px] font-bold text-gray-800 uppercase leading-tight">Trámite EEI (Aduana)</p>
+                                    <p className="text-[10px] font-bold text-gray-800 uppercase leading-tight">EEI Filing (Customs)</p>
                                     {specialCharges.eei && parseFloat(finalValue || '0') > 2500 && (
                                         <span className="text-[8px] bg-blue-500 text-white px-1.5 py-0.5 rounded uppercase font-bold tracking-wider">Auto</span>
                                     )}
@@ -525,7 +525,7 @@ const CONTAINER_OPTIONS = [
                     
                 >
                     {isSaving ? <Loader2 className="animate-spin"/> : (isDynamicPalletMode ? <Truck size={18}/> : <Plane size={18}/>)}
-                    Guardar y Habilitar Pago
+                    Save and Enable Payment
                 </button>
             </div>
         </div>
