@@ -167,7 +167,7 @@ useEffect(() => {
                 className="group bg-white p-5 rounded-xl border border-gray-200 hover:border-green-500 hover:shadow-md transition-all cursor-pointer block relative">
                 <div className="flex items-start justify-between">
                   <div>
-                    <h3 className="text-base font-bold text-gmc-gris-oscuro group-hover:text-green-600 transition-colors">Control de Referidos</h3>
+                    <h3 className="text-base font-bold text-gmc-gris-oscuro group-hover:text-green-600 transition-colors">Referral Control</h3>
                     <p className="text-xs text-gray-500 mt-1 font-medium">Monitor the $25 rewards referral program.</p>
                   </div>
                   <div className="bg-green-50 p-2 rounded-lg text-green-600 group-hover:bg-green-100 transition-colors border border-green-100">
@@ -201,7 +201,7 @@ useEffect(() => {
                 className="group bg-white p-5 rounded-xl border border-gray-200 hover:border-yellow-500 hover:shadow-md transition-all cursor-pointer block relative">
                 <div className="flex items-start justify-between">
                   <div>
-                    <h3 className="text-base font-bold text-gmc-gris-oscuro group-hover:text-yellow-600 transition-colors">Catálogo Amazon</h3>
+                    <h3 className="text-base font-bold text-gmc-gris-oscuro group-hover:text-yellow-600 transition-colors">Amazon Catalog</h3>
                     <p className="text-xs text-gray-500 mt-1 font-medium">Manage Miami Locker catalog products.</p>
                   </div>
                   <div className="bg-yellow-50 p-2 rounded-lg text-yellow-600 group-hover:bg-yellow-100 transition-colors border border-yellow-100">
@@ -221,8 +221,8 @@ useEffect(() => {
 
                 <div className="flex items-start justify-between">
                   <div>
-                    <h3 className="text-base font-bold text-gmc-gris-oscuro group-hover:text-blue-600 transition-colors">Tareas del Buzón</h3>
-                    <p className="text-xs text-gray-500 mt-1 font-medium">Escanear PDFs y destruir sobres.</p>
+                    <h3 className="text-base font-bold text-gmc-gris-oscuro group-hover:text-blue-600 transition-colors">Mailbox Tasks</h3>
+                    <p className="text-xs text-gray-500 mt-1 font-medium">Scan PDFs and shred envelopes.</p>
                   </div>
                   <div className="bg-blue-50 p-2 rounded-lg text-blue-600 group-hover:bg-blue-100 transition-colors border border-blue-100">
                     <FileSearch size={20} strokeWidth={2} />
@@ -267,7 +267,7 @@ useEffect(() => {
                 className="group bg-white p-5 rounded-xl border border-gray-200 hover:border-slate-600 hover:shadow-md transition-all cursor-pointer block">
                 <div className="flex items-start justify-between">
                   <div>
-                    <h3 className="text-base font-bold text-gmc-gris-oscuro group-hover:text-slate-700 transition-colors">Archivo Maestro</h3>
+                    <h3 className="text-base font-bold text-gmc-gris-oscuro group-hover:text-slate-700 transition-colors">Master Archive</h3>
                     <p className="text-xs text-gray-500 mt-1 font-medium">Control and shredding of correspondence.</p>
                   </div>
                   <div className="bg-slate-100 p-2 rounded-lg text-slate-600 group-hover:bg-slate-200 transition-colors border border-slate-200">
@@ -354,7 +354,7 @@ useEffect(() => {
 
                 <div className="flex items-start justify-between">
                   <div>
-                    <h3 className="text-base font-bold text-gmc-gris-oscuro group-hover:text-purple-600 transition-colors">Base de Clientes</h3>
+                    <h3 className="text-base font-bold text-gmc-gris-oscuro group-hover:text-purple-600 transition-colors">Client Database</h3>
                     <p className="text-xs text-gray-500 mt-1 font-medium">View list and accounts.</p>
                   </div>
                   <div className="bg-purple-50 p-2 rounded-lg text-purple-600 group-hover:bg-purple-100 transition-colors border border-purple-100">
@@ -455,7 +455,7 @@ useEffect(() => {
                    <div className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors border border-transparent hover:border-gray-100">
                       <div className="w-8 h-8 rounded-full bg-gmc-gris-oscuro text-gmc-dorado-principal flex items-center justify-center text-xs font-bold shadow-sm">CP</div>
                       <div>
-                        <p className="text-sm font-bold text-gmc-gris-oscuro">Chofer Principal</p>
+                        <p className="text-sm font-bold text-gmc-gris-oscuro">Main Driver</p>
                         <p className="text-xs text-gray-500 font-medium">On route: Miami Gardens</p>
                       </div>
                    </div>
