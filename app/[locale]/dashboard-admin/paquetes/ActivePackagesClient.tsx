@@ -96,8 +96,8 @@ export default function ActivePackagesClient({ allItems, currentLocale }: Packag
 
         <div className="flex flex-col md:flex-row justify-between items-end gap-4 mb-8">
             <div>
-                <h1 className="text-3xl font-bold text-gmc-gris-oscuro font-garamond">Inventario & Despachos</h1>
-                <p className="text-gray-500 mt-1">Gestiona la entrada y salida de mercancía.</p>
+                <h1 className="text-3xl font-bold text-gmc-gris-oscuro font-garamond">Inventory & Dispatches</h1>
+                <p className="text-gray-500 mt-1">Manage incoming and outgoing shipments.</p>
             </div>
             
             <div className="flex flex-col md:flex-row items-end gap-3 w-full md:w-auto">
@@ -127,7 +127,7 @@ export default function ActivePackagesClient({ allItems, currentLocale }: Packag
                     onClick={() => router.push(`/${currentLocale}/dashboard-admin/paquetes`)}
                     className="flex items-center gap-1 text-red-500 hover:text-red-800 bg-red-100 hover:bg-red-200 px-3 py-1.5 rounded-lg transition-colors text-xs font-bold"
                 >
-                    <X size={14} /> Quitar Filtro
+                    <X size={14} /> Remove Filter
                 </button>
             </div>
         )}
@@ -140,13 +140,13 @@ export default function ActivePackagesClient({ allItems, currentLocale }: Packag
                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
                         <span className="relative inline-flex rounded-full h-3 w-3 bg-purple-600"></span>
                     </span>
-                    Mostrando únicamente pre-alertas entrantes esperando recepción ({displayItems.length})
+                   Showing only incoming pre-alerts awaiting reception ({displayItems.length})
                 </div>
                 <button 
                     onClick={() => router.push(`/${currentLocale}/dashboard-admin/paquetes`)}
                     className="flex items-center gap-1 text-purple-600 hover:text-purple-800 bg-purple-100 hover:bg-purple-200 px-3 py-1.5 rounded-lg transition-colors text-xs font-bold"
                 >
-                    <X size={14} /> Quitar Filtro
+                    <X size={14} /> Remove Filter
                 </button>
             </div>
         )}
@@ -158,11 +158,11 @@ export default function ActivePackagesClient({ allItems, currentLocale }: Packag
                         <tr>
                             <th className="p-4">Tracking & ID</th>
                             <th className="p-4">Cliente</th>
-                            <th className="p-4">Descripción</th>
-                            <th className="p-4 text-center">Info Envío / Peso</th>
+                            <th className="p-4">Description</th>
+                            <th className="p-4 text-center">Shipment Info / Weight</th>
                             <th className="p-4 text-right">Total</th>
                             <th className="p-4 text-center">Estado</th>
-                            <th className="p-4 text-right">Acción</th>
+                            <th className="p-4 text-right">Action</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
@@ -263,10 +263,10 @@ export default function ActivePackagesClient({ allItems, currentLocale }: Packag
                                                     ? 'text-emerald-700 bg-emerald-100' // Verde para Paquetes Individuales (Zapatos, Ropa)
                                                     : 'text-purple-700 bg-purple-100' // Morado para Consolidación Real
                                             }`}>
-                                                {pkg.description || 'Consolidación'}
+                                                {pkg.description || 'Consolidation'}
                                             </span>
                                         ) : (
-                                            pkg.description || 'Sin descripción'
+                                            pkg.description || 'No description'
                                         )}
                                         <div className="text-xs text-gray-400 flex items-center gap-1 mt-1">
                                             <Calendar size={10} />
@@ -283,7 +283,7 @@ export default function ActivePackagesClient({ allItems, currentLocale }: Packag
                                                 <div className="flex items-center gap-1 mt-1">
                                                     <Truck size={10} className="text-gray-400"/>
                                                     <span className="text-[10px] font-bold text-gray-500 uppercase truncate max-w-[140px]">
-                                                        {pkg.courierService || 'Estándar'}
+                                                        {pkg.courierService || 'Standard'}
                                                     </span>
                                                 </div>
                                             </div>
@@ -293,13 +293,13 @@ export default function ActivePackagesClient({ allItems, currentLocale }: Packag
                                                     <Scale size={14} className="text-gray-400"/> {pkg.weightLbs || 0} lbs
                                                  </div>
                                                  <span className="text-[10px] font-bold text-green-700 bg-green-50 px-2 py-0.5 rounded border border-green-100">
-                                                     RETIRARÁ EN PERSONA
+                                                     PICKUP IN PERSON
                                                  </span>
                                             </div>
                                         ) : isPreAlert ? (
                                             <div className="text-center opacity-70">
                                                 <div className="text-[10px] font-bold text-purple-600 bg-purple-50 px-2 py-0.5 rounded border border-purple-100 uppercase inline-flex items-center gap-1">
-                                                    <Truck size={12} /> EN TRÁNSITO
+                                                    <Truck size={12} /> IN TRANSIT
                                                 </div>
                                             </div>
                                         ) : isProcessing ? (
@@ -307,7 +307,7 @@ export default function ActivePackagesClient({ allItems, currentLocale }: Packag
                                                 <div className="text-sm font-bold text-orange-600 flex items-center justify-center gap-1 animate-pulse">
                                                     <Scale size={14} /> 0 lbs
                                                 </div>
-                                                <div className="text-[10px] text-orange-400 font-bold">REQUIERE ACCIÓN</div>
+                                                <div className="text-[10px] text-orange-400 font-bold">ACTION REQUIRED</div>
                                             </div>
                                         ) : (
                                             <div className="text-center opacity-60">
@@ -329,27 +329,27 @@ export default function ActivePackagesClient({ allItems, currentLocale }: Packag
                                     <td className="p-4 text-center">
                                         {pkg.status === 'ENVIADO' ? (
                                             <span className="text-[10px] font-bold px-2 py-1 rounded-full border bg-blue-100 text-blue-800 border-blue-200 shadow-sm flex items-center justify-center gap-1">
-                                                <CheckCircle size={10}/> ENVIADO
+                                                <CheckCircle size={10}/> SHIPPED
                                             </span>
                                         ) : isReadyToShip ? (
                                             <span className="text-[10px] font-bold px-2 py-1 rounded-full border bg-green-100 text-green-800 border-green-200 animate-pulse flex items-center justify-center gap-1">
-                                                <CheckCircle size={10}/> LISTO PARA ENVÍO
+                                                <CheckCircle size={10}/> READY TO SHIP
                                             </span>
                                         ) : isStorePickup ? (
                                             <span className="text-[10px] font-bold px-2 py-1 rounded-full border bg-emerald-100 text-emerald-800 border-emerald-200 flex items-center justify-center gap-1 shadow-sm animate-pulse">
-                                                <MapPin size={10}/> ENTREGAR EN TIENDA
+                                                <MapPin size={10}/> DELIVER IN STORE
                                             </span>
                                         ) : isConsolidatedBox ? (
                                             <span className="text-[10px] font-bold px-2 py-1 rounded-full border bg-purple-100 text-purple-800 border-purple-200 flex items-center justify-center gap-1 shadow-sm">
-                                                <Box size={10}/> CONSOLIDADO
+                                                <Box size={10}/> CONSOLIDATED
                                             </span>
                                         ) : isPreAlert ? (
                                             <span className="text-[10px] font-bold px-2 py-1 rounded-full border bg-purple-100 text-purple-800 border-purple-200 animate-pulse flex items-center justify-center gap-1 shadow-sm">
-                                                <AlertCircle size={10}/> PRE ALERTA
+                                                <AlertCircle size={10}/> PRE ALERT
                                             </span>
                                         ) : isProcessing ? (
                                             <span className="text-[10px] font-bold px-2 py-1 rounded-full border bg-orange-100 text-orange-700 border-orange-200 flex items-center justify-center gap-1">
-                                                <Ruler size={10}/> POR MEDIR
+                                                <Ruler size={10}/> PENDING MEASUREMENT
                                             </span>
                                         ) : (
                                             <span className="text-[10px] font-bold px-2 py-1 rounded-full border bg-gray-50 text-gray-600 border-gray-200">
@@ -394,7 +394,7 @@ export default function ActivePackagesClient({ allItems, currentLocale }: Packag
                     <div className="bg-emerald-50 p-5 border-b border-emerald-100 flex justify-between items-center">
                         <h3 className="font-bold text-emerald-800 flex items-center gap-2 text-lg">
                             <MapPin className="text-emerald-600" size={20}/>
-                            Entregar en Tienda
+                            Deliver in Store
                         </h3>
                         <button onClick={() => setIsDeliverModalOpen(false)} className="text-emerald-400 hover:text-emerald-600 transition-colors">
                             <X size={24} />
@@ -404,18 +404,18 @@ export default function ActivePackagesClient({ allItems, currentLocale }: Packag
                     <div className="p-6">
                         <div className="text-center mb-5">
                             <p className="text-sm text-gray-500 leading-relaxed mb-4">
-                                Estás a punto de marcar este paquete como <strong>ENTREGADO</strong> al cliente en la bodega.
+                                Estás a punto de marcar este paquete como <strong>DELIVERED</strong> to the client at the warehouse.
                             </p>
                             <div className="bg-gray-50 p-3 rounded-lg border border-gray-200 text-left">
                                 <label className="block text-xs font-bold text-gray-400 uppercase mb-1">
-                                    Entregado Por (Personal):
+                                    Delivered By (Staff):
                                 </label>
                                 <div className="relative">
                                     <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16}/>
                                     <input 
                                         type="text" 
                                         autoFocus
-                                        placeholder="Tu nombre..." 
+                                        placeholder="Your name..." 
                                         className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
                                         value={staffName}
                                         onChange={(e) => setStaffName(e.target.value)}
