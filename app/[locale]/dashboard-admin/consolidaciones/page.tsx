@@ -99,7 +99,7 @@ export default async function ConsolidacionesPage({
                 </Link>
                 <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
                     <PackageOpen className="text-blue-600" />
-                    Gestión de Consolidaciones
+                    Consolidation Management
                 </h1>
                 <p className="text-gray-500 mt-1">Ciclo Activo: Solicitud ➝ Medidas ➝ Pago ➝ Despacho.</p>
             </div>
@@ -154,9 +154,9 @@ export default async function ConsolidacionesPage({
                                             {isLocalDelivery ? (
                                                 <span className="text-[10px] font-bold bg-black text-white px-2 py-0.5 rounded flex items-center gap-1"><MapPin size={10}/> LOCAL</span>
                                             ) : isOcean ? (
-                                                <span className="text-[10px] font-bold bg-blue-600 text-white px-2 py-0.5 rounded flex items-center gap-1"><Ship size={10}/> MARÍTIMO</span>
+                                                <span className="text-[10px] font-bold bg-blue-600 text-white px-2 py-0.5 rounded flex items-center gap-1"><Ship size={10}/> OCEAN</span>
                                             ) : (
-                                                <span className="text-[10px] font-bold bg-purple-100 text-purple-700 px-2 py-0.5 rounded flex items-center gap-1"><Plane size={10}/> AÉREO</span>
+                                                <span className="text-[10px] font-bold bg-purple-100 text-purple-700 px-2 py-0.5 rounded flex items-center gap-1"><Plane size={10}/> AIR</span>
                                             )}
                                         </div>
                                         <h3 className="font-bold text-gray-800 line-clamp-1">{envio.user?.name}</h3>
@@ -209,11 +209,11 @@ export default async function ConsolidacionesPage({
                                                 </span>
                                             ) : isOcean ? (
                                                 <span className="bg-blue-600 text-white px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide flex items-center gap-1 border border-blue-700">
-                                                    <Ship size={10}/> MARÍTIMO
+                                                    <Ship size={10}/> OCEAN
                                                 </span>
                                             ) : (
                                                 <span className="bg-purple-100 text-purple-800 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide flex items-center gap-1 border border-purple-200">
-                                                    <Plane size={10}/> INT. / AÉREO
+                                                    <Plane size={10}/> INT. / AIR
                                                 </span>
                                             )}
 
@@ -250,7 +250,7 @@ export default async function ConsolidacionesPage({
             ) : (
                 <div className="text-center py-8 opacity-50">
                     <CheckCircle className="mx-auto text-gray-300 mb-2"/>
-                    <p className="text-sm text-gray-400">No hay envíos pagados listos para despachar.</p>
+                    <p className="text-sm text-gray-400"> No paid shipments ready to dispatch.</p>
                 </div>
             )}
         </div>
