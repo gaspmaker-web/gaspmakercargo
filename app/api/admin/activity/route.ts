@@ -46,15 +46,15 @@ export async function GET() {
       ...recentPackages.map(p => ({
         id: p.id,
         type: 'PACKAGE',
-        title: `Paquete creado — ${p.gmcTrackingNumber}`,
-        subtitle: p.user?.name || 'Cliente',
+        title: `Package created — ${p.gmcTrackingNumber}`,
+        subtitle: p.user?.name || 'Client',
         date: p.createdAt,
         color: 'blue',
       })),
       ...recentConsolidations.map(c => ({
         id: c.id,
         type: 'CONSOLIDATION',
-        title: `Consolidación ${c.serviceType || ''} — ${c.gmcShipmentNumber}`,
+        title: `Consolidation ${c.serviceType || ''} — ${c.gmcShipmentNumber}`,
         subtitle: c.status || '',
         date: c.createdAt,
         color: 'purple',
