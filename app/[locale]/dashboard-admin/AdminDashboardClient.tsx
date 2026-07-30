@@ -241,8 +241,8 @@ useEffect(() => {
 
                 <div className="flex items-start justify-between">
                   <div>
-                    <h3 className="text-base font-bold text-gmc-gris-oscuro group-hover:text-red-600 transition-colors">Buzones & KYC</h3>
-                    <p className="text-xs text-gray-500 mt-1 font-medium">Aprobar Formas 1583 y asignar Suites.</p>
+                   <h3 className="text-base font-bold text-gmc-gris-oscuro group-hover:text-red-600 transition-colors">Mailboxes & KYC</h3>
+                   <p className="text-xs text-gray-500 mt-1 font-medium">Approve Form 1583 and assign Suites.</p>
                   </div>
                   <div className="bg-red-50 p-2 rounded-lg text-red-600 group-hover:bg-red-100 transition-colors border border-red-100">
                     <ShieldAlert size={20} strokeWidth={2} />
