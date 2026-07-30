@@ -101,7 +101,7 @@ export default async function ConsolidacionesPage({
                     <PackageOpen className="text-blue-600" />
                     Consolidation Management
                 </h1>
-                <p className="text-gray-500 mt-1">Pago ➝ Despacho.	Active Cycle: Request ➝ Measurements ➝ Payment ➝ Dispatch.</p>
+               <p className="text-gray-500 mt-1">Active Cycle: Request ➝ Measurements ➝ Payment ➝ Dispatch.</p>
             </div>
             <SearchConsolidations />
         </div>
