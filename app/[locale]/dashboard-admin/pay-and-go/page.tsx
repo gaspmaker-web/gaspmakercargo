@@ -17,7 +17,7 @@ export default async function PayAndGoPage() {
     <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
       <div className="mb-8">
         <h1 className="text-3xl font-black text-gray-900 uppercase tracking-tight italic">Drop & Go</h1>
-        <p className="text-gray-500">Recepción rápida y cobro en mostrador para clientes sin cuenta.</p>
+        <p className="text-gray-500">Quick reception and counter billing for clients without an account.</p>
       </div>
       
       <PayAndGoClient />

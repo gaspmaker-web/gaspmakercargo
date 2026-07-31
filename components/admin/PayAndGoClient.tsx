@@ -118,8 +118,8 @@ export default function PayAndGoClient() {
   };
 
   const onSubmit = async (data: any) => {
-    if (!selectedRate) return alert("Selecciona una tarifa de envío primero.");
-    if (data.customsItems.length === 0) return alert("Debes agregar al menos 1 artículo en la Declaración de Aduanas.");
+    if (!selectedRate) return alert("Please select a shipping rate first.");
+    if (data.customsItems.length === 0) return alert("You must add at least 1 item in the Customs Declaration.");
 
     setIsSubmitting(true);
     try {
@@ -171,7 +171,7 @@ export default function PayAndGoClient() {
 
   const handleBuyLabel = async () => { 
     const pkgId = successData?.packageId || successData?.package?.id || successData?.id;
-    if (!pkgId) return alert("Error: No se encontró el ID del paquete en la respuesta.");
+    if (!pkgId) return alert("Error: Package ID not found in response.");
     
     if (!confirm(`¿Comprar Label para el tracking ${successData.tracking}?`)) return; 
     
@@ -339,8 +339,8 @@ export default function PayAndGoClient() {
     return (
       <div className="bg-white rounded-2xl p-10 text-center shadow-sm max-w-2xl mx-auto border-2 border-green-500 animate-in fade-in">
         <CheckCircle size={80} className="mx-auto text-green-500 mb-4" />
-        <h2 className="text-3xl font-black text-gray-800 mb-2">¡Envío Procesado!</h2>
-        <p className="text-gray-600 mb-6">El cliente y el paquete han sido registrados.</p>
+        <h2 className="text-3xl font-black text-gray-800 mb-2">Shipment Processed!</h2>
+        <p className="text-gray-600 mb-6">The client and package have been registered.</p>
         
         <div className="bg-gray-50 rounded-xl p-6 text-left space-y-3 mb-6 font-mono text-sm border border-gray-200">
           <p><strong>Tracking Oficial:</strong> <span className="text-blue-600 font-bold text-lg">{successData.tracking}</span></p>
@@ -352,7 +352,7 @@ export default function PayAndGoClient() {
            <div className="mb-6 bg-red-50 text-red-600 border border-red-200 p-5 rounded-xl text-sm font-bold flex flex-col items-center justify-center gap-4 shadow-sm">
               <div className="flex items-center gap-2 text-center">
                  <AlertTriangle size={20} className="shrink-0" /> 
-                 No se pudo generar el Label automático en EasyPost (Posible error de saldo o dirección).
+                 Could not generate automatic label in EasyPost (Possible balance or address error).
               </div>
               
               <button 
@@ -391,18 +391,18 @@ export default function PayAndGoClient() {
       {/* COLUMNA 1: CLIENTE Y DESTINO */}
       <div className="space-y-6">
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
-          <h2 className="text-sm font-bold text-blue-800 uppercase tracking-widest mb-4 flex items-center gap-2 border-b pb-2"><User size={18}/> 1. Datos del Cliente (Remitente)</h2>
+          <h2 className="text-sm font-bold text-blue-800 uppercase tracking-widest mb-4 flex items-center gap-2 border-b pb-2"><User size={18}/> 1. Client Data (Sender)</h2>
           <div className="space-y-4">
             <div>
-              <label className="text-xs font-bold text-gray-500 mb-1 block truncate">Nombre Completo</label>
+              <label className="text-xs font-bold text-gray-500 mb-1 block truncate">Full Name</label>
               <input {...register("senderName", { required: true })} className="w-full h-11 px-3 border border-gray-300 rounded-lg focus:border-blue-500 outline-none" placeholder="Ej: Juan Pérez" />
             </div>
             <div>
-              <label className="text-xs font-bold text-gray-500 mb-1 block truncate">Correo Electrónico (Se creará cuenta)</label>
+              <label className="text-xs font-bold text-gray-500 mb-1 block truncate">Email (Account will be created)</label>
               <input type="email" {...register("senderEmail", { required: true })} className="w-full h-11 px-3 border border-gray-300 rounded-lg focus:border-blue-500 outline-none" placeholder="juan@email.com" />
             </div>
             <div>
-              <label className="text-xs font-bold text-gray-500 mb-1 block truncate">Teléfono</label>
+              <label className="text-xs font-bold text-gray-500 mb-1 block truncate">Phone</label>
               <div className="flex gap-2">
                 <select defaultValue="+1" {...register("senderPhoneCode")} className="w-1/3 h-11 px-2 border border-gray-300 rounded-lg focus:border-blue-500 outline-none bg-white text-xs font-bold text-gray-700">
                   {sortedCountries.map((country) => (
@@ -418,7 +418,7 @@ export default function PayAndGoClient() {
         </div>
 
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
-          <h2 className="text-sm font-bold text-orange-600 uppercase tracking-widest mb-4 flex items-center gap-2 border-b pb-2"><MapPin size={18}/> 2. Destinatario</h2>
+          <h2 className="text-sm font-bold text-orange-600 uppercase tracking-widest mb-4 flex items-center gap-2 border-b pb-2"><MapPin size={18}/> 2. Recipient</h2>
           <div className="space-y-4">
             <div>
               <label className="text-xs font-bold text-gray-500 mb-1 block truncate">Nombre de quien recibe</label>
@@ -426,9 +426,9 @@ export default function PayAndGoClient() {
             </div>
             
             <div>
-              <label className="text-xs font-bold text-gray-500 mb-1 block truncate">País</label>
+              <label className="text-xs font-bold text-gray-500 mb-1 block truncate">Country</label>
               <select {...register("receiverCountry", { required: true })} className="w-full h-11 px-3 border border-gray-300 rounded-lg focus:border-orange-500 outline-none font-bold">
-                  <option value="" disabled>Seleccione un país</option>
+                  <option value="" disabled>Select a country</option>
                   {sortedCountries.map((country) => (
                       <option key={`dest-${country.code}`} value={country.code.toUpperCase()}>{country.name}</option>
                   ))}
@@ -436,7 +436,7 @@ export default function PayAndGoClient() {
             </div>
 
             <div>
-              <label className="text-xs font-bold text-gray-500 mb-1 block truncate">Dirección (Calle y Casa/Apto)</label>
+              <label className="text-xs font-bold text-gray-500 mb-1 block truncate">Address (Street and House/Apt)</label>
               <input {...register("receiverAddress", { required: true })} className="w-full h-11 px-3 border border-gray-300 rounded-lg focus:border-orange-500 outline-none" placeholder="Ej: 123 Main St, Apt 4" />
             </div>
 
@@ -462,7 +462,7 @@ export default function PayAndGoClient() {
             </div>
 
             <div>
-              <label className="text-xs font-bold text-gray-500 mb-1 block truncate">Código Postal (ZIP Code)</label>
+              <label className="text-xs font-bold text-gray-500 mb-1 block truncate">ZIP Code</label>
               <input {...register("receiverZip", { required: true })} className="w-full h-11 px-3 border border-gray-300 rounded-lg focus:border-orange-500 outline-none" placeholder="Ej: 33122" />
             </div>
 
@@ -472,12 +472,12 @@ export default function PayAndGoClient() {
 
       {/* COLUMNA 2: PAQUETE Y ADUANAS */}
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
-        <h2 className="text-sm font-bold text-gray-800 uppercase tracking-widest mb-4 flex items-center gap-2 border-b pb-2"><Box size={18} className="text-gmc-dorado-principal"/> 3. Detalles de la Caja</h2>
+        <h2 className="text-sm font-bold text-gray-800 uppercase tracking-widest mb-4 flex items-center gap-2 border-b pb-2"><Box size={18} className="text-gmc-dorado-principal"/> 3. Box Details</h2>
         
         <div className="space-y-5">
           <div className="grid grid-cols-2 gap-4 items-end">
             <div>
-              <label className="text-xs font-bold text-gray-500 mb-1 block truncate">Peso Total</label>
+              <label className="text-xs font-bold text-gray-500 mb-1 block truncate">Total Weight</label>
               <div className="flex">
                 <input type="number" step="0.01" {...register("weight", { required: true })} className="w-2/3 h-12 px-3 border-y-2 border-l-2 border-gray-200 rounded-l-xl focus:border-blue-500 outline-none text-xl font-bold text-center" placeholder="0.00" />
                 <select {...register("weightUnit")} className="w-1/3 h-12 border-2 border-gray-200 rounded-r-xl bg-gray-50 text-gray-700 font-bold focus:border-blue-500 outline-none text-center cursor-pointer">
@@ -494,29 +494,29 @@ export default function PayAndGoClient() {
 
           <div className="grid grid-cols-3 gap-2">
             <div>
-              <label className="text-[10px] font-bold text-gray-400 mb-1 block truncate">Largo (L)</label>
+              <label className="text-[10px] font-bold text-gray-400 mb-1 block truncate">Length (L)</label>
               <input type="number" {...register("length")} className="w-full p-2 border border-gray-300 rounded-lg text-center"/>
             </div>
             <div>
-              <label className="text-[10px] font-bold text-gray-400 mb-1 block truncate">Ancho (W)</label>
+              <label className="text-[10px] font-bold text-gray-400 mb-1 block truncate">Width (W)</label>
               <input type="number" {...register("width")} className="w-full p-2 border border-gray-300 rounded-lg text-center"/>
             </div>
             <div>
-              <label className="text-[10px] font-bold text-gray-400 mb-1 block truncate">Alto (H)</label>
+              <label className="text-[10px] font-bold text-gray-400 mb-1 block truncate">Height (H)</label>
               <input type="number" {...register("height")} className="w-full p-2 border border-gray-300 rounded-lg text-center"/>
             </div>
           </div>
 
           {/* 🔥 FOTO OPCIONAL 🔥 */}
           <div>
-            <label className="text-xs font-bold text-gray-500 mb-2 block">Foto en Mostrador (Opcional)</label>
+            <label className="text-xs font-bold text-gray-500 mb-2 block">Counter Photo (Optional)</label>
             <label className={`relative w-full h-28 rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-2 cursor-pointer overflow-hidden transition-all ${photoUrl ? 'border-green-500 bg-green-50' : 'border-gray-300 bg-gray-50 hover:bg-gray-100'}`}>
                 {photoUrl ? (
                     <Image src={photoUrl} alt="Evidencia" fill className="object-cover opacity-80" />
                 ) : (
                     <>
                         {isUploading ? <Loader2 className="animate-spin text-blue-600" size={24}/> : <Camera size={24} className="text-gray-400"/>}
-                        <span className="text-xs font-bold text-gray-500">{isUploading ? 'Subiendo...' : 'Tomar Foto'}</span>
+                        <span className="text-xs font-bold text-gray-500">{isUploading ? 'Uploading...' : '	Take Photo'}</span>
                     </>
                 )}
                 <input type="file" accept="image/*" capture="environment" className="hidden" onChange={handlePhotoUpload} disabled={isUploading}/>
@@ -525,26 +525,26 @@ export default function PayAndGoClient() {
 
           <div className="mt-6 pt-6 border-t border-gray-200">
             <h3 className="text-sm font-bold text-indigo-800 uppercase mb-4 flex items-center gap-2">
-              <Globe size={18}/> Declaración de Aduanas
+              <Globe size={18}/> Customs Declaration
             </h3>
             
             <div className="mb-4">
-              <label className="text-xs font-bold text-gray-500 mb-1 block truncate">Tipo de Contenido (Contents Type)</label>
-              <select {...register("contentType")} className="w-full h-11 px-3 border border-gray-300 rounded-lg focus:border-indigo-500 outline-none font-bold text-sm bg-indigo-50">
-                <option value="MERCHANDISE">Mercancía (Merchandise)</option>
-                <option value="GIFT">Regalo (Gift)</option>
-                <option value="DOCUMENTS">Documentos (Documents)</option>
-                <option value="SAMPLE">Muestra Comercial (Sample)</option>
-                <option value="RETURNED_GOODS">Devolución (Returned Goods)</option>
-                <option value="OTHER">Otro (Other)</option>
-              </select>
+           <label className="text-xs font-bold text-gray-500 mb-1 block truncate">Contents Type</label>
+            <select {...register("contentType")} className="w-full h-11 px-3 border border-gray-300 rounded-lg focus:border-indigo-500 outline-none font-bold text-sm bg-indigo-50">
+            <option value="MERCHANDISE">Merchandise</option>
+            <option value="GIFT">Gift</option>
+            <option value="DOCUMENTS">Documents</option>
+            <option value="SAMPLE">Commercial Sample</option>
+            <option value="RETURNED_GOODS">Returned Goods</option>
+            <option value="OTHER">Other</option>
+            </select>
             </div>
 
             <div className="space-y-4">
               {customsFields.map((item, index) => (
                 <div key={item.id} className="p-4 bg-gray-50 border border-gray-200 rounded-xl relative">
                   <div className="flex justify-between items-center mb-3">
-                    <span className="text-xs font-bold text-indigo-600 uppercase">Ítem #{index + 1}</span>
+                    <span className="text-xs font-bold text-indigo-600 uppercase">Item #{index + 1}</span>
                     {customsFields.length > 1 && (
                       <button type="button" onClick={() => removeCustoms(index)} className="text-red-400 hover:text-red-600">
                         <Trash2 size={16} />
@@ -554,7 +554,7 @@ export default function PayAndGoClient() {
                   
                   <div className="space-y-3">
                     <div>
-                      <label className="text-[10px] font-bold text-gray-500 mb-1 block truncate">Descripción Detallada (Inglés preferible)</label>
+                      <label className="text-[10px] font-bold text-gray-500 mb-1 block truncate">Detailed Description (English preferred)</label>
                       <input {...register(`customsItems.${index}.description`, { required: true })} className="w-full h-9 px-2 border border-gray-300 rounded-md text-sm" placeholder="Ej: Cotton T-Shirt" />
                     </div>
                     
@@ -581,7 +581,7 @@ export default function PayAndGoClient() {
                     </div>
 
                     <div>
-                      <label className="text-[10px] font-bold text-gray-500 mb-1 block truncate">País de Fabricación</label>
+                      <label className="text-[10px] font-bold text-gray-500 mb-1 block truncate">Country of Manufacture</label>
                       <select {...register(`customsItems.${index}.originCountry`)} className="w-full h-9 px-2 border border-gray-300 rounded-md text-sm outline-none focus:border-indigo-500">
                           {sortedCountries.map((country) => (
                               <option key={`mfg-${index}-${country.code}`} value={country.code.toUpperCase()}>{country.name}</option>
@@ -594,7 +594,7 @@ export default function PayAndGoClient() {
             </div>
 
             <button type="button" onClick={() => appendCustoms({ description: '', quantity: 1, value: 0, weight: 0, weightUnit: 'oz', originCountry: 'US' })} className="mt-3 w-full py-2 border-2 border-dashed border-indigo-200 text-indigo-600 rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-indigo-50 transition">
-              <Plus size={16} /> Agregar Otro Artículo
+              <Plus size={16} /> Add Another Item
             </button>
 
           </div>
@@ -604,10 +604,10 @@ export default function PayAndGoClient() {
 
       {/* COLUMNA 3: COTIZACIÓN Y PAGO */}
       <div className="bg-[#222b3c] rounded-2xl p-6 shadow-xl text-white flex flex-col">
-        <h2 className="text-sm font-bold text-[#EAD8B1] uppercase tracking-widest mb-4 flex items-center gap-2 border-b border-gray-600 pb-2"><DollarSign size={18}/> 4. Cotización y Cobro</h2>
+        <h2 className="text-sm font-bold text-[#EAD8B1] uppercase tracking-widest mb-4 flex items-center gap-2 border-b border-gray-600 pb-2"><DollarSign size={18}/> 4. Quote & Payment</h2>
         
         <button type="button" onClick={handleQuote} disabled={loadingRates || !watchWeight || !watchZip || !watchCity} className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition shadow-md flex justify-center items-center gap-2 mb-6 disabled:opacity-50">
-          {loadingRates ? <Loader2 className="animate-spin"/> : <Truck size={18}/>} Calcular Tarifas
+          {loadingRates ? <Loader2 className="animate-spin"/> : <Truck size={18}/>} 	Calculate Rates
         </button>
 
         {rates.length > 0 && (
@@ -656,20 +656,20 @@ export default function PayAndGoClient() {
         )}
 
         <div className="mt-auto pt-4 border-t border-gray-600">
-            <label className="text-xs font-bold text-gray-400 uppercase mb-3 block">Método de Pago en Mostrador</label>
+            <label className="text-xs font-bold text-gray-400 uppercase mb-3 block">Counter Payment Method</label>
             <div className="grid grid-cols-2 gap-3 mb-6">
                 <button type="button" onClick={() => setPaymentMethod('CASH')} className={`py-3 rounded-xl font-bold flex flex-col items-center justify-center gap-1 border-2 transition ${paymentMethod === 'CASH' ? 'border-green-500 bg-green-500/20 text-green-400' : 'border-gray-600 text-gray-400 hover:bg-gray-800'}`}>
-                    <Banknote size={24}/> Efectivo
+                    <Banknote size={24}/> Cash
                 </button>
                 <button type="button" onClick={() => setPaymentMethod('CARD')} className={`py-3 rounded-xl font-bold flex flex-col items-center justify-center gap-1 border-2 transition ${paymentMethod === 'CARD' ? 'border-blue-500 bg-blue-500/20 text-blue-400' : 'border-gray-600 text-gray-400 hover:bg-gray-800'}`}>
-                    <CreditCard size={24}/> Tarjeta (POS)
+                    <CreditCard size={24}/> Card (POS)
                 </button>
             </div>
 
             {/* 🔥 QUITÉ LA OBLIGACIÓN DE TENER LA FOTO PARA HABILITAR EL BOTÓN DE COBRAR 🔥 */}
             <button type="submit" disabled={isSubmitting || !selectedRate} className="w-full bg-[#EAD8B1] text-[#222b3c] py-4 rounded-xl text-lg font-black hover:brightness-110 shadow-lg flex justify-center items-center gap-2 disabled:opacity-50 disabled:grayscale transition">
                 {isSubmitting ? <Loader2 className="animate-spin"/> : <Save size={24}/>} 
-                {isSubmitting ? 'Procesando...' : `COBRAR $${finalTotalAmount.toFixed(2)}`}
+                {isSubmitting ? 'Processing...' : `CHARGE $${finalTotalAmount.toFixed(2)}`}
             </button>
         </div>
       </div>
