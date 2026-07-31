@@ -179,7 +179,7 @@ export default async function AdminReferralsPage({ params }: { params: { locale:
                       {u.referralCode ? (
                          <span className="bg-gray-100 px-2 py-1 rounded border border-gray-200">{u.referralCode}</span>
                       ) : (
-                         <span className="text-gray-400 text-xs italic">No generado</span>
+                         <span className="text-gray-400 text-xs italic">Not generated</span>
                       )}
                     </td>
 
