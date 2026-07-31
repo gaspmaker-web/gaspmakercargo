@@ -372,7 +372,7 @@ const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
                     <input 
                         id="userSearch"
                         type="text" 
-                        placeholder="Suite o Nombre" 
+                        placeholder="Suite or Name"
                         className="flex-1 w-full px-4 rounded-xl border-2 border-blue-200 focus:border-blue-500 outline-none text-base md:text-lg font-medium shadow-sm"
                         onKeyDown={(e) => e.key === 'Enter' && handleSearchUser(e)}
                     />
@@ -456,7 +456,7 @@ const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
 
                 <div className="w-full">
                     <label className="text-xs font-bold text-blue-600 uppercase tracking-wider mb-1 block">
-                        Valor Declarado Total ($)
+                        Total Declared Value ($)
                     </label>
                     <div className="relative w-full">
                         <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-500" size={18} />
@@ -474,7 +474,7 @@ const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
             {/* 🔥 DIMENSIONES 🔥 */}
             <details className="group bg-gray-50 rounded-xl border border-gray-200 overflow-hidden w-full">
                 <summary className="cursor-pointer p-3 font-bold text-xs text-gray-500 uppercase hover:bg-gray-100 flex items-center gap-2 select-none">
-                    <Ruler size={14} /> Opciones Avanzadas (Dimensiones)
+                    <Ruler size={14} /> Advanced Options (Dimensions)
                 </summary>
                 <div className="p-3 grid grid-cols-3 gap-2 animate-fadeIn w-full">
                     <input type="number" placeholder="L" {...register("length")} className="w-full p-2 border border-gray-300 rounded-lg text-center text-base h-11"/>

@@ -31,7 +31,7 @@ export default async function CreateShipmentPage(props: any) {
                 className="inline-flex items-center text-sm font-bold text-gray-500 hover:text-gmc-dorado-principal transition-colors active:scale-95 p-2 -ml-2"
             >
                 <ArrowLeft size={20} className="mr-2" />
-                Volver
+                Back
             </Link>
         </div>
 
