@@ -22,15 +22,15 @@ export default async function AdminShopperOrdersPage({ params }: { params: { loc
         <div className="mb-8">
           <h1 className="text-3xl font-black text-gray-900 flex items-center gap-3">
             <Receipt className="text-[#e6c200]" size={32} /> 
-            Solicitudes de Compra (Shopper)
+            Purchase Requests (Shopper)
           </h1>
-          <p className="text-gray-500 mt-2">Administra las cotizaciones y compras de tus clientes.</p>
+          <p className="text-gray-500 mt-2">Manage your clients' quotes and purchases.</p>
         </div>
 
         <div className="space-y-4">
           {orders.length === 0 ? (
             <div className="bg-white p-10 text-center rounded-2xl border border-gray-200">
-              <p className="text-gray-500 font-bold">No hay órdenes de Shopper todavía.</p>
+              <p className="text-gray-500 font-bold">No Shopper orders yet.</p>
             </div>
           ) : (
             orders.map((order) => (
@@ -89,21 +89,21 @@ export default async function AdminShopperOrdersPage({ params }: { params: { loc
                 <div className="p-6 border-t border-gray-100 bg-gray-50/30">
                   
                   <h4 className="font-bold text-gray-800 mb-4 flex items-center gap-2 uppercase text-xs tracking-wider">
-                    <Package size={16} /> Artículos Solicitados ({order.items.length})
+                    <Package size={16} /> Requested Items ({order.items.length})
                   </h4>
                   
                   <div className="space-y-3 mb-6">
                     {order.items.map(item => (
                       <div key={item.id} className="bg-white p-4 rounded-xl border border-gray-100 flex flex-col sm:flex-row justify-between sm:items-center gap-4">
                         <div>
-                          <p className="font-bold text-gray-900 text-sm">{item.quantity}x Artículo</p>
+                          <p className="font-bold text-gray-900 text-sm">{item.quantity}x Item</p>
                           <a href={item.productUrl} target="_blank" className="text-blue-600 hover:underline text-xs flex items-center gap-1 mt-1 truncate max-w-sm">
                             <ExternalLink size={12} /> {item.productUrl}
                           </a>
                           {item.details && <p className="text-xs text-gray-500 mt-2 bg-gray-50 p-2 rounded border border-gray-100">📝 {item.details}</p>}
                         </div>
                         <div className="sm:text-right bg-gray-50 sm:bg-transparent p-3 sm:p-0 rounded-lg">
-                          <p className="text-[10px] text-gray-400 font-bold uppercase">Precio Declarado</p>
+                          <p className="text-[10px] text-gray-400 font-bold uppercase">Declared Price</p>
                           <p className="font-black text-gray-900">${item.declaredPrice?.toFixed(2) || "0.00"}</p>
                         </div>
                       </div>
@@ -119,7 +119,7 @@ export default async function AdminShopperOrdersPage({ params }: { params: { loc
                         href={`/${params.locale}/dashboard-admin/compras/${order.id}`} 
                         className="w-full sm:w-auto bg-black text-white px-8 py-3 rounded-xl font-bold hover:bg-gray-800 transition-colors flex items-center justify-center gap-2 shadow-lg"
                       >
-                        Crear Cotización
+                        Create Quote
                       </Link>
                     )}
 
@@ -129,14 +129,14 @@ export default async function AdminShopperOrdersPage({ params }: { params: { loc
                         href={`/${params.locale}/dashboard-admin/compras/${order.id}`} 
                         className="w-full sm:w-auto bg-yellow-100 text-yellow-800 px-8 py-3 rounded-xl font-bold hover:bg-yellow-200 transition-colors flex items-center justify-center gap-2"
                       >
-                        <Edit size={18} /> Modificar Cotización
+                        <Edit size={18} /> Edit Quote
                       </Link>
                     )}
 
                     {/* CASO 3: Pagado -> Desaparece el botón de cotizar. Solo una alerta verde. */}
                     {order.status === "PAID" && (
                       <div className="w-full sm:w-auto bg-green-100 text-green-800 px-8 py-3 rounded-xl font-bold flex items-center justify-center gap-2 border border-green-200">
-                        <CheckCircle size={20} /> Pago Recibido - Listo para ir a comprar en Amazon
+                        <CheckCircle size={20} /> Payment Received - Ready to purchase on Amazon
                       </div>
                     )}
 

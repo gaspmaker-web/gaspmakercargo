@@ -72,13 +72,13 @@ export default function QuoteOrderPage({ params }: { params: { id: string, local
       });
 
       if (res.ok) {
-        alert("¡Cotización enviada al cliente con éxito!");
+        alert("Quote sent to client successfully!");
         router.push(`/${params.locale}/dashboard-admin/compras`);
       } else {
-        alert("Error al guardar la cotización. Revisa la terminal (VS Code) para ver el error exacto.");
+        alert("Error saving quote. Check terminal for exact error.");
       }
     } catch (error) {
-      alert("Error de conexión");
+      alert("Connection error");
     } finally {
       setIsLoading(false);
     }
@@ -95,7 +95,7 @@ export default function QuoteOrderPage({ params }: { params: { id: string, local
               <ArrowLeft size={20} />
             </button>
             <h1 className="text-2xl font-black flex items-center gap-2">
-              <Calculator className="text-[#e6c200]" /> Armar Cotización
+              <Calculator className="text-[#e6c200]" /> Build Quote
             </h1>
           </div>
         </div>
@@ -105,8 +105,8 @@ export default function QuoteOrderPage({ params }: { params: { id: string, local
           
           <div className="bg-blue-50 text-blue-900 p-5 rounded-2xl border border-blue-200 flex flex-col md:flex-row justify-between md:items-center gap-4">
             <div>
-              <label className="block font-black text-lg">🛒 Precio del Artículo (Subtotal) $</label>
-              <p className="text-sm text-blue-700 font-medium">Modifícalo si el precio en la tienda cambió.</p>
+              <label className="block font-black text-lg">🛒 Item Price (Subtotal) $</label>
+              <p className="text-sm text-blue-700 font-medium">Modify if the store price has changed.</p>
             </div>
             <input 
               type="number" 
@@ -129,7 +129,7 @@ export default function QuoteOrderPage({ params }: { params: { id: string, local
               />
             </div>
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">🚚 Envío Interno USA (Fijo) $</label>
+              <label className="block text-sm font-bold text-gray-700 mb-2">🚚 Internal USA Shipping (Fixed) $</label>
               <input 
                 type="number" 
                 step="0.01" 
@@ -154,7 +154,7 @@ export default function QuoteOrderPage({ params }: { params: { id: string, local
           {/* RESUMEN FINAL */}
           <div className="mt-8 border-t border-gray-200 pt-6 space-y-3">
             <div className="flex justify-between text-gray-500 text-sm">
-              <span>Subtotal de la Orden</span>
+              <span>Order Subtotal</span>
               <span>${subtotalBeforeStripe.toFixed(2)}</span>
             </div>
             <div className="flex justify-between text-red-500 text-sm font-bold items-center">
@@ -162,7 +162,7 @@ export default function QuoteOrderPage({ params }: { params: { id: string, local
               <span>+ ${stripeFee.toFixed(2)}</span>
             </div>
             <div className="flex justify-between items-center text-gray-900 text-2xl font-black mt-4 bg-gray-100 p-4 rounded-xl">
-              <span>TOTAL A PAGAR:</span>
+              <span>TOTAL TO PAY:</span>
               <span>${finalTotal.toFixed(2)}</span>
             </div>
           </div>
@@ -173,7 +173,7 @@ export default function QuoteOrderPage({ params }: { params: { id: string, local
             className="w-full mt-6 bg-[#e6c200] text-black font-black text-lg py-5 rounded-xl hover:bg-yellow-500 transition-transform active:scale-95 shadow-lg flex items-center justify-center gap-2"
           >
             {isLoading ? <Loader2 className="animate-spin" /> : <CheckCircle />}
-            {isLoading ? "Enviando al cliente..." : "Confirmar Cotización"}
+            {isLoading ? "Sending to client..." : "Confirm Quote"}
           </button>
         </div>
 
