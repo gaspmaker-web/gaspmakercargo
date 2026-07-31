@@ -76,8 +76,8 @@ export default async function AdminShopperOrdersPage({ params }: { params: { loc
                         order.status === "PAID" ? "text-green-600" :
                         order.status === "QUOTED" ? "text-yellow-600" : "text-gray-400"
                       }`}>
-                        {order.status === "PAID" ? "PAGO COMPLETADO" : 
-                         order.status === "QUOTED" ? "ESPERANDO PAGO" : "PENDIENTE COTIZAR"}
+                        {order.status === "PAID" ? "PAYMENT COMPLETED" : 
+                        order.status === "QUOTED" ? "AWAITING PAYMENT" : "PENDING QUOTE"}
                       </span>
                     </div>
                     {/* Flecha que gira sola al abrir el acordeón */}
