@@ -94,11 +94,11 @@ export default async function AdminReferralsPage({ params }: { params: { locale:
 
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
             <div>
-              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Billeteras Activas</p>
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">	Active Wallets</p>
               <h3 className="text-4xl font-black text-gray-900 lining-nums">
                 ${totalWalletDistributed.toFixed(2)}
               </h3>
-              <p className="text-xs text-gray-500 font-medium mt-1">Saldo total disponible de clientes</p>
+              <p className="text-xs text-gray-500 font-medium mt-1">	Total available client balance</p>
             </div>
             <div className="p-4 bg-[#e6c200]/20 text-[#b39700] rounded-xl">
               <Wallet size={28} strokeWidth={2} />
@@ -132,7 +132,7 @@ export default async function AdminReferralsPage({ params }: { params: { locale:
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
               <input 
                 type="text" 
-                placeholder="Buscar por código o nombre..." 
+                placeholder="Search by code or name..." 
                 disabled
                 className="w-full pl-10 pr-4 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#e6c200] disabled:bg-gray-100 disabled:cursor-not-allowed"
               />
