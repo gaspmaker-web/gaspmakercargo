@@ -421,7 +421,7 @@ export default function PayAndGoClient() {
           <h2 className="text-sm font-bold text-orange-600 uppercase tracking-widest mb-4 flex items-center gap-2 border-b pb-2"><MapPin size={18}/> 2. Recipient</h2>
           <div className="space-y-4">
             <div>
-              <label className="text-xs font-bold text-gray-500 mb-1 block truncate">Nombre de quien recibe</label>
+              <label className="text-xs font-bold text-gray-500 mb-1 block truncate">Recipient Name</label>
               <input {...register("receiverName", { required: true })} className="w-full h-11 px-3 border border-gray-300 rounded-lg focus:border-orange-500 outline-none" placeholder="Ej: María López" />
             </div>
             
@@ -442,12 +442,12 @@ export default function PayAndGoClient() {
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-xs font-bold text-gray-500 mb-1 block truncate">Ciudad (City)</label>
+                <label className="text-xs font-bold text-gray-500 mb-1 block truncate">City</label>
                 <input {...register("receiverCity", { required: true })} className="w-full h-11 px-3 border border-gray-300 rounded-lg focus:border-orange-500 outline-none" placeholder="Ej: Miami" />
               </div>
               
               <div>
-                <label className="text-xs font-bold text-gray-500 mb-1 block truncate">Estado (State)</label>
+                <label className="text-xs font-bold text-gray-500 mb-1 block truncate">State</label>
                 {watchCountry === 'US' ? (
                   <select {...register("receiverState", { required: true })} className="w-full h-11 px-3 border border-gray-300 rounded-lg focus:border-orange-500 outline-none bg-white">
                     <option value="">Seleccionar...</option>
@@ -456,7 +456,7 @@ export default function PayAndGoClient() {
                     ))}
                   </select>
                 ) : (
-                  <input {...register("receiverState", { required: true })} className="w-full h-11 px-3 border border-gray-300 rounded-lg focus:border-orange-500 outline-none" placeholder="Estado / Prov." />
+                  <input {...register("receiverState", { required: true })} className="w-full h-11 px-3 border border-gray-300 rounded-lg focus:border-orange-500 outline-none" placeholder="State / Prov." />
                 )}
               </div>
             </div>
@@ -487,7 +487,7 @@ export default function PayAndGoClient() {
               </div>
             </div>
             <div>
-              <label className="text-xs font-bold text-gray-500 mb-1 block truncate">Valor Declarado ($)</label>
+              <label className="text-xs font-bold text-gray-500 mb-1 block truncate">Declared Value ($)</label>
               <input type="number" step="0.01" {...register("declaredValue")} className="w-full h-12 px-3 border-2 border-blue-100 bg-blue-50 rounded-xl focus:border-blue-500 outline-none text-lg font-bold text-blue-800 text-center" placeholder="0.00" />
             </div>
           </div>
