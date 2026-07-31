@@ -6,7 +6,7 @@ import { Gift, Users, Wallet, Search, Award, ArrowRight, CheckCircle2 } from 'lu
 import Link from 'next/link';
 
 export const metadata = {
-  title: 'Control de Referidos | Gasp Maker Admin',
+  title: 'Referral Control | Gasp Maker Admin',
 };
 
 export default async function AdminReferralsPage({ params }: { params: { locale: string } }) {
@@ -71,10 +71,10 @@ export default async function AdminReferralsPage({ params }: { params: { locale:
           <div>
             <h1 className="text-3xl font-bold text-gray-900 tracking-tight flex items-center gap-3">
               <Gift className="text-[#e6c200]" size={32} strokeWidth={2.5} />
-              Control de Referidos
+              Referral Control
             </h1>
             <p className="text-gray-500 mt-1 text-sm font-medium">
-              Monitorea el crecimiento viral y las recompensas otorgadas.
+              Monitor viral growth and rewards granted.
             </p>
           </div>
         </div>
@@ -83,9 +83,9 @@ export default async function AdminReferralsPage({ params }: { params: { locale:
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
             <div>
-              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Total Referidos</p>
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Total Referrals</p>
               <h3 className="text-4xl font-black text-gray-900 lining-nums">{totalReferredUsers}</h3>
-              <p className="text-xs text-green-600 font-bold mt-1">Nuevos clientes captados</p>
+              <p className="text-xs text-green-600 font-bold mt-1">New clients acquired</p>
             </div>
             <div className="p-4 bg-blue-50 text-blue-600 rounded-xl">
               <Users size={28} strokeWidth={2} />
@@ -115,7 +115,7 @@ export default async function AdminReferralsPage({ params }: { params: { locale:
                 {topReferrer ? topReferrer.name : 'N/A'}
               </h3>
               <p className="text-sm text-gray-300 font-medium mt-1">
-                {topReferrer ? `${topReferrer.invitedCount} amigos invitados` : 'Aún no hay referidos'}
+                {topReferrer ? `${topReferrer.invitedCount} friends invited` : 'No referrals yet'}
               </p>
             </div>
             <div className="p-4 bg-gray-800 text-[#e6c200] rounded-xl relative z-10">
@@ -127,7 +127,7 @@ export default async function AdminReferralsPage({ params }: { params: { locale:
         {/* TABLA DE CONTROL */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
           <div className="p-6 border-b border-gray-100 bg-gray-50 flex flex-col sm:flex-row justify-between items-center gap-4">
-            <h2 className="text-lg font-bold text-gray-900">Listado de Clientes y Códigos</h2>
+            <h2 className="text-lg font-bold text-gray-900">Client List and Codes</h2>
             <div className="relative w-full sm:w-72">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
               <input 
@@ -143,11 +143,11 @@ export default async function AdminReferralsPage({ params }: { params: { locale:
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-white border-b border-gray-100 text-xs uppercase tracking-wider text-gray-500 font-bold">
-                  <th className="p-4 pl-6">Cliente</th>
-                  <th className="p-4">Código Personal</th>
-                  <th className="p-4 text-center">Invitados</th>
-                  <th className="p-4">Invitado Por</th>
-                  <th className="p-4 text-right pr-6">Saldo Billetera</th>
+                  <th className="p-4 pl-6">Client</th>
+                  <th className="p-4">Personal Code</th>
+                  <th className="p-4 text-center">Invited</th>
+                  <th className="p-4">Invited By</th>
+                  <th className="p-4 text-right pr-6">Wallet Balance</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50 text-sm">
@@ -203,7 +203,7 @@ export default async function AdminReferralsPage({ params }: { params: { locale:
                           {u.referredBy}
                         </div>
                       ) : (
-                        <span className="text-gray-400 text-xs">Orgánico</span>
+                        <span className="text-gray-400 text-xs">Organic</span>
                       )}
                     </td>
 
@@ -222,7 +222,7 @@ export default async function AdminReferralsPage({ params }: { params: { locale:
                         href={`/${params.locale}/dashboard-admin/clientes/${u.id}`}
                         className="block mt-1 text-[10px] font-bold text-blue-600 hover:underline uppercase"
                       >
-                        Administrar
+                        Manage
                       </Link>
                     </td>
 
@@ -232,7 +232,7 @@ export default async function AdminReferralsPage({ params }: { params: { locale:
                 {usersWithStats.length === 0 && (
                   <tr>
                     <td colSpan={5} className="p-8 text-center text-gray-500 font-medium">
-                      No hay clientes registrados en el sistema aún.
+                      No clients registered in the system yet.
                     </td>
                   </tr>
                 )}
