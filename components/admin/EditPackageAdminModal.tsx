@@ -135,7 +135,7 @@ export default function EditPackageAdminModal({ isOpen, onClose, pkg }: EditPack
         });
 
         if (res.ok) {
-            alert("✅ Paquete corregido con éxito");
+            alert("✅ Package updated successfully");
             router.refresh(); 
             onClose();
         } else {
@@ -143,7 +143,7 @@ export default function EditPackageAdminModal({ isOpen, onClose, pkg }: EditPack
         }
     } catch (e) {
         console.error(e);
-        alert("Error de conexión");
+        alert("Connection error");
     } finally {
         setIsSaving(false);
     }
@@ -155,7 +155,7 @@ export default function EditPackageAdminModal({ isOpen, onClose, pkg }: EditPack
         
         <div className="bg-[#222b3c] p-4 flex justify-between items-center text-white">
             <h3 className="font-bold text-lg flex items-center gap-2">
-                <span className="text-yellow-400">⚡</span> Corregir Paquete: {pkg.trackingNumber || pkg.gmcTrackingNumber}
+                <span className="text-yellow-400">⚡</span> Edit Package: {pkg.trackingNumber || pkg.gmcTrackingNumber}
             </h3>
             <button onClick={onClose}><X className="hover:text-red-400 transition"/></button>
         </div>
@@ -167,7 +167,7 @@ export default function EditPackageAdminModal({ isOpen, onClose, pkg }: EditPack
                 {/* Caja de Foto del Paquete */}
                 <div className="bg-gray-50 border border-gray-200 rounded-xl p-3 flex flex-col items-center">
                     <label className="text-xs font-bold text-gray-500 mb-2 flex items-center gap-1 uppercase tracking-wider">
-                        <Camera size={14}/> Foto del Paquete
+                        <Camera size={14}/> Package Photo
                     </label>
                     <div className="relative w-full h-24 bg-white rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden mb-2">
                         {photoUrl ? (
@@ -177,7 +177,7 @@ export default function EditPackageAdminModal({ isOpen, onClose, pkg }: EditPack
                         )}
                     </div>
                     <label className="cursor-pointer bg-blue-50 text-blue-700 w-full text-center py-1.5 rounded-lg text-xs font-bold hover:bg-blue-100 transition">
-                        {isUploading ? "Subiendo..." : "Cambiar Foto"}
+                        {isUploading ? "Uploading..." : "Change Photo"}
                         <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} disabled={isUploading}/>
                     </label>
                 </div>
@@ -185,7 +185,7 @@ export default function EditPackageAdminModal({ isOpen, onClose, pkg }: EditPack
                 {/* Caja de Factura Comercial */}
                 <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-3 flex flex-col items-center">
                     <label className="text-xs font-bold text-yellow-700 mb-2 flex items-center gap-1 uppercase tracking-wider">
-                        <FileText size={14}/> Factura (Invoice)
+                        <FileText size={14}/> Invoice
                     </label>
                     <label className={`
                         relative w-full h-24 rounded-lg border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition
@@ -194,19 +194,19 @@ export default function EditPackageAdminModal({ isOpen, onClose, pkg }: EditPack
                         {invoiceUrl ? (
                             <div className="text-center">
                                 <CheckCircle className="text-green-500 mx-auto mb-1" size={24}/>
-                                <span className="text-[10px] font-bold text-green-700">Factura Subida</span>
+                                <span className="text-[10px] font-bold text-green-700">Invoice Uploaded</span>
                             </div>
                         ) : (
                             <div className="text-center text-yellow-600">
                                 {isUploadingInvoice ? <Loader2 className="animate-spin mx-auto mb-1" size={24}/> : <UploadCloud className="mx-auto mb-1" size={24}/>}
-                                <span className="text-[10px] font-bold">Subir Archivo</span>
+                                <span className="text-[10px] font-bold">Upload File</span>
                             </div>
                         )}
                         <input type="file" accept="image/*,.pdf" className="hidden" onChange={handleInvoiceUpload} disabled={isUploadingInvoice}/>
                     </label>
                     {invoiceUrl && (
                         <button onClick={() => setInvoiceUrl('')} className="mt-2 text-[10px] text-red-500 hover:underline">
-                            Remover Factura
+                            Remove Invoice
                         </button>
                     )}
                 </div>
@@ -217,7 +217,7 @@ export default function EditPackageAdminModal({ isOpen, onClose, pkg }: EditPack
             {/* ⚖️ SECCIÓN 2: MEDIDAS FÍSICAS */}
             <div className="grid grid-cols-2 gap-4">
                 <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1 flex items-center gap-1"><Scale size={12}/> Peso (Lbs)</label>
+                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1 flex items-center gap-1"><Scale size={12}/> Weight (Lbs)</label>
                     <input 
                         type="number" 
                         value={formData.weight}
@@ -230,7 +230,7 @@ export default function EditPackageAdminModal({ isOpen, onClose, pkg }: EditPack
             </div>
 
             <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase mb-1 flex items-center gap-1"><Ruler size={12}/> Dimensiones (L x W x H)</label>
+                <label className="block text-xs font-bold text-gray-500 uppercase mb-1 flex items-center gap-1"><Ruler size={12}/> Dimensions (L x W x H)</label>
                 <div className="flex gap-2">
                     <input type="number" placeholder="L" value={formData.length} onChange={e => setFormData({...formData, length: e.target.value})} className="w-full p-2 border rounded-lg text-center"/>
                     <span className="self-center text-gray-400">x</span>
@@ -246,7 +246,7 @@ export default function EditPackageAdminModal({ isOpen, onClose, pkg }: EditPack
             <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
                 <div className="flex justify-between items-center mb-3">
                     <label className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
-                        <Globe size={16} className="text-blue-500" /> Declaración Comercial
+                        <Globe size={16} className="text-blue-500" /> Commercial Declaration
                     </label>
                     <div className="text-xs font-bold text-blue-800 bg-blue-100 px-3 py-1 rounded-md flex items-center gap-1">
                         Total: <DollarSign size={12}/>{formData.declaredValue || '0.00'}
@@ -254,8 +254,8 @@ export default function EditPackageAdminModal({ isOpen, onClose, pkg }: EditPack
                 </div>
                 
                 <div className="flex gap-2 text-[10px] font-bold text-slate-500 uppercase mb-2 px-1">
-                    <div className="w-14 text-center">Cant.</div>
-                    <div className="flex-1">Descripción</div>
+                    <div className="w-14 text-center">Qty.</div>
+                    <div className="flex-1">Description</div>
                     <div className="w-20 text-center">V. Unit</div>
                     <div className="w-8"></div>
                 </div>
@@ -302,7 +302,7 @@ export default function EditPackageAdminModal({ isOpen, onClose, pkg }: EditPack
                     onClick={addCustomsItem} 
                     className="mt-3 text-sm font-bold text-blue-600 flex items-center gap-1 hover:text-blue-800 transition-colors"
                 >
-                    <Plus size={16} /> Añadir Artículo
+                    <Plus size={16} /> Add Item
                 </button>
             </div>
 
@@ -313,7 +313,7 @@ export default function EditPackageAdminModal({ isOpen, onClose, pkg }: EditPack
                 className="w-full bg-[#222b3c] text-white py-4 rounded-xl font-bold shadow-lg hover:bg-gray-800 transition flex justify-center items-center gap-2 mt-4"
             >
                 {isSaving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18}/>} 
-                {isSaving ? "Guardando..." : "Guardar Correcciones"}
+                {isSaving ? "Saving..." : "Save Changes"}
             </button>
 
         </div>
