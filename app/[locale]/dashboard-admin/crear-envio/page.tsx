@@ -38,10 +38,10 @@ export default async function CreateShipmentPage(props: any) {
         {/* Título Header */}
         <div className="mb-6 px-1">
           <h1 className="text-2xl sm:text-3xl font-bold text-gmc-gris-oscuro mb-1 font-garamond">
-            Recepción de Paquetes
+            Package Reception
           </h1>
           <p className="text-sm text-gray-500 hidden sm:block">
-            Ingresa los detalles del paquete físico recibido.
+            Enter the details of the physical package received.
           </p>
         </div>
 

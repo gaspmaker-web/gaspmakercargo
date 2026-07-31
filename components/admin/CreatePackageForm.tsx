@@ -162,7 +162,7 @@ const openPrintWindow = (format: '4x6' | '30334') => {
       }
     } catch (error) {
       console.error(error);
-      alert("Error de conexión");
+      alert("Connection error");
     } finally {
       setSearchingUser(false);
     }
@@ -191,7 +191,7 @@ const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
             navigator.vibrate([100, 50, 100, 50, 100]); 
         }
       } else {
-        throw new Error("No se recibió URL");
+        throw new Error("No URL received");
       }
     } catch (error) {
       console.error("Error upload:", error);
@@ -224,7 +224,7 @@ const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
             navigator.vibrate(150); 
         }
       } else {
-        throw new Error("No se recibió URL");
+        throw new Error("No URL received");
       }
     } catch (error) {
       console.error("Error upload invoice:", error);
@@ -249,7 +249,7 @@ const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     // Validación de la tabla de aduanas
     const isValidCustoms = customsItems.every(item => item.description.trim() !== '' && Number(item.value) >= 0);
     if (!isValidCustoms) {
-        alert("⚠️ Por favor completa correctamente la descripción y valor de todos los artículos de aduana.");
+        alert("⚠️ Please complete the description and value of all customs items correctly.");
         return;
     }
 
@@ -366,7 +366,7 @@ const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
           {!foundUser ? (
              <div className="space-y-3">
                 <label className="text-xs font-bold text-blue-800 uppercase tracking-wider flex items-center gap-2">
-                    <Search size={14} /> 1. Asignar Cliente
+                    <Search size={14} /> 1. Assign Client
                 </label>
                 <div className="flex gap-2 h-14 w-full">
                     <input 
@@ -433,14 +433,14 @@ const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
                         <span className="hidden sm:inline">ESCANEAR</span>
                     </button>
                 </div>
-                {errors.trackingNumber && <span className="text-red-500 text-xs font-bold">⚠️ Tracking requerido</span>}
+                {errors.trackingNumber && <span className="text-red-500 text-xs font-bold">⚠️ Tracking required</span>}
             </div>
 
             {/* PESO Y VALOR TOTAL */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5 w-full">
                 <div className="w-full">
                     <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 block">
-                        3. Peso (Lbs)
+                        3. Weight (Lbs)
                     </label>
                     <div className="relative w-full">
                         <Scale className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
@@ -487,16 +487,16 @@ const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
             <div className="bg-slate-50 p-3 md:p-4 rounded-xl border border-slate-200 w-full overflow-hidden">
                 <div className="flex justify-between items-center mb-3">
                     <label className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
-                        <Globe size={16} className="text-blue-500" /> Declaración (Aduanas)
+                        <Globe size={16} className="text-blue-500" /> Customs Declaration
                     </label>
                 </div>
                 
                 {/* Cabeceras adaptadas */}
                 <div className="flex gap-2 text-[10px] font-bold text-slate-500 uppercase mb-2 px-1 w-full">
-                    <div className="w-12 text-center shrink-0">Cant</div>
-                    <div className="flex-1 min-w-0">Descripción</div>
-                    <div className="w-20 text-center shrink-0">Valor</div>
-                    <div className="w-8 shrink-0"></div>
+                   <div className="w-12 text-center shrink-0">Qty</div>
+                   <div className="flex-1 min-w-0">Description</div>
+                   <div className="w-20 text-center shrink-0">Value</div>
+                   <div className="w-8 shrink-0"></div>
                 </div>
 
                 <div className="space-y-2 w-full">
@@ -542,7 +542,7 @@ const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
                     onClick={addCustomsItem} 
                     className="mt-3 text-sm font-bold text-blue-600 flex items-center gap-1 hover:text-blue-800 transition-colors py-2"
                 >
-                    <Plus size={16} /> Agregar Artículo
+                    <Plus size={16} /> Add Item
                 </button>
             </div>
 
@@ -551,7 +551,7 @@ const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
                 <div className="flex items-center gap-2 mb-4">
                     <AlertTriangle size={18} className="text-orange-500" />
                     <label className="text-sm font-bold text-orange-800 uppercase tracking-wider">
-                        Cargos Especiales y Hazmat
+                        Special Charges & Hazmat
                     </label>
                 </div>
 
@@ -581,7 +581,7 @@ const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
                         <input type="checkbox" checked={specialCharges.airHazmat} onChange={() => toggleCharge('airHazmat')} className="w-5 h-5 text-orange-600 rounded border-gray-300 focus:ring-orange-500" />
                         <div>
                             <p className="text-sm font-bold text-gray-800">Air Hazmat Compliance Fee</p>
-                            <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">Inspección, reempaque ONU, DGD y etiquetado.</p>
+                            <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">Inspection, UN repacking, DGD and labeling.</p>
                             <p className="text-xs text-orange-600 font-bold mt-1">+${hazmatRates.air_hazmat_fee.toFixed(2)}</p>
                         </div>
                     </label>
@@ -609,7 +609,7 @@ const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
                 {/* 1. FOTO EVIDENCIA */}
                 <div className="w-full">
                     <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">
-                        4. Foto del Paquete
+                        4. Package Photo
                     </label>
                     
                     <div className="relative w-full">
@@ -633,7 +633,7 @@ const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
                                         <Camera size={32} className="text-gray-400" />
                                     )}
                                     <span className="text-xs font-bold text-gray-500 text-center px-2">
-                                        {isUploading ? 'SUBIENDO...' : 'TOMAR FOTO'}
+                                        {isUploading ? 'UPLOADING...' : 'TAKE PHOTO'}
                                     </span>
                                 </>
                             )}
@@ -663,7 +663,7 @@ const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
                 {/* 2. FOTO INVOICE */}
                 <div className="w-full">
                     <label className="text-xs font-bold text-blue-600 uppercase tracking-wider mb-2 block flex items-center gap-1">
-                        <FileText size={14}/> 5. Factura / Invoice <span className="text-gray-400 normal-case font-medium">(Opcional)</span>
+                        <FileText size={14}/> 5. Invoice <span className="text-gray-400 normal-case font-medium">(Opcional)</span>
                     </label>
                     
                     <div className="relative w-full">
@@ -693,7 +693,7 @@ const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
                                         <FileText size={32} className="text-blue-400" />
                                     )}
                                     <span className="text-xs font-bold text-blue-600 text-center px-2">
-                                        {isUploadingInvoice ? 'SUBIENDO...' : 'SUBIR INVOICE / FOTO'}
+                                        {isUploadingInvoice ? 'SUBIENDO...' : 'UPLOAD INVOICE / PHOTO'}
                                     </span>
                                 </>
                             )}
@@ -731,7 +731,7 @@ const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
                         'Registrando...' 
                     ) : (
                         <>
-                            <Save size={24} /> REGISTRAR ENTRADA
+                            <Save size={24} /> REGISTER ENTRY
                         </>
                     )}
                 </button>
