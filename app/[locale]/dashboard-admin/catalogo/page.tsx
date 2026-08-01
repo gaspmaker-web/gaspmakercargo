@@ -40,12 +40,12 @@ export default function CatalogoAdminPage() {
 
   return (
     <div className="p-8 max-w-2xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6 text-gmc-gris-oscuro">Agregar Producto al Catálogo</h1>
+      <h1 className="text-2xl font-bold mb-6 text-gmc-gris-oscuro">Add Product to Catalog</h1>
       
       {/* Mensaje de Éxito Flotante */}
       {showSuccess && (
         <div className="mb-6 p-4 bg-green-50 text-green-700 border border-green-200 rounded-lg shadow-sm">
-          <span className="font-bold">¡Producto guardado exitosamente!</span> El formulario está listo para el siguiente artículo.
+          <span className="font-bold">Product saved successfully!</span> The form is ready for the next item.
         </div>
       )}
       
@@ -57,16 +57,16 @@ export default function CatalogoAdminPage() {
         <input name="affiliateUrl" placeholder="Enlace de Afiliado" className="w-full p-2 border rounded focus:ring-2 focus:ring-gmc-dorado-principal outline-none" required />
         
         <select name="category" className="w-full p-2 border rounded focus:ring-2 focus:ring-gmc-dorado-principal outline-none" required>
-          <option value="">Selecciona una categoría...</option>
-          <option value="Scanner">Scanner (Escáner OBDII)</option>
-          <option value="Battery">Battery (Baterías)</option>
-          <option value="Diagnostic">Diagnostic (Diagnóstico)</option>
-          <option value="DashCam">Dash Cam (Cámaras)</option>
-          <option value="JumpStarter">Jump Starter (Arrancadores)</option>
-          <option value="TireCare">Tire Care (Bombas de Aire/Llantas)</option>
-          <option value="CarCare">Car Care (Limpieza/Detailing)</option>
-          <option value="Electronics">Electronics (Pantallas/Audio)</option>
-          <option value="Lighting">Lighting (Luces/Focos LED)</option>
+       <option value="">Select a category...</option>
+       <option value="Scanner">Scanner (OBDII Scanner)</option>
+       <option value="Battery">Battery (Batteries)</option>
+       <option value="Diagnostic">Diagnostic</option>
+       <option value="DashCam">Dash Cam (Cameras)</option>
+       <option value="JumpStarter">Jump Starter</option>
+       <option value="TireCare">Tire Care (Air Pumps/Tires)</option>
+       <option value="CarCare">Car Care (Cleaning/Detailing)</option>
+       <option value="Electronics">Electronics (Screens/Audio)</option>
+       <option value="Lighting">Lighting (LED Lights)</option>
         </select>
         
         {/* El botón ahora reacciona al estado de "isSubmitting" */}
@@ -75,7 +75,7 @@ export default function CatalogoAdminPage() {
           disabled={isSubmitting}
           className="bg-gmc-dorado-principal text-white px-6 py-3 rounded font-bold hover:bg-yellow-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
         >
-          {isSubmitting ? 'Guardando producto...' : 'Guardar Producto en Producción'}
+          {isSubmitting ? 'Saving product...' : 'Save Product to Production'}
         </button>
       </form>
     </div>
