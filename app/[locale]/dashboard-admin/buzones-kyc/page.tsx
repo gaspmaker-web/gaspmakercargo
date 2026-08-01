@@ -53,9 +53,9 @@ export default async function BuzonesKycAdminPage({ params: { locale } }: Props)
                </Link>
                <div>
                  <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight flex items-center gap-3">
-                   <ShieldAlert className="text-red-500" size={32} /> Bóveda Legal & KYC
+                   <ShieldAlert className="text-red-500" size={32} /> Legal Vault & KYC
                  </h1>
-                 <p className="text-gray-500 mt-1">Historial completo y revisión de solicitudes de Buzón Virtual (Forma 1583).</p>
+                 <p className="text-gray-500 mt-1">Complete history and review of Virtual Mailbox requests (Form 1583).</p>
                </div>
            </div>
 
@@ -72,7 +72,7 @@ export default async function BuzonesKycAdminPage({ params: { locale } }: Props)
                 <div className="bg-green-50 border border-green-200 px-4 py-2 rounded-xl flex items-center gap-3 shadow-sm">
                     <CheckCircle className="text-green-500" size={20} />
                     <div>
-                        <p className="text-[10px] text-green-600 font-bold uppercase tracking-wider">Aprobados</p>
+                        <p className="text-[10px] text-green-600 font-bold uppercase tracking-wider">Approved</p>
                         <p className="text-lg font-black text-green-700 leading-none">{totalActive}</p>
                     </div>
                 </div>
@@ -82,7 +82,7 @@ export default async function BuzonesKycAdminPage({ params: { locale } }: Props)
         {/* TABLA PRINCIPAL (HISTORIAL COMPLETO) */}
         <div className="bg-white rounded-3xl shadow-sm border border-gray-200 overflow-hidden">
             <div className="p-5 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
-                <h2 className="font-bold text-gray-800 flex items-center gap-2"><History size={18} className="text-blue-500"/> Registro Histórico de Documentos</h2>
+                <h2 className="font-bold text-gray-800 flex items-center gap-2"><History size={18} className="text-blue-500"/> Document Historical Record</h2>
                 <div className="relative hidden sm:block">
                     <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                     <input type="text" placeholder="Buscar cliente..." className="pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-blue-500" disabled />
@@ -92,18 +92,18 @@ export default async function BuzonesKycAdminPage({ params: { locale } }: Props)
             {allSubscriptions.length === 0 ? (
                 <div className="p-12 text-center flex flex-col items-center">
                     <Mailbox size={48} className="text-gray-300 mb-4" />
-                    <h3 className="text-xl font-bold text-gray-800 mb-2">Bóveda Vacía</h3>
-                    <p className="text-gray-500">Aún no hay documentos KYC registrados en el historial.</p>
+                    <h3 className="text-xl font-bold text-gray-800 mb-2">Empty Vault</h3>
+                    <p className="text-gray-500">No KYC documents registered in history yet.</p>
                 </div>
             ) : (
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                         <thead>
                             <tr className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
-                                <th className="p-4 font-bold">Cliente / Usuario</th>
-                                <th className="p-4 font-bold">Estado Legal</th>
-                                <th className="p-4 font-bold">Documentos (Auditoría)</th>
-                                <th className="p-4 font-bold text-right">Acción / Resolución</th>
+                                <th className="p-4 font-bold">Client / User</th>
+                                <th className="p-4 font-bold">Legal Status</th>
+                                <th className="p-4 font-bold">Documents (Audit)</th>
+                                <th className="p-4 font-bold text-right">Action / Resolution</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
@@ -126,9 +126,9 @@ export default async function BuzonesKycAdminPage({ params: { locale } }: Props)
                                         </td>
                                         <td className="p-4">
                                             {/* Indicadores Dinámicos de Estado */}
-                                            {sub.status === 'PENDING_USPS' && <span className="text-[10px] bg-orange-100 text-orange-700 px-2 py-1 rounded-full font-bold uppercase tracking-wider flex items-center gap-1 w-max animate-pulse"><Clock size={12}/> Revisión Pendiente</span>}
-                                            {sub.status === 'ACTIVE' && <span className="text-[10px] bg-green-100 text-green-700 px-2 py-1 rounded-full font-bold uppercase tracking-wider flex items-center gap-1 w-max"><CheckCircle size={12}/> Aprobado / Activo</span>}
-                                            {sub.status === 'REJECTED' && <span className="text-[10px] bg-red-100 text-red-700 px-2 py-1 rounded-full font-bold uppercase tracking-wider flex items-center gap-1 w-max"><XCircle size={12}/> Rechazado</span>}
+                                            {sub.status === 'PENDING_USPS' && <span className="text-[10px] bg-orange-100 text-orange-700 px-2 py-1 rounded-full font-bold uppercase tracking-wider flex items-center gap-1 w-max animate-pulse"><Clock size={12}/> Pending Review</span>}
+                                            {sub.status === 'ACTIVE' && <span className="text-[10px] bg-green-100 text-green-700 px-2 py-1 rounded-full font-bold uppercase tracking-wider flex items-center gap-1 w-max"><CheckCircle size={12}/> Approved / Active</span>}
+                                            {sub.status === 'REJECTED' && <span className="text-[10px] bg-red-100 text-red-700 px-2 py-1 rounded-full font-bold uppercase tracking-wider flex items-center gap-1 w-max"><XCircle size={12}/> Rejected</span>}
                                         </td>
                                         
                                         <td className="p-4">
@@ -185,14 +185,14 @@ export default async function BuzonesKycAdminPage({ params: { locale } }: Props)
                                     {sub.additionalRecipients.map((rec) => (
                                         <tr key={rec.id} className="bg-blue-50/10 hover:bg-blue-50/30 transition-colors">
                                             <td className="p-4 pl-8 border-l-4 border-blue-400">
-                                                <span className="bg-blue-100 text-blue-800 text-[10px] px-2 py-0.5 rounded uppercase font-bold tracking-wider mb-1 inline-flex items-center gap-1"><Users size={10}/> Adicional</span>
+                                                <span className="bg-blue-100 text-blue-800 text-[10px] px-2 py-0.5 rounded uppercase font-bold tracking-wider mb-1 inline-flex items-center gap-1"><Users size={10}/> Additional</span>
                                                 <p className="font-bold text-gray-900">{rec.fullName}</p>
-                                                <p className="text-xs text-gray-500">Buzón de: {sub.user.name}</p>
+                                                <p className="text-xs text-gray-500">Mailbox of: {sub.user.name}</p>
                                             </td>
                                             <td className="p-4">
-                                                {rec.status === 'PENDING_USPS' && <span className="text-[10px] bg-orange-100 text-orange-700 px-2 py-1 rounded-full font-bold uppercase tracking-wider flex items-center gap-1 w-max animate-pulse"><Clock size={12}/> Revisión Pendiente</span>}
-                                                {rec.status === 'ACTIVE' && <span className="text-[10px] bg-green-100 text-green-700 px-2 py-1 rounded-full font-bold uppercase tracking-wider flex items-center gap-1 w-max"><CheckCircle size={12}/> Aprobado</span>}
-                                                {rec.status === 'REJECTED' && <span className="text-[10px] bg-red-100 text-red-700 px-2 py-1 rounded-full font-bold uppercase tracking-wider flex items-center gap-1 w-max"><XCircle size={12}/> Rechazado</span>}
+                                               {rec.status === 'PENDING_USPS' && <span className="text-[10px] bg-orange-100 text-orange-700 px-2 py-1 rounded-full font-bold uppercase tracking-wider flex items-center gap-1 w-max animate-pulse"><Clock size={12}/> Pending Review</span>}
+                                               {rec.status === 'ACTIVE' && <span className="text-[10px] bg-green-100 text-green-700 px-2 py-1 rounded-full font-bold uppercase tracking-wider flex items-center gap-1 w-max"><CheckCircle size={12}/> Approved</span>}
+                                               {rec.status === 'REJECTED' && <span className="text-[10px] bg-red-100 text-red-700 px-2 py-1 rounded-full font-bold uppercase tracking-wider flex items-center gap-1 w-max"><XCircle size={12}/> Rejected</span>}
                                             </td>
                                             
                                             <td className="p-4">
@@ -240,7 +240,7 @@ export default async function BuzonesKycAdminPage({ params: { locale } }: Props)
                                                     />
                                                 ) : (
                                                     <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">
-                                                        Resuelto el {new Date(rec.updatedAt).toLocaleDateString()}
+                                                        Resolved on {new Date(rec.updatedAt).toLocaleDateString()}
                                                     </span>
                                                 )}
                                             </td>

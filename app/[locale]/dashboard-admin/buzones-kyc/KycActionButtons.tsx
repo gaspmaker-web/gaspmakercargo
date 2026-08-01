@@ -31,7 +31,7 @@ export default function KycActionButtons({ subscriptionId, userId, isPrimary, re
 
   const handleApprove = async () => {
     if (!suiteNo.trim()) {
-        alert("El número de PMB no puede estar vacío.");
+       alert("PMB number cannot be empty.");
         return;
     }
 
@@ -56,7 +56,7 @@ export default function KycActionButtons({ subscriptionId, userId, isPrimary, re
         alert("Error al aprobar.");
       }
     } catch (error) {
-      alert("Error de conexión.");
+      alert("Connection error.");
     } finally {
       setLoading(false);
     }
@@ -64,7 +64,7 @@ export default function KycActionButtons({ subscriptionId, userId, isPrimary, re
 
   const handleReject = async () => {
     if (!reason.trim()) {
-        alert("Debes escribir una razón de rechazo.");
+        alert("You must write a rejection reason.");
         return;
     }
 
@@ -116,8 +116,8 @@ export default function KycActionButtons({ subscriptionId, userId, isPrimary, re
                   <div className="mb-6">
                     <p className="text-sm text-gray-500 mb-4 leading-relaxed">
                         {isPrimary 
-                            ? "Verifica el PMB a registrar en USPS. El sistema ha extraído los números automáticamente." 
-                            : "Verifica el PMB compartido bajo el cual operará esta persona adicional."}
+                            ? "Verify the PMB to register with USPS. The system has extracted the numbers automatically." 
+                            : "Verify the shared PMB under which this additional person will operate."}
                     </p>
                     
                     <div className="relative">
@@ -131,7 +131,7 @@ export default function KycActionButtons({ subscriptionId, userId, isPrimary, re
                             className="w-full pl-9 pr-3 py-3 border border-green-200 rounded-xl font-mono font-bold text-gray-900 outline-none focus:border-green-500 bg-green-50/30 text-lg shadow-inner transition-colors" 
                         />
                     </div>
-                    <p className="text-[10px] text-gray-400 mt-2 font-medium uppercase tracking-wider text-center">Formato oficial USPS: Solo números</p>
+                    <p className="text-[10px] text-gray-400 mt-2 font-medium uppercase tracking-wider text-center">Official USPS format: Numbers only</p>
                   </div>
 
                   <div className="flex gap-3">
@@ -148,13 +148,13 @@ export default function KycActionButtons({ subscriptionId, userId, isPrimary, re
       {isRejecting && (
           <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm text-left animate-in fade-in">
               <div className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl border border-gray-100">
-                  <h3 className="text-xl font-bold text-red-600 mb-2">Rechazar Documentos</h3>
-                  <p className="text-sm text-gray-500 mb-4 leading-relaxed">Escribe la razón para que el cliente la corrija de inmediato.</p>
+                  <h3 className="text-xl font-bold text-red-600 mb-2">Reject Documents</h3>
+                  <p className="text-sm text-gray-500 mb-4 leading-relaxed">Write the reason so the client can correct it immediately.</p>
                   <textarea value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Ej: La foto del pasaporte está cortada..." className="w-full p-3 border border-red-200 bg-red-50/50 rounded-xl mb-6 text-sm text-gray-800 outline-none focus:border-red-500 h-28 resize-none shadow-inner" />
                   <div className="flex gap-3">
                       <button onClick={() => setIsRejecting(false)} className="flex-1 p-3 font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition">Cancelar</button>
                       <button onClick={handleReject} disabled={loading} className="flex-1 p-3 font-bold text-white bg-red-600 hover:bg-red-700 rounded-xl transition flex items-center justify-center gap-2 shadow-md hover:shadow-lg">
-                          {loading ? <Loader2 className="animate-spin" size={18}/> : <XCircle size={18}/>} Rechazar
+                          {loading ? <Loader2 className="animate-spin" size={18}/> : <XCircle size={18}/>} Reject
                       </button>
                   </div>
               </div>
