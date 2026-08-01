@@ -60,8 +60,8 @@ export default async function PickupRequestsPage({ params, searchParams }: { par
   const getServiceLabel = (type: string) => {
     switch (type) {
         case 'DELIVERY': return 'Delivery Local';
-        case 'PICKUP': return 'Pickup (A → Bodega)';
-        case 'SHIPPING': return 'Envío Internacional';
+        case 'PICKUP': return 'Pickup (A → Warehouse)';
+        case 'SHIPPING': return 'International Shipment';
         default: return type;
     }
   };
@@ -74,7 +74,7 @@ export default async function PickupRequestsPage({ params, searchParams }: { par
       if (s === 'ENTREGADO' || s === 'COMPLETADO') {
           return (
             <span className="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold flex items-center justify-center gap-1 border border-green-200">
-                <CheckCircle size={12}/> ENTREGADO
+                <CheckCircle size={12}/> DELIVERED
             </span>
           );
       }
@@ -83,7 +83,7 @@ export default async function PickupRequestsPage({ params, searchParams }: { par
       if (s === 'EN_REPARTO' || s === 'EN_CAMINO' || s === 'OUT_FOR_DELIVERY') {
           return (
             <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-bold flex items-center justify-center gap-1 border border-blue-200 animate-pulse">
-                <Truck size={12}/> EN RUTA
+                <Truck size={12}/> ON ROUTE
             </span>
           );
       }
@@ -92,7 +92,7 @@ export default async function PickupRequestsPage({ params, searchParams }: { par
       if (s === 'PAGADO' || s === 'ACEPTADO') {
           return (
             <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded text-xs font-bold flex items-center justify-center gap-1 border border-purple-200">
-                <CheckCircle size={12}/> PAGADO
+                <CheckCircle size={12}/> PAID
             </span>
           );
       }
@@ -100,8 +100,8 @@ export default async function PickupRequestsPage({ params, searchParams }: { par
       // 4. DEFECTO / PENDIENTE (AMARILLO)
       return (
         <span className="bg-yellow-50 text-yellow-700 px-2 py-1 rounded text-xs font-bold flex items-center justify-center gap-1 border border-yellow-200">
-            <Clock size={12}/> PENDIENTE
-        </span>
+            <Clock size={12}/> PENDING
+</span>
       );
   };
 
@@ -117,10 +117,10 @@ export default async function PickupRequestsPage({ params, searchParams }: { par
                         <ArrowLeft size={24} />
                     </Link>
                     <h1 className="text-3xl font-bold text-gmc-gris-oscuro font-garamond">
-                        Gestión de Transporte
+                     Transport Management
                     </h1>
                 </div>
-                <p className="text-gray-500 ml-8 mb-4">Monitor de Pick-ups y Deliveries Locales.</p>
+                <p className="text-gray-500 ml-8 mb-4">Local Pickups and Deliveries Monitor.</p>
                 
                 {/* BUSCADOR */}
                 <form className="ml-8 flex gap-2">
@@ -134,13 +134,13 @@ export default async function PickupRequestsPage({ params, searchParams }: { par
                         />
                     </div>
                     <button type="submit" className="bg-gmc-gris-oscuro text-white px-4 py-2 rounded-lg font-bold hover:bg-black">
-                        Buscar
+                     Search
                     </button>
                 </form>
             </div>
             
             <div className="bg-white px-6 py-3 rounded-xl shadow-sm border border-gray-200 flex flex-col items-end">
-                <span className="text-xs text-gray-400 uppercase font-bold">Solicitudes Totales</span>
+                <span className="text-xs text-gray-400 uppercase font-bold">Total Requests</span>
                 <span className="font-bold text-2xl text-gmc-gris-oscuro">{requests.length}</span>
             </div>
         </div>
@@ -151,18 +151,18 @@ export default async function PickupRequestsPage({ params, searchParams }: { par
                 <table className="w-full text-left border-collapse">
                     <thead className="bg-gray-50 text-gray-500 text-xs uppercase font-bold border-b border-gray-200">
                         <tr>
-                            <th className="p-4">Servicio</th>
-                            <th className="p-4">Cliente</th>
-                            <th className="p-4">Ruta (A &rarr; B)</th>
-                            <th className="p-4">Carga / Detalles</th>
-                            <th className="p-4 text-center">Pago</th>
-                            <th className="p-4 text-center">Estado</th>
-                            <th className="p-4 text-right">Acción</th>
+                            <th className="p-4">Service</th>
+                            <th className="p-4">Client</th>
+                            <th className="p-4">Route (A &rarr; B)</th>
+                            <th className="p-4">Cargo / Details</th>
+                            <th className="p-4 text-center">Payment</th>
+                            <th className="p-4 text-center">Status</th>
+                            <th className="p-4 text-right">Action</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100 text-sm">
                         {requests.length === 0 ? (
-                            <tr><td colSpan={7} className="p-10 text-center text-gray-400">No se encontraron solicitudes.</td></tr>
+                            <tr><td colSpan={7} className="p-10 text-center text-gray-400">No requests found.</td></tr>
                         ) : (
                             requests.map((req) => (
                                 <tr key={req.id} className="hover:bg-blue-50/20 transition-colors group">
@@ -186,7 +186,7 @@ export default async function PickupRequestsPage({ params, searchParams }: { par
                                     <td className="p-4 max-w-xs">
                                         <div className="space-y-1 text-xs">
                                             <p className="text-gray-600 truncate" title={req.originAddress}>A: {req.originAddress}</p>
-                                            <p className="text-gray-600 truncate" title={req.dropOffAddress || 'Almacén'}>B: {req.dropOffAddress || 'Almacén'}</p>
+                                            <p className="text-gray-600 truncate" title={req.dropOffAddress || 'Warehouse'}>B: {req.dropOffAddress || 'Warehouse'}</p>
                                         </div>
                                     </td>
                                     <td className="p-4 text-xs text-gray-500 italic truncate max-w-[150px]">{req.description}</td>
@@ -200,7 +200,7 @@ export default async function PickupRequestsPage({ params, searchParams }: { par
                                             href={`/${params.locale}/dashboard-admin/solicitudes-pickup/${req.id}`}
                                             className="inline-flex items-center gap-1 text-sm font-bold text-gmc-dorado-principal hover:text-black hover:underline transition-colors"
                                         >
-                                            <Eye size={16}/> Ver
+                                            <Eye size={16}/> View
                                         </Link>
                                     </td>
                                 </tr>
