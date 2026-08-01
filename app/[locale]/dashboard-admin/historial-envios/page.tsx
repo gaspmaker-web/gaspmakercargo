@@ -62,7 +62,7 @@ export default async function HistorialEnviosPage({
       updatedAt: p.updatedAt,
       user: p.user,
       destino: getDestinationCode(p),
-      servicio: p.courierService || 'Estándar',
+      servicio: p.courierService || 'Standard',
       hasSignature: !!p.deliverySignature,
       awbUrl: p.awbDocumentUrl,
       isConsolidated: false,
@@ -75,7 +75,7 @@ export default async function HistorialEnviosPage({
       updatedAt: c.updatedAt,
       user: c.user,
       destino: getDestinationCode(c),
-      servicio: c.courierService || 'Consolidación Master',
+      servicio: c.courierService || 'Master Consolidation',
       hasSignature: false,
       awbUrl: c.awbDocumentUrl,
       isConsolidated: true,
@@ -89,12 +89,12 @@ export default async function HistorialEnviosPage({
         
         <div className="mb-8">
             <Link href="/dashboard-admin" className="inline-flex items-center text-gray-500 hover:text-blue-600 transition-colors font-medium text-sm mb-2">
-                <ArrowLeft size={18} className="mr-2" /> Volver al Panel
+                <ArrowLeft size={18} className="mr-2" /> Back to Panel
             </Link>
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-                        <FileText className="text-blue-600" /> Historial Global de Envíos
+                        <FileText className="text-blue-600" /> Global Shipment History
                     </h1>
                 </div>
                 <form className="relative">
@@ -109,12 +109,12 @@ export default async function HistorialEnviosPage({
                 <table className="w-full text-sm text-left">
                     <thead className="bg-gray-50 text-gray-500 uppercase text-[10px] font-bold border-b border-gray-100">
                         <tr>
-                            <th className="px-6 py-4">TRACKING / ID</th>
-                            <th className="px-6 py-4">CLIENTE / DESTINO</th>
-                            <th className="px-6 py-4">ESTADO ACTUAL</th>
-                            <th className="px-6 py-4 text-center">DOCS ADUANA (AWB)</th>
-                            <th className="px-6 py-4 text-center">PRUEBA DE ENTREGA (POD)</th>
-                            <th className="px-6 py-4 text-right">ACTUALIZACIÓN</th>
+                          <th className="px-6 py-4">TRACKING / ID</th>
+                          <th className="px-6 py-4">CLIENT / DESTINATION</th>
+                          <th className="px-6 py-4">CURRENT STATUS</th>
+                          <th className="px-6 py-4 text-center">CUSTOMS DOCS (AWB)</th>
+                          <th className="px-6 py-4 text-center">PROOF OF DELIVERY (POD)</th>
+                          <th className="px-6 py-4 text-right">UPDATE</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
@@ -156,7 +156,7 @@ export default async function HistorialEnviosPage({
                                     <td className="px-6 py-4 text-center">
                                         {envio.awbUrl ? (
                                             <a href={envio.awbUrl} target="_blank" className="inline-flex items-center gap-1.5 bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg text-[10px] font-bold border border-blue-200 hover:bg-blue-100 transition-all">
-                                                <FileCheck size={14}/> VER AWB
+                                                <FileCheck size={14}/> VIEW AWB
                                             </a>
                                         ) : (
                                             <ScanUploadForm 
