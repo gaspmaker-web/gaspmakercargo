@@ -64,7 +64,7 @@ export default async function BuzonesKycAdminPage({ params: { locale } }: Props)
                 <div className="bg-orange-50 border border-orange-200 px-4 py-2 rounded-xl flex items-center gap-3 shadow-sm">
                     <Clock className="text-orange-500" size={20} />
                     <div>
-                        <p className="text-[10px] text-orange-600 font-bold uppercase tracking-wider">Pendientes</p>
+                        <p className="text-[10px] text-orange-600 font-bold uppercase tracking-wider">Pending</p>
                         {/* 🔥 Ahora muestra el TOTAL real de trabajo pendiente */}
                         <p className="text-lg font-black text-orange-700 leading-none">{totalPending}</p>
                     </div>
@@ -85,7 +85,7 @@ export default async function BuzonesKycAdminPage({ params: { locale } }: Props)
                 <h2 className="font-bold text-gray-800 flex items-center gap-2"><History size={18} className="text-blue-500"/> Document Historical Record</h2>
                 <div className="relative hidden sm:block">
                     <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <input type="text" placeholder="Buscar cliente..." className="pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-blue-500" disabled />
+                    <input type="text" placeholder="Search client..." className="pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:border-blue-500" disabled />
                 </div>
             </div>
 
@@ -175,7 +175,7 @@ export default async function BuzonesKycAdminPage({ params: { locale } }: Props)
                                                 />
                                             ) : (
                                                 <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">
-                                                    Resuelto el {new Date(sub.updatedAt).toLocaleDateString()}
+                                                    Resolved on {new Date(sub.updatedAt).toLocaleDateString()}
                                                 </span>
                                             )}
                                         </td>
