@@ -98,7 +98,7 @@ export default async function HistorialEnviosPage({
                     </h1>
                 </div>
                 <form className="relative">
-                    <input name="q" type="text" placeholder="Buscar..." defaultValue={query} className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none w-full md:w-72 shadow-sm" />
+                    <input name="q" type="text" placeholder="Search..." defaultValue={query} className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none w-full md:w-72 shadow-sm" />
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16}/>
                 </form>
             </div>
