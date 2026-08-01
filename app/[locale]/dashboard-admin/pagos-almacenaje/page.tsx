@@ -121,7 +121,7 @@ export default async function StorageFeesPage({ params, searchParams }: { params
       identifier: p.gmcTrackingNumber,
       user: p.user,
       date: p.createdAt, // Fecha de ingreso real
-      description: `Lleva ${daysInWarehouse} días en bodega (Límite: 30 días)`,
+      description: `Has been in warehouse for ${daysInWarehouse} days (Limit: 30 days)`,
       amount: calculatedDebt, 
       status: 'DEUDA_ACTIVA',
       icon: <Box className="text-red-600" size={20} />,
@@ -148,20 +148,20 @@ export default async function StorageFeesPage({ params, searchParams }: { params
       if (s === 'DEUDA_ACTIVA') {
           return (
             <span className="bg-red-100 text-red-700 px-2 py-1 rounded text-xs font-bold flex items-center justify-center gap-1 border border-red-200 animate-pulse">
-                <AlertTriangle size={12}/> DEUDA ACTIVA
+                <AlertTriangle size={12}/> ACTIVE DEBT
             </span>
           );
       }
       if (s === 'PAGADO' || s === 'COMPLETADO') {
           return (
             <span className="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold flex items-center justify-center gap-1 border border-green-200">
-                <CheckCircle size={12}/> PAGADO
+                <CheckCircle size={12}/> PAID
             </span>
           );
       }
       return (
         <span className="bg-yellow-50 text-yellow-700 px-2 py-1 rounded text-xs font-bold flex items-center justify-center gap-1 border border-yellow-200">
-            <Clock size={12}/> PENDIENTE
+            <Clock size={12}/> PENDING
         </span>
       );
   };
@@ -178,10 +178,10 @@ export default async function StorageFeesPage({ params, searchParams }: { params
                         <ArrowLeft size={24} />
                     </Link>
                     <h1 className="text-3xl font-bold text-gmc-gris-oscuro font-garamond">
-                        Control de Almacenaje
+                     Storage Control
                     </h1>
                 </div>
-                <p className="text-gray-500 ml-8 mb-4">Monitor de cobros por tiempo excedido en bodega.</p>
+                <p className="text-gray-500 ml-8 mb-4">Monitor of charges for exceeded warehouse time.</p>
                 
                 {/* BUSCADOR */}
                 <form className="ml-8 flex gap-2">
@@ -190,23 +190,23 @@ export default async function StorageFeesPage({ params, searchParams }: { params
                         <input 
                             name="q" 
                             defaultValue={query} 
-                            placeholder="Buscar cliente, suite o ID..." 
+                            placeholder="Search client, suite or ID..." 
                             className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none w-64"
                         />
                     </div>
                     <button type="submit" className="bg-gmc-gris-oscuro text-white px-4 py-2 rounded-lg font-bold hover:bg-black">
-                        Buscar
+                     Search
                     </button>
                 </form>
             </div>
             
             <div className="flex gap-4">
                 <div className="bg-white px-6 py-3 rounded-xl shadow-sm border border-red-200 flex flex-col items-end bg-red-50/50">
-                    <span className="text-xs text-red-600 uppercase font-bold flex items-center gap-1"><AlertTriangle size={12}/> Deuda Activa</span>
+                    <span className="text-xs text-red-600 uppercase font-bold flex items-center gap-1"><AlertTriangle size={12}/> Active Debt</span>
                     <span className="font-bold text-2xl text-red-700">${totalActiveDebt.toFixed(2)}</span>
                 </div>
                 <div className="bg-white px-6 py-3 rounded-xl shadow-sm border border-green-200 flex flex-col items-end bg-green-50/30">
-                    <span className="text-xs text-green-600 uppercase font-bold">Ingresos Estimados</span>
+                    <span className="text-xs text-green-600 uppercase font-bold">Estimated Income</span>
                     <span className="font-bold text-2xl text-green-700">${totalRevenue.toFixed(2)}</span>
                 </div>
             </div>
@@ -218,17 +218,17 @@ export default async function StorageFeesPage({ params, searchParams }: { params
                 <table className="w-full text-left border-collapse">
                     <thead className="bg-gray-50 text-gray-500 text-xs uppercase font-bold border-b border-gray-200">
                         <tr>
-                            <th className="p-4">Servicio</th>
-                            <th className="p-4">Cliente</th>
-                            <th className="p-4">Fecha (Ingreso/Cobro)</th>
-                            <th className="p-4">Concepto</th>
-                            <th className="p-4 text-center">Monto</th>
-                            <th className="p-4 text-center">Estado</th>
+                           <th className="p-4">Service</th>
+                           <th className="p-4">Client</th>
+                           <th className="p-4">Date (Entry/Charge)</th>
+                           <th className="p-4">Concept</th>
+                           <th className="p-4 text-center">Amount</th>
+                           <th className="p-4 text-center">Status</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100 text-sm">
                         {allRecords.length === 0 ? (
-                            <tr><td colSpan={6} className="p-10 text-center text-gray-400">No hay pagos ni deudas de almacenaje registradas.</td></tr>
+                            <tr><td colSpan={6} className="p-10 text-center text-gray-400">No storage payments or debts registered.</td></tr>
                         ) : (
                             allRecords.map((record) => (
                                 <tr key={record.id} className={`transition-colors ${record.status === 'DEUDA_ACTIVA' ? 'bg-red-50/30 hover:bg-red-50' : 'hover:bg-orange-50/20'}`}>
