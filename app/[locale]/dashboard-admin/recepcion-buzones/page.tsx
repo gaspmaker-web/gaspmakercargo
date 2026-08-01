@@ -166,7 +166,7 @@ export default function EstacionRecepcionBodega() {
                     disabled={isSearching || !suiteQuery}
                     className="bg-gray-900 hover:bg-black text-white px-8 rounded-2xl font-bold text-lg transition-colors flex items-center gap-2 disabled:opacity-50"
                 >
-                    {isSearching ? <Loader2 className="animate-spin" /> : "Buscar"}
+                    {isSearching ? <Loader2 className="animate-spin" /> : "Search"}
                 </button>
             </form>
         </div>
@@ -180,7 +180,7 @@ export default function EstacionRecepcionBodega() {
                             <User className="text-blue-600" size={24} />
                         </div>
                         <div>
-                            <p className="text-xs font-bold text-blue-500 uppercase tracking-widest">Destinatario</p>
+                            <p className="text-xs font-bold text-blue-500 uppercase tracking-widest">Recipient</p>
                             <h2 className="text-xl font-black text-gray-900">{foundUser.name}</h2>
                         </div>
                     </div>
@@ -193,7 +193,7 @@ export default function EstacionRecepcionBodega() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     {/* COLUMNA IZQUIERDA: FOTO */}
                     <div className="space-y-4">
-                        <h3 className="font-bold text-gray-900 flex items-center gap-2"><Camera size={18}/> Foto Frontal del Sobre</h3>
+                        <h3 className="font-bold text-gray-900 flex items-center gap-2"><Camera size={18}/> Envelope Front Photo</h3>
                         
                         <label className="block w-full aspect-[4/3] bg-gray-50 border-2 border-dashed border-gray-300 rounded-2xl overflow-hidden cursor-pointer hover:bg-gray-100 hover:border-blue-400 transition-all relative group">
                             <input type="file" accept="image/*" capture="environment" onChange={handleImageChange} className="hidden" />
