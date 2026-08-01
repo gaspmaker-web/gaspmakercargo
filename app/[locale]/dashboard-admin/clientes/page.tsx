@@ -122,7 +122,7 @@ export default async function GestionClientesPage({
                     
                     <div className="flex flex-col items-end gap-2 w-full md:w-auto">
                         <div className="bg-white px-4 py-1 rounded-full shadow-sm border border-gray-200 text-xs font-bold text-gray-500 mb-1">
-                            {serializedUsers.length} {serializedUsers.length === 1 ? 'Usuario' : 'Usuarios'}
+                            {serializedUsers.length} {serializedUsers.length === 1 ? 'User' : 'Users'}
                         </div>
                         {/* Buscador */}
                         <ClientSearch />
