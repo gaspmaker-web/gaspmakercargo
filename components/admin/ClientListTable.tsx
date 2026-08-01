@@ -100,7 +100,7 @@ export default function ClientListTable({ clients, locale }: ClientListTableProp
                       href={`/${locale}/dashboard-admin/clientes/${client.id}`}
                       className="inline-flex items-center gap-2 text-sm font-bold text-gmc-dorado-principal hover:text-gmc-gris-oscuro hover:underline transition-all"
                     >
-                      <Eye size={18} /> Ver Detalles
+                      <Eye size={18} /> View Details
                     </Link>
                   </td>
 

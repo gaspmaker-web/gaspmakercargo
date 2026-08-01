@@ -105,7 +105,7 @@ export default async function GestionClientesPage({
                         className="inline-flex items-center text-sm font-bold text-gray-500 hover:text-gmc-dorado-principal transition-colors"
                     >
                         <ArrowLeft size={20} className="mr-2" />
-                        Volver al Panel
+                        Back to Panel
                     </Link>
                 </div>
 
@@ -113,10 +113,10 @@ export default async function GestionClientesPage({
                 <div className="flex flex-col md:flex-row justify-between items-end gap-4 mb-6">
                     <div>
                         <h1 className="text-3xl font-bold text-gmc-gris-oscuro font-garamond">
-                            Gestión de Clientes
+                            Client Management
                         </h1>
                         <p className="text-gray-500 mt-1 text-sm">
-                            Administra los usuarios registrados y sus roles.
+                            Manage registered users and their roles.
                         </p>
                     </div>
                     
