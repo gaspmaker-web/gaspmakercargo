@@ -79,7 +79,7 @@ export default function PickupActionButtons({
         <body>
           <div class="header">
             <div>
-              <h1 class="title">Hoja de Preparación</h1>
+              <h1 class="title">Preparation Sheet</h1>
               <p class="company">Gasp Maker Cargo - Inventario de Buzones</p>
             </div>
             <div>
@@ -117,7 +117,7 @@ export default function PickupActionButtons({
           <p style="font-weight: bold; font-size: 14px;">Total de documentos a preparar: ${mailItems.length}</p>
 
           <div class="footer">
-            Documento de uso interno. El empleado debe marcar la casilla "Listo" al encontrar cada sobre físico en la estantería.
+            Internal use document. Staff must check the "Ready" box when finding each physical envelope on the shelf.
             <br><br>Firma del Empleado: __________________________
           </div>
           
@@ -150,7 +150,7 @@ export default function PickupActionButtons({
           className="flex-1 md:flex-none bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-sm"
         >
           {loading ? <Loader2 className="animate-spin" size={14}/> : <PackageSearch size={14}/>}
-          Marcar como Preparado
+           Mark as Prepared
         </button>
       )}
 
@@ -161,7 +161,7 @@ export default function PickupActionButtons({
           className="flex-1 md:flex-none bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-md animate-pulse"
         >
           {loading ? <Loader2 className="animate-spin" size={14}/> : <Handshake size={14}/>}
-          Confirmar Entrega ($0.00)
+          Confirm Delivery ($0.00)
         </button>
       )}
     </div>

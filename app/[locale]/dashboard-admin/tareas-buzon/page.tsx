@@ -61,8 +61,8 @@ export default async function TareasBuzonPage({ params: { locale } }: Props) {
                 <ClipboardList className="text-white" size={28} />
             </div>
             <div>
-                <h1 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight uppercase">Mesa de Tareas</h1>
-                <p className="text-gray-500 font-medium">Gestión operativa del Buzón Virtual y Entregas Físicas.</p>
+                <h1 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight uppercase">Task Desk</h1>
+                <p className="text-gray-500 font-medium">Operational management of Virtual Mailbox and Physical Deliveries.</p>
             </div>
         </div>
 
@@ -71,8 +71,8 @@ export default async function TareasBuzonPage({ params: { locale } }: Props) {
                 <div className="bg-green-50 text-green-600 p-4 rounded-full mb-4 shadow-sm border border-green-100">
                     <Clock size={32} />
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-2">¡Mesa Operativa Limpia!</h3>
-                <p className="text-gray-500">No hay tareas de sobres ni recogidas programadas pendientes de procesar.</p>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">Clean Operations Desk!</h3>
+                <p className="text-gray-500">No envelope tasks or scheduled pickups pending processing.</p>
             </div>
         ) : (
             <>
@@ -82,7 +82,7 @@ export default async function TareasBuzonPage({ params: { locale } }: Props) {
                 {pendingPickups.length > 0 && (
                     <div className="space-y-4">
                         <h2 className="text-lg font-black text-gray-800 uppercase tracking-wider flex items-center gap-2 border-b border-gray-200 pb-2">
-                            <MapPin className="text-orange-600" size={20} /> Entregas Programadas (Mostrador)
+                            <MapPin className="text-orange-600" size={20} /> Scheduled Deliveries (Counter)
                         </h2>
                         <div className="grid gap-4">
                             {pendingPickups.map((task) => (
@@ -110,7 +110,7 @@ export default async function TareasBuzonPage({ params: { locale } }: Props) {
                                 <div className="flex-1">
                                     <div className="flex items-center gap-2 text-sm font-bold text-orange-700 bg-orange-50 w-max px-3 py-1.5 rounded-lg border border-orange-100">
                                         <Mail size={16} /> 
-                                        <span>Preparar {task.mailItems.length} Documentos</span>
+                                        <span>Prepare {task.mailItems.length} Documents</span>
                                     </div>
                                 </div>
 
@@ -141,17 +141,17 @@ export default async function TareasBuzonPage({ params: { locale } }: Props) {
                 {pendingTasks.length > 0 && (
                     <div className="space-y-4 pt-4">
                         <h2 className="text-lg font-black text-gray-800 uppercase tracking-wider flex items-center gap-2 border-b border-gray-200 pb-2">
-                            <ClipboardList className="text-indigo-600" size={20} /> Tareas Internas de Sobres
+                            <ClipboardList className="text-indigo-600" size={20} /> Internal Envelope Tasks
                         </h2>
                         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
                             <div className="overflow-x-auto">
                                 <table className="w-full text-left text-sm whitespace-nowrap">
                                     <thead className="bg-gray-50 border-b border-gray-100 text-gray-500 uppercase tracking-wider text-[11px] font-bold">
                                         <tr>
-                                            <th className="px-6 py-4">Foto del Sobre</th>
-                                            <th className="px-6 py-4">Cliente / Suite</th>
-                                            <th className="px-6 py-4">Tarea Solicitada</th>
-                                            <th className="px-6 py-4 text-right">Ejecutar Acción</th>
+                                         <th className="px-6 py-4">Envelope Photo</th>
+                                         <th className="px-6 py-4">Client / Suite</th>
+                                         <th className="px-6 py-4">Requested Task</th>
+                                         <th className="px-6 py-4 text-right">Execute Action</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-100 text-gray-700 font-medium">
@@ -198,9 +198,9 @@ export default async function TareasBuzonPage({ params: { locale } }: Props) {
 
                                                 {/* ETIQUETA DE TAREA */}
                                                 <td className="px-6 py-4">
-                                                    {item.status === 'SCAN_REQUESTED' && <span className="text-[11px] bg-blue-100 text-blue-800 border border-blue-200 px-3 py-1.5 rounded-lg font-bold uppercase tracking-wider flex items-center gap-1.5 w-max"><Search size={14}/> Escanear Contenido</span>}
-                                                    {item.status === 'SHRED_REQUESTED' && <span className="text-[11px] bg-red-100 text-red-800 border border-red-200 px-3 py-1.5 rounded-lg font-bold uppercase tracking-wider flex items-center gap-1.5 w-max animate-pulse"><Trash2 size={14}/> Destruir Sobre</span>}
-                                                    {item.status === 'CARGO_REQUESTED' && <span className="text-[11px] bg-indigo-100 text-indigo-800 border border-indigo-200 px-3 py-1.5 rounded-lg font-bold uppercase tracking-wider flex items-center gap-1.5 w-max animate-pulse"><PackagePlus size={14}/> Mover a Carga</span>}
+                                                    {item.status === 'SCAN_REQUESTED' && <span className="text-[11px] bg-blue-100 text-blue-800 border border-blue-200 px-3 py-1.5 rounded-lg font-bold uppercase tracking-wider flex items-center gap-1.5 w-max"><Search size={14}/> Scan Content</span>}
+                                                    {item.status === 'SHRED_REQUESTED' && <span className="text-[11px] bg-red-100 text-red-800 border border-red-200 px-3 py-1.5 rounded-lg font-bold uppercase tracking-wider flex items-center gap-1.5 w-max animate-pulse"><Trash2 size={14}/> Shred Envelope</span>}
+                                                    {item.status === 'CARGO_REQUESTED' && <span className="text-[11px] bg-indigo-100 text-indigo-800 border border-indigo-200 px-3 py-1.5 rounded-lg font-bold uppercase tracking-wider flex items-center gap-1.5 w-max animate-pulse"><PackagePlus size={14}/> Move to Cargo</span>}
                                                 </td>
 
                                                 {/* BOTONES DE ACCIÓN */}
@@ -213,7 +213,7 @@ export default async function TareasBuzonPage({ params: { locale } }: Props) {
                                                                 href={`/${locale}/dashboard-admin/solicitudes-escaneo`}
                                                                 className="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-[11px] uppercase tracking-wider font-bold transition-all shadow-sm active:scale-95"
                                                             >
-                                                                <Search size={14} /> Ir a Escanear
+                                                                <Search size={14} /> Go to Scan
                                                             </Link>
                                                         )}
                                                     </div>
