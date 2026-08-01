@@ -51,10 +51,10 @@ export default function CatalogoAdminPage() {
       
       {/* Conectamos la referencia (ref) y la nueva función (action) */}
       <form ref={formRef} action={handleAction} className="space-y-4">
-        <input name="title" placeholder="Título del Producto" className="w-full p-2 border rounded focus:ring-2 focus:ring-gmc-dorado-principal outline-none" required />
-        <input name="price" placeholder="Precio (ej. $39.99)" className="w-full p-2 border rounded focus:ring-2 focus:ring-gmc-dorado-principal outline-none" required />
-        <input name="imageUrl" placeholder="URL de la Imagen" className="w-full p-2 border rounded focus:ring-2 focus:ring-gmc-dorado-principal outline-none" required />
-        <input name="affiliateUrl" placeholder="Enlace de Afiliado" className="w-full p-2 border rounded focus:ring-2 focus:ring-gmc-dorado-principal outline-none" required />
+      <input name="title" placeholder="Product Title" className="w-full p-2 border rounded focus:ring-2 focus:ring-gmc-dorado-principal outline-none" required />
+      <input name="price" placeholder="Price (e.g. $39.99)" className="w-full p-2 border rounded focus:ring-2 focus:ring-gmc-dorado-principal outline-none" required />
+      <input name="imageUrl" placeholder="Image URL" className="w-full p-2 border rounded focus:ring-2 focus:ring-gmc-dorado-principal outline-none" required />
+      <input name="affiliateUrl" placeholder="Affiliate Link" className="w-full p-2 border rounded focus:ring-2 focus:ring-gmc-dorado-principal outline-none" required />
         
         <select name="category" className="w-full p-2 border rounded focus:ring-2 focus:ring-gmc-dorado-principal outline-none" required>
        <option value="">Select a category...</option>
