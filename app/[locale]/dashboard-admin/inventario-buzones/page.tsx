@@ -78,8 +78,8 @@ export default async function InventarioBuzonesPage({ params: { locale } }: Prop
                     <Archive className="text-gmc-dorado-principal" size={28} />
                 </div>
                 <div>
-                    <h1 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight uppercase">Archivo Maestro</h1>
-                    <p className="text-gray-500 font-medium">Control global y registro histórico de correspondencia.</p>
+                    <h1 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight uppercase">Master Archive</h1>
+                    <p className="text-gray-500 font-medium">Global control and historical record of correspondence.</p>
                 </div>
             </div>
 
@@ -87,21 +87,21 @@ export default async function InventarioBuzonesPage({ params: { locale } }: Prop
                 <div className="bg-orange-50 border border-orange-200 px-4 py-2 rounded-xl flex items-center gap-3 shadow-sm">
                     <AlertTriangle className="text-orange-500" size={20} />
                     <div>
-                        <p className="text-[10px] text-orange-600 font-bold uppercase tracking-wider">Caducados</p>
+                        <p className="text-[10px] text-orange-600 font-bold uppercase tracking-wider">Expired</p>
                         <p className="text-lg font-black text-orange-700 leading-none">{totalExpired}</p>
                     </div>
                 </div>
                 <div className="bg-red-50 border border-red-200 px-4 py-2 rounded-xl flex items-center gap-3 shadow-sm">
                     <Trash2 className="text-red-500" size={20} />
                     <div>
-                        <p className="text-[10px] text-red-500 font-bold uppercase tracking-wider">Por Triturar</p>
+                        <p className="text-[10px] text-red-500 font-bold uppercase tracking-wider">To Shred</p>
                         <p className="text-lg font-black text-red-700 leading-none">{totalShredRequests}</p>
                     </div>
                 </div>
                 <div className="bg-blue-50 border border-blue-200 px-4 py-2 rounded-xl flex items-center gap-3 shadow-sm">
                     <Search className="text-blue-500" size={20} />
                     <div>
-                        <p className="text-[10px] text-blue-500 font-bold uppercase tracking-wider">Por Escanear</p>
+                        <p className="text-[10px] text-blue-500 font-bold uppercase tracking-wider">To Scan</p>
                         <p className="text-lg font-black text-blue-700 leading-none">{totalScanRequests}</p>
                     </div>
                 </div>
@@ -114,11 +114,11 @@ export default async function InventarioBuzonesPage({ params: { locale } }: Prop
                 <table className="w-full text-left text-sm whitespace-nowrap">
                     <thead className="bg-gray-50 border-b border-gray-100 text-gray-500 uppercase tracking-wider text-[11px] font-bold">
                         <tr>
-                            <th className="px-6 py-4">Sobre / Remitente</th>
-                            <th className="px-6 py-4">Cliente (Suite)</th>
-                            <th className="px-6 py-4">Fecha Ingreso</th>
-                            <th className="px-6 py-4">Estado Físico</th>
-                            <th className="px-6 py-4 text-right">Acción / Historial Digital</th>
+                         <th className="px-6 py-4">Envelope / Sender</th>
+                         <th className="px-6 py-4">Client (Suite)</th>
+                         <th className="px-6 py-4">Entry Date</th>
+                         <th className="px-6 py-4">Physical Status</th>
+                         <th className="px-6 py-4 text-right">Action / Digital History</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100 text-gray-700 font-medium">
@@ -160,25 +160,25 @@ export default async function InventarioBuzonesPage({ params: { locale } }: Prop
                                     <div className="flex flex-col">
                                         <span>{new Date(item.receivedAt).toLocaleDateString()}</span>
                                         <span className={`text-[10px] uppercase font-bold tracking-wider mt-0.5 ${item.isExpired ? 'text-red-600' : 'text-gray-400'}`}>
-                                            {item.diffInDays} días almacenado
+                                            {item.diffInDays} days stored
                                         </span>
                                     </div>
                                 </td>
                                 <td className="px-6 py-4">
                                     <div className="flex flex-col gap-1.5">
                                         {/* Etiquetas Visuales Originales */}
-                                        {item.status === 'UNREAD' && <span className="text-[10px] bg-gray-100 text-gray-600 px-2 py-1 rounded-full font-bold uppercase tracking-wider flex items-center gap-1 w-max"><Mailbox size={12}/> En Suite</span>}
-                                        {item.status === 'SCAN_REQUESTED' && <span className="text-[10px] bg-blue-100 text-blue-700 px-2 py-1 rounded-full font-bold uppercase tracking-wider flex items-center gap-1 w-max"><Search size={12}/> Requiere Escaneo</span>}
-                                        {item.status === 'SCANNED_READY' && <span className="text-[10px] bg-green-100 text-green-700 px-2 py-1 rounded-full font-bold uppercase tracking-wider flex items-center gap-1 w-max"><CheckCircle2 size={12}/> Guardado (Leído)</span>}
-                                        {item.status === 'SHRED_REQUESTED' && <span className="text-[10px] bg-red-100 text-red-700 px-2 py-1 rounded-full font-bold uppercase tracking-wider flex items-center gap-1 w-max animate-pulse"><Trash2 size={12}/> Requiere Triturar</span>}
-                                        {item.status === 'SHREDDED' && <span className="text-[10px] bg-slate-800 text-white px-2 py-1 rounded-full font-bold uppercase tracking-wider flex items-center gap-1 w-max"><Archive size={12}/> Destruido</span>}
-                                        {item.status === 'CARGO_REQUESTED' && <span className="text-[10px] bg-indigo-100 text-indigo-700 px-2 py-1 rounded-full font-bold uppercase tracking-wider flex items-center gap-1 w-max animate-pulse"><PackagePlus size={12}/> Requiere Carga</span>}
-                                        {item.status === 'MOVED_TO_CARGO' && <span className="text-[10px] bg-purple-800 text-white px-2 py-1 rounded-full font-bold uppercase tracking-wider flex items-center gap-1 w-max"><PackagePlus size={12}/> En Paquetes</span>}
-                                        {item.isExpired && <span className="text-[10px] bg-red-600 text-white px-2 py-1 rounded-full font-bold uppercase tracking-wider flex items-center gap-1 w-max animate-pulse shadow-sm"><AlertTriangle size={12}/> VENCIDO</span>}
-                                        
-                                        {/* 🔥 NUEVAS ETIQUETAS DE PICKUP */}
-                                        {item.status === 'PICKUP_SCHEDULED' && <span className="text-[10px] bg-orange-100 text-orange-800 px-2 py-1 rounded-full font-bold uppercase tracking-wider flex items-center gap-1 w-max"><MapPin size={12}/> Cita Programada</span>}
-                                        {item.status === 'DELIVERED_PHYSICAL' && <span className="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-1 rounded-full font-bold uppercase tracking-wider flex items-center gap-1 w-max"><UserCheck size={12}/> Entregado Físico</span>}
+                                      {item.status === 'UNREAD' && <span className="text-[10px] bg-gray-100 text-gray-600 px-2 py-1 rounded-full font-bold uppercase tracking-wider flex items-center gap-1 w-max"><Mailbox size={12}/> In Suite</span>}
+                                      {item.status === 'SCAN_REQUESTED' && <span className="text-[10px] bg-blue-100 text-blue-700 px-2 py-1 rounded-full font-bold uppercase tracking-wider flex items-center gap-1 w-max"><Search size={12}/> Requires Scan</span>}
+                                      {item.status === 'SCANNED_READY' && <span className="text-[10px] bg-green-100 text-green-700 px-2 py-1 rounded-full font-bold uppercase tracking-wider flex items-center gap-1 w-max"><CheckCircle2 size={12}/> Saved (Read)</span>}
+                                      {item.status === 'SHRED_REQUESTED' && <span className="text-[10px] bg-red-100 text-red-700 px-2 py-1 rounded-full font-bold uppercase tracking-wider flex items-center gap-1 w-max animate-pulse"><Trash2 size={12}/> Requires Shredding</span>}
+                                      {item.status === 'SHREDDED' && <span className="text-[10px] bg-slate-800 text-white px-2 py-1 rounded-full font-bold uppercase tracking-wider flex items-center gap-1 w-max"><Archive size={12}/> Destroyed</span>}
+                                      {item.status === 'CARGO_REQUESTED' && <span className="text-[10px] bg-indigo-100 text-indigo-700 px-2 py-1 rounded-full font-bold uppercase tracking-wider flex items-center gap-1 w-max animate-pulse"><PackagePlus size={12}/> Requires Cargo</span>}
+                                      {item.status === 'MOVED_TO_CARGO' && <span className="text-[10px] bg-purple-800 text-white px-2 py-1 rounded-full font-bold uppercase tracking-wider flex items-center gap-1 w-max"><PackagePlus size={12}/> In Packages</span>}
+                                      {item.isExpired && <span className="text-[10px] bg-red-600 text-white px-2 py-1 rounded-full font-bold uppercase tracking-wider flex items-center gap-1 w-max animate-pulse shadow-sm"><AlertTriangle size={12}/> EXPIRED</span>}
+
+                                       {/* 🔥 NUEVAS ETIQUETAS DE PICKUP */}
+                                      {item.status === 'PICKUP_SCHEDULED' && <span className="text-[10px] bg-orange-100 text-orange-800 px-2 py-1 rounded-full font-bold uppercase tracking-wider flex items-center gap-1 w-max"><MapPin size={12}/> Scheduled Appointment</span>}
+                                      {item.status === 'DELIVERED_PHYSICAL' && <span className="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-1 rounded-full font-bold uppercase tracking-wider flex items-center gap-1 w-max"><UserCheck size={12}/> Physical Delivery</span>}
                                     </div>
                                 </td>
                                 <td className="px-6 py-4 text-right">
@@ -188,7 +188,7 @@ export default async function InventarioBuzonesPage({ params: { locale } }: Prop
                                         {item.isExpired && (
                                             <form action={actionPurgar.bind(null, item.id)}>
                                                 <button type="submit" className="inline-flex items-center gap-1.5 bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg text-[11px] uppercase tracking-wider font-bold transition-all shadow-md active:scale-95">
-                                                    <Trash2 size={14} /> Purgar (Admin)
+                                                    <Trash2 size={14} /> Purge (Admin)
                                                 </button>
                                             </form>
                                         )}
@@ -209,7 +209,7 @@ export default async function InventarioBuzonesPage({ params: { locale } }: Prop
                                                 href={`/${locale}/dashboard-admin/solicitudes-escaneo`}
                                                 className="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-[11px] uppercase tracking-wider font-bold transition-all shadow-sm active:scale-95"
                                             >
-                                                <Search size={14} /> Ir a Escanear
+                                                <Search size={14} /> Go to Scan
                                             </Link>
                                         )}
 
@@ -221,7 +221,7 @@ export default async function InventarioBuzonesPage({ params: { locale } }: Prop
                                                 rel="noopener noreferrer"
                                                 className="inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 px-3 py-1.5 rounded-lg text-[11px] uppercase tracking-wider font-bold transition-all shadow-sm"
                                             >
-                                                <FileText size={14} /> Ver PDF Guardado
+                                                <FileText size={14} /> View Saved PDF
                                             </a>
                                         )}
 
@@ -232,7 +232,7 @@ export default async function InventarioBuzonesPage({ params: { locale } }: Prop
                                                  item.status === 'MOVED_TO_CARGO' ? 'Movido a Paquetes' : 
                                                  item.status === 'PICKUP_SCHEDULED' ? 'En espera de cliente' :
                                                  item.status === 'DELIVERED_PHYSICAL' ? 'Entregado al cliente' :
-                                                 'Físico en bodega'}
+                                                 'Physical in warehouse'}
                                             </span>
                                         )}
                                     </div>
