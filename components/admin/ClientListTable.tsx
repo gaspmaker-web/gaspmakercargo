@@ -27,11 +27,11 @@ export default function ClientListTable({ clients, locale }: ClientListTableProp
           {/* Cabecera */}
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
-              <th className="p-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Nombre</th>
-              <th className="p-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Email</th>
-              <th className="p-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Fecha Registro</th>
-              <th className="p-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Rol</th>
-              <th className="p-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-center">Acciones</th>
+             <th className="p-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Name</th>
+             <th className="p-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Email</th>
+             <th className="p-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Registration Date</th>
+             <th className="p-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Role</th>
+             <th className="p-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-center">Actions</th>
             </tr>
           </thead>
 
@@ -40,7 +40,7 @@ export default function ClientListTable({ clients, locale }: ClientListTableProp
             {clients.length === 0 ? (
               <tr>
                 <td colSpan={5} className="p-8 text-center text-gray-400">
-                  No se encontraron clientes.
+                No clients found.
                 </td>
               </tr>
             ) : (
