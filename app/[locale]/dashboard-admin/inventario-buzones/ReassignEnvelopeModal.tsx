@@ -30,14 +30,14 @@ export default function ReassignEnvelopeModal({
         startTransition(async () => {
             const res = await reassignEnvelope(mailItemId, newSuite);
             if (res.success) {
-                setMessage({ type: 'success', text: '¡Reasignado con éxito!' });
+                setMessage({ type: 'success', text: 'Reassigned successfully!' });
                 setTimeout(() => {
                     setIsOpen(false);
                     setMessage(null);
                     setNewSuite('');
                 }, 2000);
             } else {
-                setMessage({ type: 'error', text: res.error || 'Ocurrió un error' });
+                setMessage({ type: 'error', text: res.error || 'An error occurred' });
             }
         });
     };
@@ -77,10 +77,10 @@ export default function ReassignEnvelopeModal({
                                 </button>
                             </div>
 
-                            <h2 className="text-2xl font-black text-gray-900 mb-6">Detalles del Sobre</h2>
+                            <h2 className="text-2xl font-black text-gray-900 mb-6">Envelope Details</h2>
 
                             <div className="bg-slate-50 border border-slate-200 p-4 rounded-2xl mb-8 shadow-inner">
-                                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-1">Cliente Actual</p>
+                                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-1">Current Client</p>
                                 <p className="font-bold text-gray-900 text-lg truncate">{currentName}</p>
                                 <p className="text-blue-600 font-black">Suite #{currentSuite}</p>
                             </div>
@@ -88,7 +88,7 @@ export default function ReassignEnvelopeModal({
                             <div className="border-t border-gray-100 pt-8 mt-auto">
                                 <h3 className="text-sm font-bold text-gray-900 mb-4 flex items-center gap-2">
                                     <RefreshCw size={18} className="text-orange-500" /> 
-                                    ¿Error? Asignar a otra Suite
+                                    Error? Assign to another Suite
                                 </h3>
                                 
                                 <form onSubmit={handleReassign} className="space-y-4">

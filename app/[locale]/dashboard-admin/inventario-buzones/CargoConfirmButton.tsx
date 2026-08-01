@@ -9,7 +9,7 @@ export default function CargoConfirmButton({ mailItemId }: { mailItemId: string 
   const [isProcessing, setIsProcessing] = useState(false);
 
   const handleConfirm = async () => {
-    if (!confirm("📦 ¿Confirmas que tomaste este sobre físico y lo pasaste al estante de PAQUETES/CARGA?")) return;
+    if (!confirm("📦 Confirm that you took this physical envelope and moved it to the PACKAGES/CARGO shelf?")) return;
 
     setIsProcessing(true);
     try {
@@ -26,7 +26,7 @@ export default function CargoConfirmButton({ mailItemId }: { mailItemId: string 
         alert(`Error: ${data.error}`);
       }
     } catch (error) {
-      alert("Error de conexión.");
+      alert("Connection error.");
     } finally {
       setIsProcessing(false);
     }
@@ -39,7 +39,7 @@ export default function CargoConfirmButton({ mailItemId }: { mailItemId: string 
       className="inline-flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg text-[11px] uppercase tracking-wider font-bold transition-all shadow-sm active:scale-95 disabled:opacity-50"
     >
       {isProcessing ? <Loader2 size={14} className="animate-spin" /> : <PackagePlus size={14} />}
-      Convertir a Paquete
+    Convert to Package
     </button>
   );
 }
