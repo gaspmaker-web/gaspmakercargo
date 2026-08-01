@@ -65,10 +65,10 @@ export default function EstacionRecepcionBodega() {
         if (res.ok) {
             setFoundUser(data);
         } else {
-            alert(data.error || "Buzón no encontrado");
+            alert(data.error || "Mailbox not found");
         }
     } catch (error) {
-        alert("Error de conexión");
+        alert("Connection error");
     } finally {
         setIsSearching(false);
     }
@@ -107,10 +107,10 @@ export default function EstacionRecepcionBodega() {
 
         if (res.ok) {
             // 🔥 3. ALERTA PARA ESCRIBIR EL TRACKING CORTO EN EL SOBRE
-            alert(`✅ ¡Sobre registrado en el buzón!\n\n✍️ ESCRIBE ESTA REFERENCIA EN EL SOBRE:\n\n${autoTracking}`);
+            alert(`✅ Envelope registered in mailbox!\n\n✍️ WRITE THIS REFERENCE ON THE ENVELOPE:\n\n${autoTracking}`);
             handleReset(); 
         } else {
-            alert(data.error || "Ocurrió un error");
+            alert(data.error || "An error occurred");
         }
     } catch (error) {
         alert("Error de red");
@@ -142,8 +142,8 @@ export default function EstacionRecepcionBodega() {
                 <Mailbox className="text-white" size={28} />
             </div>
             <div>
-                <h1 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight">Estación de Recepción</h1>
-                <p className="text-gray-500 font-medium">Escanea o ingresa el número de PMB (Suite) para procesar correspondencia.</p>
+               <h1 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight">Reception Station</h1>
+               <p className="text-gray-500 font-medium">Scan or enter the PMB number (Suite) to process mail.</p>
             </div>
         </div>
 
@@ -203,8 +203,8 @@ export default function EstacionRecepcionBodega() {
                             ) : (
                                 <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400 group-hover:text-blue-500">
                                     <Camera size={48} className="mb-3 opacity-50" />
-                                    <p className="font-bold">Tocar para tomar foto</p>
-                                    <p className="text-xs mt-1">O subir desde galería</p>
+                                    <p className="font-bold">Tap to take photo</p>
+                                    <p className="text-xs mt-1">Or upload from gallery</p>
                                 </div>
                             )}
                         </label>
@@ -215,15 +215,15 @@ export default function EstacionRecepcionBodega() {
                         
                         {/* PESO */}
                         <div>
-                            <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2"><Weight size={18}/> Peso (Para envíos)</h3>
+                            <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2"><Weight size={18}/> Weight (For shipments)</h3>
                             <div className="flex gap-4 items-center">
                                 <div className="relative flex-1">
                                     <input type="number" min="0" value={weightLb} onChange={(e) => setWeightLb(e.target.value)} placeholder="0" className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl text-lg font-bold text-right outline-none focus:border-blue-500" />
-                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">Libras (lb)</span>
+                                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">Pounds (lb)</span>
                                 </div>
                                 <div className="relative flex-1">
                                     <input type="number" min="0" max="15.99" step="0.1" value={weightOz} onChange={(e) => setWeightOz(e.target.value)} placeholder="0.0" className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl text-lg font-bold text-right outline-none focus:border-blue-500" />
-                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">Onzas (oz)</span>
+                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">Ounces (oz)</span>
                                 </div>
                             </div>
                             <p className="text-right text-xs text-gray-400 mt-2 font-medium">Total Sistema: <strong className="text-blue-600">{totalOz.toFixed(2)} oz</strong></p>
@@ -231,7 +231,7 @@ export default function EstacionRecepcionBodega() {
 
                         {/* DIMENSIONES PARA EASYPOST */}
                         <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
-                            <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2"><Ruler size={18}/> Dimensiones en Pulgadas (Tarifas)</h3>
+                           <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2"><Ruler size={18}/> Dimensions in Inches (Rates)</h3>
                             
                             {/* Botones Rápidos */}
                             <div className="flex gap-2 mb-3">
@@ -263,8 +263,8 @@ export default function EstacionRecepcionBodega() {
                                 <AlertTriangle size={24} />
                             </div>
                             <div className="flex-1">
-                                <p className="font-bold text-lg">Sobre llegó dañado</p>
-                                <p className="text-xs opacity-80">Roto, abierto o mojado por USPS.</p>
+                                <p className="font-bold text-lg">Envelope arrived damaged</p>
+                                <p className="text-xs opacity-80">Torn, opened or wet by USPS.</p>
                             </div>
                             <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${isDamaged ? 'border-red-600 bg-red-600 text-white' : 'border-gray-400'}`}>
                                 {isDamaged && <CheckCircle2 size={16} />}
