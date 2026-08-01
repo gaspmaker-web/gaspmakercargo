@@ -56,7 +56,7 @@ export default function ExportButton({ transactions }: { transactions: any[] }) 
       className="flex items-center gap-2 bg-white border border-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors shadow-sm font-medium text-sm disabled:opacity-50"
     >
       {isExporting ? <Loader2 size={18} className="animate-spin" /> : <Download size={18} />}
-      <span>{isExporting ? 'Exportando...' : 'Exportar Reporte'}</span>
+      <span>{isExporting ? 'Exporting...' : 'Export Report'}</span>
     </button>
   );
 }

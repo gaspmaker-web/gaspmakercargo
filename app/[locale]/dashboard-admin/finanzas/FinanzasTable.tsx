@@ -111,7 +111,7 @@ return (
               <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
-                placeholder="Buscar cliente..."
+                placeholder="Search client..."
                 value={search}
                 onChange={e => { setSearch(e.target.value); setPage(1); }}
                 className="w-full pl-8 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-100"
