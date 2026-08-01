@@ -205,7 +205,7 @@ export default async function FinanzasPage() {
         const calculatedDebt = isDocument ? 0 : p.storageDebt + ((p.shippingSubtotal || 0) - (p.shippingTotalPaid || 0));
         return {
           id: p.gmcTrackingNumber,
-          type: isDocument ? 'Documento (Buzón)' : 'Paquete',
+          type: isDocument ? 'Mailbox Document' : 'Package',
           date: p.createdAt,
           amount: p.shippingTotalPaid || 0,
           debt: Math.max(0, calculatedDebt), 
@@ -215,7 +215,7 @@ export default async function FinanzasPage() {
     }),
     ...consolidations.map(c => ({
       id: c.gmcShipmentNumber,
-      type: 'Consolidación',
+      type: 'Consolidation',
       date: c.createdAt,
       amount: c.totalAmount || 0,
       debt: 0, 
@@ -237,7 +237,7 @@ export default async function FinanzasPage() {
     // 🔥 NUEVO: Mapeamos los recibos reales (Transacciones) a la tabla
     ...mailboxTxs.map(tx => ({
       id: tx.stripePaymentId ? `STRIPE-${tx.stripePaymentId.substring(0,8)}` : `TX-${tx.id.substring(0, 6).toUpperCase()}`,
-      type: 'Pago Buzón Virtual',
+      type: 'Virtual Mailbox Payment',
       date: tx.createdAt,
       amount: tx.amount, // Aquí leerá los $7.99 o $14.99 exactos
       debt: 0,
@@ -255,10 +255,10 @@ export default async function FinanzasPage() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold text-gmc-gris-oscuro font-garamond">
-            Finanzas y Facturación
+            Finance & Billing
           </h1>
           <p className="text-gray-500 mt-1">
-            Métricas de Carga Tradicional y Buzón Virtual en tiempo real.
+            Traditional Cargo and Virtual Mailbox metrics in real time.
           </p>
         </div>
         {/* 🔥 AQUÍ INYECTAMOS EL NUEVO BOTÓN EXPORTADOR 🔥 */}

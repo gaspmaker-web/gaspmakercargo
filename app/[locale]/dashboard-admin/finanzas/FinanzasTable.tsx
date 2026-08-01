@@ -73,28 +73,28 @@ export default function FinanzasTable({ grandTotal }: FinanzasTableProps) {
 return (
   <div className="space-y-4">
       {/* KPIs dinámicos por filtro */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-        <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
-          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Total Global</p>
-          <p className="text-xl font-bold text-gray-800">{formatCurrency(grandTotal)}</p>
-          <p className="text-[10px] text-gray-400 mt-1">Todos los servicios</p>
-        </div>
-        <div className="bg-white p-4 rounded-xl border border-blue-100 shadow-sm">
-          <p className="text-[10px] font-bold text-blue-400 uppercase tracking-wider mb-1">Carga Tradicional</p>
-          <p className="text-xl font-bold text-gray-800">{formatCurrency(totals.carga)}</p>
-        </div>
-        <div className="bg-white p-4 rounded-xl border border-orange-100 shadow-sm">
-          <p className="text-[10px] font-bold text-orange-400 uppercase tracking-wider mb-1">Pickups</p>
-          <p className="text-xl font-bold text-gray-800">{formatCurrency(totals.pickups)}</p>
-        </div>
-        <div className="bg-white p-4 rounded-xl border border-purple-100 shadow-sm">
-          <p className="text-[10px] font-bold text-purple-400 uppercase tracking-wider mb-1">Buzón Virtual</p>
-          <p className="text-xl font-bold text-gray-800">{formatCurrency(totals.buzon)}</p>
-        </div>
-        <div className="bg-white p-4 rounded-xl border border-red-100 shadow-sm">
-          <p className="text-[10px] font-bold text-red-400 uppercase tracking-wider mb-1">Por Cobrar</p>
-          <p className="text-xl font-bold text-red-600">{formatCurrency(totals.deuda)}</p>
-        </div>
+     <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+     <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Global Total</p>
+    <p className="text-xl font-bold text-gray-800">{formatCurrency(grandTotal)}</p>
+    <p className="text-[10px] text-gray-400 mt-1">All services</p>
+    </div>
+    <div className="bg-white p-4 rounded-xl border border-blue-100 shadow-sm">
+    <p className="text-[10px] font-bold text-blue-400 uppercase tracking-wider mb-1">Traditional Cargo</p>
+    <p className="text-xl font-bold text-gray-800">{formatCurrency(totals.carga)}</p>
+    </div>
+    <div className="bg-white p-4 rounded-xl border border-orange-100 shadow-sm">
+    <p className="text-[10px] font-bold text-orange-400 uppercase tracking-wider mb-1">Pickups</p>
+    <p className="text-xl font-bold text-gray-800">{formatCurrency(totals.pickups)}</p>
+     </div>
+     <div className="bg-white p-4 rounded-xl border border-purple-100 shadow-sm">
+    <p className="text-[10px] font-bold text-purple-400 uppercase tracking-wider mb-1">Virtual Mailbox</p>
+    <p className="text-xl font-bold text-gray-800">{formatCurrency(totals.buzon)}</p>
+     </div>
+     <div className="bg-white p-4 rounded-xl border border-red-100 shadow-sm">
+    <p className="text-[10px] font-bold text-red-400 uppercase tracking-wider mb-1">Outstanding</p>
+    <p className="text-xl font-bold text-red-600">{formatCurrency(totals.deuda)}</p>
+      </div>
       </div>
 
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
@@ -102,8 +102,8 @@ return (
       <div className="p-6 border-b border-gray-100 bg-gray-50/50">
         <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
           <h3 className="text-lg font-bold text-gray-800">
-            Historial Completo
-            <span className="ml-2 text-sm font-normal text-gray-400">({total} registros)</span>
+         Complete History
+        <span className="ml-2 text-sm font-normal text-gray-400">({total} records)</span>
           </h3>
           <div className="flex gap-2 w-full sm:w-auto">
             {/* Búsqueda */}
@@ -125,11 +125,11 @@ return (
                 onChange={e => { setType(e.target.value); setPage(1); }}
                 className="pl-8 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-100 bg-white"
               >
-                <option value="all">Todos</option>
-                <option value="package">Paquetes</option>
-                <option value="consolidation">Consolidaciones</option>
-                <option value="pickup">Pickups</option>
-                <option value="mailbox">Buzón Virtual</option>
+             <option value="all">All</option>
+             <option value="package">Packages</option>
+             <option value="consolidation">Consolidations</option>
+             <option value="pickup">Pickups</option>
+             <option value="mailbox">Virtual Mailbox</option>
               </select>
             </div>
           </div>
@@ -141,20 +141,20 @@ return (
         <table className="w-full">
           <thead className="bg-white text-xs text-gray-400 font-bold uppercase tracking-wider text-left border-b border-gray-100">
             <tr>
-              <th className="px-6 py-4">ID / Tracking</th>
-              <th className="px-6 py-4">Cliente</th>
-              <th className="px-6 py-4">Concepto</th>
-              <th className="px-6 py-4">Fecha</th>
-              <th className="px-6 py-4">Pagado</th>
-              <th className="px-6 py-4">Deuda</th>
-              <th className="px-6 py-4">Estado</th>
+             <th className="px-6 py-4">ID / Tracking</th>
+             <th className="px-6 py-4">Client</th>
+             <th className="px-6 py-4">Concept</th>
+             <th className="px-6 py-4">Date</th>
+             <th className="px-6 py-4">Paid</th>
+             <th className="px-6 py-4">Debt</th>
+             <th className="px-6 py-4">Status</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50 text-sm">
             {loading ? (
-              <tr><td colSpan={7} className="px-6 py-8 text-center text-gray-400">Cargando...</td></tr>
+              <tr><td colSpan={7} className="px-6 py-8 text-center text-gray-400">Loading...</td></tr>
             ) : transactions.length === 0 ? (
-              <tr><td colSpan={7} className="px-6 py-8 text-center text-gray-400">Sin resultados</td></tr>
+              <tr><td colSpan={7} className="px-6 py-8 text-center text-gray-400">No results</td></tr>
             ) : (
               transactions.map((tx, i) => (
                 <tr key={`${tx.id}-${i}`} className="hover:bg-gray-50/50 transition-colors">
@@ -197,7 +197,7 @@ return (
       {totalPages > 1 && (
         <div className="p-4 border-t border-gray-100 flex items-center justify-between">
           <span className="text-xs text-gray-400">
-            Página {page} de {totalPages} — {total} registros totales
+            Page {page} of {totalPages} — {total} total records
           </span>
           <div className="flex gap-2">
             <button
