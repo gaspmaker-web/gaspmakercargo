@@ -16,7 +16,7 @@ const VEHICLE_NAMES: Record<string, string> = {
     'v_30': 'Auto / SUV',
     'v_55': 'Minivan / Transit Connect',
     'v_75': 'Cargo Van',
-    'v_250': 'Camión de Carga'
+    'v_250': 'Cargo Truck'
 };
 
 export default async function PickupRequestDetailPage({ params }: { params: { id: string, locale: string } }) {
@@ -44,7 +44,7 @@ export default async function PickupRequestDetailPage({ params }: { params: { id
         
         <div className="mb-6">
             <Link href={`/${params.locale}/dashboard-admin/solicitudes-pickup`} className="text-gray-500 hover:text-black flex items-center gap-2 transition-colors">
-                <ArrowLeft size={20} /> Volver a la lista
+                <ArrowLeft size={20} /> Back to list
             </Link>
         </div>
 
@@ -67,28 +67,28 @@ export default async function PickupRequestDetailPage({ params }: { params: { id
                 {isDelivery && req.tookanLink && (
                      <div className="bg-white p-4 rounded-xl border border-blue-200 shadow-sm">
                         <h4 className="font-bold text-gray-800 mb-2 text-sm flex items-center gap-2">
-                            <MapIcon size={16} className="text-blue-600"/> Seguimiento en Vivo
+                            <MapIcon size={16} className="text-blue-600"/> Live Tracking
                         </h4>
                         <a 
                             href={req.tookanLink} 
                             target="_blank"
                             className="block w-full text-center bg-blue-600 text-white py-2 rounded-lg font-bold hover:bg-blue-700 transition"
                         >
-                            Ver Driver en Mapa
+                            View Driver on Map
                         </a>
                      </div>
                 )}
 
                 {/* 2. Detalles Financieros */}
                 <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
-                    <h4 className="font-bold text-gray-800 mb-3 text-sm">Detalles Financieros</h4>
+                    <h4 className="font-bold text-gray-800 mb-3 text-sm">Financial Details</h4>
                     <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
-                            <span className="text-gray-500">Servicio</span>
+                            <span className="text-gray-500">Service</span>
                             <span className="font-medium text-gray-900">{req.serviceType}</span>
                         </div>
                         <div className="flex justify-between">
-                            <span className="text-gray-500">Est. Peso</span>
+                            <span className="text-gray-500">Est. Weight</span>
                             <span className="font-medium text-gray-900">{req.weightInfo || 'N/A'}</span>
                         </div>
                        {/* 🔥 NUEVA FILA: MOSTRAR VEHÍCULO SELECCIONADO */}
@@ -96,11 +96,11 @@ export default async function PickupRequestDetailPage({ params }: { params: { id
     <span className="text-gray-500">Vehículo Req.</span>
     <span className="font-bold text-blue-700 bg-blue-100 px-2 py-0.5 rounded text-xs uppercase tracking-wide">
         {/* Cambiamos volumeTier por volumeInfo para que lea tu BD correctamente */}
-        {VEHICLE_NAMES[req.volumeInfo as string] || req.volumeInfo || 'No especificado'}
+        {VEHICLE_NAMES[req.volumeInfo as string] || req.volumeInfo || 'Not specified'}
     </span>
 </div>
                         <div className="border-t border-gray-100 my-2 pt-2 flex justify-between">
-                            <span className="font-bold text-gray-700">Total Pagado</span>
+                            <span className="font-bold text-gray-700">Total Paid</span>
                             <span className="font-bold text-green-600">${req.totalPaid?.toFixed(2)}</span>
                         </div>
                     </div>
@@ -109,7 +109,7 @@ export default async function PickupRequestDetailPage({ params }: { params: { id
                 {/* 3. Link Chofer */}
                 <div className="bg-blue-50 p-5 rounded-xl border border-blue-100">
                      <p className="font-bold text-blue-800 mb-2 text-sm flex items-center gap-2">
-                        <ExternalLink size={14}/> Link Chofer
+                        <ExternalLink size={14}/> Driver Link
                      </p>
                      <code className="block bg-white p-2 rounded border border-blue-200 text-xs text-gray-600 break-all font-mono select-all">
                         {driverLinkPath}
@@ -125,9 +125,9 @@ export default async function PickupRequestDetailPage({ params }: { params: { id
                     <div className="bg-gmc-gris-oscuro text-white p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                         <div>
                             <h1 className="text-2xl font-bold font-garamond flex items-center gap-2">
-                                Solicitud #{req.id.slice(0,8).toUpperCase()}
+                                Request #{req.id.slice(0,8).toUpperCase()}
                             </h1>
-                            <p className="text-sm text-gray-400">Creada el {new Date(req.createdAt).toLocaleDateString()}</p>
+                            <p className="text-sm text-gray-400">Created on {new Date(req.createdAt).toLocaleDateString()}</p>
                         </div>
                         <div className="text-right">
                             <span className={`px-4 py-2 rounded-lg text-sm font-bold border ${
@@ -144,7 +144,7 @@ export default async function PickupRequestDetailPage({ params }: { params: { id
                         {/* Cliente */}
                         <div>
                             <h3 className="text-xs font-bold text-gray-400 uppercase mb-3 flex items-center gap-2 tracking-wider">
-                                <User size={14}/> Cliente
+                                <User size={14}/> Client
                             </h3>
                             <div className="flex items-center gap-3">
                                 <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
@@ -163,11 +163,11 @@ export default async function PickupRequestDetailPage({ params }: { params: { id
                         {/* Contacto */}
                         <div>
                             <h3 className="text-xs font-bold text-gray-400 uppercase mb-3 flex items-center gap-2 tracking-wider">
-                                <Phone size={14}/> Contacto
+                                <Phone size={14}/> Contact
                             </h3>
                             <p className="text-lg font-medium text-gray-800">{req.contactPhone || 'No registrado'}</p>
                             <p className="text-sm text-gray-500">
-                                Fecha: <span className="text-gray-800 font-bold">{req.pickupDate ? new Date(req.pickupDate).toLocaleDateString() : 'Pendiente'}</span>
+                               Date: <span className="text-gray-800 font-bold">{req.pickupDate ? new Date(req.pickupDate).toLocaleDateString() : 'Pending'}</span>
                             </p>
                         </div>
 
@@ -177,13 +177,13 @@ export default async function PickupRequestDetailPage({ params }: { params: { id
                             
                             <div className="relative pl-8 mb-6">
                                 <div className="absolute left-0 top-1 w-3 h-3 bg-blue-500 rounded-full border-2 border-white shadow-sm -ml-[5px]"></div>
-                                <p className="text-xs font-bold text-gray-400 uppercase mb-1">Origen (A)</p>
+                                <p className="text-xs font-bold text-gray-400 uppercase mb-1">Origin (A)</p>
                                 <p className="font-medium text-gray-800 text-lg">{req.originAddress}</p>
                             </div>
 
                             <div className="relative pl-8">
                                 <div className="absolute left-0 top-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white shadow-sm -ml-[5px]"></div>
-                                <p className="text-xs font-bold text-gray-400 uppercase mb-1">Destino (B)</p>
+                                <p className="text-xs font-bold text-gray-400 uppercase mb-1">Destination (B)</p>
                                 <p className="font-medium text-gray-800">{req.dropOffAddress || 'Almacén Central GMC'}</p>
                             </div>
                         </div>
@@ -191,11 +191,11 @@ export default async function PickupRequestDetailPage({ params }: { params: { id
                         {/* Carga */}
                         <div className="md:col-span-2">
                             <h3 className="text-xs font-bold text-gray-400 uppercase mb-3 flex items-center gap-2 tracking-wider">
-                                <Package size={14}/> Detalles de Carga
+                                <Package size={14}/> Cargo Details
                             </h3>
                             <div className="bg-yellow-50 p-4 rounded-xl border border-yellow-100 text-gray-700 italic flex items-start gap-3">
                                 <span className="text-2xl text-yellow-400 leading-none">“</span>
-                                <p>{req.description || 'Sin descripción'}</p>
+                                <p>{req.description || 'No description'}</p>
                             </div>
                         </div>
                     </div>
@@ -204,7 +204,7 @@ export default async function PickupRequestDetailPage({ params }: { params: { id
                 {/* --- SECCIÓN DE EVIDENCIA --- */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden p-6">
                     <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2 font-garamond">
-                        <Camera size={20} className="text-purple-600"/> Evidencia de la Operación
+                        <Camera size={20} className="text-purple-600"/> Operation Evidence
                     </h3>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -212,19 +212,19 @@ export default async function PickupRequestDetailPage({ params }: { params: { id
                         <div className="border border-gray-100 rounded-xl p-3 bg-gray-50/50">
                             <div className="flex justify-between items-center mb-3">
                                 <span className="text-xs font-bold text-blue-700 bg-blue-100 px-2 py-1 rounded flex items-center gap-1">
-                                    <CheckCircle size={12}/> RECOGIDA
+                                    <CheckCircle size={12}/> PICKUP
                                 </span>
                             </div>
                             
                             {req.photoPickupUrl ? (
                                 <div className="relative h-48 w-full rounded-lg overflow-hidden border border-gray-200 shadow-md group">
                                     <Image src={req.photoPickupUrl} alt="Recogida" fill className="object-cover group-hover:scale-105 transition-transform duration-500"/>
-                                    <a href={req.photoPickupUrl} target="_blank" className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-white font-bold text-xs"><ExternalLink size={16} className="mr-1"/> VER FOTO</a>
+                                    <a href={req.photoPickupUrl} target="_blank" className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-white font-bold text-xs"><ExternalLink size={16} className="mr-1"/> VIEW PHOTO</a>
                                 </div>
                             ) : (
                                 <div className="h-48 w-full rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-400 bg-white">
                                     <Camera size={24} className="mb-2 opacity-30"/>
-                                    <span className="text-xs font-medium">Sin foto</span>
+                                    <span className="text-xs font-medium">No photo</span>
                                 </div>
                             )}
                         </div>
@@ -233,19 +233,19 @@ export default async function PickupRequestDetailPage({ params }: { params: { id
                         <div className="border border-gray-100 rounded-xl p-3 bg-gray-50/50">
                             <div className="flex justify-between items-center mb-3">
                                 <span className="text-xs font-bold text-green-700 bg-green-100 px-2 py-1 rounded flex items-center gap-1">
-                                    <CheckCircle size={12}/> ENTREGA FINAL
+                                    <CheckCircle size={12}/> FINAL DELIVERY
                                 </span>
                             </div>
 
                             {req.photoDeliveryUrl ? (
                                 <div className="relative h-48 w-full rounded-lg overflow-hidden border border-gray-200 shadow-md group">
                                     <Image src={req.photoDeliveryUrl} alt="Entrega" fill className="object-cover group-hover:scale-105 transition-transform duration-500"/>
-                                    <a href={req.photoDeliveryUrl} target="_blank" className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-white font-bold text-xs"><ExternalLink size={16} className="mr-1"/> VER FOTO</a>
+                                    <a href={req.photoDeliveryUrl} target="_blank" className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-white font-bold text-xs"><ExternalLink size={16} className="mr-1"/> VIEW PHOTO</a>
                                 </div>
                             ) : (
                                 <div className="h-48 w-full rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-400 bg-white">
                                     <Clock size={24} className="mb-2 opacity-30"/>
-                                    <span className="text-xs font-medium">Pendiente</span>
+                                    <span className="text-xs font-medium">Pending</span>
                                 </div>
                             )}
                         </div>
@@ -254,7 +254,7 @@ export default async function PickupRequestDetailPage({ params }: { params: { id
                         {req.signatureUrl && (
                             <div className="md:col-span-2 mt-2 pt-4 border-t border-gray-100">
                                  <p className="text-xs font-bold text-gray-500 uppercase mb-2 flex items-center gap-1">
-                                    <PenTool size={12} className="text-black"/> Firma de Conformidad
+                                    <PenTool size={12} className="text-black"/> Confirmation Signature
                                 </p>
                                 <div className="bg-white border border-gray-200 rounded-xl p-4 flex justify-center">
                                     <img src={req.signatureUrl} alt="Firma Cliente" className="h-24 object-contain opacity-90"/>
