@@ -4,9 +4,9 @@ import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
-    Truck, MapPin, Warehouse, CreditCard, Info, Loader2, Package, Check,
-    ChevronDown, ChevronUp, Calendar, Phone, Weight, AlertTriangle, Clock,
-    Car, Ruler
+Truck, MapPin, Loader2, Package, Check,
+    ChevronDown, ChevronUp, Weight, AlertTriangle,
+    Car, Warehouse, Globe, ArrowRight, ShieldCheck, UserPlus, Ruler, Info, Plus, X, Calendar, Clock, Phone, CreditCard
 } from 'lucide-react';
 import { useJsApiLoader, Autocomplete } from '@react-google-maps/api';
 import { getProcessingFee } from '@/lib/stripeCalc';
@@ -96,13 +96,30 @@ export default function SolicitarPickupPage() {
   const [isAddressValid, setIsAddressValid] = useState(false);
   const [isTimeValid, setIsTimeValid] = useState(false);
 
-  const [quote, setQuote] = useState({
-      total: 0, subtotal: 0, processingFee: 0, baseFare: 0, distanceSurcharge: 0, distanceMiles: 0, appliedStrategy: 'WEIGHT'
-  });
+const [quote, setQuote] = useState({
+    total: 0, subtotal: 0, processingFee: 0, baseFare: 0, distanceSurcharge: 0, distanceMiles: 0, appliedStrategy: 'WEIGHT'
+});
 
-  const [orderId, setOrderId] = useState<string | null>(null);
-  const originRef = useRef<google.maps.places.Autocomplete | null>(null);
-  const destRef = useRef<google.maps.places.Autocomplete | null>(null);
+// 🔥 MÚLTIPLES PARADAS
+const [extraStops, setExtraStops] = useState<{address: string, description: string, weightTier: string}[]>([]);
+
+const addStop = () => {
+  setExtraStops([...extraStops, { address: '', description: '', weightTier: 'w_0_40' }]);
+};
+
+const removeStop = (index: number) => {
+  setExtraStops(extraStops.filter((_, i) => i !== index));
+};
+
+const updateStop = (index: number, field: string, value: string) => {
+  const updated = [...extraStops];
+  updated[index] = { ...updated[index], [field]: value };
+  setExtraStops(updated);
+};
+
+const [orderId, setOrderId] = useState<string | null>(null);
+const originRef = useRef<google.maps.places.Autocomplete | null>(null);
+const destRef = useRef<google.maps.places.Autocomplete | null>(null);
 
   const [formData, setFormData] = useState({
     originAddress: '', originCity: '', pickupDate: '', description: '', contactPhone: '',
@@ -249,7 +266,7 @@ if (isPalletMode) {
       const place = originRef.current.getPlace();
 
       if (!place || !place.geometry || !place.formatted_address) {
-          setAddressError("⚠️ Dirección inválida. Selecciona de la lista.");
+          setAddressError("⚠️ Invalid address. Please select from the list.");
           setIsAddressValid(false);
           setFormData(prev => ({ ...prev, originAddress: '' }));
           return;
@@ -397,10 +414,10 @@ if (isPalletMode) {
   const handlePaymentAndSubmit = async () => {
     if (serviceType !== 'PICKUP_WAREHOUSE') {
         if (!isAddressValid || !formData.originAddress) {
-            alert("⚠️ Dirección no válida. Selecciona una opción de la lista."); return;
+            alert("⚠️ Invalid address. Please select an option from the list."); return;
         }
         if (serviceType === 'DELIVERY' && !formData.dropOffAddress) {
-            alert("⚠️ Faltan dirección de entrega."); return;
+            alert("⚠️ Delivery address is missing."); return;
         }
         if (!formData.pickupDate || !isTimeValid) { alert("Completa los campos correctamente, respetando el horario."); return; }
 
@@ -609,7 +626,7 @@ if (isPalletMode) {
                                     >
                                         <input
                                             type="text"
-                                            placeholder="Dirección de recogida..."
+                                            placeholder="Pickup address..."
                                             className={`w-full p-3 border rounded-lg text-base ${addressError ? 'border-red-500 bg-red-50 text-red-900' : 'border-gray-200'}`}
                                             onInput={handleInputInput}
                                         />
@@ -642,7 +659,7 @@ if (isPalletMode) {
                                         >
                                             <input
                                                 type="text"
-                                                placeholder="Dirección de entrega..."
+                                                placeholder="Delivery address..."
                                                 className={`w-full p-3 border rounded-lg text-base ${dropOffError ? 'border-red-500 bg-red-50 text-red-900' : 'border-gray-200'}`}
                                             />
                                         </Autocomplete>
