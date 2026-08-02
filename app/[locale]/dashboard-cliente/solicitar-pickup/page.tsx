@@ -670,20 +670,20 @@ const validateTimeWindow = (dateTimeString: string) => {
       </button>
     </div>
 <Autocomplete
-  onLoad={ref => { stopRefs.current[index] = ref; }}
-  onPlaceChanged={() => {
-    const place = stopRefs.current[index]?.getPlace();
-    if (place?.formatted_address) {
-      const newStops = [...extraStopsRef.current];
-      newStops[index] = { ...newStops[index], address: place.formatted_address };
-      setExtraStops(newStops);
-      if (serviceType === 'SHIPPING') {
-        calculateComplexRoute(formData.originAddress, '', newStops);
-      } else if (serviceType === 'DELIVERY') {
-        calculateComplexRoute(formData.originAddress, formData.dropOffAddress, newStops);
-      }
+onLoad={ref => { stopRefs.current[index] = ref; }}
+onPlaceChanged={() => {
+  const place = stopRefs.current[index]?.getPlace();
+  if (place?.formatted_address) {
+    const newStops = [...extraStopsRef.current];
+    newStops[index] = { ...newStops[index], address: place.formatted_address };
+    setExtraStops(newStops);
+    if (serviceType === 'SHIPPING') {
+      calculateComplexRoute(formData.originAddress, '', newStops);
+    } else if (serviceType === 'DELIVERY' && formData.originAddress && formData.dropOffAddress) {
+      calculateComplexRoute(formData.originAddress, formData.dropOffAddress, newStops);
     }
-  }}
+  }
+}}
   restrictions={{ country: "us" }}
     >
       <input
