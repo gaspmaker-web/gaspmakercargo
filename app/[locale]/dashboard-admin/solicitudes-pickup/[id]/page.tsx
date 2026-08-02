@@ -64,7 +64,7 @@ export default async function PickupRequestDetailPage({ params }: { params: { id
             userId={req.userId}
             gmcTracking={req.id.slice(0,8).toUpperCase()}
              />
-         </div>
+           </div>
 
                 {/* 1.1 Si es DELIVERY, mostramos Tracking en Vivo */}
                 {isDelivery && req.tookanLink && (
@@ -96,7 +96,7 @@ export default async function PickupRequestDetailPage({ params }: { params: { id
                         </div>
                        {/* 🔥 NUEVA FILA: MOSTRAR VEHÍCULO SELECCIONADO */}
 <div className="flex justify-between items-center bg-blue-50/50 -mx-2 px-2 py-1 rounded">
-    <span className="text-gray-500">Vehículo Req.</span>
+    <span className="text-gray-500">Req. Vehicle</span>
     <span className="font-bold text-blue-700 bg-blue-100 px-2 py-0.5 rounded text-xs uppercase tracking-wide">
         {/* Cambiamos volumeTier por volumeInfo para que lea tu BD correctamente */}
         {VEHICLE_NAMES[req.volumeInfo as string] || req.volumeInfo || 'Not specified'}

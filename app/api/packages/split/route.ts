@@ -55,12 +55,19 @@ export async function POST(req: Request) {
       createdPackages.push(newPkg);
     }
 
-  // Marcar el paquete madre como PROCESADO
+// Marcar el paquete madre como PROCESADO
 await prisma.package.update({
   where: { id: parentPackageId },
   data: { status: 'PROCESADO' }
 });
 
+// Si viene de un pickup, marcar el pickupRequest también
+if (body.isPickup) {
+  await prisma.pickupRequest.update({
+    where: { id: parentPackageId },
+    data: { status: 'PROCESADO' }
+  });
+}
 // Notificar al cliente
 const { sendNotification } = await import('@/lib/notifications');
 await sendNotification({
