@@ -327,48 +327,62 @@ if (isPalletMode) {
     if (serviceType === 'DELIVERY' && formData.originAddress && formData.dropOffAddress) {
         calculateComplexRoute(formData.originAddress, formData.dropOffAddress);
     }
-  }, [formData.originAddress, formData.dropOffAddress, serviceType, isLoaded, autoVehicle.type]);
+  }, [formData.originAddress, formData.dropOffAddress, serviceType, isLoaded, autoVehicle.type, extraStops]);
 
   const calculateComplexRoute = async (origin: string, destination: string) => {
     if (!isLoaded || typeof google === 'undefined' || !origin) return;
 
     try {
-        const service = new google.maps.DistanceMatrixService();
-        let totalMiles = 0;
+      const service = new google.maps.DistanceMatrixService();
+      let totalMiles = 0;
 
-        const getLeg = async (start: string, end: string) => {
-            const res = await service.getDistanceMatrix({
-                origins: [start], destinations: [end],
-                travelMode: google.maps.TravelMode.DRIVING,
-                unitSystem: google.maps.UnitSystem.IMPERIAL
-            });
-            const el = res.rows[0].elements[0];
-            if (el.status !== "OK") return 0;
-            return el.distance.text.includes('mi')
-                ? parseFloat(el.distance.text.replace(' mi','').replace(',',''))
-                : el.distance.value / 1609.34;
-        };
+      const getLeg = async (start: string, end: string) => {
+        const res = await service.getDistanceMatrix({
+          origins: [start], destinations: [end],
+          travelMode: google.maps.TravelMode.DRIVING,
+          unitSystem: google.maps.UnitSystem.IMPERIAL
+        });
+        const el = res.rows[0].elements[0];
+        if (el.status !== "OK") return 0;
+        return el.distance.text.includes('mi')
+          ? parseFloat(el.distance.text.replace(' mi','').replace(',',''))
+          : el.distance.value / 1609.34;
+      };
 
-        if (serviceType === 'SHIPPING') {
-            const leg1 = await getLeg(GMC_WAREHOUSE_ADDRESS, origin);
-            // 🔥 REGLA AURA: Box Truck cobra circuito completo (ida y vuelta)
-            totalMiles = (autoVehicle.type === 'BOX_TRUCK') ? leg1 * 2 : leg1;
+      const validStops = extraStops.filter(s => s.address);
+
+      if (serviceType === 'SHIPPING') {
+        totalMiles += await getLeg(GMC_WAREHOUSE_ADDRESS, origin);
+        
+        let prev = origin;
+        for (const stop of validStops) {
+          totalMiles += await getLeg(prev, stop.address);
+          prev = stop.address;
         }
-        else if (serviceType === 'DELIVERY') {
-            if (!destination) return;
+        
+        if (autoVehicle.type === 'BOX_TRUCK') {
+          totalMiles += await getLeg(prev, GMC_WAREHOUSE_ADDRESS);
+        }
+      }
+      else if (serviceType === 'DELIVERY') {
+        if (!destination) return;
 
-            const leg1 = await getLeg(GMC_WAREHOUSE_ADDRESS, origin);
-            const leg2 = await getLeg(origin, destination);
+        totalMiles += await getLeg(GMC_WAREHOUSE_ADDRESS, origin);
 
-            if (autoVehicle.type === 'BOX_TRUCK') {
-                const leg3 = await getLeg(destination, GMC_WAREHOUSE_ADDRESS);
-                totalMiles = leg1 + leg2 + leg3;
-            } else {
-                totalMiles = leg1 + leg2;
-            }
+        let prev = origin;
+        for (const stop of validStops) {
+          totalMiles += await getLeg(prev, stop.address);
+          prev = stop.address;
         }
 
-        setQuote(prev => ({ ...prev, distanceMiles: parseFloat(totalMiles.toFixed(1)) }));
+        totalMiles += await getLeg(prev, destination);
+
+        if (autoVehicle.type === 'BOX_TRUCK') {
+          totalMiles += await getLeg(destination, GMC_WAREHOUSE_ADDRESS);
+        }
+      }
+
+      setQuote(prev => ({ ...prev, distanceMiles: parseFloat(totalMiles.toFixed(1)) }));
 
     } catch (e) { console.error("Error calculando ruta:", e); }
   };
