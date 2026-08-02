@@ -131,7 +131,7 @@ export default async function PickupRequestDetailPage({ params }: { params: { id
                         </div>
                         <div className="text-right">
                             <span className={`px-4 py-2 rounded-lg text-sm font-bold border ${
-                                req.status === 'COMPLETADO' || req.status === 'DELIVERY' ? 'bg-green-500 text-white border-green-600' :
+                                req.status === 'COMPLETADO' || req.status === 'ENTREGADO' ? 'bg-green-500 text-white border-green-600' :
                                 req.status === 'PROCESADO' ? 'bg-gray-600 text-gray-300 border-gray-500' :
                                 'bg-white/10 text-white border-white/20'
                             }`}>
