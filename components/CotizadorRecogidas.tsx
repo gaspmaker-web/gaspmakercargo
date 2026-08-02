@@ -42,21 +42,6 @@ interface FormData {
 
 const GOOGLE_LIBRARIES: ("places")[] = ["places"];
 
-const [extraStops, setExtraStops] = useState<{address: string, description: string, weightTier: string}[]>([]);
-
-const addStop = () => {
-  setExtraStops([...extraStops, { address: '', description: '', weightTier: 'w_30' }]);
-};
-
-const removeStop = (index: number) => {
-  setExtraStops(extraStops.filter((_, i) => i !== index));
-};
-
-const updateStop = (index: number, field: string, value: string) => {
-  const updated = [...extraStops];
-  updated[index] = { ...updated[index], [field]: value };
-  setExtraStops(updated);
-};
 
 export default function CotizadorRecogidas() {
   const { isLoaded } = useJsApiLoader({
@@ -91,6 +76,23 @@ function CotizadorForm() {
       termsAccepted: false
     }
   });
+
+  // 🔥 MÚLTIPLES PARADAS
+  const [extraStops, setExtraStops] = useState<{address: string, description: string, weightTier: string}[]>([]);
+
+  const addStop = () => {
+    setExtraStops([...extraStops, { address: '', description: '', weightTier: 'w_30' }]);
+  };
+
+  const removeStop = (index: number) => {
+    setExtraStops(extraStops.filter((_, i) => i !== index));
+  };
+
+  const updateStop = (index: number, field: string, value: string) => {
+    const updated = [...extraStops];
+    updated[index] = { ...updated[index], [field]: value };
+    setExtraStops(updated);
+  };
 
   // Observamos valores para recálculo en tiempo real
   const watchedValues = watch();
