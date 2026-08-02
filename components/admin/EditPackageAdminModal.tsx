@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { X, Save, Upload, Ruler, Scale, Camera, DollarSign, Globe, Plus, Trash2, Loader2, UploadCloud, CheckCircle, FileText } from 'lucide-react';
+import { X, Save, Upload, Ruler, Scale, Camera, DollarSign, Globe, Plus, Trash2, Loader2, UploadCloud, CheckCircle, FileText, Package } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 
@@ -141,11 +141,64 @@ export default function EditPackageAdminModal({ isOpen, onClose, pkg }: EditPack
         } else {
             alert("Error al guardar cambios");
         }
-    } catch (e) {
+ } catch (e) {
         console.error(e);
         alert("Connection error");
     } finally {
         setIsSaving(false);
+    }
+  };
+
+  // ========================================================================
+  // 📦 SPLIT INTO BOXES
+  // ========================================================================
+  const [splitMode, setSplitMode] = useState(false);
+  const [isSplitting, setIsSplitting] = useState(false);
+  const [splitBoxes, setSplitBoxes] = useState([
+    { description: '', weight: '', length: '', width: '', height: '', value: '' }
+  ]);
+
+  const handleAddSplitBox = () => {
+    setSplitBoxes([...splitBoxes, { description: '', weight: '', length: '', width: '', height: '', value: '' }]);
+  };
+
+  const handleRemoveSplitBox = (index: number) => {
+    setSplitBoxes(splitBoxes.filter((_, i) => i !== index));
+  };
+
+  const handleSplitBoxChange = (index: number, field: string, value: string) => {
+    const updated = [...splitBoxes];
+    updated[index] = { ...updated[index], [field]: value };
+    setSplitBoxes(updated);
+  };
+
+  const handleSplitSave = async () => {
+    if (splitBoxes.some(b => !b.description || !b.weight)) {
+      alert('Please fill in description and weight for all boxes.');
+      return;
+    }
+    setIsSplitting(true);
+    try {
+      const res = await fetch('/api/packages/split', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          parentPackageId: pkg.id,
+          boxes: splitBoxes
+        })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        alert(`✅ ${data.created} packages created successfully!\n${data.packages.join('\n')}`);
+        router.refresh();
+        onClose();
+      } else {
+        alert('Error: ' + data.error);
+      }
+    } catch (e) {
+      alert('Connection error');
+    } finally {
+      setIsSplitting(false);
     }
   };
 
@@ -302,8 +355,100 @@ export default function EditPackageAdminModal({ isOpen, onClose, pkg }: EditPack
                     onClick={addCustomsItem} 
                     className="mt-3 text-sm font-bold text-blue-600 flex items-center gap-1 hover:text-blue-800 transition-colors"
                 >
-                    <Plus size={16} /> Add Item
+  <Plus size={16} /> Add Item
                 </button>
+            </div>
+
+            <hr className="border-gray-100"/>
+
+            {/* 📦 SECCIÓN 4: SPLIT INTO BOXES */}
+            <div className="bg-indigo-50 p-4 rounded-xl border border-indigo-200">
+              <div className="flex justify-between items-center mb-3">
+                <label className="text-xs font-bold text-indigo-700 uppercase tracking-wider flex items-center gap-2">
+                  <Package size={16} className="text-indigo-500" /> Split into Individual Boxes
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setSplitMode(!splitMode)}
+                  className="text-xs font-bold text-indigo-600 bg-indigo-100 px-3 py-1 rounded-lg hover:bg-indigo-200 transition"
+                >
+                  {splitMode ? 'Cancel' : 'Enable Split'}
+                </button>
+              </div>
+
+              {splitMode && (
+                <div className="space-y-3">
+                  <p className="text-xs text-indigo-600 font-medium">
+                    Each box will be created as a separate package linked to <strong>{pkg.gmcTrackingNumber}</strong>
+                  </p>
+                  
+                  {splitBoxes.map((box, index) => (
+                    <div key={index} className="bg-white p-3 rounded-xl border border-indigo-200 relative">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-xs font-bold text-indigo-800 uppercase">Box {index + 1}</span>
+                        {index > 0 && (
+                          <button onClick={() => handleRemoveSplitBox(index)} className="text-red-400 hover:text-red-600">
+                            <Trash2 size={14}/>
+                          </button>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 mb-2">
+                        <div>
+                          <label className="text-[10px] font-bold text-gray-500 uppercase mb-1 block">Description</label>
+                          <input type="text" placeholder="e.g. Shoes, Clothes..."
+                            value={box.description}
+                            onChange={e => handleSplitBoxChange(index, 'description', e.target.value)}
+                            className="w-full border border-gray-200 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-indigo-400"/>
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-bold text-gray-500 uppercase mb-1 block">Weight (Lbs)</label>
+                          <input type="number" placeholder="0"
+                            value={box.weight}
+                            onChange={e => handleSplitBoxChange(index, 'weight', e.target.value)}
+                            className="w-full border border-gray-200 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-indigo-400"/>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-3 gap-2">
+                        <div>
+                          <label className="text-[10px] font-bold text-gray-400 uppercase mb-1 block">L (in)</label>
+                          <input type="number" placeholder="0" value={box.length}
+                            onChange={e => handleSplitBoxChange(index, 'length', e.target.value)}
+                            className="w-full border border-gray-200 rounded-lg p-2 text-center text-sm outline-none focus:ring-2 focus:ring-indigo-400"/>
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-bold text-gray-400 uppercase mb-1 block">W (in)</label>
+                          <input type="number" placeholder="0" value={box.width}
+                            onChange={e => handleSplitBoxChange(index, 'width', e.target.value)}
+                            className="w-full border border-gray-200 rounded-lg p-2 text-center text-sm outline-none focus:ring-2 focus:ring-indigo-400"/>
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-bold text-gray-400 uppercase mb-1 block">H (in)</label>
+                          <input type="number" placeholder="0" value={box.height}
+                            onChange={e => handleSplitBoxChange(index, 'height', e.target.value)}
+                            className="w-full border border-gray-200 rounded-lg p-2 text-center text-sm outline-none focus:ring-2 focus:ring-indigo-400"/>
+                        </div>
+                      </div>
+                      <div className="mt-2">
+                        <label className="text-[10px] font-bold text-gray-500 uppercase mb-1 block">Declared Value ($)</label>
+                        <input type="number" placeholder="0.00" value={box.value}
+                          onChange={e => handleSplitBoxChange(index, 'value', e.target.value)}
+                          className="w-full border border-gray-200 rounded-lg p-2 text-sm outline-none focus:ring-2 focus:ring-indigo-400"/>
+                      </div>
+                    </div>
+                  ))}
+
+                  <button type="button" onClick={handleAddSplitBox}
+                    className="w-full py-2 border-2 border-dashed border-indigo-300 text-indigo-600 rounded-xl text-xs font-bold hover:border-indigo-600 hover:bg-indigo-50 transition flex items-center justify-center gap-2">
+                    <Plus size={14}/> Add Another Box
+                  </button>
+
+                  <button type="button" onClick={handleSplitSave} disabled={isSplitting}
+                    className="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700 transition flex items-center justify-center gap-2">
+                    {isSplitting ? <Loader2 className="animate-spin" size={16}/> : <Package size={16}/>}
+                    {isSplitting ? 'Creating Packages...' : `Create ${splitBoxes.length} Individual Package${splitBoxes.length > 1 ? 's' : ''}`}
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* BOTÓN DE GUARDAR */}
