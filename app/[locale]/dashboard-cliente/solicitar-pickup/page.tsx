@@ -373,38 +373,39 @@ if (isPalletMode) {
     } catch (e) { console.error("Error calculando ruta:", e); }
   };
 
-  const handleInputInput = () => {
-      setIsAddressValid(false);
-      setQuote(prev => ({ ...prev, distanceMiles: 0 }));
-  };
+const handleInputInput = () => {
+    setIsAddressValid(false);
+    setQuote(prev => ({ ...prev, distanceMiles: 0 }));
+};
 
-  const validateTimeWindow = (dateTimeString: string) => {
-    if (!dateTimeString) {
-      setIsTimeValid(false);
-      setTimeError(null);
-      return;
-    }
+const stopRefs = useRef<(google.maps.places.Autocomplete | null)[]>([]);
 
-    const selectedDate = new Date(dateTimeString);
-    const now = new Date();
+const validateTimeWindow = (dateTimeString: string) => {
+  if (!dateTimeString) {
+    setIsTimeValid(false);
+    setTimeError(null);
+    return;
+  }
 
-    if (selectedDate < now) {
-      setIsTimeValid(false);
-      setTimeError(t.has('timeErrorPast') ? t('timeErrorPast') : "Please select a future date and time.");
-      return;
-    }
+  const selectedDate = new Date(dateTimeString);
+  const now = new Date();
 
-    const hours = selectedDate.getHours();
+  if (selectedDate < now) {
+    setIsTimeValid(false);
+    setTimeError(t.has('timeErrorPast') ? t('timeErrorPast') : "Please select a future date and time.");
+    return;
+  }
 
-    if (hours >= 9 && hours < 16) {
-      setIsTimeValid(true);
-      setTimeError(null);
-    } else {
-      setIsTimeValid(false);
-      setTimeError(t.has('timeErrorWindow') ? t('timeErrorWindow') : "Our pickup window is between 9:00 AM and 4:00 PM.");
-    }
-  };
+  const hours = selectedDate.getHours();
 
+  if (hours >= 9 && hours < 16) {
+    setIsTimeValid(true);
+    setTimeError(null);
+  } else {
+    setIsTimeValid(false);
+    setTimeError(t.has('timeErrorWindow') ? t('timeErrorWindow') : "Our pickup window is between 9:00 AM and 4:00 PM.");
+  }
+};
   const handleDateTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     setFormData({...formData, pickupDate: val});
@@ -639,31 +640,40 @@ if (isPalletMode) {
                                     )}
                              </div>
 
-                                {/* 🔥 PARADAS ADICIONALES */}
-                                {extraStops.map((stop, index) => (
-                                  <div key={index} className="bg-gray-50 p-3 rounded-xl border border-gray-200 space-y-2">
-                                    <div className="flex justify-between items-center">
-                                      <span className="text-xs font-bold text-gray-700 uppercase">Stop {String.fromCharCode(66 + index)}</span>
-                                      <button type="button" onClick={() => removeStop(index)} className="text-red-400 hover:text-red-600">
-                                        <X size={16}/>
-                                      </button>
-                                    </div>
-                                    <input
-                                      type="text"
-                                      placeholder={`Stop ${String.fromCharCode(66 + index)}: Pickup address...`}
-                                      value={stop.address}
-                                      onChange={e => updateStop(index, 'address', e.target.value)}
-                                      className="w-full p-3 border border-gray-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-400"
-                                    />
-                                    <input
-                                      type="text"
-                                      placeholder="What to pick up at this stop..."
-                                      value={stop.description}
-                                      onChange={e => updateStop(index, 'description', e.target.value)}
-                                      className="w-full p-2.5 border border-gray-100 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-300"
-                                    />
-                                  </div>
-                                ))}
+                              {/* 🔥 PARADAS ADICIONALES */}
+{extraStops.map((stop, index) => (
+  <div key={index} className="bg-gray-50 p-3 rounded-xl border border-gray-200 space-y-2">
+    <div className="flex justify-between items-center">
+      <span className="text-xs font-bold text-gray-700 uppercase">Stop {String.fromCharCode(66 + index)}</span>
+      <button type="button" onClick={() => removeStop(index)} className="text-red-400 hover:text-red-600">
+        <X size={16}/>
+      </button>
+    </div>
+    <Autocomplete
+      onLoad={ref => { stopRefs.current[index] = ref; }}
+      onPlaceChanged={() => {
+        const place = stopRefs.current[index]?.getPlace();
+        if (place?.formatted_address) {
+          updateStop(index, 'address', place.formatted_address);
+        }
+      }}
+      restrictions={{ country: "us" }}
+    >
+      <input
+        type="text"
+        placeholder={`Stop ${String.fromCharCode(66 + index)}: Pickup address...`}
+        className="w-full p-3 border border-gray-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-400"
+      />
+    </Autocomplete>
+    <input
+      type="text"
+      placeholder="What to pick up at this stop..."
+      value={stop.description}
+      onChange={e => updateStop(index, 'description', e.target.value)}
+      className="w-full p-2.5 border border-gray-100 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-300"
+    />
+  </div>
+))}
 
                                 {/* Botón Add Stop */}
                                 <button
