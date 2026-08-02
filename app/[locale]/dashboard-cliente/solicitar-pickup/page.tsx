@@ -394,6 +394,11 @@ const handleInputInput = () => {
 };
 
 const stopRefs = useRef<(google.maps.places.Autocomplete | null)[]>([]);
+const extraStopsRef = useRef(extraStops);
+
+useEffect(() => {
+  extraStopsRef.current = extraStops;
+}, [extraStops]);
 
 const validateTimeWindow = (dateTimeString: string) => {
   if (!dateTimeString) {
@@ -669,16 +674,14 @@ const validateTimeWindow = (dateTimeString: string) => {
   onPlaceChanged={() => {
     const place = stopRefs.current[index]?.getPlace();
     if (place?.formatted_address) {
-      const newStops = [...extraStops];
+      const newStops = [...extraStopsRef.current];
       newStops[index] = { ...newStops[index], address: place.formatted_address };
       setExtraStops(newStops);
-      setTimeout(() => {
-        if (serviceType === 'SHIPPING') {
-          calculateComplexRoute(formData.originAddress, '', newStops);
-        } else if (serviceType === 'DELIVERY') {
-          calculateComplexRoute(formData.originAddress, formData.dropOffAddress, newStops);
-        }
-      }, 300);
+      if (serviceType === 'SHIPPING') {
+        calculateComplexRoute(formData.originAddress, '', newStops);
+      } else if (serviceType === 'DELIVERY') {
+        calculateComplexRoute(formData.originAddress, formData.dropOffAddress, newStops);
+      }
     }
   }}
   restrictions={{ country: "us" }}
