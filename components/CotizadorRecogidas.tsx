@@ -8,18 +8,18 @@ import { Calculator, Truck, MapPin, Package, AlertTriangle, CheckCircle, Info } 
 // --- CONFIGURACIÓN DE TARIFAS ---
 
 const WEIGHT_TIERS = [
-  { id: 'w_30', label: '8 oz - 40 lbs (Pequeño)', price: 30 },
-  { id: 'w_45', label: '41 lbs - 70 lbs (Mediano)', price: 45 },
-  { id: 'w_65', label: '71 lbs - 110 lbs (Grande)', price: 65 },
-  { id: 'w_85', label: '111 lbs - 150 lbs (Muy Grande)', price: 85 },
-  { id: 'w_heavy', label: 'Más de 151 lbs (Carga Pesada)', price: 0 }, // Precio calculado: $0.55 * lbs
+  { id: 'w_30', label: '8 oz - 40 lbs (Small)', price: 30 },
+  { id: 'w_45', label: '41 lbs - 70 lbs (Medium)', price: 45 },
+  { id: 'w_65', label: '71 lbs - 110 lbs (Large)', price: 65 },
+  { id: 'w_85', label: '111 lbs - 150 lbs (Extra Large)', price: 85 },
+  { id: 'w_heavy', label: 'Over 151 lbs (Heavy Cargo)', price: 0 },
 ];
 
 const VOLUME_TIERS = [
-  { id: 'v_30', label: 'Estándar (Hasta 1/4 área)', price: 30 },
-  { id: 'v_55', label: 'Medio Volumen (1/4 a 1/2 área)', price: 55 },
-  { id: 'v_75', label: 'Alto Volumen (1/2 a 3/4 área)', price: 75 },
-  { id: 'v_100', label: 'Uso Exclusivo / Flete (Toda el área)', price: 100 },
+  { id: 'v_30', label: 'Standard (Up to 1/4 area)', price: 30 },
+  { id: 'v_55', label: 'Medium Volume (1/4 to 1/2 area)', price: 55 },
+  { id: 'v_75', label: 'High Volume (1/2 to 3/4 area)', price: 75 },
+  { id: 'v_100', label: 'Exclusive Use / Freight (Full area)', price: 100 },
 ];
 
 const BASE_MILES = 10;
@@ -172,9 +172,9 @@ function CotizadorForm() {
         </div>
         <div>
             <h1 className="text-2xl md:text-3xl font-bold text-gmc-gris-oscuro font-garamond">
-                Cotizador de Delivery
+             Delivery Quote
             </h1>
-            <p className="text-gray-500 text-sm">Logística local Punto A &rarr; Punto B</p>
+            <p className="text-gray-500 text-sm">Local logistics Point A &rarr; Point B</p>
         </div>
       </div>
 
@@ -186,13 +186,13 @@ function CotizadorForm() {
             {/* 1. SELECCIÓN DE CARGA */}
             <div className="bg-gray-50 p-5 rounded-xl border border-gray-200">
                 <h3 className="font-bold text-gmc-gris-oscuro mb-4 flex items-center gap-2">
-                    <Package size={18}/> Características de la Carga
+                    <Package size={18}/> Cargo Characteristics
                 </h3>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Peso */}
                     <div>
-                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Peso Estimado</label>
+                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Estimated Weight</label>
                         <select 
                             {...register("weightTier")}
                             className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gmc-dorado-principal outline-none bg-white"
@@ -205,7 +205,7 @@ function CotizadorForm() {
 
                     {/* Volumen */}
                     <div>
-                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Volumen / Espacio</label>
+                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Volume / Space</label>
                         <select 
                             {...register("volumeTier")}
                             className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gmc-dorado-principal outline-none bg-white"
@@ -220,14 +220,14 @@ function CotizadorForm() {
                 {/* Input Condicional para Carga Pesada */}
                 {watchedValues.weightTier === 'w_heavy' && (
                     <div className="mt-4 animate-fadeIn">
-                        <label className="block text-xs font-bold text-blue-600 uppercase mb-1">Peso Exacto (Lbs)</label>
+                        <label className="block text-xs font-bold text-blue-600 uppercase mb-1">Exact Weight (Lbs)</label>
                         <input 
                             type="number" 
                             {...register("exactWeight", { required: true, min: 151 })}
                             placeholder="Ej: 200"
                             className="w-full p-3 border-2 border-blue-100 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                         />
-                        <p className="text-xs text-blue-500 mt-1">* Se cobrará $0.55 por libra.</p>
+                        <p className="text-xs text-blue-500 mt-1">* $0.55 per pound will be charged.</p>
                     </div>
                 )}
             </div>
@@ -235,7 +235,7 @@ function CotizadorForm() {
             {/* 2. RUTA (GOOGLE MAPS) */}
             <div className="bg-blue-50/50 p-5 rounded-xl border border-blue-100">
                 <h3 className="font-bold text-blue-800 mb-4 flex items-center gap-2">
-                    <Truck size={18}/> Ruta de Entrega
+                    <Truck size={18}/> Delivery Route
                 </h3>
 
                 <div className="space-y-4">
@@ -254,7 +254,7 @@ function CotizadorForm() {
                         >
                             <input 
                                 type="text" 
-                                placeholder="Punto A: Dirección de Recogida"
+                                placeholder="Point A: Pickup Address"
                                 className="w-full pl-10 p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                                 {...register("originAddress", { required: true })}
                             />
@@ -276,7 +276,7 @@ function CotizadorForm() {
                         >
                             <input 
                                 type="text" 
-                                placeholder="Punto B: Dirección de Entrega"
+                                placeholder="Point B: Delivery Address"
                                 className="w-full pl-10 p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                                 {...register("destAddress", { required: true })}
                             />
@@ -285,18 +285,18 @@ function CotizadorForm() {
 
                     {/* Distancia Calculada */}
                     <div className="flex justify-between items-center bg-white p-3 rounded-lg border border-blue-200">
-                        <span className="text-sm font-bold text-gray-600">Distancia Estimada:</span>
+                       <span className="text-sm font-bold text-gray-600">Estimated Distance:</span>
                         <div className="text-right">
                              {isCalculating ? (
-                                <span className="text-sm text-blue-500 animate-pulse">Calculando...</span>
+                                <span className="text-sm text-blue-500 animate-pulse">Calculating...</span>
                              ) : (
-                                <span className="text-lg font-bold text-blue-800">{watchedValues.distanceMiles} Millas</span>
+                                <span className="text-lg font-bold text-blue-800">{watchedValues.distanceMiles} Miles</span>
                              )}
                         </div>
                     </div>
                     {watchedValues.distanceMiles > 10 && (
                         <p className="text-xs text-orange-600 flex items-center gap-1">
-                            <Info size={12}/> Aplica recargo por distancia ({watchedValues.distanceMiles - 10} mi extra)
+                            <Info size={12}/> Distance surcharge applies ({watchedValues.distanceMiles - 10} mi extra)
                         </p>
                     )}
                 </div>
@@ -315,7 +315,7 @@ function CotizadorForm() {
         <div className="lg:col-span-1">
             <div className="bg-gmc-gris-oscuro text-white p-6 rounded-2xl shadow-2xl sticky top-6">
                 <h3 className="text-lg font-bold text-gmc-dorado-principal mb-4 border-b border-gray-600 pb-2">
-                    Resumen de Cotización
+                    Quote Summary
                 </h3>
 
                 <div className="space-y-3 mb-6">
@@ -325,7 +325,7 @@ function CotizadorForm() {
                     </div>
                     
                     <div className="flex justify-between text-sm">
-                        <span className="text-gray-300">Recargo Distancia:</span>
+                        <span className="text-gray-300">Distance Surcharge:</span>
                         <span className="font-bold text-orange-300">+${quoteResult?.distanceSurcharge.toFixed(2)}</span>
                     </div>
 
@@ -346,7 +346,7 @@ function CotizadorForm() {
                             {...register("termsAccepted", { required: true })}
                         />
                         <span className="text-xs text-gray-300 leading-snug">
-                            Acepto que la tarifa se basa en mi estimación. Si el conductor detecta discrepancias en peso/tamaño al recoger, acepto pagar el recargo correspondiente.
+                            I agree that the rate is based on my estimate. If the driver detects discrepancies in weight/size upon pickup, I agree to pay the corresponding surcharge.
                         </span>
                     </label>
                 </div>
@@ -356,7 +356,7 @@ function CotizadorForm() {
                     disabled={!watchedValues.termsAccepted}
                     className="w-full py-4 bg-gmc-dorado-principal text-gmc-gris-oscuro font-bold rounded-xl hover:bg-white hover:text-black transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                    Solicitar Delivery
+                    Request Delivery
                 </button>
             </div>
         </div>
