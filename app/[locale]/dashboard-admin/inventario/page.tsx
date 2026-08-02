@@ -35,14 +35,14 @@ export default async function AdminDespachosPage() {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
-              <Truck className="text-blue-600"/> Centro de Despachos
+              <Truck className="text-blue-600"/> Dispatch Center
             </h1>
             <p className="text-gray-500 mt-1">
-              Gestiona los envíos que ya han sido pagados y necesitan Tracking Number.
+              Manage shipments that have been paid and need a Tracking Number.
             </p>
           </div>
           <div className="bg-white px-4 py-2 rounded-lg shadow-sm border text-sm font-bold text-gray-600">
-            Total Pendiente: {consolidacionesListas.length + paquetesSueltosListos.length}
+            Total Pending: {consolidacionesListas.length + paquetesSueltosListos.length}
           </div>
         </div>
 
@@ -51,26 +51,26 @@ export default async function AdminDespachosPage() {
           {consolidacionesListas.length > 0 && (
             <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
               <h2 className="text-xl font-bold mb-4 flex items-center gap-2 text-blue-800 border-b pb-2">
-                <Box className="text-blue-600"/> Consolidaciones ({consolidacionesListas.length})
+                <Box className="text-blue-600"/> Consolidations ({consolidacionesListas.length})
               </h2>
               <div className="grid gap-4">
                 {consolidacionesListas.map((envio) => (
                   <div key={envio.id} className="group hover:bg-blue-50/50 transition-colors p-4 rounded-xl border border-gray-200 hover:border-blue-300 flex flex-col md:flex-row justify-between items-center gap-4">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">Consolidado</span>
+                        <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">Consolidated</span>
                         <span className="text-xs text-gray-400 font-mono">#{envio.gmcShipmentNumber}</span>
                       </div>
                       <h3 className="font-bold text-lg text-gray-800">{envio.user.name || 'Cliente Desconocido'}</h3>
                       <p className="text-sm text-gray-500 flex items-center gap-2">
-                        <span className="bg-gray-100 px-2 py-0.5 rounded text-xs">{envio.packages.length} paquetes</span>
+                        <span className="bg-gray-100 px-2 py-0.5 rounded text-xs">{envio.packages.length} packages</span>
                         <span>•</span>
                         <span className="font-medium text-gray-700">{envio.selectedCourier || 'Courier no seleccionado'}</span>
                       </p>
                     </div>
                     <div className="flex items-center gap-6 w-full md:w-auto justify-between md:justify-end">
                       <div className="text-right">
-                        <p className="text-[10px] text-gray-400 uppercase font-bold">Pagado</p>
+                        <p className="text-[10px] text-gray-400 uppercase font-bold">Paid</p>
                         <p className="font-bold text-green-600 text-lg">${envio.totalAmount?.toFixed(2)}</p>
                       </div>
                       <BotonDespachar id={envio.id} type="CONSOLIDATION" courier={envio.selectedCourier} />
@@ -85,7 +85,7 @@ export default async function AdminDespachosPage() {
           {paquetesSueltosListos.length > 0 && (
             <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
               <h2 className="text-xl font-bold mb-4 flex items-center gap-2 text-orange-800 border-b pb-2">
-                <Package className="text-orange-600"/> Paquetes Individuales ({paquetesSueltosListos.length})
+                <Package className="text-orange-600"/> Individual Packages ({paquetesSueltosListos.length})
               </h2>
               <div className="grid gap-4">
                 {paquetesSueltosListos.map((pkg) => (
@@ -100,7 +100,7 @@ export default async function AdminDespachosPage() {
                     </div>
                     <div className="flex items-center gap-6 w-full md:w-auto justify-between md:justify-end">
                       <div className="text-right">
-                        <p className="text-[10px] text-gray-400 uppercase font-bold">Peso</p>
+                        <p className="text-[10px] text-gray-400 uppercase font-bold">Weight</p>
                         <p className="font-bold text-gray-700 text-lg">{pkg.weightLbs} lb</p>
                       </div>
                       <BotonDespachar id={pkg.id} type="PACKAGE" courier={pkg.selectedCourier} />
@@ -116,8 +116,8 @@ export default async function AdminDespachosPage() {
               <div className="bg-green-50 p-4 rounded-full mb-4">
                 <Truck size={40} className="text-green-500"/>
               </div>
-              <h3 className="text-xl font-bold text-gray-800">¡Todo despachado!</h3>
-              <p className="text-gray-400 mt-2">No hay envíos pendientes de tracking.</p>
+              <h3 className="text-xl font-bold text-gray-800">All dispatched!</h3>
+              <p className="text-gray-400 mt-2">No shipments pending tracking.</p>
             </div>
           )}
 
