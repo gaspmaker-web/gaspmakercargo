@@ -26,7 +26,7 @@ export default function ClientDetailClient({ client, locale }: { client: any, lo
             href={`/${locale}/dashboard-admin/clientes`}
             className="inline-flex items-center text-gray-500 hover:text-gmc-dorado-principal transition-colors font-bold"
           >
-            <ArrowLeft size={20} className="mr-2" /> Volver a la lista
+            <ArrowLeft size={20} className="mr-2" /> Back to list
           </Link>
         </div>
 
@@ -50,23 +50,23 @@ export default function ClientDetailClient({ client, locale }: { client: any, lo
 
         {/* Tabla */}
         <h2 className="text-xl font-bold text-gmc-gris-oscuro mb-4 flex items-center gap-2">
-            <Package className="text-gmc-dorado-principal" /> Paquetes e Invoices
+            <Package className="text-gmc-dorado-principal" /> Packages & Invoices
         </h2>
 
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
             {client.packages.length === 0 ? (
-                <div className="p-10 text-center text-gray-400">Este cliente no tiene paquetes registrados.</div>
+                <div className="p-10 text-center text-gray-400">This client has no registered packages.</div>
             ) : (
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                         <thead className="bg-gray-50 text-gray-500 text-xs uppercase font-bold">
                             <tr>
-                                <th className="p-4 border-b">Tracking</th>
-                                <th className="p-4 border-b">Descripción</th>
-                                <th className="p-4 border-b">Estado</th>
-                                <th className="p-4 border-b text-center">Documento</th>
-                                <th className="p-4 border-b text-center">Valor</th>
-                                <th className="p-4 border-b text-right">Acción</th>
+                               <th className="p-4 border-b">Tracking</th>
+                               <th className="p-4 border-b">Description</th>
+                               <th className="p-4 border-b">Status</th>
+                               <th className="p-4 border-b text-center">Document</th>
+                               <th className="p-4 border-b text-center">Value</th>
+                               <th className="p-4 border-b text-right">Action</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
@@ -89,7 +89,7 @@ export default function ClientDetailClient({ client, locale }: { client: any, lo
                                                 {/* 🔥 ALERTA VISUAL DE PRECIO FALTANTE */}
                                                 {needsPrice && (
                                                     <span className="bg-red-500 text-white text-[9px] px-2 py-0.5 rounded-full font-bold animate-pulse flex items-center gap-1 shadow-sm uppercase tracking-wider">
-                                                        <AlertTriangle size={10} /> Falta Precio
+                                                        <AlertTriangle size={10} /> Missing Price
                                                     </span>
                                                 )}
                                             </div>
@@ -116,12 +116,12 @@ export default function ClientDetailClient({ client, locale }: { client: any, lo
                                                     }`}
                                                 >
                                                     {isPdf ? <FileText size={14} /> : <ImageIcon size={14} />}
-                                                    {isPdf ? "Ver PDF" : "Ver Imagen"}
+                                                    {isPdf ? "View PDF" : "View Image"}
                                                     <ExternalLink size={12} className="opacity-50"/>
                                                 </a>
                                             ) : (
                                                 <span className="inline-flex items-center gap-1 text-gray-400 text-xs bg-gray-100 px-2 py-1 rounded border border-gray-200">
-                                                    <AlertCircle size={12} /> Pendiente
+                                                    <AlertCircle size={12} /> Pending
                                                 </span>
                                             )}
                                         </td>
@@ -143,7 +143,7 @@ export default function ClientDetailClient({ client, locale }: { client: any, lo
                                                         : 'bg-white text-gray-600 hover:bg-gray-50 border-gray-200'
                                                 }`}
                                             >
-                                                <Edit size={14} /> {needsPrice ? 'Poner Precio' : 'Editar'}
+                                                <Edit size={14} /> {needsPrice ? 'Set Price' : 'Edit'}
                                             </Link>
                                         </td>
                                     </tr>
