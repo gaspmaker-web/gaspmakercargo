@@ -68,12 +68,12 @@ export default function PackageActions({ pkg, locale, onDeliverStore }: PackageA
 
       const params = new URLSearchParams({
           tracking: currentTracking,
-          clientName: pkg.user?.name || 'Cliente',
+          clientName: pkg.user?.name || 'Client',
           suite: pkg.user?.suiteNo || 'N/A',
           weight: (pkg.weightLbs || 0).toString(),
           countryCode: pkg.user?.countryCode || 'US',
           date: new Date().toLocaleDateString(),
-          description: pkg.description || 'Envío',
+          description: pkg.description || 'Shipment',
           format: format
       });
 
@@ -92,10 +92,10 @@ export default function PackageActions({ pkg, locale, onDeliverStore }: PackageA
     
     const shippingCost = parseFloat(pkg.shippingTotalPaid || pkg.shippingSubtotal || 0).toFixed(2);
     
-    let receiverName = pkg.user?.name || 'Cliente No Registrado';
-    let receiverAddressBlock = 'Dirección no especificada';
-    
-    const userPhone = pkg.user?.phone || 'No Provisto / Not Provided';
+    let receiverName = pkg.user?.name || 'Unregistered Client';
+    let receiverAddressBlock = 'Address not specified';
+
+    const userPhone = pkg.user?.phone || 'Not Provided';
     const userEmail = pkg.user?.email || 'N/A';
     
     if (pkg.shippingAddress) {
@@ -151,7 +151,7 @@ export default function PackageActions({ pkg, locale, onDeliverStore }: PackageA
     } else {
         allItems = [{
             qty: 1,
-            description: pkg.description || 'Personal Effects / Artículos Varios',
+            description: pkg.description ||'Personal Effects / Miscellaneous Items',
             value: pkg.declaredValue || 0
         }];
         calculatedDeclaredValue += parseFloat(pkg.declaredValue || 0);
@@ -310,7 +310,7 @@ export default function PackageActions({ pkg, locale, onDeliverStore }: PackageA
               alert("Error: " + data.message);
           }
       } catch (e) {
-          alert("Error de conexión");
+          alert("Connection error");
       } finally {
           setIsSaving(false);
       }
@@ -372,7 +372,7 @@ export default function PackageActions({ pkg, locale, onDeliverStore }: PackageA
               onClick={() => openPrintWindow('4x6')}
               className="flex-1 bg-slate-800 text-white py-3 rounded-lg font-bold flex items-center justify-center gap-2 hover:bg-black transition-colors"
           >
-              <Printer size={18}/> Etiqueta 4x6"
+              <Printer size={18}/> Label 4x6"
           </button>
           <button 
               onClick={() => openPrintWindow('mini')}
@@ -396,21 +396,21 @@ export default function PackageActions({ pkg, locale, onDeliverStore }: PackageA
 
             {/* 1. EDITAR */}
             <button onClick={() => { setIsEditOpen(true); setIsMenuOpen(false); }} className="w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center gap-3 text-gray-700">
-              <Edit size={16} className="text-gray-400" /> Editar Detalles
+              <Edit size={16} className="text-gray-400" /> Edit Details
             </button>
             
             {/* 2. IMPRIMIR (Menú Principal) */}
             <button onClick={() => { setShowPrintModal(true); setIsMenuOpen(false); }} className="w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center gap-3 text-gray-700">
-              <Printer size={16} className="text-gray-400" /> Imprimir Etiqueta
+              <Printer size={16} className="text-gray-400" /> Print Label
             </button>
 
             {/* 🔥 3. NUEVO: GENERAR INVOICE ADUANAL 🔥 */}
             <button onClick={handleGenerateInvoice} className="w-full text-left px-4 py-3 hover:bg-orange-50 text-orange-700 flex items-center gap-3 font-medium transition-colors border-t border-gray-100">
-              <FileText size={16} /> Descargar Invoice
+              <FileText size={16} /> Download Invoice
             </button>
 
             <Link href={`/${locale}/dashboard-admin/clientes/${pkg.user?.id}`} className="w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center gap-3 text-gray-700 border-t border-gray-100">
-               <User size={16} className="text-gray-400" /> Ver Perfil Cliente
+               <User size={16} className="text-gray-400" /> View Client Profile
             </Link>
 
             {/* CONSOLIDAR */}
@@ -419,14 +419,14 @@ export default function PackageActions({ pkg, locale, onDeliverStore }: PackageA
                     onClick={() => { setShowConsolidateModal(true); setIsMenuOpen(false); }}
                     className="w-full text-left px-4 py-3 bg-indigo-50 hover:bg-indigo-100 flex items-center gap-3 font-bold text-indigo-800 border-t border-indigo-100"
                 >
-                    <Box size={16} /> Procesar Consolidación
+                 <Box size={16} /> Process Consolidation
                 </button>
             )}
 
             {/* PRE-ALERTA */}
             {isPreAlert && (
                  <Link href={`/${locale}/dashboard-admin/paquetes/${pkg.id}`} className="w-full text-left px-4 py-3 bg-yellow-50 hover:bg-yellow-100 flex items-center gap-3 font-bold text-yellow-800 border-t border-gray-100">
-                    <Package size={16} /> Procesar Ingreso
+                   <Package size={16} /> Process Entry
                 </Link>
             )}
 
@@ -435,7 +435,7 @@ export default function PackageActions({ pkg, locale, onDeliverStore }: PackageA
                 <>
                 {!isGaspMaker && (
                     <button onClick={handleBuyLabel} disabled={isSaving} className="w-full text-left px-4 py-3 bg-purple-50 hover:bg-purple-100 flex items-center gap-3 font-bold text-purple-700 border-t border-gray-100">
-                        <Printer size={16} /> Comprar Label (API)
+                        <Printer size={16} /> Purchase Label (API)
                     </button>
                 )}
                 <button onClick={() => { setShowDispatchModal(true); setIsMenuOpen(false); }} className="w-full text-left px-4 py-3 hover:bg-blue-50 flex items-center gap-3 font-bold text-blue-700 border-t border-gray-100">
@@ -452,13 +452,13 @@ export default function PackageActions({ pkg, locale, onDeliverStore }: PackageA
                             onDeliverStore(); 
                             setIsMenuOpen(false); 
                         } else {
-                            alert("Error: Función de entrega no conectada.");
+                            alert("Error: Delivery function not connected.");
                         }
                     }} 
                     className="w-full text-left px-4 py-3 bg-emerald-50 hover:bg-emerald-100 flex items-center gap-3 text-emerald-700 font-bold border-t border-emerald-100 transition-colors"
                 >
-                    <MapPin size={16}/> Entregar en Tienda
-                </button>
+                    <MapPin size={16}/> Deliver in Store
+                  </button>
             )}
 
           </div>
@@ -471,7 +471,7 @@ export default function PackageActions({ pkg, locale, onDeliverStore }: PackageA
             <div className="bg-white rounded-xl shadow-2xl max-w-sm w-full p-6 animate-in zoom-in-95">
                 <div className="flex justify-between items-center mb-4">
                     <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-                        <Printer size={20}/> Imprimir Etiqueta
+                        <Printer size={20}/> Print Label
                     </h3>
                     <button onClick={() => setShowPrintModal(false)}><X size={20} className="text-gray-400"/></button>
                 </div>
@@ -490,7 +490,7 @@ export default function PackageActions({ pkg, locale, onDeliverStore }: PackageA
             <div className="bg-white rounded-xl shadow-2xl max-w-sm w-full p-6 animate-in zoom-in-95">
                 <div className="flex justify-between items-center mb-4">
                     <h3 className="text-lg font-bold text-indigo-900">
-                        {consolidateSuccess ? '¡Consolidación Exitosa!' : 'Datos de Consolidación'}
+                        {consolidateSuccess ? 'Consolidation Successful!' : 'Consolidation Data'}
                     </h3>
                     <button onClick={() => setShowConsolidateModal(false)}><X size={20} className="text-gray-400 hover:text-red-500"/></button>
                 </div>
@@ -501,26 +501,26 @@ export default function PackageActions({ pkg, locale, onDeliverStore }: PackageA
                             <CheckCircle size={32}/>
                         </div>
                         <p className="text-sm text-gray-600 mb-6">
-                            El paquete ha sido consolidado. Imprime la etiqueta ahora.
+                         The package has been consolidated. Print the label now.
                         </p>
                         <PrintButtons />
                         <button onClick={() => setShowConsolidateModal(false)} className="mt-4 text-xs text-gray-400 hover:text-gray-600">
-                            Cerrar
+                         Close
                         </button>
                     </div>
                 ) : (
                     <>
                         <div className="bg-indigo-50 p-4 rounded-lg mb-4 text-xs text-indigo-800">
-                            <p>Ingresa las medidas finales de la caja consolidada.</p>
+                           <p>Enter the final measurements of the consolidated box.</p>
                         </div>
 
-                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Peso Final (Lbs)</label>
+                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Final Weight (Lbs)</label>
                         <input type="number" value={finalWeight} onChange={(e) => setFinalWeight(e.target.value)} placeholder="Ej: 70" className="w-full border border-gray-300 rounded-lg p-3 font-mono text-lg mb-4 focus:ring-2 focus:ring-indigo-500 outline-none" autoFocus />
 
                         <div className="grid grid-cols-3 gap-2 mb-6">
-                            <div><label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Largo</label><input type="number" placeholder="In" className="w-full border p-2 rounded-lg text-center" value={dims.length} onChange={(e) => setDims({...dims, length: e.target.value})}/></div>
-                            <div><label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Ancho</label><input type="number" placeholder="In" className="w-full border p-2 rounded-lg text-center" value={dims.width} onChange={(e) => setDims({...dims, width: e.target.value})}/></div>
-                            <div><label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Alto</label><input type="number" placeholder="In" className="w-full border p-2 rounded-lg text-center" value={dims.height} onChange={(e) => setDims({...dims, height: e.target.value})}/></div>
+                            <div><label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Length</label><input type="number" placeholder="In" className="w-full border p-2 rounded-lg text-center" value={dims.length} onChange={(e) => setDims({...dims, length: e.target.value})}/></div>
+                            <div><label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Width</label><input type="number" placeholder="In" className="w-full border p-2 rounded-lg text-center" value={dims.width} onChange={(e) => setDims({...dims, width: e.target.value})}/></div>
+                            <div><label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Height</label><input type="number" placeholder="In" className="w-full border p-2 rounded-lg text-center" value={dims.height} onChange={(e) => setDims({...dims, height: e.target.value})}/></div>
                         </div>
 
                         <button onClick={handleConsolidate} disabled={isSaving} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 transition-all">
@@ -551,13 +551,13 @@ export default function PackageActions({ pkg, locale, onDeliverStore }: PackageA
                         <div className="mx-auto w-12 h-12 bg-green-100 rounded-full flex items-center justify-center text-green-600 mb-3">
                             <CheckCircle size={32}/>
                         </div>
-                        <p className="text-sm text-gray-600 mb-2">Tracking Generado:</p>
+                        <p className="text-sm text-gray-600 mb-2">Generated Tracking:</p>
                         <p className="font-mono font-bold text-xl text-blue-600 mb-6 bg-blue-50 p-2 rounded">{trackingNumber}</p>
                         
                         <PrintButtons />
                         
                         <button onClick={() => setShowDispatchModal(false)} className="mt-4 text-xs text-gray-400 hover:text-gray-600">
-                            Cerrar
+                         Close
                         </button>
                     </div>
                 ) : (
@@ -565,7 +565,7 @@ export default function PackageActions({ pkg, locale, onDeliverStore }: PackageA
                         <div className="bg-blue-50 p-3 rounded-lg mb-4 text-sm"><p className="font-bold text-blue-800">{pkg.selectedCourier}</p></div>
                         <input type="text" value={trackingNumber} onChange={(e) => setTrackingNumber(e.target.value)} placeholder="Tracking..." className="w-full border p-3 rounded-lg mb-4 font-mono text-lg"/>
                         <button onClick={handleDispatch} disabled={isSaving} className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg flex gap-2 justify-center">
-                            {isSaving ? <Loader2 className="animate-spin"/> : <Save size={18}/>} Guardar
+                           {isSaving ? <Loader2 className="animate-spin"/> : <Save size={18}/>} Save
                         </button>
                     </>
                 )}
