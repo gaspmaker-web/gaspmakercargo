@@ -317,7 +317,7 @@ if (isPalletMode) {
       setFormData(prev => ({ ...prev, dropOffAddress: newDropoff }));
   };
 
-  // --- DISTANCE RECALC ---
+ // --- DISTANCE RECALC ---
   useEffect(() => {
     if (!isLoaded || !serviceType || serviceType === 'PICKUP_WAREHOUSE') return;
 
@@ -329,7 +329,7 @@ if (isPalletMode) {
     }
   }, [formData.originAddress, formData.dropOffAddress, serviceType, isLoaded, autoVehicle.type, extraStops]);
 
-  const calculateComplexRoute = async (origin: string, destination: string) => {
+  const calculateComplexRoute = async (origin: string, destination: string, stops?: {address: string}[]) => {
     if (!isLoaded || typeof google === 'undefined' || !origin) return;
 
     try {
@@ -348,6 +348,7 @@ if (isPalletMode) {
           ? parseFloat(el.distance.text.replace(' mi','').replace(',',''))
           : el.distance.value / 1609.34;
       };
+
 
       const validStops = extraStops.filter(s => s.address);
 
@@ -663,17 +664,19 @@ const validateTimeWindow = (dateTimeString: string) => {
         <X size={16}/>
       </button>
     </div>
-   <Autocomplete
+<Autocomplete
   onLoad={ref => { stopRefs.current[index] = ref; }}
   onPlaceChanged={() => {
     const place = stopRefs.current[index]?.getPlace();
     if (place?.formatted_address) {
-      updateStop(index, 'address', place.formatted_address);
+      const newStops = [...extraStops];
+      newStops[index] = { ...newStops[index], address: place.formatted_address };
+      setExtraStops(newStops);
       setTimeout(() => {
         if (serviceType === 'SHIPPING') {
-          calculateComplexRoute(formData.originAddress, '');
+          calculateComplexRoute(formData.originAddress, '', newStops);
         } else if (serviceType === 'DELIVERY') {
-          calculateComplexRoute(formData.originAddress, formData.dropOffAddress);
+          calculateComplexRoute(formData.originAddress, formData.dropOffAddress, newStops);
         }
       }, 300);
     }
