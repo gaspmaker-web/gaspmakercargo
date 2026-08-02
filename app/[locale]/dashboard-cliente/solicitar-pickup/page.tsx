@@ -637,7 +637,42 @@ if (isPalletMode) {
                                             <span>{addressError}</span>
                                         </div>
                                     )}
-                                </div>
+                             </div>
+
+                                {/* 🔥 PARADAS ADICIONALES */}
+                                {extraStops.map((stop, index) => (
+                                  <div key={index} className="bg-gray-50 p-3 rounded-xl border border-gray-200 space-y-2">
+                                    <div className="flex justify-between items-center">
+                                      <span className="text-xs font-bold text-gray-700 uppercase">Stop {String.fromCharCode(66 + index)}</span>
+                                      <button type="button" onClick={() => removeStop(index)} className="text-red-400 hover:text-red-600">
+                                        <X size={16}/>
+                                      </button>
+                                    </div>
+                                    <input
+                                      type="text"
+                                      placeholder={`Stop ${String.fromCharCode(66 + index)}: Pickup address...`}
+                                      value={stop.address}
+                                      onChange={e => updateStop(index, 'address', e.target.value)}
+                                      className="w-full p-3 border border-gray-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-400"
+                                    />
+                                    <input
+                                      type="text"
+                                      placeholder="What to pick up at this stop..."
+                                      value={stop.description}
+                                      onChange={e => updateStop(index, 'description', e.target.value)}
+                                      className="w-full p-2.5 border border-gray-100 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-300"
+                                    />
+                                  </div>
+                                ))}
+
+                                {/* Botón Add Stop */}
+                                <button
+                                  type="button"
+                                  onClick={addStop}
+                                  className="w-full py-2 border-2 border-dashed border-gray-300 text-gray-500 rounded-lg text-xs font-bold hover:border-gmc-dorado-principal hover:text-gmc-dorado-principal transition flex items-center justify-center gap-2"
+                                >
+                                  <Plus size={14}/> Add Stop ({String.fromCharCode(66 + extraStops.length)})
+                                </button>
 
                                 {serviceType === 'SHIPPING' && (
                                     <div className="p-3 bg-blue-50 border border-blue-100 rounded-lg flex items-center gap-3">
