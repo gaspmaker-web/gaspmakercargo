@@ -8,8 +8,8 @@ import {
   ExternalLink, PenTool, Map as MapIcon, Clock 
 } from 'lucide-react';
 
-// IMPORTAMOS EL COMPONENTE DE ACCIÓN
-import AdminPickupActions from '@/components/admin/AdminPickupActions';
+// IMPORTAMOS EL COMPONENTE DE SPLIT
+import PickupSplitPanel from '@/components/admin/PickupSplitPanel';
 
 // 🔥 DICCIONARIO DE VEHÍCULOS PARA EL ADMIN
 const VEHICLE_NAMES: Record<string, string> = {
@@ -54,14 +54,17 @@ export default async function PickupRequestDetailPage({ params }: { params: { id
             {/* --- COLUMNA DERECHA (ACCIONES Y DETALLES) --- */}
             <div className="space-y-6 order-first lg:order-last lg:col-span-1 lg:sticky lg:top-6">
                 
-                {/* 1. BOTÓN DE ACCIÓN (Recepción en Almacén) */}
-                <div className="bg-white p-1 rounded-xl border-2 border-gmc-dorado-principal shadow-lg">
-                    <AdminPickupActions 
-                        pickupId={req.id} 
-                        status={req.status} 
-                        serviceType={req.serviceType || 'SHIPPING'} 
-                    />
-                </div>
+               {/* 1. WAREHOUSE RECEPTION - Split into Individual Packages */}
+           <div className="bg-white p-1 rounded-xl border-2 border-gmc-dorado-principal shadow-lg">
+            <PickupSplitPanel
+            pickupId={req.id}
+            status={req.status}
+            serviceType={req.serviceType || 'SHIPPING'}
+            photoUrl={req.photoPickupUrl || ''}
+            userId={req.userId}
+            gmcTracking={req.id.slice(0,8).toUpperCase()}
+             />
+         </div>
 
                 {/* 1.1 Si es DELIVERY, mostramos Tracking en Vivo */}
                 {isDelivery && req.tookanLink && (
