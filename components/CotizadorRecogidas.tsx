@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { useJsApiLoader, Autocomplete } from '@react-google-maps/api';
-import { Calculator, Truck, MapPin, Package, AlertTriangle, CheckCircle, Info } from "lucide-react";
+import { Calculator, Truck, MapPin, Package, AlertTriangle, CheckCircle, Info, Plus, X } from "lucide-react";
 
 // --- CONFIGURACIÓN DE TARIFAS ---
 
@@ -41,6 +41,22 @@ interface FormData {
 }
 
 const GOOGLE_LIBRARIES: ("places")[] = ["places"];
+
+const [extraStops, setExtraStops] = useState<{address: string, description: string, weightTier: string}[]>([]);
+
+const addStop = () => {
+  setExtraStops([...extraStops, { address: '', description: '', weightTier: 'w_30' }]);
+};
+
+const removeStop = (index: number) => {
+  setExtraStops(extraStops.filter((_, i) => i !== index));
+};
+
+const updateStop = (index: number, field: string, value: string) => {
+  const updated = [...extraStops];
+  updated[index] = { ...updated[index], [field]: value };
+  setExtraStops(updated);
+};
 
 export default function CotizadorRecogidas() {
   const { isLoaded } = useJsApiLoader({
@@ -125,34 +141,53 @@ function CotizadorForm() {
   ]);
 
   // --- GOOGLE MAPS DISTANCE ---
-  const calculateDistance = async () => {
-    const origin = watchedValues.originAddress;
-    const dest = watchedValues.destAddress;
+ const calculateDistance = async () => {
+  const origin = watchedValues.originAddress;
+  const dest = watchedValues.destAddress;
+  if (!origin || !dest) return;
 
-    if (!origin || !dest) return;
-
-    setIsCalculating(true);
-    try {
-        const service = new google.maps.DistanceMatrixService();
-        const result = await service.getDistanceMatrix({
-            origins: [origin],
-            destinations: [dest],
-            travelMode: google.maps.TravelMode.DRIVING,
-            unitSystem: google.maps.UnitSystem.IMPERIAL
-        });
-
-        const element = result.rows[0].elements[0];
-        if (element.status === "OK") {
-            // Convertir metros a millas (1 mi = 1609.34 m)
-            const miles = element.distance.value / 1609.34;
-            setValue("distanceMiles", parseFloat(miles.toFixed(1)));
-        }
-    } catch (e) {
-        console.error("Error calculando distancia", e);
-    } finally {
-        setIsCalculating(false);
+  setIsCalculating(true);
+  try {
+    const service = new google.maps.DistanceMatrixService();
+    
+    // Si hay paradas extra, calculamos ruta completa
+    if (extraStops.length > 0) {
+      const directionsService = new google.maps.DirectionsService();
+      const waypoints = extraStops
+        .filter(s => s.address)
+        .map(s => ({ location: s.address, stopover: true }));
+      
+      const result = await directionsService.route({
+        origin,
+        destination: dest,
+        waypoints,
+        travelMode: google.maps.TravelMode.DRIVING,
+        unitSystem: google.maps.UnitSystem.IMPERIAL
+      });
+      
+      const totalDistance = result.routes[0].legs.reduce(
+        (acc, leg) => acc + (leg.distance?.value || 0), 0
+      );
+      setValue("distanceMiles", parseFloat((totalDistance / 1609.34).toFixed(1)));
+    } else {
+      const result = await service.getDistanceMatrix({
+        origins: [origin],
+        destinations: [dest],
+        travelMode: google.maps.TravelMode.DRIVING,
+        unitSystem: google.maps.UnitSystem.IMPERIAL
+      });
+      const element = result.rows[0].elements[0];
+      if (element.status === "OK") {
+        const miles = element.distance.value / 1609.34;
+        setValue("distanceMiles", parseFloat(miles.toFixed(1)));
+      }
     }
-  };
+  } catch (e) {
+    console.error("Error calculando distancia", e);
+  } finally {
+    setIsCalculating(false);
+  }
+};
 
   const onSubmit = (data: FormData) => {
     if (!quoteResult) return;
@@ -233,74 +268,129 @@ function CotizadorForm() {
             </div>
 
             {/* 2. RUTA (GOOGLE MAPS) */}
-            <div className="bg-blue-50/50 p-5 rounded-xl border border-blue-100">
-                <h3 className="font-bold text-blue-800 mb-4 flex items-center gap-2">
-                    <Truck size={18}/> Delivery Route
-                </h3>
+<div className="bg-blue-50/50 p-5 rounded-xl border border-blue-100">
+  <h3 className="font-bold text-blue-800 mb-4 flex items-center gap-2">
+    <Truck size={18}/> Pickup Route
+  </h3>
 
-                <div className="space-y-4">
-                    {/* Punto A */}
-                    <div className="relative">
-                        <MapPin className="absolute left-3 top-3.5 text-green-600 z-10" size={18}/>
-                        <Autocomplete
-                            onLoad={ref => { originRef.current = ref }}
-                            onPlaceChanged={() => {
-                                const place = originRef.current?.getPlace();
-                                if(place?.formatted_address) {
-                                    setValue("originAddress", place.formatted_address);
-                                    calculateDistance();
-                                }
-                            }}
-                        >
-                            <input 
-                                type="text" 
-                                placeholder="Point A: Pickup Address"
-                                className="w-full pl-10 p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                                {...register("originAddress", { required: true })}
-                            />
-                        </Autocomplete>
-                    </div>
+  <div className="space-y-3">
+    {/* Punto A — siempre visible */}
+    <div className="relative">
+      <div className="absolute left-3 top-3.5 z-10 flex items-center justify-center w-5 h-5 bg-green-600 text-white rounded-full text-[10px] font-bold">A</div>
+      <Autocomplete
+        onLoad={ref => { originRef.current = ref }}
+        onPlaceChanged={() => {
+          const place = originRef.current?.getPlace();
+          if(place?.formatted_address) {
+            setValue("originAddress", place.formatted_address);
+            calculateDistance();
+          }
+        }}
+      >
+        <input 
+          type="text" 
+          placeholder="Stop A: Pickup Address"
+          className="w-full pl-10 p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+          {...register("originAddress", { required: true })}
+        />
+      </Autocomplete>
+    </div>
 
-                    {/* Punto B */}
-                    <div className="relative">
-                        <MapPin className="absolute left-3 top-3.5 text-red-600 z-10" size={18}/>
-                        <Autocomplete
-                            onLoad={ref => { destRef.current = ref }}
-                            onPlaceChanged={() => {
-                                const place = destRef.current?.getPlace();
-                                if(place?.formatted_address) {
-                                    setValue("destAddress", place.formatted_address);
-                                    calculateDistance();
-                                }
-                            }}
-                        >
-                            <input 
-                                type="text" 
-                                placeholder="Point B: Delivery Address"
-                                className="w-full pl-10 p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                                {...register("destAddress", { required: true })}
-                            />
-                        </Autocomplete>
-                    </div>
+  {/* Paradas adicionales dinámicas */}
+{extraStops.map((stop, index) => (
+  <div key={index} className="bg-white p-3 rounded-xl border border-blue-200 space-y-2">
+    <div className="flex justify-between items-center">
+      <span className="text-xs font-bold text-blue-700 uppercase">Stop {String.fromCharCode(66 + index)}</span>
+      <button type="button" onClick={() => removeStop(index)} className="text-red-400 hover:text-red-600">
+        <X size={16}/>
+      </button>
+    </div>
+    
+    {/* Dirección */}
+    <div className="relative">
+      <MapPin className="absolute left-3 top-3 text-blue-500" size={14}/>
+      <input
+        type="text"
+        placeholder={`Stop ${String.fromCharCode(66 + index)}: Address`}
+        value={stop.address}
+        onChange={e => updateStop(index, 'address', e.target.value)}
+        className="w-full pl-9 p-2.5 border border-blue-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500"
+      />
+    </div>
 
-                    {/* Distancia Calculada */}
-                    <div className="flex justify-between items-center bg-white p-3 rounded-lg border border-blue-200">
-                       <span className="text-sm font-bold text-gray-600">Estimated Distance:</span>
-                        <div className="text-right">
-                             {isCalculating ? (
-                                <span className="text-sm text-blue-500 animate-pulse">Calculating...</span>
-                             ) : (
-                                <span className="text-lg font-bold text-blue-800">{watchedValues.distanceMiles} Miles</span>
-                             )}
-                        </div>
-                    </div>
-                    {watchedValues.distanceMiles > 10 && (
-                        <p className="text-xs text-orange-600 flex items-center gap-1">
-                            <Info size={12}/> Distance surcharge applies ({watchedValues.distanceMiles - 10} mi extra)
-                        </p>
-                    )}
-                </div>
-            </div>
+    {/* Descripción */}
+    <input
+      type="text"
+      placeholder="What to pick up at this stop..."
+      value={stop.description}
+      onChange={e => updateStop(index, 'description', e.target.value)}
+      className="w-full p-2.5 border border-blue-100 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-400"
+    />
+
+    {/* Peso estimado */}
+    <select
+      value={stop.weightTier}
+      onChange={e => updateStop(index, 'weightTier', e.target.value)}
+      className="w-full p-2.5 border border-blue-100 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-400 bg-white"
+    >
+      {WEIGHT_TIERS.map(t => (
+        <option key={t.id} value={t.id}>{t.label}</option>
+      ))}
+    </select>
+  </div>
+))}
+
+{/* Botón agregar parada */}
+<button
+  type="button"
+  onClick={addStop}
+  className="w-full py-2 border-2 border-dashed border-blue-300 text-blue-600 rounded-lg text-xs font-bold hover:border-blue-600 hover:bg-blue-50 transition flex items-center justify-center gap-2"
+>
+  <Plus size={14}/> Add Stop ({String.fromCharCode(66 + extraStops.length)})
+</button>
+
+{/* Punto B — destino final */}
+<div className="relative">
+  <div className="absolute left-3 top-3.5 z-10 flex items-center justify-center w-5 h-5 bg-red-600 text-white rounded-full text-[10px] font-bold">
+    {String.fromCharCode(66 + extraStops.length)}
+  </div>
+  <Autocomplete
+    onLoad={ref => { destRef.current = ref }}
+    onPlaceChanged={() => {
+      const place = destRef.current?.getPlace();
+      if(place?.formatted_address) {
+        setValue("destAddress", place.formatted_address);
+        calculateDistance();
+      }
+    }}
+  >
+    <input 
+      type="text" 
+      placeholder="Final Destination"
+      className="w-full pl-10 p-3 border border-red-200 rounded-lg focus:ring-2 focus:ring-red-400 outline-none"
+      {...register("destAddress", { required: true })}
+    />
+  </Autocomplete>
+</div>
+
+{/* Distancia Calculada */}
+<div className="flex justify-between items-center bg-white p-3 rounded-lg border border-blue-200">
+  <span className="text-sm font-bold text-gray-600">Total Route Distance:</span>
+  <div className="text-right">
+    {isCalculating ? (
+      <span className="text-sm text-blue-500 animate-pulse">Calculating...</span>
+    ) : (
+      <span className="text-lg font-bold text-blue-800">{watchedValues.distanceMiles} Miles</span>
+    )}
+  </div>
+</div>
+{watchedValues.distanceMiles > 10 && (
+  <p className="text-xs text-orange-600 flex items-center gap-1">
+    <Info size={12}/> Distance surcharge applies ({watchedValues.distanceMiles - 10} mi extra)
+  </p>
+)}
+</div>
+</div>
 
             {/* 3. CONTACTO Y DESCRIPCIÓN */}
             <div className="grid grid-cols-2 gap-4">
