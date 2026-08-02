@@ -370,15 +370,15 @@ export default function PayAndGoClient() {
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
             {successData.labelUrl && (
               <button onClick={() => window.open(successData.labelUrl, '_blank')} className="bg-slate-800 text-white px-6 py-3 rounded-xl font-bold hover:bg-black transition flex items-center justify-center gap-2 shadow-md animate-in zoom-in">
-                <Printer size={20}/> Imprimir Label
+                 <Printer size={20}/> Print Label
               </button>
             )}
             
             <button onClick={handleGenerateInvoice} className="bg-orange-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-orange-700 transition flex items-center justify-center gap-2 shadow-md">
-              <FileText size={20}/> Descargar Invoice Aduanal
+              <FileText size={20}/> Download Customs Invoice
             </button>
             <button onClick={() => { reset(); setSuccessData(null); setPhotoUrl(null); setRates([]); setSelectedRate(null); setIsBuyingLabel(false); }} className="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-blue-700 transition flex items-center justify-center gap-2 shadow-md">
-              <Plus size={20}/> Nuevo Drop & Go
+              <Plus size={20}/> New Drop & Go
             </button>
         </div>
       </div>
@@ -630,7 +630,7 @@ export default function PayAndGoClient() {
         {selectedRate && (
           <div className="mt-4 mb-4 bg-gray-800 p-4 rounded-xl border border-gray-700 space-y-2 text-sm animate-in fade-in">
             <div className="flex justify-between text-gray-300">
-              <span>Costo de Flete:</span>
+              <span>Freight Cost:</span>
               <span>${basePrice.toFixed(2)}</span>
             </div>
             
@@ -649,7 +649,7 @@ export default function PayAndGoClient() {
             )}
             
             <div className="flex justify-between text-[#EAD8B1] font-bold text-lg pt-2 border-t border-gray-600 mt-2">
-              <span>Total a Cobrar:</span>
+              <span>Total to Charge:</span>
               <span>${finalTotalAmount.toFixed(2)}</span>
             </div>
           </div>
