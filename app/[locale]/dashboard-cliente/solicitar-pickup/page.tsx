@@ -663,15 +663,22 @@ const validateTimeWindow = (dateTimeString: string) => {
         <X size={16}/>
       </button>
     </div>
-    <Autocomplete
-      onLoad={ref => { stopRefs.current[index] = ref; }}
-      onPlaceChanged={() => {
-        const place = stopRefs.current[index]?.getPlace();
-        if (place?.formatted_address) {
-          updateStop(index, 'address', place.formatted_address);
+   <Autocomplete
+  onLoad={ref => { stopRefs.current[index] = ref; }}
+  onPlaceChanged={() => {
+    const place = stopRefs.current[index]?.getPlace();
+    if (place?.formatted_address) {
+      updateStop(index, 'address', place.formatted_address);
+      setTimeout(() => {
+        if (serviceType === 'SHIPPING') {
+          calculateComplexRoute(formData.originAddress, '');
+        } else if (serviceType === 'DELIVERY') {
+          calculateComplexRoute(formData.originAddress, formData.dropOffAddress);
         }
-      }}
-      restrictions={{ country: "us" }}
+      }, 300);
+    }
+  }}
+  restrictions={{ country: "us" }}
     >
       <input
         type="text"
