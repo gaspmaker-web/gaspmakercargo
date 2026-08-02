@@ -55,12 +55,21 @@ export async function POST(req: Request) {
       createdPackages.push(newPkg);
     }
 
-    // Marcar el paquete madre como PROCESADO
-    await prisma.package.update({
-      where: { id: parentPackageId },
-      data: { status: 'PROCESADO' }
-    });
+  // Marcar el paquete madre como PROCESADO
+await prisma.package.update({
+  where: { id: parentPackageId },
+  data: { status: 'PROCESADO' }
+});
 
+// Notificar al cliente
+const { sendNotification } = await import('@/lib/notifications');
+await sendNotification({
+  userId: parentPkg.userId,
+  title: '📦 Your packages are ready!',
+  message: `Your pickup has been processed. ${createdPackages.length} packages are now available in your dashboard. Please upload the invoice for each one.`,
+  href: '/en/dashboard-cliente',
+  type: 'INFO'
+});
     return NextResponse.json({ 
       success: true, 
       created: createdPackages.length,
