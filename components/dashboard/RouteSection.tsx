@@ -22,7 +22,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { AlertTriangle, MapPin, Plus, Warehouse } from "lucide-react";
-import SortableStop from "./SortableStop";
+import SortableStop from "@/components/SortableStop";
 
 const ALLOWED_COUNTIES = ["Miami-Dade County", "Broward County"];
 
