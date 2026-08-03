@@ -702,16 +702,7 @@ onPlaceChanged={() => {
   </div>
 ))}
 
-                                {/* Botón Add Stop */}
-                                <button
-                                  type="button"
-                                  onClick={addStop}
-                                  className="w-full py-2 border-2 border-dashed border-gray-300 text-gray-500 rounded-lg text-xs font-bold hover:border-gmc-dorado-principal hover:text-gmc-dorado-principal transition flex items-center justify-center gap-2"
-                                >
-                                  <Plus size={14}/> Add Stop ({String.fromCharCode(66 + extraStops.length)})
-                                </button>
-
-                                {serviceType === 'SHIPPING' && (
+                              {serviceType === 'SHIPPING' && (
                                     <div className="p-3 bg-blue-50 border border-blue-100 rounded-lg flex items-center gap-3">
                                         <div className="bg-white p-2 rounded-full text-blue-600 shadow-sm"><Warehouse size={18}/></div>
                                         <div>
@@ -721,6 +712,51 @@ onPlaceChanged={() => {
                                         </div>
                                     </div>
                                 )}
+
+                                {/* 🔥 PARADAS ADICIONALES — SHIPPING */}
+                                {serviceType === 'SHIPPING' && extraStops.map((stop, index) => (
+                                  <div key={index} className="bg-gray-50 p-3 rounded-xl border border-gray-200 space-y-2">
+                                    <div className="flex justify-between items-center">
+                                      <span className="text-xs font-bold text-gray-700 uppercase">Stop {String.fromCharCode(66 + index)}</span>
+                                      <button type="button" onClick={() => removeStop(index)} className="text-red-400 hover:text-red-600">
+                                        <X size={16}/>
+                                      </button>
+                                    </div>
+                                    <Autocomplete
+                                      onLoad={ref => { stopRefs.current[index] = ref; }}
+                                      onPlaceChanged={() => {
+                                        const place = stopRefs.current[index]?.getPlace();
+                                        if (place?.formatted_address) {
+                                          const newStops = [...extraStopsRef.current];
+                                          newStops[index] = { ...newStops[index], address: place.formatted_address };
+                                          setExtraStops(newStops);
+                                          calculateComplexRoute(formData.originAddress, '', newStops);
+                                        }
+                                      }}
+                                      restrictions={{ country: "us" }}
+                                    >
+                                      <input type="text"
+                                        placeholder={`Stop ${String.fromCharCode(66 + index)}: Pickup address...`}
+                                        className="w-full p-3 border border-gray-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-400"
+                                      />
+                                    </Autocomplete>
+                                    <input type="text"
+                                      placeholder="What to pick up at this stop..."
+                                      value={stop.description}
+                                      onChange={e => updateStop(index, 'description', e.target.value)}
+                                      className="w-full p-2.5 border border-gray-100 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-300"
+                                    />
+                                  </div>
+                                ))}
+
+                                {/* Botón Add Stop — SHIPPING */}
+                                {serviceType === 'SHIPPING' && (
+                                  <button type="button" onClick={addStop}
+                                    className="w-full py-2 border-2 border-dashed border-gray-300 text-gray-500 rounded-lg text-xs font-bold hover:border-gmc-dorado-principal hover:text-gmc-dorado-principal transition flex items-center justify-center gap-2">
+                                    <Plus size={14}/> Add Stop ({String.fromCharCode(66 + extraStops.length)})
+                                  </button>
+                                )}
+
                                 {serviceType === 'DELIVERY' && (
                                     <div>
                                         <label className="text-xs font-bold text-gray-400">{t('dropoffPointB')}</label>
@@ -740,6 +776,50 @@ onPlaceChanged={() => {
                                                 <AlertTriangle size={16} />
                                                 <span>{dropOffError}</span>
                                             </div>
+                                        )}
+
+                                        {/* 🔥 PARADAS ADICIONALES — DELIVERY (después del destino) */}
+                                        {formData.dropOffAddress && extraStops.map((stop, index) => (
+                                          <div key={index} className="bg-gray-50 p-3 rounded-xl border border-gray-200 space-y-2 mt-3">
+                                            <div className="flex justify-between items-center">
+                                              <span className="text-xs font-bold text-gray-700 uppercase">Stop {String.fromCharCode(66 + index)}</span>
+                                              <button type="button" onClick={() => removeStop(index)} className="text-red-400 hover:text-red-600">
+                                                <X size={16}/>
+                                              </button>
+                                            </div>
+                                            <Autocomplete
+                                              onLoad={ref => { stopRefs.current[index] = ref; }}
+                                              onPlaceChanged={() => {
+                                                const place = stopRefs.current[index]?.getPlace();
+                                                if (place?.formatted_address) {
+                                                  const newStops = [...extraStopsRef.current];
+                                                  newStops[index] = { ...newStops[index], address: place.formatted_address };
+                                                  setExtraStops(newStops);
+                                                  calculateComplexRoute(formData.originAddress, formData.dropOffAddress, newStops);
+                                                }
+                                              }}
+                                              restrictions={{ country: "us" }}
+                                            >
+                                              <input type="text"
+                                                placeholder={`Stop ${String.fromCharCode(66 + index)}: Pickup address...`}
+                                                className="w-full p-3 border border-gray-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-green-400"
+                                              />
+                                            </Autocomplete>
+                                            <input type="text"
+                                              placeholder="What to pick up at this stop..."
+                                              value={stop.description}
+                                              onChange={e => updateStop(index, 'description', e.target.value)}
+                                              className="w-full p-2.5 border border-gray-100 rounded-lg text-sm outline-none focus:ring-2 focus:ring-green-300"
+                                            />
+                                          </div>
+                                        ))}
+
+                                        {/* Botón Add Stop — DELIVERY (solo cuando destino está lleno) */}
+                                        {formData.dropOffAddress && (
+                                          <button type="button" onClick={addStop}
+                                            className="w-full mt-3 py-2 border-2 border-dashed border-gray-300 text-gray-500 rounded-lg text-xs font-bold hover:border-green-500 hover:text-green-600 transition flex items-center justify-center gap-2">
+                                            <Plus size={14}/> Add Stop ({String.fromCharCode(66 + extraStops.length)})
+                                          </button>
                                         )}
                                     </div>
                                 )}
