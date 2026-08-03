@@ -958,7 +958,7 @@ const handleSelectRate = (billId: string, rate: Rate) => {
                         
                         <div className="mb-6 bg-gray-800 p-4 rounded-xl border border-gray-700">
                             <label className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase mb-3">
-                                <MapPin size={16} className="text-gmc-dorado-principal" /> Destino de Envío
+                                <MapPin size={16} className="text-gmc-dorado-principal" /> {t('shippingDestination')}
                             </label>
                             {allAddresses.length > 0 ? (
                                 <div className="relative">
