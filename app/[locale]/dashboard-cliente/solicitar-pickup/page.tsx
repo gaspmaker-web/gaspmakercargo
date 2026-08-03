@@ -324,9 +324,9 @@ if (isPalletMode) {
     if (serviceType === 'SHIPPING' && formData.originAddress) {
         calculateComplexRoute(formData.originAddress, '');
     }
-    if (serviceType === 'DELIVERY' && formData.originAddress && formData.dropOffAddress) {
-        calculateComplexRoute(formData.originAddress, formData.dropOffAddress);
-    }
+   if (serviceType === 'DELIVERY' && formData.originAddress) {
+    calculateComplexRoute(formData.originAddress, formData.dropOffAddress);
+}
   }, [formData.originAddress, formData.dropOffAddress, serviceType, isLoaded, autoVehicle.type, extraStops]);
 
   const calculateComplexRoute = async (origin: string, destination: string, stops?: {address: string}[]) => {
@@ -365,24 +365,23 @@ if (isPalletMode) {
           totalMiles += await getLeg(prev, GMC_WAREHOUSE_ADDRESS);
         }
       }
-      else if (serviceType === 'DELIVERY') {
-        if (!destination) return;
+     else if (serviceType === 'DELIVERY') {
+  totalMiles += await getLeg(GMC_WAREHOUSE_ADDRESS, origin);
 
-        totalMiles += await getLeg(GMC_WAREHOUSE_ADDRESS, origin);
+  let prev = origin;
+  for (const stop of validStops) {
+    totalMiles += await getLeg(prev, stop.address);
+    prev = stop.address;
+  }
 
-        let prev = origin;
-        for (const stop of validStops) {
-          totalMiles += await getLeg(prev, stop.address);
-          prev = stop.address;
-        }
-
-        totalMiles += await getLeg(prev, destination);
-
-        if (autoVehicle.type === 'BOX_TRUCK') {
-          totalMiles += await getLeg(destination, GMC_WAREHOUSE_ADDRESS);
-        }
-      }
-
+  // Solo suma el destino final si existe
+  if (destination) {
+    totalMiles += await getLeg(prev, destination);
+    if (autoVehicle.type === 'BOX_TRUCK') {
+      totalMiles += await getLeg(destination, GMC_WAREHOUSE_ADDRESS);
+    }
+  }
+}
       setQuote(prev => ({ ...prev, distanceMiles: parseFloat(totalMiles.toFixed(1)) }));
 
     } catch (e) { console.error("Error calculando ruta:", e); }
