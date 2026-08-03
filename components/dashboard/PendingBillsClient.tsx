@@ -864,7 +864,7 @@ const handleSelectRate = (billId: string, rate: Rate) => {
                                                                         <div>
                                                                             <p className="font-bold text-gray-800 text-sm">{cleanCarrierName(selectedRate.carrier)}</p>
                                                                             <p className="text-[10px] text-gray-500">{cleanServiceName(selectedRate.service)}</p>
-                                                                          <p className="text-[10px] text-gray-400 mt-0.5">{formatDays(selectedRate.days || '', t)}</p>
+                                                                            <p className="text-[10px] text-gray-400 mt-0.5">{formatDays(selectedRate.days || '', tPackage)}</p>
                                                                         </div>
                                                                     </div>
                                                                     <p className="text-xl font-bold text-gmc-gris-oscuro">${displayPrice.toFixed(2)}</p>
@@ -923,7 +923,7 @@ const handleSelectRate = (billId: string, rate: Rate) => {
                                                                                     <div className="text-sm">
                                                                                         <p className="font-bold text-gray-700">{cleanCarrierName(rate.carrier)}</p>
                                                                                         <p className="text-[11px] text-gray-500 font-medium leading-tight mt-0.5 line-clamp-2">{cleanServiceName(rate.service)}</p>
-                                                                                        <p className="text-[10px] text-gray-400 font-bold mt-1 flex items-center gap-1"><Clock size={10} /> {formatDays(rate.days || '', t)}</p>
+                                                                                        <p className="text-[10px] text-gray-400 font-bold mt-1 flex items-center gap-1"><Clock size={10} /> {formatDays(rate.days || '', tPackage)}</p>
                                                                                     </div>
                                                                                 </div>
                                                                                 <span className="text-sm font-bold text-blue-600">${rate.price.toFixed(2)}</span>
