@@ -1157,7 +1157,7 @@ const handleSelectRate = (billId: string, rate: Rate) => {
                                     
                                     <div className="pb-3 border-b border-gray-600 mb-3">
                                         <label className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase mb-2">
-                                            <MapPin size={14} className="text-gmc-dorado-principal" /> Destino de Envío
+                                            <MapPin size={14} className="text-gmc-dorado-principal" /> {t('shippingDestination')}
                                         </label>
                                         {allAddresses.length > 0 ? (
                                             <div className="relative bg-gray-700 rounded-lg border border-gray-600">
@@ -1175,7 +1175,7 @@ const handleSelectRate = (billId: string, rate: Rate) => {
                                                 <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
                                             </div>
                                         ) : (
-                                            <span className="text-xs text-yellow-400">Sin dirección. Ve a Configuración.</span>
+                                            <span className="text-xs text-yellow-400">{t('noAddressConfig')}</span>
                                         )}
                                     </div>
 

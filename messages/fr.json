@@ -413,6 +413,8 @@
     "noAddresses": "Vous n'avez pas d'adresses.",
     "addAddressHere": "Ajoutez-en une ici",
     "selectInvoice": "Sélectionnez une facture ou un colis à gauche pour voir le total à payer.",
+    "shippingDestination": "Destination d'expédition",
+    "noAddressConfig": "Pas d'adresse. Allez dans Paramètres.",
     "configureAddress": "Configurer l'Adresse",
     "pickupInStore": "Retrait en Magasin",
     "freightCost": "Frais de Transport",
