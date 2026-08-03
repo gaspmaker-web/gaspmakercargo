@@ -42,6 +42,17 @@ return NextResponse.json({
   mailbox_shred_per_envelope: Number(rates['mailbox_shred_per_envelope'] ?? 0.50),
   air_countries: airCountries,
   ocean_countries: oceanCountries,
+  // 🔥 LOCAL DELIVERY
+  local_base_radius_miles: Number(rates['local_base_radius_miles'] ?? 10),
+  local_per_mile_car_suv: Number(rates['local_per_mile_car_suv'] ?? 1.25),
+  local_per_mile_minivan: Number(rates['local_per_mile_minivan'] ?? 1.50),
+  local_per_mile_cargo_van: Number(rates['local_per_mile_cargo_van'] ?? 1.75),
+  local_per_mile_box_truck: Number(rates['local_per_mile_box_truck'] ?? 2.50),
+  local_pre_built_pallet_flat: Number(rates['local_pre_built_pallet_flat'] ?? 95),
+  local_pre_built_radius_miles: Number(rates['local_pre_built_radius_miles'] ?? 20),
+  local_pallet_cargo_van_1: Number(rates['local_pallet_cargo_van_1'] ?? 95),
+  local_pallet_cargo_van_2: Number(rates['local_pallet_cargo_van_2'] ?? 125),
+  local_pallet_box_truck: Number(rates['local_pallet_box_truck'] ?? 175),
 });
 } catch (error) {
     console.error('Error loading public rates:', error);
