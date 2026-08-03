@@ -205,18 +205,19 @@ export default function SolicitarPickupPage() {
             const auraQuote = calculateAuraLocalDelivery([simulatedBox], quote.distanceMiles);
 
            // Solicitar-pickup: vehículo = precio flat (no multiplica)
-baseFare = auraQuote.baseFare;
-if (isPalletMode) {
-    if (formData.heavyVehicle === 'BOX_TRUCK') {
-    baseFare = tenantRates.local_pallet_box_truck;
-} else {
-    baseFare = formData.palletCount === 2 ? tenantRates.local_pallet_cargo_van_2 : tenantRates.local_pallet_cargo_van_1;
-}
-}
+           baseFare = auraQuote.baseFare;
+           if (isPalletMode) {
+           if (formData.heavyVehicle === 'BOX_TRUCK') {
+           baseFare = tenantRates.local_pallet_box_truck;
+           } else {
+            baseFare = formData.palletCount === 2 ? tenantRates.local_pallet_cargo_van_2 : tenantRates.local_pallet_cargo_van_1;
+              }
+            }
 
             // Override distancia con la tarifa del vehículo asignado (radio base 10 mi)
-            if (quote.distanceMiles > 10) {
-                distanceSurcharge = parseFloat(((quote.distanceMiles - 10) * autoVehicle.rate).toFixed(2));
+            const baseRadius = tenantRates.local_base_radius_miles;
+         if (quote.distanceMiles > baseRadius) {
+          distanceSurcharge = parseFloat(((quote.distanceMiles - baseRadius) * autoVehicle.rate).toFixed(2));
             }
 
             subtotal = baseFare + distanceSurcharge;
