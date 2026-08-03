@@ -4,9 +4,9 @@ import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
-Truck, MapPin, Loader2, Package, Check,
-    ChevronDown, ChevronUp, Weight, AlertTriangle,
-    Car, Warehouse, Globe, ArrowRight, ShieldCheck, UserPlus, Ruler, Info, Plus, X, Calendar, Clock, Phone, CreditCard
+    Truck, MapPin, Warehouse, CreditCard, Info, Loader2, Package, Check,
+    ChevronDown, ChevronUp, Calendar, Phone, Weight, AlertTriangle, Clock,
+    Car, Ruler
 } from 'lucide-react';
 import { useJsApiLoader, Autocomplete } from '@react-google-maps/api';
 import { getProcessingFee } from '@/lib/stripeCalc';
@@ -96,30 +96,13 @@ export default function SolicitarPickupPage() {
   const [isAddressValid, setIsAddressValid] = useState(false);
   const [isTimeValid, setIsTimeValid] = useState(false);
 
-const [quote, setQuote] = useState({
-    total: 0, subtotal: 0, processingFee: 0, baseFare: 0, distanceSurcharge: 0, distanceMiles: 0, appliedStrategy: 'WEIGHT'
-});
+  const [quote, setQuote] = useState({
+      total: 0, subtotal: 0, processingFee: 0, baseFare: 0, distanceSurcharge: 0, distanceMiles: 0, appliedStrategy: 'WEIGHT'
+  });
 
-// 🔥 MÚLTIPLES PARADAS
-const [extraStops, setExtraStops] = useState<{address: string, description: string, weightTier: string}[]>([]);
-
-const addStop = () => {
-  setExtraStops([...extraStops, { address: '', description: '', weightTier: 'w_0_40' }]);
-};
-
-const removeStop = (index: number) => {
-  setExtraStops(extraStops.filter((_, i) => i !== index));
-};
-
-const updateStop = (index: number, field: string, value: string) => {
-  const updated = [...extraStops];
-  updated[index] = { ...updated[index], [field]: value };
-  setExtraStops(updated);
-};
-
-const [orderId, setOrderId] = useState<string | null>(null);
-const originRef = useRef<google.maps.places.Autocomplete | null>(null);
-const destRef = useRef<google.maps.places.Autocomplete | null>(null);
+  const [orderId, setOrderId] = useState<string | null>(null);
+  const originRef = useRef<google.maps.places.Autocomplete | null>(null);
+  const destRef = useRef<google.maps.places.Autocomplete | null>(null);
 
   const [formData, setFormData] = useState({
     originAddress: '', originCity: '', pickupDate: '', description: '', contactPhone: '',
@@ -266,7 +249,7 @@ if (isPalletMode) {
       const place = originRef.current.getPlace();
 
       if (!place || !place.geometry || !place.formatted_address) {
-          setAddressError("⚠️ Invalid address. Please select from the list.");
+          setAddressError("⚠️ Dirección inválida. Selecciona de la lista.");
           setIsAddressValid(false);
           setFormData(prev => ({ ...prev, originAddress: '' }));
           return;
@@ -414,10 +397,10 @@ if (isPalletMode) {
   const handlePaymentAndSubmit = async () => {
     if (serviceType !== 'PICKUP_WAREHOUSE') {
         if (!isAddressValid || !formData.originAddress) {
-            alert("⚠️ Invalid address. Please select an option from the list."); return;
+            alert("⚠️ Dirección no válida. Selecciona una opción de la lista."); return;
         }
         if (serviceType === 'DELIVERY' && !formData.dropOffAddress) {
-            alert("⚠️ Delivery address is missing."); return;
+            alert("⚠️ Faltan dirección de entrega."); return;
         }
         if (!formData.pickupDate || !isTimeValid) { alert("Completa los campos correctamente, respetando el horario."); return; }
 
@@ -626,7 +609,7 @@ if (isPalletMode) {
                                     >
                                         <input
                                             type="text"
-                                            placeholder="Pickup address..."
+                                            placeholder="Dirección de recogida..."
                                             className={`w-full p-3 border rounded-lg text-base ${addressError ? 'border-red-500 bg-red-50 text-red-900' : 'border-gray-200'}`}
                                             onInput={handleInputInput}
                                         />
@@ -637,42 +620,7 @@ if (isPalletMode) {
                                             <span>{addressError}</span>
                                         </div>
                                     )}
-                             </div>
-
-                                {/* 🔥 PARADAS ADICIONALES */}
-                                {extraStops.map((stop, index) => (
-                                  <div key={index} className="bg-gray-50 p-3 rounded-xl border border-gray-200 space-y-2">
-                                    <div className="flex justify-between items-center">
-                                      <span className="text-xs font-bold text-gray-700 uppercase">Stop {String.fromCharCode(66 + index)}</span>
-                                      <button type="button" onClick={() => removeStop(index)} className="text-red-400 hover:text-red-600">
-                                        <X size={16}/>
-                                      </button>
-                                    </div>
-                                    <input
-                                      type="text"
-                                      placeholder={`Stop ${String.fromCharCode(66 + index)}: Pickup address...`}
-                                      value={stop.address}
-                                      onChange={e => updateStop(index, 'address', e.target.value)}
-                                      className="w-full p-3 border border-gray-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-400"
-                                    />
-                                    <input
-                                      type="text"
-                                      placeholder="What to pick up at this stop..."
-                                      value={stop.description}
-                                      onChange={e => updateStop(index, 'description', e.target.value)}
-                                      className="w-full p-2.5 border border-gray-100 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-300"
-                                    />
-                                  </div>
-                                ))}
-
-                                {/* Botón Add Stop */}
-                                <button
-                                  type="button"
-                                  onClick={addStop}
-                                  className="w-full py-2 border-2 border-dashed border-gray-300 text-gray-500 rounded-lg text-xs font-bold hover:border-gmc-dorado-principal hover:text-gmc-dorado-principal transition flex items-center justify-center gap-2"
-                                >
-                                  <Plus size={14}/> Add Stop ({String.fromCharCode(66 + extraStops.length)})
-                                </button>
+                                </div>
 
                                 {serviceType === 'SHIPPING' && (
                                     <div className="p-3 bg-blue-50 border border-blue-100 rounded-lg flex items-center gap-3">
@@ -694,7 +642,7 @@ if (isPalletMode) {
                                         >
                                             <input
                                                 type="text"
-                                                placeholder="Delivery address..."
+                                                placeholder="Dirección de entrega..."
                                                 className={`w-full p-3 border rounded-lg text-base ${dropOffError ? 'border-red-500 bg-red-50 text-red-900' : 'border-gray-200'}`}
                                             />
                                         </Autocomplete>
