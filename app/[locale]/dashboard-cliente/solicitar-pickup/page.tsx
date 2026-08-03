@@ -12,9 +12,6 @@ import { useJsApiLoader, Autocomplete } from '@react-google-maps/api';
 import { getProcessingFee } from '@/lib/stripeCalc';
 import { useTenantRates } from '@/hooks/useTenantRates';
 import { useTranslations } from 'next-intl';
-import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
-import { SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
-import SortableStop from '@/components/SortableStop';
 
 // 🔥 IMPORTAMOS EL MOTOR AURA ENTERPRISE
 import { calculateAuraLocalDelivery, getVehicleByWeight, AuraBox } from '@/lib/aura-engine'; 
@@ -104,62 +101,33 @@ const [quote, setQuote] = useState({
 });
 
 // 🔥 MÚLTIPLES PARADAS
-const [extraStops, setExtraStops] = useState<{id: string, address: string, description: string}[]>([]);
+const [extraStops, setExtraStops] = useState<{address: string, description: string, weightTier: string}[]>([]);
 
 const addStop = () => {
-  setExtraStops([...extraStops, { 
-    id: `stop-${Date.now()}`, 
-    address: '', 
-    description: '' 
-  }]);
+  setExtraStops([...extraStops, { address: '', description: '', weightTier: 'w_0_40' }]);
 };
 
-const removeStop = (id: string) => {
-  setExtraStops(extraStops.filter(s => s.id !== id));
+const removeStop = (index: number) => {
+  setExtraStops(extraStops.filter((_, i) => i !== index));
 };
 
-const updateStopAddress = (id: string, address: string) => {
-  const updated = extraStops.map(s => s.id === id ? { ...s, address } : s);
+const updateStop = (index: number, field: string, value: string) => {
+  const updated = [...extraStops];
+  updated[index] = { ...updated[index], [field]: value };
   setExtraStops(updated);
-  extraStopsRef.current = updated;
 };
-
-const updateStopDescription = (id: string, description: string) => {
-  setExtraStops(extraStops.map(s => s.id === id ? { ...s, description } : s));
-};
-
-const handleDragEnd = (event: DragEndEvent) => {
-  const { active, over } = event;
-  if (over && active.id !== over.id) {
-    const oldIndex = extraStops.findIndex(s => s.id === active.id);
-    const newIndex = extraStops.findIndex(s => s.id === over.id);
-    const newStops = arrayMove(extraStops, oldIndex, newIndex);
-    setExtraStops(newStops);
-    extraStopsRef.current = newStops;
-    if (serviceType === 'SHIPPING') {
-      calculateComplexRoute(formData.originAddress, '', newStops);
-    } else if (serviceType === 'DELIVERY') {
-      calculateComplexRoute(formData.originAddress, formData.dropOffAddress, newStops);
-    }
-  }
-};
-
-const sensors = useSensors(
-  useSensor(PointerSensor),
-  useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
-);
 
 const [orderId, setOrderId] = useState<string | null>(null);
 const originRef = useRef<google.maps.places.Autocomplete | null>(null);
 const destRef = useRef<google.maps.places.Autocomplete | null>(null);
 
-const [formData, setFormData] = useState({
-  originAddress: '', originCity: '', pickupDate: '', description: '', contactPhone: '',
-  dropOffAddress: '', dropOffCity: '', dropOffContact: '', dropOffPhone: '',
-  weightTier: 'w_0_40', exactWeight: 0,
-  heavyVehicle: 'CARGO_VAN', palletCount: 1,
-  termsAccepted: false
-});
+  const [formData, setFormData] = useState({
+    originAddress: '', originCity: '', pickupDate: '', description: '', contactPhone: '',
+    dropOffAddress: '', dropOffCity: '', dropOffContact: '', dropOffPhone: '',
+    weightTier: 'w_0_40', exactWeight: 0,
+    heavyVehicle: 'CARGO_VAN', palletCount: 1,
+    termsAccepted: false
+  });
 
   // 🔥 PESO CALCULADO (igual que cotizador público)
   const calcWeight = useMemo(() => {
@@ -349,114 +317,94 @@ if (isPalletMode) {
       setFormData(prev => ({ ...prev, dropOffAddress: newDropoff }));
   };
 
- // --- DISTANCE RECALC ---
+  // --- DISTANCE RECALC ---
   useEffect(() => {
     if (!isLoaded || !serviceType || serviceType === 'PICKUP_WAREHOUSE') return;
 
     if (serviceType === 'SHIPPING' && formData.originAddress) {
         calculateComplexRoute(formData.originAddress, '');
     }
-   if (serviceType === 'DELIVERY' && formData.originAddress) {
-    calculateComplexRoute(formData.originAddress, formData.dropOffAddress);
-}
-  }, [formData.originAddress, formData.dropOffAddress, serviceType, isLoaded, autoVehicle.type, extraStops]);
+    if (serviceType === 'DELIVERY' && formData.originAddress && formData.dropOffAddress) {
+        calculateComplexRoute(formData.originAddress, formData.dropOffAddress);
+    }
+  }, [formData.originAddress, formData.dropOffAddress, serviceType, isLoaded, autoVehicle.type]);
 
-  const calculateComplexRoute = async (origin: string, destination: string, stops?: {address: string}[]) => {
+  const calculateComplexRoute = async (origin: string, destination: string) => {
     if (!isLoaded || typeof google === 'undefined' || !origin) return;
 
     try {
-      const service = new google.maps.DistanceMatrixService();
-      let totalMiles = 0;
+        const service = new google.maps.DistanceMatrixService();
+        let totalMiles = 0;
 
-      const getLeg = async (start: string, end: string) => {
-        const res = await service.getDistanceMatrix({
-          origins: [start], destinations: [end],
-          travelMode: google.maps.TravelMode.DRIVING,
-          unitSystem: google.maps.UnitSystem.IMPERIAL
-        });
-        const el = res.rows[0].elements[0];
-        if (el.status !== "OK") return 0;
-        return el.distance.text.includes('mi')
-          ? parseFloat(el.distance.text.replace(' mi','').replace(',',''))
-          : el.distance.value / 1609.34;
-      };
+        const getLeg = async (start: string, end: string) => {
+            const res = await service.getDistanceMatrix({
+                origins: [start], destinations: [end],
+                travelMode: google.maps.TravelMode.DRIVING,
+                unitSystem: google.maps.UnitSystem.IMPERIAL
+            });
+            const el = res.rows[0].elements[0];
+            if (el.status !== "OK") return 0;
+            return el.distance.text.includes('mi')
+                ? parseFloat(el.distance.text.replace(' mi','').replace(',',''))
+                : el.distance.value / 1609.34;
+        };
 
-
-      const validStops = extraStops.filter(s => s.address);
-
-      if (serviceType === 'SHIPPING') {
-        totalMiles += await getLeg(GMC_WAREHOUSE_ADDRESS, origin);
-        
-        let prev = origin;
-        for (const stop of validStops) {
-          totalMiles += await getLeg(prev, stop.address);
-          prev = stop.address;
+        if (serviceType === 'SHIPPING') {
+            const leg1 = await getLeg(GMC_WAREHOUSE_ADDRESS, origin);
+            // 🔥 REGLA AURA: Box Truck cobra circuito completo (ida y vuelta)
+            totalMiles = (autoVehicle.type === 'BOX_TRUCK') ? leg1 * 2 : leg1;
         }
-        
-        if (autoVehicle.type === 'BOX_TRUCK') {
-          totalMiles += await getLeg(prev, GMC_WAREHOUSE_ADDRESS);
+        else if (serviceType === 'DELIVERY') {
+            if (!destination) return;
+
+            const leg1 = await getLeg(GMC_WAREHOUSE_ADDRESS, origin);
+            const leg2 = await getLeg(origin, destination);
+
+            if (autoVehicle.type === 'BOX_TRUCK') {
+                const leg3 = await getLeg(destination, GMC_WAREHOUSE_ADDRESS);
+                totalMiles = leg1 + leg2 + leg3;
+            } else {
+                totalMiles = leg1 + leg2;
+            }
         }
-      }
-     else if (serviceType === 'DELIVERY') {
-  totalMiles += await getLeg(GMC_WAREHOUSE_ADDRESS, origin);
 
-  let prev = origin;
-  for (const stop of validStops) {
-    totalMiles += await getLeg(prev, stop.address);
-    prev = stop.address;
-  }
-
-  // Solo suma el destino final si existe
-  if (destination) {
-    totalMiles += await getLeg(prev, destination);
-    if (autoVehicle.type === 'BOX_TRUCK') {
-      totalMiles += await getLeg(destination, GMC_WAREHOUSE_ADDRESS);
-    }
-  }
-}
-      setQuote(prev => ({ ...prev, distanceMiles: parseFloat(totalMiles.toFixed(1)) }));
+        setQuote(prev => ({ ...prev, distanceMiles: parseFloat(totalMiles.toFixed(1)) }));
 
     } catch (e) { console.error("Error calculando ruta:", e); }
   };
 
-const handleInputInput = () => {
-    setIsAddressValid(false);
-    setQuote(prev => ({ ...prev, distanceMiles: 0 }));
-};
+  const handleInputInput = () => {
+      setIsAddressValid(false);
+      setQuote(prev => ({ ...prev, distanceMiles: 0 }));
+  };
 
-const stopRefs = useRef<(google.maps.places.Autocomplete | null)[]>([]);
-const extraStopsRef = useRef(extraStops);
+  const validateTimeWindow = (dateTimeString: string) => {
+    if (!dateTimeString) {
+      setIsTimeValid(false);
+      setTimeError(null);
+      return;
+    }
 
-useEffect(() => {
-  extraStopsRef.current = extraStops;
-}, [extraStops]);
+    const selectedDate = new Date(dateTimeString);
+    const now = new Date();
 
-const validateTimeWindow = (dateTimeString: string) => {
-  if (!dateTimeString) {
-    setIsTimeValid(false);
-    setTimeError(null);
-    return;
-  }
+    if (selectedDate < now) {
+      setIsTimeValid(false);
+      setTimeError(t.has('timeErrorPast') ? t('timeErrorPast') : "Please select a future date and time.");
+      return;
+    }
 
-  const selectedDate = new Date(dateTimeString);
-  const now = new Date();
+    const hours = selectedDate.getHours();
 
-  if (selectedDate < now) {
-    setIsTimeValid(false);
-    setTimeError(t.has('timeErrorPast') ? t('timeErrorPast') : "Please select a future date and time.");
-    return;
-  }
+    if (hours >= 9 && hours < 16) {
+      setIsTimeValid(true);
+      setTimeError(null);
+    } else {
+      setIsTimeValid(false);
+      setTimeError(t.has('timeErrorWindow') ? t('timeErrorWindow') : "Our pickup window is between 9:00 AM and 4:00 PM.");
+    }
+  };
 
-  const hours = selectedDate.getHours();
-
-  if (hours >= 9 && hours < 16) {
-    setIsTimeValid(true);
-    setTimeError(null);
-  } else {
-    setIsTimeValid(false);
-    setTimeError(t.has('timeErrorWindow') ? t('timeErrorWindow') : "Our pickup window is between 9:00 AM and 4:00 PM.");
-  }
-};
   const handleDateTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     setFormData({...formData, pickupDate: val});
@@ -690,7 +638,43 @@ const validateTimeWindow = (dateTimeString: string) => {
                                         </div>
                                     )}
                              </div>
-{serviceType === 'SHIPPING' && (
+
+                                {/* 🔥 PARADAS ADICIONALES */}
+                                {extraStops.map((stop, index) => (
+                                  <div key={index} className="bg-gray-50 p-3 rounded-xl border border-gray-200 space-y-2">
+                                    <div className="flex justify-between items-center">
+                                      <span className="text-xs font-bold text-gray-700 uppercase">Stop {String.fromCharCode(66 + index)}</span>
+                                      <button type="button" onClick={() => removeStop(index)} className="text-red-400 hover:text-red-600">
+                                        <X size={16}/>
+                                      </button>
+                                    </div>
+                                    <input
+                                      type="text"
+                                      placeholder={`Stop ${String.fromCharCode(66 + index)}: Pickup address...`}
+                                      value={stop.address}
+                                      onChange={e => updateStop(index, 'address', e.target.value)}
+                                      className="w-full p-3 border border-gray-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-400"
+                                    />
+                                    <input
+                                      type="text"
+                                      placeholder="What to pick up at this stop..."
+                                      value={stop.description}
+                                      onChange={e => updateStop(index, 'description', e.target.value)}
+                                      className="w-full p-2.5 border border-gray-100 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-300"
+                                    />
+                                  </div>
+                                ))}
+
+                                {/* Botón Add Stop */}
+                                <button
+                                  type="button"
+                                  onClick={addStop}
+                                  className="w-full py-2 border-2 border-dashed border-gray-300 text-gray-500 rounded-lg text-xs font-bold hover:border-gmc-dorado-principal hover:text-gmc-dorado-principal transition flex items-center justify-center gap-2"
+                                >
+                                  <Plus size={14}/> Add Stop ({String.fromCharCode(66 + extraStops.length)})
+                                </button>
+
+                                {serviceType === 'SHIPPING' && (
                                     <div className="p-3 bg-blue-50 border border-blue-100 rounded-lg flex items-center gap-3">
                                         <div className="bg-white p-2 rounded-full text-blue-600 shadow-sm"><Warehouse size={18}/></div>
                                         <div>
@@ -700,33 +684,6 @@ const validateTimeWindow = (dateTimeString: string) => {
                                         </div>
                                     </div>
                                 )}
-
-                              {/* 🔥 PARADAS ADICIONALES — SHIPPING */}
-                              {serviceType === 'SHIPPING' && (
-                                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                                  <SortableContext items={extraStops.map(s => s.id)} strategy={verticalListSortingStrategy}>
-                                    {extraStops.map((stop, index) => (
-                                      <SortableStop
-                                        key={stop.id}
-                                        stop={stop}
-                                        index={index}
-                                        onAddressChange={updateStopAddress}
-                                        onDescriptionChange={updateStopDescription}
-                                        onRemove={removeStop}
-                                        onRouteRecalc={() => calculateComplexRoute(formData.originAddress, '', extraStopsRef.current)}
-                                        color="blue"
-                                      />
-                                    ))}
-                                  </SortableContext>
-                                </DndContext>
-                              )}      {/* Botón Add Stop — SHIPPING */}
-                                {serviceType === 'SHIPPING' && (
-                                  <button type="button" onClick={addStop}
-                                    className="w-full py-2 border-2 border-dashed border-gray-300 text-gray-500 rounded-lg text-xs font-bold hover:border-gmc-dorado-principal hover:text-gmc-dorado-principal transition flex items-center justify-center gap-2">
-                                    <Plus size={14}/> Add Stop ({String.fromCharCode(66 + extraStops.length)})
-                                  </button>
-                                )}
-
                                 {serviceType === 'DELIVERY' && (
                                     <div>
                                         <label className="text-xs font-bold text-gray-400">{t('dropoffPointB')}</label>
@@ -746,33 +703,6 @@ const validateTimeWindow = (dateTimeString: string) => {
                                                 <AlertTriangle size={16} />
                                                 <span>{dropOffError}</span>
                                             </div>
-                                        )}
-
-                                 {/* 🔥 PARADAS ADICIONALES — DELIVERY */}
-                                        {formData.dropOffAddress && (
-                                          <>
-                                            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                                              <SortableContext items={extraStops.map(s => s.id)} strategy={verticalListSortingStrategy}>
-                                                {extraStops.map((stop, index) => (
-                                                  <SortableStop
-                                                    key={stop.id}
-                                                    stop={stop}
-                                                    index={index}
-                                                    onAddressChange={updateStopAddress}
-                                                    onDescriptionChange={updateStopDescription}
-                                                    onRemove={removeStop}
-                                                    onRouteRecalc={() => calculateComplexRoute(formData.originAddress, formData.dropOffAddress, extraStopsRef.current)}
-                                                    color="green"
-                                                  />
-                                                ))}
-                                              </SortableContext>
-                                            </DndContext>
-
-                                            <button type="button" onClick={addStop}
-                                              className="w-full mt-3 py-2 border-2 border-dashed border-gray-300 text-gray-500 rounded-lg text-xs font-bold hover:border-green-500 hover:text-green-600 transition flex items-center justify-center gap-2">
-                                              <Plus size={14}/> Add Stop ({String.fromCharCode(66 + extraStops.length)})
-                                            </button>
-                                          </>
                                         )}
                                     </div>
                                 )}
