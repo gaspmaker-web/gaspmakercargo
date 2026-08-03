@@ -977,7 +977,7 @@ const handleSelectRate = (billId: string, rate: Rate) => {
                                 </div>
                             ) : (
                                 <div className="text-sm text-yellow-400 bg-yellow-400/10 p-3 rounded border border-yellow-400/20">
-                                    No tienes direcciones. <Link href={`/${locale}/account-settings`} className="underline font-bold">Agrégala aquí</Link>.
+                                    {t('noAddresses')} <Link href={`/${locale}/account-settings`} className="underline font-bold">{t('addAddressHere')}</Link>.
                                 </div>
                             )}
                         </div>
