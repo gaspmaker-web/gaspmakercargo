@@ -35,28 +35,28 @@ if (!webhookSecret) {
     }
 
 // ==================================================================
-    // 🚀 NUEVO: EVENTO DE RENOVACIÓN AUTOMÁTICA MENSUAL ($29.99)
+    // 🚀 RENOVACIÓN AUTOMÁTICA MENSUAL
     // ==================================================================
     if (event.type === 'invoice.payment_succeeded') {
-      const invoice = event.data.object as any; // 👈 Bypass de TS
+      const invoice = event.data.object as any;
       const subscriptionId = invoice.subscription as string;
 
-      if (subscriptionId) {
+      // Solo procesar si es una suscripción real de Stripe
+      if (subscriptionId && subscriptionId.startsWith('sub_')) {
         try {
-          // Calculamos el vencimiento (30 días a partir de ahora si no viene en invoice)
-          const nextPeriodEnd = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+          const nextPeriodEnd = new Date(invoice.period_end * 1000 || Date.now() + 30 * 24 * 60 * 60 * 1000);
           
           await prisma.mailboxSubscription.updateMany({
             where: { stripeSubscriptionId: subscriptionId },
             data: { 
-                status: 'ACTIVE', 
-                currentPeriodEnd: nextPeriodEnd, 
-                updatedAt: new Date() 
+              status: 'ACTIVE', 
+              currentPeriodEnd: nextPeriodEnd, 
+              updatedAt: new Date() 
             }
           });
-          console.log(`✅ Renovación VIP automática exitosa para suscripción: ${subscriptionId}`);
+          console.log(`✅ Renovación automática exitosa: ${subscriptionId}`);
         } catch (dbError) {
-          console.error('❌ Error actualizando la suscripción mensual:', dbError);
+          console.error('❌ Error actualizando suscripción:', dbError);
         }
       }
     }
