@@ -985,7 +985,7 @@ const handleSelectRate = (billId: string, rate: Rate) => {
                         {totals.count === 0 ? (
                             <div className="flex flex-col justify-center items-center h-[200px] text-center opacity-50">
                                 <Truck size={48} className="mb-4 text-gray-400" />
-                                <p className="text-sm text-gray-300 max-w-[200px]">Selecciona una factura o paquete a la izquierda para ver el total a pagar.</p>
+                                <p className="text-sm text-gray-300 max-w-[200px]">{t('selectInvoice')}</p>
                             </div>
                         ) : (
                             <div className="animate-fadeIn">
