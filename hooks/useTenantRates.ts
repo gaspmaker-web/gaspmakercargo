@@ -19,6 +19,17 @@ interface TenantRatesPublic {
   mailbox_premium_monthly: number;
   mailbox_scan_per_envelope: number;
   mailbox_shred_per_envelope: number;
+  // 🔥 LOCAL DELIVERY
+  local_base_radius_miles: number;
+  local_per_mile_car_suv: number;
+  local_per_mile_minivan: number;
+  local_per_mile_cargo_van: number;
+  local_per_mile_box_truck: number;
+  local_pre_built_pallet_flat: number;
+  local_pre_built_radius_miles: number;
+  local_pallet_cargo_van_1: number;
+  local_pallet_cargo_van_2: number;
+  local_pallet_box_truck: number;
 }
 
 const DEFAULT_RATES: TenantRatesPublic = {
@@ -39,6 +50,17 @@ const DEFAULT_RATES: TenantRatesPublic = {
   mailbox_premium_monthly: 14.99,
   mailbox_scan_per_envelope: 1.50,
   mailbox_shred_per_envelope: 0.50,
+  // 🔥 LOCAL DELIVERY
+  local_base_radius_miles: 10,
+  local_per_mile_car_suv: 1.25,
+  local_per_mile_minivan: 1.50,
+  local_per_mile_cargo_van: 1.75,
+  local_per_mile_box_truck: 2.50,
+  local_pre_built_pallet_flat: 95,
+  local_pre_built_radius_miles: 20,
+  local_pallet_cargo_van_1: 95,
+  local_pallet_cargo_van_2: 125,
+  local_pallet_box_truck: 175,
 };
 
 export function useTenantRates(): TenantRatesPublic {

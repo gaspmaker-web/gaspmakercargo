@@ -125,10 +125,11 @@ export default function SolicitarPickupPage() {
   const autoVehicle = useMemo(() => {
       if (formData.weightTier === 'w_151_plus') {
           // Para 151+, el cliente elige entre Cargo Van y Box Truck
-          return formData.heavyVehicle === 'BOX_TRUCK'
-              ? { type: 'BOX_TRUCK', rate: 2.50, maxLength: '20 ft', maxHeight: '8 ft' }
-              : { type: 'CARGO_VAN', rate: 1.75, maxLength: '12 ft', maxHeight: '6 ft' };
+         return formData.heavyVehicle === 'BOX_TRUCK'
+  ? { type: 'BOX_TRUCK', rate: tenantRates.local_per_mile_box_truck, maxLength: '20 ft', maxHeight: '8 ft' }
+  : { type: 'CARGO_VAN', rate: tenantRates.local_per_mile_cargo_van, maxLength: '12 ft', maxHeight: '6 ft' };
       }
+
       return getVehicleByWeight(calcWeight);
   }, [calcWeight, formData.weightTier, formData.heavyVehicle]);
 
@@ -207,10 +208,10 @@ export default function SolicitarPickupPage() {
 baseFare = auraQuote.baseFare;
 if (isPalletMode) {
     if (formData.heavyVehicle === 'BOX_TRUCK') {
-        baseFare = 175;
-    } else {
-        baseFare = formData.palletCount === 2 ? 125 : 95;
-    }
+    baseFare = tenantRates.local_pallet_box_truck;
+} else {
+    baseFare = formData.palletCount === 2 ? tenantRates.local_pallet_cargo_van_2 : tenantRates.local_pallet_cargo_van_1;
+}
 }
 
             // Override distancia con la tarifa del vehículo asignado (radio base 10 mi)
