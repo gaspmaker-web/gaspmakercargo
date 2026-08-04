@@ -72,41 +72,42 @@ const DEFAULT_CAPITALS: Record<string, { city: string, zip?: string, state?: str
 };
 
 // ==========================================
+// ==========================================
 // 1. TARIFAS LOCALES EXPORTACIÓN
 // ==========================================
 
 // 🚚 DÍAS REALES POR CARRIER (Enterprise)
-// EasyPost devuelve días genéricos para el Caribe — usamos datos reales por carrier/servicio
+// Incluye días de aduana — tiempo real que experimenta el cliente
 function getDeliveryDaysByCarrier(carrier: string, service: string): string {
   const c = (carrier || '').toUpperCase();
   const s = (service || '').toUpperCase();
 
   if (c.includes('DHL')) {
-    if (s.includes('EXPRESS_WORLDWIDE') || s.includes('EXPRESS WORLDWIDE')) return '2-3 days';
-    if (s.includes('EXPRESS_EASY') || s.includes('EXPRESS EASY'))           return '2-4 days';
-    if (s.includes('ECONOMY'))                                               return '5-7 days';
-    return '2-3 days';
+    if (s.includes('EXPRESS_WORLDWIDE') || s.includes('EXPRESS WORLDWIDE')) return '4-6 days (incl. customs)';
+    if (s.includes('EXPRESS_EASY') || s.includes('EXPRESS EASY'))           return '5-7 days (incl. customs)';
+    if (s.includes('ECONOMY'))                                               return '7-10 days (incl. customs)';
+    return '4-6 days (incl. customs)';
   }
   if (c.includes('UPS')) {
-    if (s.includes('EXPEDITED'))   return '3-5 days';
-    if (s.includes('SAVER'))       return '4-6 days';
-    if (s.includes('EXPRESS_PLUS') || s.includes('EXPRESS PLUS')) return '1-2 days';
-    if (s.includes('EXPRESS') && !s.includes('SAVER')) return '2-3 days';
-    if (s.includes('STANDARD'))    return '5-7 days';
-    return '3-5 days';
+    if (s.includes('EXPEDITED'))   return '5-7 days (incl. customs)';
+    if (s.includes('SAVER'))       return '6-8 days (incl. customs)';
+    if (s.includes('EXPRESS_PLUS') || s.includes('EXPRESS PLUS')) return '3-5 days (incl. customs)';
+    if (s.includes('EXPRESS') && !s.includes('SAVER')) return '4-6 days (incl. customs)';
+    if (s.includes('STANDARD'))    return '7-10 days (incl. customs)';
+    return '5-7 days (incl. customs)';
   }
   if (c.includes('FEDEX')) {
-    if (s.includes('PRIORITY'))  return '1-3 days';
-    if (s.includes('ECONOMY'))   return '5-7 days';
-    if (s.includes('FIRST'))     return '1-2 days';
-    return '2-4 days';
+    if (s.includes('PRIORITY'))  return '3-5 days (incl. customs)';
+    if (s.includes('ECONOMY'))   return '7-10 days (incl. customs)';
+    if (s.includes('FIRST'))     return '3-4 days (incl. customs)';
+    return '4-7 days (incl. customs)';
   }
   if (c.includes('USPS')) {
-    if (s.includes('EXPRESS'))   return '3-5 days';
-    if (s.includes('PRIORITY'))  return '6-10 days';
-    return '7-14 days';
+    if (s.includes('EXPRESS'))   return '5-8 days (incl. customs)';
+    if (s.includes('PRIORITY'))  return '8-12 days (incl. customs)';
+    return '10-14 days (incl. customs)';
   }
-  return '3-7 days';
+  return '5-10 days (incl. customs)';
 }
 
 // ==========================================
