@@ -385,7 +385,8 @@
     "14_21_days": "14-21 días",
     "15_21_days": "15-21 días",
     "day": "día",
-    "days": "días"
+    "days": "días",
+    "inclCustoms": "incl. aduana"
   },
   "PendingBills": {
     "title": "Facturas Pendientes",

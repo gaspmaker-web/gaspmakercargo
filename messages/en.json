@@ -389,7 +389,9 @@
     "14_21_days": "14-21 days",
     "15_21_days": "15-21 days",
     "day": "day",
-    "days": "days"
+    "days": "days",
+    "inclCustoms": "incl. customs"
+    
   },
   "PendingBills": {
     "title": "Pending Bills",

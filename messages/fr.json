@@ -388,7 +388,8 @@
     "14_21_days": "14-21 jours",
     "15_21_days": "15-21 jours",
     "day": "jour",
-    "days": "jours"
+    "days": "jours",
+    "inclCustoms": "douane incluse"
   },
   "PendingBills": {
     "title": "Factures en Attente",

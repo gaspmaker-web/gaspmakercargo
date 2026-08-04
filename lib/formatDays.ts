@@ -13,10 +13,15 @@ export function formatDays(days: string, t: (key: string, opts?: any) => string)
   // Código predefinido traducible
   if (isDayCode(days)) return t(days);
   
-  // ✅ Rango con customs — pasar tal cual (ej: "5-7 days (incl. customs)")
-  if (days.includes('-') || days.includes('incl.')) return days;
+  // ✅ Rango con customs — traducir la parte "(incl. customs)"
+  if (days.includes('incl.')) {
+    return days.replace('incl. customs', t('inclCustoms'));
+  }
 
-  // Días numéricos de EasyPost (ej: "1 days", "3 days")
+  // Rango simple sin customs (ej: "5-7 days")
+  if (days.includes('-')) return days;
+
+  // Días numéricos simples de EasyPost
   const match = days.match(/^(\d+)/);
   if (match) {
     const count = parseInt(match[1]);
