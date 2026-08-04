@@ -12,7 +12,9 @@
     "testimonials": "Testimonios",
     "locations": "Ubicaciones",
     "access": "Acceso",
-    "termsOfService": "Términos de Servicio"
+    "termsOfService": "Términos de Servicio",
+    "languageLabel": "Idioma",
+    "navigationLabel": "Navegación"
   },
   "HomePage": {
     "Hero": {

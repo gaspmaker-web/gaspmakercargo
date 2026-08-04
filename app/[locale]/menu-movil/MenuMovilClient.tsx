@@ -73,7 +73,7 @@ export default function MenuMovilClient() {
         <div>
           <div className="flex items-center gap-2 mb-4 px-1">
             <Globe size={14} className="text-gmc-dorado-principal"/>
-            <p className="text-[10px] text-gmc-dorado-principal/80 uppercase tracking-[2px] font-bold">Idioma / Language</p>
+            <p className="text-[10px] text-gmc-dorado-principal/80 uppercase tracking-[2px] font-bold">{t('languageLabel')}</p>
           </div>
           
           <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-[2rem] p-5 shadow-2xl shadow-black/20">
@@ -103,7 +103,7 @@ export default function MenuMovilClient() {
         <div>
           <div className="flex items-center gap-2 mb-4 px-1">
             <div className="w-1.5 h-1.5 bg-gmc-dorado-principal rounded-full shadow-[0_0_10px_#fbbf24]"></div>
-            <p className="text-[10px] text-gmc-dorado-principal/80 uppercase tracking-[2px] font-bold">Navegación</p>
+            <p className="text-[10px] text-gmc-dorado-principal/80 uppercase tracking-[2px] font-bold">{t('navigationLabel')}</p>
           </div>
 
           <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-[2rem] overflow-hidden shadow-2xl shadow-black/30">
