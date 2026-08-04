@@ -438,12 +438,12 @@ const auraResult = calculateAuraLocalDelivery(auraBoxes, safeDistanceMiles, aura
         const basePrice = parseFloat(epRate.rate);
         const priceWithMarkup = basePrice * rate('easypost_markup', undefined, 1.30);
 
-        const deliveryDays = useCarrierFallback
-            ? getDeliveryDaysByCarrier(epRate.carrier, epRate.service)
-            : epRate.delivery_days
-                ? `${epRate.delivery_days} days`
-                : getDeliveryDaysByCarrier(epRate.carrier, epRate.service);
-
+       const deliveryDays = easyPostCountryCode !== 'US'
+    ? getDeliveryDaysByCarrier(epRate.carrier, epRate.service)
+    : epRate.delivery_days
+        ? `${epRate.delivery_days} days`
+        : getDeliveryDaysByCarrier(epRate.carrier, epRate.service);
+        
         return {
             id: epRate.id,
             carrier: epRate.carrier,
