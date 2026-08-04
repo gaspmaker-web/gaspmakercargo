@@ -580,25 +580,25 @@ export default function SolicitarPickupPage() {
 
   return (
     <div className="min-h-screen w-full max-w-[100vw] bg-gray-50 pb-40 md:pb-6 font-montserrat overflow-x-hidden relative">
-      <div className="max-w-6xl mx-auto p-4 md:p-6 w-full">
+      <div className="max-w-6xl mx-auto px-3 py-4 md:p-6 w-full">
 
-        <div className="mb-6 text-center">
-            <h1 className="text-xl md:text-2xl font-bold text-gmc-gris-oscuro font-garamond">{t('title')}</h1>
-            <p className="text-sm text-gray-500">{t('subtitle')}</p>
+        <div className="mb-5 text-center">
+            <h1 className="text-lg md:text-2xl font-bold text-gmc-gris-oscuro font-garamond">{t('title')}</h1>
+            <p className="text-xs md:text-sm text-gray-500 mt-1">{t('subtitle')}</p>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-6 mb-6">
-            <button onClick={() => handleServiceSelect('PICKUP_WAREHOUSE')} className={`p-4 rounded-xl border transition-all flex flex-col items-start justify-between h-full ${serviceType === 'PICKUP_WAREHOUSE' ? 'border-gmc-dorado-principal bg-yellow-50' : 'border-gray-200 bg-white'}`}>
-                <Warehouse size={24} className={serviceType === 'PICKUP_WAREHOUSE' ? 'text-gmc-dorado-principal' : 'text-gray-400'}/>
-                <div className="mt-2 text-left"><h3 className="font-bold text-sm text-gray-800 leading-tight">{t('tabSelfPickup')}</h3><p className="text-[10px] text-gray-500">{t('descSelfPickup')}</p></div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-5">
+            <button onClick={() => handleServiceSelect('PICKUP_WAREHOUSE')} className={`p-3.5 rounded-xl border transition-all flex flex-row sm:flex-col items-center sm:items-start gap-3 sm:gap-0 sm:justify-between ${serviceType === 'PICKUP_WAREHOUSE' ? 'border-gmc-dorado-principal bg-yellow-50' : 'border-gray-200 bg-white'}`}>
+                <Warehouse size={20} className={`shrink-0 ${serviceType === 'PICKUP_WAREHOUSE' ? 'text-gmc-dorado-principal' : 'text-gray-400'}`}/>
+                <div className="text-left"><h3 className="font-bold text-sm text-gray-800 leading-tight">{t('tabSelfPickup')}</h3><p className="text-[10px] text-gray-500 sm:block hidden">{t('descSelfPickup')}</p></div>
             </button>
-            <button onClick={() => handleServiceSelect('SHIPPING')} className={`p-4 rounded-xl border transition-all flex flex-col items-start justify-between h-full ${serviceType === 'SHIPPING' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 bg-white'}`}>
-                <Truck size={24} className={serviceType === 'SHIPPING' ? 'text-blue-600' : 'text-gray-400'}/>
-                <div className="mt-2 text-left"><h3 className="font-bold text-sm text-gray-800 leading-tight">{t('tabShipping')}</h3><p className="text-[10px] text-gray-500">{t('descShipping')}</p></div>
+            <button onClick={() => handleServiceSelect('SHIPPING')} className={`p-3.5 rounded-xl border transition-all flex flex-row sm:flex-col items-center sm:items-start gap-3 sm:gap-0 sm:justify-between ${serviceType === 'SHIPPING' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 bg-white'}`}>
+                <Truck size={20} className={`shrink-0 ${serviceType === 'SHIPPING' ? 'text-blue-600' : 'text-gray-400'}`}/>
+                <div className="text-left"><h3 className="font-bold text-sm text-gray-800 leading-tight">{t('tabShipping')}</h3><p className="text-[10px] text-gray-500 sm:block hidden">{t('descShipping')}</p></div>
             </button>
-            <button onClick={() => handleServiceSelect('DELIVERY')} className={`p-4 rounded-xl border transition-all flex flex-col items-start justify-between h-full col-span-2 md:col-span-1 ${serviceType === 'DELIVERY' ? 'border-green-600 bg-green-50' : 'border-gray-200 bg-white'}`}>
-                <MapPin size={24} className={serviceType === 'DELIVERY' ? 'text-green-600' : 'text-gray-400'}/>
-                <div className="mt-2 text-left"><h3 className="font-bold text-sm text-gray-800 leading-tight">{t('tabDelivery')}</h3><p className="text-[10px] text-gray-500">{t('descDelivery')}</p></div>
+            <button onClick={() => handleServiceSelect('DELIVERY')} className={`p-3.5 rounded-xl border transition-all flex flex-row sm:flex-col items-center sm:items-start gap-3 sm:gap-0 sm:justify-between ${serviceType === 'DELIVERY' ? 'border-green-600 bg-green-50' : 'border-gray-200 bg-white'}`}>
+                <MapPin size={20} className={`shrink-0 ${serviceType === 'DELIVERY' ? 'text-green-600' : 'text-gray-400'}`}/>
+                <div className="text-left"><h3 className="font-bold text-sm text-gray-800 leading-tight">{t('tabDelivery')}</h3><p className="text-[10px] text-gray-500 sm:block hidden">{t('descDelivery')}</p></div>
             </button>
         </div>
 
@@ -824,50 +824,48 @@ export default function SolicitarPickupPage() {
                                             <span className="font-medium">{vehicleInfo.dims}</span>
                                         </div>
 
-                                        {/* Dimension validation hint */}
                                         <div className="mt-3 p-2.5 bg-amber-50 border border-amber-100 rounded-lg flex items-start gap-2">
                                             <Info size={14} className="text-amber-600 shrink-0 mt-0.5" />
                                             <p className="text-[11px] text-amber-800 leading-snug">
-                                                {t.has('dimensionHint')
-                                                    ? <>{t('dimensionHint', { maxLength: '' })}<strong>{autoVehicle.maxLength}</strong></>
-                                                    : <>Does your longest item exceed <strong>{autoVehicle.maxLength}</strong>?</>
-                                                }
+                                                Does your longest item exceed <strong>{autoVehicle.maxLength}</strong>? If so, consider selecting a higher weight range for a larger vehicle.
                                             </p>
                                         </div>
                                     </div>
                                 )}
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                    <div className="relative">
-                                        <label className="absolute -top-2 left-3 bg-white px-1 text-[10px] font-bold text-gray-400 z-10">
+                                <div className="space-y-4 mb-4">
+                                    {/* Pickup Window */}
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-400 uppercase mb-1.5">
                                             {t.has('pickupDateLabel') ? t('pickupDateLabel') : "Pickup Window (9am-4pm)"}
                                         </label>
                                         <div className="relative">
-                                            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={18} />
+                                            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
                                             <input
                                                 type="datetime-local"
-                                                className={`w-full p-3 pl-10 border rounded-xl text-base bg-white appearance-none focus:ring-2 focus:ring-gmc-dorado-principal min-h-[46px] ${timeError ? 'border-red-500 bg-red-50' : 'border-gray-200 focus:border-transparent'}`}
+                                                className={`w-full p-3 pl-10 border rounded-xl text-sm bg-white focus:ring-2 focus:ring-gmc-dorado-principal min-h-[48px] ${timeError ? 'border-red-500 bg-red-50' : 'border-gray-200 focus:border-transparent'}`}
                                                 onChange={handleDateTimeChange}
                                             />
                                         </div>
                                         {timeError && (
-                                            <div className="mt-1 flex items-center gap-1 text-red-500 text-[10px] font-bold">
+                                            <div className="mt-1 flex items-center gap-1 text-red-500 text-xs font-bold">
                                                 <Clock size={12} />
                                                 <span>{timeError}</span>
                                             </div>
                                         )}
                                     </div>
 
-                                    <div className="relative">
-                                         <label className="absolute -top-2 left-3 bg-white px-1 text-[10px] font-bold text-gray-400 z-10">
-                                             {t.has('contactLabel') ? t('contactLabel') : "Contact"}
-                                         </label>
-                                         <div className="relative">
-                                            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={18} />
+                                    {/* Contact */}
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-400 uppercase mb-1.5">
+                                            {t.has('contactLabel') ? t('contactLabel') : "Contact"}
+                                        </label>
+                                        <div className="relative">
+                                            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
                                             <input
                                                 type="tel"
                                                 placeholder={t.has('phonePlaceholder') ? t('phonePlaceholder') : "Phone number"}
-                                                className="w-full p-3 pl-10 border border-gray-200 rounded-xl text-base bg-white focus:ring-2 focus:ring-gmc-dorado-principal focus:border-transparent min-h-[46px]"
+                                                className="w-full p-3 pl-10 border border-gray-200 rounded-xl text-sm bg-white focus:ring-2 focus:ring-gmc-dorado-principal focus:border-transparent min-h-[48px]"
                                                 onChange={e => setFormData({...formData, contactPhone: e.target.value})}
                                             />
                                         </div>
