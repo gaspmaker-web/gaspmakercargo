@@ -356,6 +356,7 @@
     "feeHandling": "Taxa: Manuseio (GMC)",
     "free": "GRÁTIS",
     "processingFee": "Taxa de Processamento",
+    "selectCourierPrompt": "Selecione um courier à esquerda para ver o total a pagar.",
     "discount": "Desconto",
     "welcomeBonus": "Bônus de Boas-vindas Automático! 🎁",
     "shippingOptions": "Opções de Envio",

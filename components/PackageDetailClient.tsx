@@ -853,7 +853,7 @@ export default function PackageDetailClient({
                   </button>
                 </>
               ) : (
-                <div className="text-center py-12 text-gray-500"><Truck size={48} className="mx-auto mb-4 opacity-20" /><p className="text-sm px-4">Selecciona un courier a la izquierda para ver el total a pagar.</p></div>
+               <p className="text-sm px-4">{t('selectCourierPrompt')}</p>
               )}
             </div>
           </div>

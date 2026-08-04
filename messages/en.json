@@ -357,6 +357,7 @@
     "feeHandling": "Fee: Handling (GMC)",
     "free": "FREE",
     "processingFee": "Processing Fee",
+    "selectCourierPrompt": "Select a courier on the left to see the total to pay.",
     "discount": "Discount",
     "welcomeBonus": "Welcome Bonus Auto-Applied! 🎁",
     "shippingOptions": "Shipping Options",

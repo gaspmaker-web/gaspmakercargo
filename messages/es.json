@@ -353,6 +353,7 @@
     "feeHandling": "Tarifa: Manejo (GMC)",
     "free": "GRATIS",
     "processingFee": "Tarifa de Procesamiento",
+    "selectCourierPrompt": "Selecciona un courier a la izquierda para ver el total a pagar.",
     "discount": "Descuento",
     "welcomeBonus": "¡Bono de Bienvenida Automático! 🎁",
     "shippingOptions": "Opciones de Envío",

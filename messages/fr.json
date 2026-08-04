@@ -356,6 +356,7 @@
     "feeHandling": "Frais : Manutention (GMC)",
     "free": "GRATUIT",
     "processingFee": "Frais de Traitement",
+    "selectCourierPrompt": "Sélectionnez un transporteur à gauche pour voir le total à payer.",
     "discount": "Réduction",
     "welcomeBonus": "Bonus de Bienvenue Automatique ! 🎁",
     "shippingOptions": "Options d'Expédition",
