@@ -67,9 +67,9 @@ const tenantSlug = tenant?.slug || process.env.TENANT_SLUG || 'gaspmaker';
   }
 
   return (
-    <html lang={locale}>
+    <html lang={locale} className="overflow-x-hidden">
      <body 
-  className={`${inter.variable} ${montserrat.variable} ${garamond.variable} font-sans bg-gray-50 flex flex-col min-h-screen`}
+  className={`${inter.variable} ${montserrat.variable} ${garamond.variable} font-sans bg-gray-50 flex flex-col min-h-screen overflow-x-hidden`}
   suppressHydrationWarning={true}
   style={tenantStyles}
 >
