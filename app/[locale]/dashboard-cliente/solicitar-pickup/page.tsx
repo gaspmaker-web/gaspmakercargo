@@ -855,7 +855,8 @@ export default function SolicitarPickupPage() {
                                             <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
                                             <input
                                                 type="datetime-local"
-                                                className={`w-full p-3 pl-10 border rounded-xl text-sm bg-white focus:ring-2 focus:ring-gmc-dorado-principal min-h-[48px] ${timeError ? 'border-red-500 bg-red-50' : 'border-gray-200 focus:border-transparent'}`}
+                                                style={{ fontSize: '16px' }}
+                                                className={`w-full p-3 pl-10 border rounded-xl bg-white focus:ring-2 focus:ring-gmc-dorado-principal min-h-[48px] ${timeError ? 'border-red-500 bg-red-50' : 'border-gray-200 focus:border-transparent'}`}
                                                 onChange={handleDateTimeChange}
                                             />
                                         </div>
@@ -877,7 +878,8 @@ export default function SolicitarPickupPage() {
                                             <input
                                                 type="tel"
                                                 placeholder={t.has('phonePlaceholder') ? t('phonePlaceholder') : "Phone number"}
-                                                className="w-full p-3 pl-10 border border-gray-200 rounded-xl text-sm bg-white focus:ring-2 focus:ring-gmc-dorado-principal focus:border-transparent min-h-[48px]"
+                                                style={{ fontSize: '16px' }}
+                                                className="w-full p-3 pl-10 border border-gray-200 rounded-xl bg-white focus:ring-2 focus:ring-gmc-dorado-principal focus:border-transparent min-h-[48px]"
                                                 onChange={e => setFormData({...formData, contactPhone: e.target.value})}
                                             />
                                         </div>

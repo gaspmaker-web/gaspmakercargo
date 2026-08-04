@@ -261,24 +261,15 @@ function SortableStopRow({
                 placeholder={isDropoff ? t_dropoffAddress : t_pickupAddress}
                 defaultValue={stop.address}
                 autoComplete="off"
+                style={{ fontSize: '16px' }}
                 className={[
-                  "w-full pl-9 pr-8 py-2.5 border rounded-xl text-sm font-medium transition-colors",
+                  "w-full pl-9 pr-8 py-3 border rounded-xl font-medium transition-colors",
                   "focus:outline-none focus:ring-2 focus:border-transparent placeholder-gray-400",
                   stop.error
                     ? "border-red-400 bg-red-50 text-red-900 focus:ring-red-300"
                     : `border-gray-200 bg-white ${inputFocus}`,
                 ].join(" ")}
                 onChange={() => onAddressClear(stop.id)}
-                onFocus={e => {
-                  // iOS: espera a que el teclado suba (~300ms) y luego
-                  // hace scroll para que el input quede visible
-                  setTimeout(() => {
-                    e.target.scrollIntoView({
-                      behavior: 'smooth',
-                      block: 'center',
-                    });
-                  }, 350);
-                }}
               />
             </div>
           </Autocomplete>
@@ -301,7 +292,8 @@ function SortableStopRow({
               placeholder={descPlaceholder}
               value={stop.description}
               onChange={e => onDescriptionChange(stop.id, e.target.value)}
-              className="w-full pl-9 pr-3 py-2.5 border border-gray-100 rounded-xl text-sm
+              style={{ fontSize: '16px' }}
+              className="w-full pl-9 pr-3 py-3 border border-gray-100 rounded-xl
                 outline-none focus:ring-2 focus:ring-gray-200 bg-gray-50 placeholder-gray-400"
             />
           </div>
