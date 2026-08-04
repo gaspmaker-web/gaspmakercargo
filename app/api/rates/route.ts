@@ -75,26 +75,38 @@ const DEFAULT_CAPITALS: Record<string, { city: string, zip?: string, state?: str
 // 1. TARIFAS LOCALES EXPORTACIÓN
 // ==========================================
 
-// 🚚 DÍAS DE ENTREGA INTELIGENTE
-function getDeliveryDays(
-  epRate: any,
-  easyPostCountryCode: string,
-  targetCountryCode: string,
-  rateText: (concept: string, countryCode?: string, fallback?: string) => string
-): string {
-  if (easyPostCountryCode === 'US') {
-    return epRate.delivery_days ? `${epRate.delivery_days} days` : '3-7 days';
-  }
-  const tenantDays = rateText('air_days', targetCountryCode, '');
-  if (tenantDays) return tenantDays;
+// 🚚 DÍAS REALES POR CARRIER (Enterprise)
+// EasyPost devuelve días genéricos para el Caribe — usamos datos reales por carrier/servicio
+function getDeliveryDaysByCarrier(carrier: string, service: string): string {
+  const c = (carrier || '').toUpperCase();
+  const s = (service || '').toUpperCase();
 
-  const carrier = (epRate.carrier || '').toUpperCase();
-  const service = (epRate.service || '').toUpperCase();
-  if (carrier.includes('DHL')) return service.includes('EXPRESS') ? '2-3 days' : '3-5 days';
-  if (carrier.includes('FEDEX')) return service.includes('PRIORITY') ? '1-3 days' : '3-5 days';
-  if (carrier.includes('UPS')) return service.includes('EXPRESS') ? '1-3 days' : '3-5 days';
-  if (carrier.includes('USPS')) return service.includes('EXPRESS') ? '3-5 days' : '6-10 days';
-  return epRate.delivery_days ? `${epRate.delivery_days} days` : '5-7 days';
+  if (c.includes('DHL')) {
+    if (s.includes('EXPRESS_WORLDWIDE') || s.includes('EXPRESS WORLDWIDE')) return '2-3 days';
+    if (s.includes('EXPRESS_EASY') || s.includes('EXPRESS EASY'))           return '2-4 days';
+    if (s.includes('ECONOMY'))                                               return '5-7 days';
+    return '2-3 days';
+  }
+  if (c.includes('UPS')) {
+    if (s.includes('EXPEDITED'))   return '3-5 days';
+    if (s.includes('SAVER'))       return '4-6 days';
+    if (s.includes('EXPRESS_PLUS') || s.includes('EXPRESS PLUS')) return '1-2 days';
+    if (s.includes('EXPRESS') && !s.includes('SAVER')) return '2-3 days';
+    if (s.includes('STANDARD'))    return '5-7 days';
+    return '3-5 days';
+  }
+  if (c.includes('FEDEX')) {
+    if (s.includes('PRIORITY'))  return '1-3 days';
+    if (s.includes('ECONOMY'))   return '5-7 days';
+    if (s.includes('FIRST'))     return '1-2 days';
+    return '2-4 days';
+  }
+  if (c.includes('USPS')) {
+    if (s.includes('EXPRESS'))   return '3-5 days';
+    if (s.includes('PRIORITY'))  return '6-10 days';
+    return '7-14 days';
+  }
+  return '3-7 days';
 }
 
 // ==========================================
@@ -408,34 +420,45 @@ const auraResult = calculateAuraLocalDelivery(auraBoxes, safeDistanceMiles, aura
                 to_address: toAddress, from_address: fromAddress, parcel: parcel,
             });
 
-    if (shipment.rates) {
-                const easyPostRates = shipment.rates.map((epRate: any) => {
-                    let logoUrl = null;
-                    const carrierUpper = (epRate.carrier || '').toUpperCase();
-                    if (carrierUpper.includes('USPS') || carrierUpper.includes('POSTAL')) logoUrl = '/usps-logo.svg';
-                    else if (carrierUpper.includes('FEDEX')) logoUrl = '/fedex-express-6.svg';
-                    else if (carrierUpper.includes('DHL')) logoUrl = '/dhl-1.svg';
-                    else if (carrierUpper.includes('UPS')) logoUrl = '/ups-united-parcel-service.svg';
+   if (shipment.rates) {
+    // 🔥 Si todos los carriers devuelven el mismo día → EasyPost no tiene datos reales
+    const allDays = shipment.rates.map((r: any) => r.delivery_days).filter(Boolean);
+    const allSameDays = allDays.length > 0 && allDays.every((d: number) => d === allDays[0]);
+    const useCarrierFallback = easyPostCountryCode !== 'US' && allSameDays;
 
-                    const basePrice = parseFloat(epRate.rate);
-                    const priceWithMarkup = basePrice * rate('easypost_markup', undefined, 1.30);
+    const easyPostRates = shipment.rates.map((epRate: any) => {
+        let logoUrl = null;
+        const carrierUpper = (epRate.carrier || '').toUpperCase();
+        if (carrierUpper.includes('USPS') || carrierUpper.includes('POSTAL')) logoUrl = '/usps-logo.svg';
+        else if (carrierUpper.includes('FEDEX')) logoUrl = '/fedex-express-6.svg';
+        else if (carrierUpper.includes('DHL')) logoUrl = '/dhl-1.svg';
+        else if (carrierUpper.includes('UPS')) logoUrl = '/ups-united-parcel-service.svg';
 
-                    return {
-                        id: epRate.id, 
-                        carrier: epRate.carrier, 
-                        service: epRate.service,
-                        price: parseFloat(priceWithMarkup.toFixed(2)), 
-                        currency: epRate.currency,
-                        days: getDeliveryDays(epRate, easyPostCountryCode, targetCountryCode, rateText),
-                        logo: logoUrl 
-                    };
-                });
-                rawRates.push(...easyPostRates);
-            }
-        } catch (e: any) { 
-            console.warn(`EasyPost Warning: ${e.message}`); 
-        }
-    }
+        const basePrice = parseFloat(epRate.rate);
+        const priceWithMarkup = basePrice * rate('easypost_markup', undefined, 1.30);
+
+        const deliveryDays = useCarrierFallback
+            ? getDeliveryDaysByCarrier(epRate.carrier, epRate.service)
+            : epRate.delivery_days
+                ? `${epRate.delivery_days} days`
+                : getDeliveryDaysByCarrier(epRate.carrier, epRate.service);
+
+        return {
+            id: epRate.id,
+            carrier: epRate.carrier,
+            service: epRate.service,
+            price: parseFloat(priceWithMarkup.toFixed(2)),
+            currency: epRate.currency,
+            days: deliveryDays,
+            logo: logoUrl
+        };
+    });
+    rawRates.push(...easyPostRates);
+}
+} catch (e: any) { 
+    console.warn(`EasyPost Warning: ${e.message}`); 
+}
+}
 
     // ==========================================
     // 7. TARIFAS LOCALES (EXPORTACIÓN CARIBE)
