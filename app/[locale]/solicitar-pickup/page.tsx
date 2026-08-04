@@ -343,6 +343,7 @@ export default function PublicQuotePage() {
                                 t_countyError={t.has('countyError') ? t('countyError') : '❌ Miami-Dade & Broward only.'}
                                 t_pickupAddress={t.has('pickupAddressPlaceholder') ? t('pickupAddressPlaceholder') : 'Pickup address...'}
                                 t_dropoffAddress={t.has('dropoffAddressPlaceholder') ? t('dropoffAddressPlaceholder') : 'Delivery address...'}
+                                t_estimatedRoute={t.has('estimatedRoute') ? t('estimatedRoute') : 'estimated route'}
                             />
 
                             {/* LOAD DETAILS */}

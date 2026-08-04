@@ -703,6 +703,7 @@ export default function SolicitarPickupPage() {
                                 t_countyError={t('countyError')}
                                 t_pickupAddress={t('pickupAddressPlaceholder')}
                                 t_dropoffAddress={t('dropoffAddressPlaceholder')}
+                                t_estimatedRoute={t('estimatedRoute')}
                               />
                             </div>
 

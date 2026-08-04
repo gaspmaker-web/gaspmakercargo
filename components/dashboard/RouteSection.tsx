@@ -58,6 +58,7 @@ interface RouteSectionProps {
   t_countyError: string;
   t_pickupAddress: string;
   t_dropoffAddress: string;
+  t_estimatedRoute: string;
 }
 
 // ─── Stop dot color por tipo ──────────────────────────────────────────────────
@@ -263,8 +264,9 @@ function SortableStopRow({
                 autoComplete="off"
                 style={{ fontSize: '16px' }}
                 className={[
-                  "w-full pl-9 pr-8 py-3 border rounded-xl font-medium transition-colors",
+                  "w-full pl-9 border rounded-xl font-medium transition-colors",
                   "focus:outline-none focus:ring-2 focus:border-transparent placeholder-gray-400",
+                  hasAddress ? "pr-8 py-3" : "pr-3 py-3",
                   stop.error
                     ? "border-red-400 bg-red-50 text-red-900 focus:ring-red-300"
                     : `border-gray-200 bg-white ${inputFocus}`,
@@ -328,6 +330,7 @@ export default function RouteSection({
   t_countyError,
   t_pickupAddress,
   t_dropoffAddress,
+  t_estimatedRoute,
 }: RouteSectionProps) {
   const getStopLetter = (index: number) => String.fromCharCode(66 + index);
   let stopLetterIndex = 0;
@@ -425,7 +428,7 @@ export default function RouteSection({
         <div className="mx-4 mb-4 flex items-center gap-2 px-3 py-2 bg-gray-50 border border-gray-100 rounded-lg">
           <MapPin size={12} className="text-gray-400 shrink-0" />
           <span className="text-xs text-gray-500 font-medium">
-            {distanceMiles} mi · ruta estimada
+            {distanceMiles} mi · {t_estimatedRoute}
           </span>
         </div>
       )}
