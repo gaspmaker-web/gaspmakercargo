@@ -75,6 +75,27 @@ const DEFAULT_CAPITALS: Record<string, { city: string, zip?: string, state?: str
 // 1. TARIFAS LOCALES EXPORTACIÓN
 // ==========================================
 
+// 🚚 DÍAS DE ENTREGA INTELIGENTE
+function getDeliveryDays(
+  epRate: any,
+  easyPostCountryCode: string,
+  targetCountryCode: string,
+  rateText: (concept: string, countryCode?: string, fallback?: string) => string
+): string {
+  if (easyPostCountryCode === 'US') {
+    return epRate.delivery_days ? `${epRate.delivery_days} days` : '3-7 days';
+  }
+  const tenantDays = rateText('air_days', targetCountryCode, '');
+  if (tenantDays) return tenantDays;
+
+  const carrier = (epRate.carrier || '').toUpperCase();
+  const service = (epRate.service || '').toUpperCase();
+  if (carrier.includes('DHL')) return service.includes('EXPRESS') ? '2-3 days' : '3-5 days';
+  if (carrier.includes('FEDEX')) return service.includes('PRIORITY') ? '1-3 days' : '3-5 days';
+  if (carrier.includes('UPS')) return service.includes('EXPRESS') ? '1-3 days' : '3-5 days';
+  if (carrier.includes('USPS')) return service.includes('EXPRESS') ? '3-5 days' : '6-10 days';
+  return epRate.delivery_days ? `${epRate.delivery_days} days` : '5-7 days';
+}
 
 // ==========================================
 // 2. CONTROLADOR PRINCIPAL (API ROUTE)
@@ -356,7 +377,11 @@ const auraResult = calculateAuraLocalDelivery(auraBoxes, safeDistanceMiles, aura
                 if (!finalZip || finalZip.length < 5) finalZip = '33166';
             }
 
-            const safeZip = (finalZip && finalZip.length >= 3) ? finalZip : undefined;
+            const safeZip = (
+  easyPostCountryCode === 'US' && 
+  finalZip && 
+  finalZip.length >= 3
+) ? finalZip : undefined;
             
             const fromAddress = await easypost.Address.create({
                 company: 'Gasp Maker Cargo', street1: '1861 NW 22nd St', city: 'Miami', state: 'FL', zip: '33142', country: 'US', phone: '786-282-0763',
@@ -401,7 +426,7 @@ const auraResult = calculateAuraLocalDelivery(auraBoxes, safeDistanceMiles, aura
                         service: epRate.service,
                         price: parseFloat(priceWithMarkup.toFixed(2)), 
                         currency: epRate.currency,
-                        days: epRate.delivery_days ? `${epRate.delivery_days} days` : '3-7 days', 
+                        days: getDeliveryDays(epRate, easyPostCountryCode, targetCountryCode, rateText),
                         logo: logoUrl 
                     };
                 });
