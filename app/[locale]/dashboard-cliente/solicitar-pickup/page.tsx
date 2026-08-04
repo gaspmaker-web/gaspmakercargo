@@ -439,8 +439,9 @@ export default function SolicitarPickupPage() {
             distanceMiles: quote.distanceMiles,
             heavyVehicle: formData.heavyVehicle,
             palletCount: formData.palletCount,
-            isPalletMode: formData.weightTier === 'w_151_plus'
-        })
+      isPalletMode: formData.weightTier === 'w_151_plus',
+extraStops: [],
+})
     });
 
             try {
