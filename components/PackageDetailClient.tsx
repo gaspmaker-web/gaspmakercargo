@@ -361,9 +361,14 @@ export default function PackageDetailClient({
           discountApplied: discount,
           shippingAddress: formattedAddress,
           walletDiscount: useWallet ? appliedWalletAmount : 0,
+          selectedCourier: selectedRate.carrier,
+          courierService: selectedRate.service,
+          // 🔥 EasyPost Rate IDs exactos — para comprar la etiqueta correcta
+          easypostRateId: selectedRate.id,
+          easypostShipmentId: selectedRate.shipmentId,
         }),
       });
-
+      
       const payData = await payRes.json();
       if (!payRes.ok) throw new Error(payData.message || "Error al procesar el cobro.");
 

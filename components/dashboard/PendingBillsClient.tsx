@@ -53,7 +53,7 @@ const cleanServiceName = (name: string) => {
 };
 
 interface Rate {
-    id: string; carrier: string; service: string; price: number; currency: string; days: string; logo?: string;
+    id: string; carrier: string; service: string; price: number; currency: string; days: string; logo?: string; shipmentId?: string;
 }
 
 interface PendingBillsClientProps {
@@ -571,22 +571,25 @@ const handleSelectRate = (billId: string, rate: Rate) => {
               return [billId]; 
           });
 
-          const payloadToSend = {
-              amountNet: totals.total,
-              paymentMethodId: selectedCardId,
-              serviceType: 'BILL_PAYMENT',
-              packageServiceType: packageServiceType, 
-              description: `Pago Envíos (${totals.count}) ${discount > 0 ? "(Promo Applied)" : ""}`,
-              packageIds: allPackageIds,
-              billDetails: billsPayload, 
-              billIds: selectedBillIds,          
-              selectedCourier: selectedCourier,  
-              courierService: courierService,
-              discountApplied: discount,
-              shippingAddress: finalShippingAddress,
-              walletDiscount: useWallet ? totals.appliedWallet : 0,
-              idempotencyKey: idempotencyKey 
-          };
+    const payloadToSend = {
+    amountNet: totals.total,
+    paymentMethodId: selectedCardId,
+    serviceType: 'BILL_PAYMENT',
+    packageServiceType: packageServiceType, 
+    description: `Pago Envíos (${totals.count}) ${discount > 0 ? "(Promo Applied)" : ""}`,
+    packageIds: allPackageIds,
+    billDetails: billsPayload, 
+    billIds: selectedBillIds,          
+    selectedCourier: selectedCourier,  
+    courierService: courierService,
+    discountApplied: discount,
+    shippingAddress: finalShippingAddress,
+    walletDiscount: useWallet ? totals.appliedWallet : 0,
+    idempotencyKey: idempotencyKey,
+    // 🔥 EasyPost Rate IDs exactos — para comprar la etiqueta correcta
+    easypostRateId: selectedRateMap[selectedBillIds[0]]?.id || null,
+    easypostShipmentId: selectedRateMap[selectedBillIds[0]]?.shipmentId || null,
+};
 
           const payRes = await fetch('/api/payments/charge', {
               method: 'POST',

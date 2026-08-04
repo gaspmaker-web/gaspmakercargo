@@ -81,46 +81,51 @@ export async function POST(req: Request) {
 
     // =========================================================================
 
-    // 3. Crear el envío en EasyPost (Para comprarlo)
-    const shipment = await easypost.Shipment.create({
-      to_address: {
-        name: finalName,
-        street1: finalStreet,
-        city: finalCity,
-        country: finalCountry,
-        zip: finalZip,
-        phone: finalPhone
-      },
-      from_address: {
-        company: 'Gasp Maker Cargo',
-        street1: '1861 NW 22nd St',
-        city: 'Miami',
-        state: 'FL',
-        zip: '33142',
-        country: 'US',
-        phone: '7862820763'
-      },
-      parcel: {
-        length: pkg.lengthIn,
-        width: pkg.widthIn,
-        height: pkg.heightIn,
-        weight: pkg.weightLbs * 16 // EasyPost usa onzas
-      },
-      service: pkg.courierService || 'Standard', 
-      carrier: pkg.selectedCourier 
-    });
+    // 3. Intentar usar el rate guardado — evita que expiren
+const savedShipmentId = pkg.easypostShipmentId || pkg.consolidatedShipment?.easypostShipmentId;
+const savedRateId = pkg.easypostRateId || pkg.consolidatedShipment?.easypostRateId;
 
-    // 4. COMPRAR LA ETIQUETA
-    const selectedRate = shipment.rates.find((r: any) => 
-        r.carrier.toLowerCase() === courier && 
+let boughtShipment;
+
+if (savedShipmentId && savedRateId) {
+    // ✅ Rate exacto que el cliente vio — compra el carrier correcto
+    console.log(`✅ Comprando rate guardado: ${savedShipmentId} / ${savedRateId}`);
+    try {
+        boughtShipment = await easypost.Shipment.buy(savedShipmentId, savedRateId);
+    } catch (rateError: any) {
+        console.warn(`⚠️ Rate expirado, creando nuevo shipment: ${rateError.message}`);
+        const newShipment = await easypost.Shipment.create({
+            to_address: { name: finalName, street1: finalStreet, city: finalCity, country: finalCountry, zip: finalZip !== '00000' ? finalZip : undefined, phone: finalPhone },
+            from_address: { company: 'Gasp Maker Cargo', street1: '1861 NW 22nd St', city: 'Miami', state: 'FL', zip: '33142', country: 'US', phone: '7862820763' },
+            parcel: { length: pkg.lengthIn, width: pkg.widthIn, height: pkg.heightIn, weight: pkg.weightLbs * 16 },
+            service: pkg.courierService || 'Standard',
+            carrier: pkg.selectedCourier
+        });
+        const fallbackRate = newShipment.rates.find((r: any) =>
+            r.carrier.toLowerCase() === courier &&
+            (r.service === pkg.courierService || !pkg.courierService)
+        );
+        if (!fallbackRate) return NextResponse.json({ error: "Rate expirado. Pide al cliente que cotice de nuevo." }, { status: 400 });
+        boughtShipment = await easypost.Shipment.buy(newShipment.id, fallbackRate.id);
+    }
+} else {
+    // Sin rate guardado — comportamiento anterior
+    console.warn(`⚠️ Sin easypostRateId guardado para paquete ${packageId}`);
+    const shipment = await easypost.Shipment.create({
+        to_address: { name: finalName, street1: finalStreet, city: finalCity, country: finalCountry, zip: finalZip !== '00000' ? finalZip : undefined, phone: finalPhone },
+        from_address: { company: 'Gasp Maker Cargo', street1: '1861 NW 22nd St', city: 'Miami', state: 'FL', zip: '33142', country: 'US', phone: '7862820763' },
+        parcel: { length: pkg.lengthIn, width: pkg.widthIn, height: pkg.heightIn, weight: pkg.weightLbs * 16 },
+        service: pkg.courierService || 'Standard',
+        carrier: pkg.selectedCourier
+    });
+    const selectedRate = shipment.rates.find((r: any) =>
+        r.carrier.toLowerCase() === courier &&
         (r.service === pkg.courierService || !pkg.courierService)
     );
+    if (!selectedRate) return NextResponse.json({ error: "No se encontró tarifa exacta en EasyPost." }, { status: 400 });
+    boughtShipment = await easypost.Shipment.buy(shipment.id, selectedRate.id);
+}
 
-    if (!selectedRate) {
-        return NextResponse.json({ error: "No se encontró tarifa exacta en EasyPost. Revisa los datos de la caja." }, { status: 400 });
-    }
-
-    const boughtShipment = await easypost.Shipment.buy(shipment.id, selectedRate.id);
 
     // 5. Guardar Tracking y Label en Base de Datos
     await prisma.package.update({

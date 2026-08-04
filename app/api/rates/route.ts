@@ -443,16 +443,18 @@ const auraResult = calculateAuraLocalDelivery(auraBoxes, safeDistanceMiles, aura
     : epRate.delivery_days
         ? `${epRate.delivery_days} days`
         : getDeliveryDaysByCarrier(epRate.carrier, epRate.service);
-        
-        return {
-            id: epRate.id,
-            carrier: epRate.carrier,
-            service: epRate.service,
-            price: parseFloat(priceWithMarkup.toFixed(2)),
-            currency: epRate.currency,
-            days: deliveryDays,
-            logo: logoUrl
-        };
+
+      // DESPUÉS — agrega shipmentId:
+    return {
+    id: epRate.id,
+    carrier: epRate.carrier,
+    service: epRate.service,
+    price: parseFloat(priceWithMarkup.toFixed(2)),
+    currency: epRate.currency,
+    days: deliveryDays,
+    logo: logoUrl,
+    shipmentId: shipment.id,  // 🔥 NUEVO
+};
     });
     rawRates.push(...easyPostRates);
 }

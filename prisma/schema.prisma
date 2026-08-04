@@ -161,9 +161,13 @@ model Package {
   consolidatedShipmentId String?
   consolidatedShipment   ConsolidatedShipment? @relation(fields: [consolidatedShipmentId], references: [id])
 
-// 🏢 MULTI-TENANT
+  // 🏢 MULTI-TENANT
   tenant_id             String?
   tenant                Tenant?  @relation(fields: [tenant_id], references: [id])
+
+  // 🔥 EasyPost Rate IDs — para comprar etiqueta exacta sin que expire
+  easypostRateId       String?
+  easypostShipmentId   String?
 
   // ==========================================
   // 🚀 ÍNDICES DE RENDIMIENTO (ENTERPRISE)
@@ -222,14 +226,17 @@ model ConsolidatedShipment {
   packages               Package[]
 
 
-// 🏢 MULTI-TENANT
   tenant_id             String?
   tenant                Tenant?  @relation(fields: [tenant_id], references: [id])
 
- // ==========================================
+  // 🔥 EasyPost Rate IDs — para comprar etiqueta exacta sin que expire
+  easypostRateId       String?
+  easypostShipmentId   String?
+
+  // ==========================================
   // 🚀 ÍNDICES DE RENDIMIENTO (ENTERPRISE)
   // ==========================================
-  @@index([gmcShipmentNumber]) // 🔥 CAMBIA ESTO AQUÍ
+  @@index([gmcShipmentNumber])
   @@index([userId])
 }
 
