@@ -12,6 +12,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { GripVertical, X, MapPin } from "lucide-react";
 import { Autocomplete } from "@react-google-maps/api";
 import { useRef } from "react";
+import { useTranslations } from 'next-intl';
 
 export interface Stop {
   id: string;
@@ -59,6 +60,7 @@ export default function SortableStop({
 }: Props) {
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
   const s = STYLES[color];
+  const t = useTranslations('Pickup');
   const letter = String.fromCharCode(66 + index); // B, C, D...
 
   const {
@@ -146,7 +148,7 @@ export default function SortableStop({
             />
             <input
               type="text"
-              placeholder={`Stop ${letter}: dirección...`}
+              placeholder={`Stop ${letter}: ${t('pickupAddressPlaceholder')}`}
               defaultValue={stop.address}
               autoComplete="off"
               // ✅ SIN touchAction aquí — el input debe recibir todos los eventos touch
@@ -168,7 +170,7 @@ export default function SortableStop({
           </span>
           <input
             type="text"
-            placeholder="¿Qué recoges aquí?"
+            placeholder={t('whatToPickupHere')}
             value={stop.description}
             onChange={(e) => onDescriptionChange(stop.id, e.target.value)}
             className="w-full pl-9 pr-3 py-2.5 border border-gray-100 rounded-lg text-sm outline-none focus:ring-2 focus:ring-gray-200 bg-gray-50 placeholder-gray-400"

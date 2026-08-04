@@ -14,7 +14,17 @@ import { useTenantRates } from '@/hooks/useTenantRates';
 import { useTranslations } from 'next-intl';
 
 // 🔥 IMPORTAMOS EL MOTOR AURA ENTERPRISE
-import { calculateAuraLocalDelivery, getVehicleByWeight, AuraBox } from '@/lib/aura-engine'; 
+import { calculateAuraLocalDelivery, getVehicleByWeight, AuraBox } from '@/lib/aura-engine';
+
+// 🔥 DnD-Kit con TouchSensor para móvil
+import {
+  KeyboardSensor, PointerSensor, TouchSensor,
+  useSensor, useSensors, DragEndEvent
+} from '@dnd-kit/core';
+import { sortableKeyboardCoordinates, arrayMove } from '@dnd-kit/sortable';
+
+// 🔥 RouteSection v2 — arquitectura array único (Uber/Lyft style)
+import RouteSection, { Stop, StopType } from '@/components/dashboard/RouteSection';
 
 const GMC_WAREHOUSE_ADDRESS = "1861 NW 22nd St, Miami, FL 33142";
 const ALLOWED_COUNTIES = ['Miami-Dade County', 'Broward County'];
@@ -90,10 +100,7 @@ export default function SolicitarPickupPage() {
   const [selectedCardId, setSelectedCardId] = useState<string>('');
   const [showMobileSummary, setShowMobileSummary] = useState(false);
 
-  const [addressError, setAddressError] = useState<string | null>(null);
-  const [dropOffError, setDropOffError] = useState<string | null>(null);
   const [timeError, setTimeError] = useState<string | null>(null);
-  const [isAddressValid, setIsAddressValid] = useState(false);
   const [isTimeValid, setIsTimeValid] = useState(false);
 
   const [quote, setQuote] = useState({
@@ -101,8 +108,100 @@ export default function SolicitarPickupPage() {
   });
 
   const [orderId, setOrderId] = useState<string | null>(null);
-  const originRef = useRef<google.maps.places.Autocomplete | null>(null);
-  const destRef = useRef<google.maps.places.Autocomplete | null>(null);
+
+  // ─── ARQUITECTURA UBER/LYFT: UN SOLO ARRAY DE PARADAS ──────────────
+  // Pickup siempre [0], Dropoff siempre [último], intermedios en el medio
+  const makeStop = (type: StopType, id?: string): Stop => ({
+    id: id ?? `stop-${Date.now()}-${Math.random()}`,
+    type,
+    address: '',
+    description: '',
+    error: undefined,
+  });
+
+  const [stops, setStops] = useState<Stop[]>(() => [
+    makeStop('PICKUP', 'pickup'),
+    makeStop('DROPOFF', 'dropoff'),
+  ]);
+
+  // Refs estables para acceder al array actual en callbacks async
+  const stopsRef = useRef<Stop[]>([]);
+  useEffect(() => { stopsRef.current = stops; }, [stops]);
+
+  // ─── DnD Sensors — TouchSensor con delay anti-scroll ───────────────
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor,   { activationConstraint: { delay: 250, tolerance: 10 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
+  // ─── Helpers para leer el array ────────────────────────────────────
+  const originAddress  = stops[0]?.address ?? '';
+  const dropOffAddress = stops[stops.length - 1]?.address ?? '';
+  const isAddressValid = stops[0]?.address !== '' && !stops[0]?.error;
+
+  // ─── Handlers del array ────────────────────────────────────────────
+  const handleStopAddressValid = (id: string, address: string) => {
+    setStops(prev => prev.map(s => s.id === id ? { ...s, address, error: undefined } : s));
+  };
+
+  const handleStopAddressError = (id: string, error: string) => {
+    setStops(prev => prev.map(s => s.id === id ? { ...s, address: '', error } : s));
+  };
+
+  const handleStopAddressClear = (id: string) => {
+    setStops(prev => {
+      const updated = prev.map(s => s.id === id ? { ...s, address: '', error: undefined } : s);
+      // Si cualquier parada se limpia → reset distancia
+      // No tiene sentido mostrar una ruta si falta algún punto
+      setQuote(q => ({ ...q, distanceMiles: 0, distanceSurcharge: 0 }));
+      return updated;
+    });
+  };
+
+  const handleStopDescriptionChange = (id: string, description: string) => {
+    setStops(prev => prev.map(s => s.id === id ? { ...s, description } : s));
+  };
+
+  const handleAddStop = () => {
+    setStops(prev => {
+      const newStop = makeStop('STOP');
+      if (serviceType === 'SHIPPING') {
+        // SHIPPING: no hay DROPOFF en el array → agregar al final
+        return [...prev, newStop];
+      } else {
+        // DELIVERY: insertar antes del DROPOFF (último elemento)
+        const withoutLast = prev.slice(0, -1);
+        const last = prev[prev.length - 1];
+        return [...withoutLast, newStop, last];
+      }
+    });
+  };
+
+  const handleRemoveStop = (id: string) => {
+    setStops(prev => prev.filter(s => s.id !== id));
+    setQuote(q => ({ ...q, distanceMiles: 0, distanceSurcharge: 0 }));
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    setStops(prev => {
+      const reordered = arrayMove(prev,
+        prev.findIndex(s => s.id === active.id),
+        prev.findIndex(s => s.id === over.id)
+      );
+      stopsRef.current = reordered;
+      // Recalcular ruta con nuevo orden
+      const origin  = reordered[0]?.address ?? '';
+      const dropoff = reordered[reordered.length - 1]?.address ?? '';
+      calculateComplexRoute(origin, dropoff, reordered);
+      return reordered;
+    });
+  };
+
+  const handleRouteRecalc = () =>
+    calculateComplexRoute(originAddress, dropOffAddress);
 
   const [formData, setFormData] = useState({
     originAddress: '', originCity: '', pickupDate: '', description: '', contactPhone: '',
@@ -161,10 +260,17 @@ export default function SolicitarPickupPage() {
   // --- 2. MANEJO DE SELECCIÓN (con auto-scroll a la sección correcta) ---
   const handleServiceSelect = (type: string) => {
       setServiceType(type);
-      setAddressError(null);
-      setDropOffError(null);
       setTimeError(null);
       setQuote(prev => ({ ...prev, distanceMiles: 0, distanceSurcharge: 0 }));
+
+      // ✅ SHIPPING: solo PICKUP — destino siempre es bodega GMC
+      // ✅ DELIVERY: PICKUP + DROPOFF — el cliente define ambos puntos
+      if (type === 'SHIPPING') {
+        setStops([makeStop('PICKUP', 'pickup')]);
+      } else {
+        setStops([makeStop('PICKUP', 'pickup'), makeStop('DROPOFF', 'dropoff')]);
+      }
+
       setTimeout(() => {
           const target = type === 'PICKUP_WAREHOUSE' ? inventorySectionRef.current : routeSectionRef.current;
           target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -245,76 +351,16 @@ export default function SolicitarPickupPage() {
   const tasaTTD = 7.30;
   const montoTTD = (quote.total * tasaTTD).toFixed(2);
 
-  // --- MAPS & VALIDACIÓN ---
-  const handleOriginChange = () => {
-      if (!originRef.current) return;
-      const place = originRef.current.getPlace();
-
-      if (!place || !place.geometry || !place.formatted_address) {
-          setAddressError("⚠️ Dirección inválida. Selecciona de la lista.");
-          setIsAddressValid(false);
-          setFormData(prev => ({ ...prev, originAddress: '' }));
-          return;
-      }
-
-      let county = '';
-      if (place.address_components) {
-          const countyComp = place.address_components.find(c => c.types.includes('administrative_area_level_2'));
-          if (countyComp) county = countyComp.long_name;
-      }
-      const isAllowed = ALLOWED_COUNTIES.some(allowed => county === allowed);
-      if (!isAllowed) {
-          setAddressError(`❌ Solo atendemos en Miami-Dade y Broward. (Zona: ${county || 'Desconocida'})`);
-          setIsAddressValid(false);
-          setFormData(prev => ({ ...prev, originAddress: '' }));
-          return;
-      }
-
-      setAddressError(null);
-      setIsAddressValid(true);
-      const newOrigin = place.formatted_address!;
-      setFormData(prev => ({ ...prev, originAddress: newOrigin }));
-  };
-
-  const handleDropoffChange = () => {
-      if (!destRef.current) return;
-      const place = destRef.current.getPlace();
-
-      if (!place || !place.geometry || !place.formatted_address) {
-          setFormData(prev => ({ ...prev, dropOffAddress: '' }));
-          return;
-      }
-
-      let county = '';
-      if (place.address_components) {
-          const countyComp = place.address_components.find(c => c.types.includes('administrative_area_level_2'));
-          if (countyComp) county = countyComp.long_name;
-      }
-      const isAllowed = ALLOWED_COUNTIES.some(allowed => county === allowed);
-      if (!isAllowed) {
-          setDropOffError(`❌ Solo entregamos en Miami-Dade y Broward. (Zona: ${county || 'Desconocida'})`);
-          setFormData(prev => ({ ...prev, dropOffAddress: '' }));
-          return;
-      }
-
-      setDropOffError(null);
-      const newDropoff = place.formatted_address!;
-      setFormData(prev => ({ ...prev, dropOffAddress: newDropoff }));
-  };
-
   // --- DISTANCE RECALC ---
   useEffect(() => {
     if (!isLoaded || !serviceType || serviceType === 'PICKUP_WAREHOUSE') return;
-
-    if (serviceType === 'SHIPPING' && formData.originAddress) {
-        calculateComplexRoute(formData.originAddress, '');
+    if (originAddress) {
+      calculateComplexRoute(originAddress, dropOffAddress);
     }
-    if (serviceType === 'DELIVERY' && formData.originAddress && formData.dropOffAddress) {
-        calculateComplexRoute(formData.originAddress, formData.dropOffAddress);
-    }
-  }, [formData.originAddress, formData.dropOffAddress, serviceType, isLoaded, autoVehicle.type]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stops, serviceType, isLoaded, autoVehicle.type]);
 
-  const calculateComplexRoute = async (origin: string, destination: string) => {
+  const calculateComplexRoute = async (origin: string, destination: string, currentStops?: Stop[]) => {
     if (!isLoaded || typeof google === 'undefined' || !origin) return;
 
     try {
@@ -322,6 +368,7 @@ export default function SolicitarPickupPage() {
         let totalMiles = 0;
 
         const getLeg = async (start: string, end: string) => {
+            if (!start || !end) return 0;
             const res = await service.getDistanceMatrix({
                 origins: [start], destinations: [end],
                 travelMode: google.maps.TravelMode.DRIVING,
@@ -334,33 +381,41 @@ export default function SolicitarPickupPage() {
                 : el.distance.value / 1609.34;
         };
 
+        // Leer stops actuales — todas las direcciones válidas en orden
+        const allStops = currentStops ?? stopsRef.current;
+        const validAddresses = allStops
+          .filter(s => s.address)
+          .map(s => s.address);
+
+        if (validAddresses.length < 1) return;
+
         if (serviceType === 'SHIPPING') {
-            const leg1 = await getLeg(GMC_WAREHOUSE_ADDRESS, origin);
-            // 🔥 REGLA AURA: Box Truck cobra circuito completo (ida y vuelta)
-            totalMiles = (autoVehicle.type === 'BOX_TRUCK') ? leg1 * 2 : leg1;
+            // Bodega → origen → paradas intermedias
+            totalMiles += await getLeg(GMC_WAREHOUSE_ADDRESS, validAddresses[0]);
+            for (let i = 0; i < validAddresses.length - 1; i++) {
+                totalMiles += await getLeg(validAddresses[i], validAddresses[i + 1]);
+            }
+            // 🔥 REGLA AURA: Box Truck cobra regreso a bodega
+            if (autoVehicle.type === 'BOX_TRUCK') {
+                totalMiles += await getLeg(validAddresses[validAddresses.length - 1], GMC_WAREHOUSE_ADDRESS);
+            }
         }
         else if (serviceType === 'DELIVERY') {
-            if (!destination) return;
-
-            const leg1 = await getLeg(GMC_WAREHOUSE_ADDRESS, origin);
-            const leg2 = await getLeg(origin, destination);
-
+            if (validAddresses.length < 2) return;
+            // Bodega → todos los puntos en orden
+            totalMiles += await getLeg(GMC_WAREHOUSE_ADDRESS, validAddresses[0]);
+            for (let i = 0; i < validAddresses.length - 1; i++) {
+                totalMiles += await getLeg(validAddresses[i], validAddresses[i + 1]);
+            }
+            // 🔥 REGLA AURA: Box Truck cobra regreso a bodega
             if (autoVehicle.type === 'BOX_TRUCK') {
-                const leg3 = await getLeg(destination, GMC_WAREHOUSE_ADDRESS);
-                totalMiles = leg1 + leg2 + leg3;
-            } else {
-                totalMiles = leg1 + leg2;
+                totalMiles += await getLeg(validAddresses[validAddresses.length - 1], GMC_WAREHOUSE_ADDRESS);
             }
         }
 
         setQuote(prev => ({ ...prev, distanceMiles: parseFloat(totalMiles.toFixed(1)) }));
 
     } catch (e) { console.error("Error calculando ruta:", e); }
-  };
-
-  const handleInputInput = () => {
-      setIsAddressValid(false);
-      setQuote(prev => ({ ...prev, distanceMiles: 0 }));
   };
 
   const validateTimeWindow = (dateTimeString: string) => {
@@ -398,14 +453,15 @@ export default function SolicitarPickupPage() {
 
   const handlePaymentAndSubmit = async () => {
     if (serviceType !== 'PICKUP_WAREHOUSE') {
-        if (!isAddressValid || !formData.originAddress) {
+        if (!isAddressValid || !originAddress) {
             alert("⚠️ Dirección no válida. Selecciona una opción de la lista."); return;
         }
-        if (serviceType === 'DELIVERY' && !formData.dropOffAddress) {
-            alert("⚠️ Faltan dirección de entrega."); return;
+        if (serviceType === 'DELIVERY' && !dropOffAddress) {
+            alert("⚠️ Falta dirección de entrega."); return;
         }
-        if (!formData.pickupDate || !isTimeValid) { alert("Completa los campos correctamente, respetando el horario."); return; }
-
+        if (!formData.pickupDate || !isTimeValid) {
+            alert("Completa los campos correctamente, respetando el horario."); return;
+        }
         if (!selectedCardId) {
             setShowMobileSummary(true);
             if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(50);
@@ -440,8 +496,8 @@ export default function SolicitarPickupPage() {
             heavyVehicle: formData.heavyVehicle,
             palletCount: formData.palletCount,
       isPalletMode: formData.weightTier === 'w_151_plus',
-extraStops: [],
-})
+      extraStops: stops.filter(s => s.address),
+        })
     });
 
             try {
@@ -465,17 +521,25 @@ extraStops: [],
     ...formData,
     serviceType,
     status: 'PAGADO',
-    originAddress: serviceType === 'PICKUP_WAREHOUSE' ? GMC_WAREHOUSE_ADDRESS : formData.originAddress,
-    dropOffAddress: serviceType === 'DELIVERY' ? formData.dropOffAddress : GMC_WAREHOUSE_ADDRESS,
+    originAddress: serviceType === 'PICKUP_WAREHOUSE' ? GMC_WAREHOUSE_ADDRESS : originAddress,
+    dropOffAddress: serviceType === 'DELIVERY' ? dropOffAddress : GMC_WAREHOUSE_ADDRESS,
     subtotal: paymentData.subtotal,
     processingFee: paymentData.fee,
     totalPaid: paymentData.total,
     stripePaymentId: paymentData.paymentId,
-    description: serviceType === 'PICKUP_WAREHOUSE' ? 'Retiro Personal en Bodega' : formData.description,
+    description: serviceType === 'PICKUP_WAREHOUSE'
+      ? 'Retiro Personal en Bodega'
+      : stops.map(s => s.description).filter(Boolean).join(' | '),
     weightInfo: formData.weightTier,
     weightLbs: calcWeight,
     distanceMiles: quote.distanceMiles,
     isPalletMode: formData.weightTier === 'w_151_plus',
+    extraStops: stops.map(s => ({
+      id: s.id,
+      type: s.type,
+      address: s.address,
+      description: s.description,
+    })),
 };
 
         const orderRes = await fetch('/api/pickup', {
@@ -515,7 +579,7 @@ extraStops: [],
   const gridLayoutClass = isBodega ? 'max-w-4xl mx-auto' : 'grid grid-cols-1 lg:grid-cols-3 gap-8';
 
   return (
-    <div className="min-h-screen w-full max-w-[100vw] bg-gray-50 pb-40 md:pb-6 font-montserrat overflow-x-hidden relative" style={{ touchAction: 'pan-y' }}>
+    <div className="min-h-screen w-full max-w-[100vw] bg-gray-50 pb-40 md:pb-6 font-montserrat overflow-x-hidden relative">
       <div className="max-w-6xl mx-auto p-4 md:p-6 w-full">
 
         <div className="mb-6 text-center">
@@ -601,62 +665,33 @@ extraStops: [],
                         </div>
                     ) : (
                         <>
-                            <div ref={routeSectionRef} className="scroll-mt-4 bg-white p-4 md:p-6 rounded-xl shadow-sm border border-gray-200 space-y-4">
-                                <h3 className="font-bold text-gmc-gris-oscuro text-sm uppercase mb-2">{t('routeTitle')}</h3>
-                                <div>
-                                    <label className="text-xs font-bold text-gray-400">{t('pickupPointA')}</label>
-                                    <Autocomplete
-                                        onLoad={ref => { originRef.current = ref }}
-                                        onPlaceChanged={handleOriginChange}
-                                        restrictions={{ country: "us" }}
-                                    >
-                                        <input
-                                            type="text"
-                                            placeholder="Dirección de recogida..."
-                                            className={`w-full p-3 border rounded-lg text-base ${addressError ? 'border-red-500 bg-red-50 text-red-900' : 'border-gray-200'}`}
-                                            onInput={handleInputInput}
-                                        />
-                                    </Autocomplete>
-                                    {addressError && (
-                                        <div className="mt-2 flex items-center gap-2 text-red-600 bg-red-50 p-2 rounded-lg text-xs font-bold animate-in fade-in">
-                                            <AlertTriangle size={16} />
-                                            <span>{addressError}</span>
-                                        </div>
-                                    )}
-                                </div>
-
-                                {serviceType === 'SHIPPING' && (
-                                    <div className="p-3 bg-blue-50 border border-blue-100 rounded-lg flex items-center gap-3">
-                                        <div className="bg-white p-2 rounded-full text-blue-600 shadow-sm"><Warehouse size={18}/></div>
-                                        <div>
-                                            <p className="text-xs font-bold text-blue-800 uppercase">{t('interDestTitle')}</p>
-                                            <p className="text-sm font-bold text-gray-700">{t('gmcWarehouse')}</p>
-                                            <p className="text-[10px] text-gray-500">{t('exportNote')}</p>
-                                        </div>
-                                    </div>
-                                )}
-                                {serviceType === 'DELIVERY' && (
-                                    <div>
-                                        <label className="text-xs font-bold text-gray-400">{t('dropoffPointB')}</label>
-                                        <Autocomplete
-                                            onLoad={ref => { destRef.current = ref }}
-                                            onPlaceChanged={handleDropoffChange}
-                                            restrictions={{ country: "us" }}
-                                        >
-                                            <input
-                                                type="text"
-                                                placeholder="Dirección de entrega..."
-                                                className={`w-full p-3 border rounded-lg text-base ${dropOffError ? 'border-red-500 bg-red-50 text-red-900' : 'border-gray-200'}`}
-                                            />
-                                        </Autocomplete>
-                                        {dropOffError && (
-                                            <div className="mt-2 flex items-center gap-2 text-red-600 bg-red-50 p-2 rounded-lg text-xs font-bold animate-in fade-in">
-                                                <AlertTriangle size={16} />
-                                                <span>{dropOffError}</span>
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
+                            {/* ✅ RouteSection v2 — array único, todo draggable */}
+                            <div ref={routeSectionRef} className="scroll-mt-4">
+                              <RouteSection
+                                serviceType={serviceType as 'SHIPPING' | 'DELIVERY'}
+                                stops={stops}
+                                distanceMiles={quote.distanceMiles}
+                                onStopAddressValid={handleStopAddressValid}
+                                onStopAddressError={handleStopAddressError}
+                                onStopAddressClear={handleStopAddressClear}
+                                onStopDescriptionChange={handleStopDescriptionChange}
+                                onAddStop={handleAddStop}
+                                onRemoveStop={handleRemoveStop}
+                                onDragEnd={handleDragEnd}
+                                sensors={sensors}
+                                t_routeTitle={t('routeTitle')}
+                                t_pickupPointA={t('pickupPointA')}
+                                t_dropoffLabel={t('dropoffPointB')}
+                                t_interDestTitle={t('interDestTitle')}
+                                t_gmcWarehouse={t('gmcWarehouse')}
+                                t_exportNote={t('exportNote')}
+                                t_pickupDescPlaceholder={t('pickupDescPlaceholder')}
+                                t_dropoffDescPlaceholder={t('dropoffDescPlaceholder')}
+                                t_addStop={t('addStop')}
+                                t_countyError={t('countyError')}
+                                t_pickupAddress={t('pickupAddressPlaceholder')}
+                                t_dropoffAddress={t('dropoffAddressPlaceholder')}
+                              />
                             </div>
 
                             <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm border border-gray-200">
@@ -839,11 +874,6 @@ extraStops: [],
                                     </div>
                                 </div>
 
-                                <textarea
-                                    className="w-full p-3 border border-gray-200 rounded-xl text-base h-24 resize-none focus:ring-2 focus:ring-gmc-dorado-principal focus:border-transparent"
-                                    placeholder={t.has('descPlaceholder') ? t('descPlaceholder') : "Description of items..."}
-                                    onChange={e => setFormData({...formData, description: e.target.value})}
-                                ></textarea>
                             </div>
                         </>
                     )}
