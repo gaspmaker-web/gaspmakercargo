@@ -853,7 +853,7 @@ export default function PackageDetailClient({
                   </button>
                 </>
               ) : (
-               <p className="text-sm px-4">{t('selectCourierPrompt')}</p>
+               <div className="text-center py-12 text-gray-500"><Truck size={48} className="mx-auto mb-4 opacity-20" /><p className="text-sm px-4">{t('selectCourierPrompt')}</p></div>
               )}
             </div>
           </div>
