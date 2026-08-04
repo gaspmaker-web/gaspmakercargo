@@ -98,7 +98,19 @@ export default function SolicitarPickupPage() {
   const [inventoryLoading, setInventoryLoading] = useState(true);
   const [cards, setCards] = useState<any[]>([]);
   const [selectedCardId, setSelectedCardId] = useState<string>('');
+  const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
   const [showMobileSummary, setShowMobileSummary] = useState(false);
+
+  useEffect(() => {
+    const handleFocusIn = () => setIsKeyboardOpen(true);
+    const handleFocusOut = () => setTimeout(() => setIsKeyboardOpen(false), 100);
+    document.addEventListener('focusin', handleFocusIn);
+    document.addEventListener('focusout', handleFocusOut);
+    return () => {
+      document.removeEventListener('focusin', handleFocusIn);
+      document.removeEventListener('focusout', handleFocusOut);
+    };
+  }, []);
 
   const [timeError, setTimeError] = useState<string | null>(null);
   const [isTimeValid, setIsTimeValid] = useState(false);
@@ -579,8 +591,8 @@ export default function SolicitarPickupPage() {
   const gridLayoutClass = isBodega ? 'max-w-4xl mx-auto' : 'grid grid-cols-1 lg:grid-cols-3 gap-8';
 
   return (
-    <div className="min-h-screen w-full max-w-[100vw] bg-gray-50 pb-40 md:pb-6 font-montserrat overflow-x-hidden relative">
-      <div className="max-w-6xl mx-auto px-3 py-4 md:p-6 w-full">
+    <div className="min-h-screen w-screen bg-gray-50 pb-40 md:pb-6 font-montserrat overflow-x-hidden relative" style={{ overflowX: 'hidden', maxWidth: '100%' }}>
+      <div className="w-full max-w-6xl mx-auto px-3 py-4 md:p-6" style={{ overflowX: 'hidden' }}>
 
         <div className="mb-5 text-center">
             <h1 className="text-lg md:text-2xl font-bold text-gmc-gris-oscuro font-garamond">{t('title')}</h1>
@@ -949,7 +961,7 @@ export default function SolicitarPickupPage() {
             </div>
         )}
 
-        {serviceType && !isBodega && (
+        {serviceType && !isBodega && !isKeyboardOpen && (
             <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50">
                 <div className="absolute bottom-full left-0 right-0 h-10 bg-gradient-to-t from-gray-200/50 to-transparent pointer-events-none" />
                 <div className="bg-[#222b3c] rounded-t-3xl shadow-[0_-5px_25px_rgba(0,0,0,0.2)] p-5 animate-slideUp text-white">

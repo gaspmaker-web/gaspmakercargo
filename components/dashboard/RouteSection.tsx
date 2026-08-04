@@ -269,6 +269,16 @@ function SortableStopRow({
                     : `border-gray-200 bg-white ${inputFocus}`,
                 ].join(" ")}
                 onChange={() => onAddressClear(stop.id)}
+                onFocus={e => {
+                  // iOS: espera a que el teclado suba (~300ms) y luego
+                  // hace scroll para que el input quede visible
+                  setTimeout(() => {
+                    e.target.scrollIntoView({
+                      behavior: 'smooth',
+                      block: 'center',
+                    });
+                  }, 350);
+                }}
               />
             </div>
           </Autocomplete>
