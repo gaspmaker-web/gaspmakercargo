@@ -258,7 +258,10 @@ model PickupRequest {
   stripePaymentId  String?
   weightInfo       String?
   volumeInfo       String?
-
+  weightLbs        Float?
+  distanceMiles    Float?
+  isPalletMode     Boolean  @default(false)
+  extraStops       Json?
   photoPickupUrl   String?  
   photoDeliveryUrl String?
   

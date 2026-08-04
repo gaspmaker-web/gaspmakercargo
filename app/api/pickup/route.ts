@@ -106,7 +106,7 @@ export async function POST(request: Request) {
         processingFee = parseFloat(body.processingFee) || 0;
         totalPaid     = parseFloat(body.totalPaid) || 0;
     }
-    // ==========================================
+ // ==========================================
     // ✅ Guardar en BD con precios del SERVIDOR
     // ==========================================
     const newRequest = await prisma.pickupRequest.create({
@@ -124,10 +124,14 @@ export async function POST(request: Request) {
         dropOffPhone: body.dropOffPhone || null,
         weightInfo: body.weightInfo || body.weightTier,
         volumeInfo: body.volumeInfo || body.volumeTier,
+        weightLbs: body.weightLbs || null,
+        distanceMiles: body.distanceMiles || null,
+        isPalletMode: body.isPalletMode || false,
+        extraStops: body.extraStops || null,
         status: body.status || 'PENDIENTE',
-        totalPaid,        // ✅ precio del servidor
-        subtotal,         // ✅ precio del servidor
-        processingFee,    // ✅ precio del servidor
+        totalPaid,
+        subtotal,
+        processingFee,
         stripePaymentId: body.stripePaymentId || null
       },
     });
