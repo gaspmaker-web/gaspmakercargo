@@ -41,7 +41,7 @@ export async function POST(req: Request) {
         const phoneBlock = parts[2]?.trim() || '';
 
         let phone = phoneBlock.replace(/[^0-9]/g, '');
-        if (phone.length < 10) phone = '7862820763';
+        if (phone.length < 10) phone = (pkg.user.phone || '').replace(/[^0-9]/g, '') || '7862820763';
 
         const addrChunks = addressBlock.split(',').map(c => c.trim());
         const countryRaw = addrChunks.pop() || 'US'; 
