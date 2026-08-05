@@ -158,7 +158,8 @@ await prisma.package.update({
         finalTrackingNumber: boughtShipment.tracker.tracking_code,
         receiptUrl: boughtShipment.postage_label.label_url,
         shippingLabelUrl: boughtShipment.postage_label.label_url,
-        courierService: `${boughtShipment.selected_rate.carrier} - ${boughtShipment.selected_rate.service}`
+        courierService: `${boughtShipment.selected_rate.carrier} - ${boughtShipment.selected_rate.service}`,
+        easypostTrackerId: boughtShipment.tracker.id,  // 🔥 Para webhooks
     }
 });
 
@@ -171,11 +172,11 @@ if (pkg.consolidatedShipmentId) {
             finalTrackingNumber: boughtShipment.tracker.tracking_code,
             shippingLabelUrl: boughtShipment.postage_label.label_url,
             selectedCourier: boughtShipment.selected_rate.carrier,
-            courierService: `${boughtShipment.selected_rate.carrier} - ${boughtShipment.selected_rate.service}`
+            courierService: `${boughtShipment.selected_rate.carrier} - ${boughtShipment.selected_rate.service}`,
+            easypostTrackerId: boughtShipment.tracker.id,  // 🔥 Para webhooks
         }
     });
 }
-
     // ====================================================================
     // 🔥 MAGIA DE NOTIFICACIONES (EMAIL + CAMPANITA) 🔥
     // ====================================================================
