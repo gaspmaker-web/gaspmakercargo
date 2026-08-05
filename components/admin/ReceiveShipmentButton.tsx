@@ -1,40 +1,34 @@
-'use client';
+"use client";
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { CheckCircle, Loader2, Play } from 'lucide-react';
+import { Play, Loader2, CheckCircle, AlertTriangle } from 'lucide-react';
 
-// 🔥 MODIFICADO: Agregamos prop 'countryName' para mostrar el país
-export default function ReceiveShipmentButton({ 
-    shipmentId, 
-    currentStatus,
-    countryName = "Destino" // Valor por defecto si no viene el país
-}: { 
-    shipmentId: string, 
-    currentStatus: string,
-    countryName?: string
-}) {
+interface Props {
+    shipmentId: string;
+    currentStatus: string;
+    countryName: string;
+}
+
+export default function ReceiveShipmentButton({ shipmentId, currentStatus, countryName }: Props) {
     const [loading, setLoading] = useState(false);
+    const [confirming, setConfirming] = useState(false);
     const router = useRouter();
 
     const handleReceive = async () => {
-        // 🔥 MODIFICADO: Confirmación visual con el nombre del país
-        if(!confirm(`¿Confirmas que recibiste esta caja consolidada físicamente en ${countryName} y sale a reparto?`)) return;
-        
+        setConfirming(false);
         setLoading(true);
         try {
-            // 🔥 MODIFICADO: Apuntamos a 'update-status' para activar al Driver
             const res = await fetch('/api/admin/packages/update-status', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ 
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
                     packageId: shipmentId,
-                    newStatus: 'EN_REPARTO' // 👈 ESTO ACTIVA AL DRIVER
+                    newStatus: 'EN_REPARTO'
                 })
             });
 
             if (res.ok) {
-                alert(`✅ Recibido en ${countryName}. Estado: EN REPARTO`);
                 router.refresh();
             } else {
                 alert("Hubo un error al actualizar.");
@@ -47,7 +41,6 @@ export default function ReceiveShipmentButton({
         }
     };
 
-    // Si ya fue recibido (Agregamos 'COMPLETADO' por seguridad)
     if (currentStatus === 'EN_ALMACEN_DESTINO' || currentStatus === 'EN_REPARTO' || currentStatus === 'ENTREGADO' || currentStatus === 'COMPLETADO') {
         return (
             <button disabled className="bg-green-100 text-green-800 px-6 py-3 rounded-lg font-bold flex items-center gap-2 cursor-not-allowed opacity-80">
@@ -56,15 +49,38 @@ export default function ReceiveShipmentButton({
         );
     }
 
+    // ✅ Confirmación en React — sin confirm() nativo que bloquea el hilo
+    if (confirming) {
+        return (
+            <div className="flex items-center gap-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <AlertTriangle size={18} className="text-yellow-600 shrink-0" />
+                <p className="text-sm font-bold text-yellow-800 flex-1">
+                    ¿Confirmas que recibiste en {countryName} y sale a reparto?
+                </p>
+                <button
+                    onClick={handleReceive}
+                    className="bg-green-600 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-green-700 transition"
+                >
+                    ✅ Sí, confirmar
+                </button>
+                <button
+                    onClick={() => setConfirming(false)}
+                    className="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-bold text-sm hover:bg-gray-300 transition"
+                >
+                    Cancelar
+                </button>
+            </div>
+        );
+    }
+
     return (
-        <button 
-            onClick={handleReceive}
+        <button
+            onClick={() => setConfirming(true)}
             disabled={loading}
             className="bg-gmc-dorado-principal hover:bg-yellow-500 text-white px-6 py-3 rounded-lg font-bold shadow-md transition-all flex items-center gap-2"
         >
             {loading ? <Loader2 className="animate-spin" /> : <Play size={20} fill="currentColor" />}
-            {/* 🔥 MODIFICADO: Muestra el país en el botón */}
-            RECIBIR EN {countryName.toUpperCase()} (SACAR A REPARTO)
+            {loading ? 'Procesando...' : 'RECIBIR (SACAR A REPARTO)'}
         </button>
     );
 }
