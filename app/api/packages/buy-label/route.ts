@@ -87,68 +87,67 @@ export async function POST(req: Request) {
         customs_items: [customsItem]
     };
 
+// 🔥 ENTERPRISE: Usar rate guardado si existe — evita carrier incorrecto
+const savedShipmentId = pkg.easypostShipmentId || pkg.consolidatedShipment?.easypostShipmentId;
+const savedRateId = pkg.easypostRateId || pkg.consolidatedShipment?.easypostRateId;
+
+let boughtShipment;
+
+if (savedShipmentId && savedRateId) {
+    // ✅ Rate exacto que el cliente vio y pagó
+    console.log(`✅ Usando rate guardado: ${savedShipmentId} / ${savedRateId}`);
+    try {
+        boughtShipment = await easypost.Shipment.buy(savedShipmentId, savedRateId);
+    } catch (rateError: any) {
+        console.warn(`⚠️ Rate expirado, creando nuevo shipment: ${rateError.message}`);
+        // Fallback — nuevo shipment con mismo carrier/service
+        const newShipment = await easypost.Shipment.create({
+            to_address: toAddress,
+            from_address: { company: 'GaspMaker Cargo', street1: '1861 NW 22nd St', city: 'Miami', state: 'FL', zip: '33142', country: 'US', phone: '7862820763' },
+            parcel: { length: parseFloat(pkg.lengthIn as any) || 10, width: parseFloat(pkg.widthIn as any) || 6, height: parseFloat(pkg.heightIn as any) || 4, weight: (parseFloat(pkg.weightLbs as any) || 1) * 16 },
+            customs_info: customsInfo
+        });
+        if (!newShipment.rates || newShipment.rates.length === 0) throw new Error('EasyPost no devolvió tarifas.');
+        const carrierRates = newShipment.rates.filter((r: any) => r.carrier.toLowerCase().includes(courierName));
+        let selectedRate = carrierRates.find((r: any) => r.service === pkg.courierService)
+            || carrierRates.sort((a: any, b: any) => parseFloat(a.rate) - parseFloat(b.rate))[0]
+            || newShipment.rates.sort((a: any, b: any) => parseFloat(a.rate) - parseFloat(b.rate))[0];
+        if (!selectedRate) return NextResponse.json({ error: `No hay tarifa para ${pkg.selectedCourier}.` }, { status: 400 });
+
+        // 🔒 Bóveda de seguridad
+        const costOfLabel = parseFloat(selectedRate.rate);
+        const amountPaidByClient = pkg.shippingTotalPaid ? parseFloat(pkg.shippingTotalPaid as any) : 0;
+        const requiredMinimumPaid = costOfLabel * 1.30;
+        if (amountPaidByClient < (requiredMinimumPaid - 1)) {
+            return NextResponse.json({ error: `⚠️ BLOQUEO FINANCIERO: Etiqueta $${costOfLabel.toFixed(2)}. Mínimo: $${requiredMinimumPaid.toFixed(2)}, pagado: $${amountPaidByClient.toFixed(2)}.` }, { status: 400 });
+        }
+        boughtShipment = await easypost.Shipment.buy(newShipment.id, selectedRate.id);
+    }
+} else {
+    // Sin rate guardado — comportamiento anterior
+    console.warn(`⚠️ Sin easypostRateId para paquete ${packageId}`);
     const shipment = await easypost.Shipment.create({
-      to_address: toAddress,
-      from_address: {
-        company: 'GaspMaker Cargo',
-        street1: '1861 NW 22nd St',
-        city: 'Miami',
-        state: 'FL',
-        zip: '33142',
-        country: 'US',
-        phone: '7862820763'
-      },
-      parcel: {
-        length: parseFloat(pkg.lengthIn as any) || 10,
-        width: parseFloat(pkg.widthIn as any) || 6,
-        height: parseFloat(pkg.heightIn as any) || 4,
-        weight: (parseFloat(pkg.weightLbs as any) || 1) * 16
-      },
-      customs_info: customsInfo 
+        to_address: toAddress,
+        from_address: { company: 'GaspMaker Cargo', street1: '1861 NW 22nd St', city: 'Miami', state: 'FL', zip: '33142', country: 'US', phone: '7862820763' },
+        parcel: { length: parseFloat(pkg.lengthIn as any) || 10, width: parseFloat(pkg.widthIn as any) || 6, height: parseFloat(pkg.heightIn as any) || 4, weight: (parseFloat(pkg.weightLbs as any) || 1) * 16 },
+        customs_info: customsInfo
     });
+    if (!shipment.rates || shipment.rates.length === 0) throw new Error('EasyPost no devolvió tarifas.');
+    const carrierRates = shipment.rates.filter((r: any) => r.carrier.toLowerCase().includes(courierName));
+    let selectedRate = carrierRates.find((r: any) => r.service === pkg.courierService)
+        || carrierRates.sort((a: any, b: any) => parseFloat(a.rate) - parseFloat(b.rate))[0]
+        || shipment.rates.sort((a: any, b: any) => parseFloat(a.rate) - parseFloat(b.rate))[0];
+    if (!selectedRate) return NextResponse.json({ error: `No hay tarifa para ${pkg.selectedCourier}.` }, { status: 400 });
 
-    if (!shipment.rates || shipment.rates.length === 0) {
-        throw new Error(`EasyPost no devolvió tarifas para la dirección seleccionada.`);
-    }
-
-    let selectedRate;
-    const carrierRates = shipment.rates.filter((r: any) => 
-        r.carrier.toLowerCase().includes(courierName)
-    );
-
-   if (carrierRates.length > 0) {
-        if (pkg.courierService) {
-            selectedRate = carrierRates.find((r: any) => r.service === pkg.courierService);
-        }
-        if (!selectedRate) {
-            selectedRate = carrierRates.sort((a: any, b: any) => parseFloat(a.rate) - parseFloat(b.rate))[0];
-        }
-    } else {
-        selectedRate = shipment.rates.sort((a: any, b: any) => parseFloat(a.rate) - parseFloat(b.rate))[0];
-    }
-
-    if (!selectedRate) {
-        return NextResponse.json({ error: `No hay tarifa para ${pkg.selectedCourier}.` }, { status: 400 });
-    }
-
-    // ====================================================================
-    // 🔥 BÓVEDA DE SEGURIDAD (CANDADO ANTI-PÉRDIDAS + 30% MARGEN) 🔥
-    // ====================================================================
+    // 🔒 Bóveda de seguridad
     const costOfLabel = parseFloat(selectedRate.rate);
     const amountPaidByClient = pkg.shippingTotalPaid ? parseFloat(pkg.shippingTotalPaid as any) : 0;
-
-    // Calculamos cuánto debió pagar el cliente para cubrir la etiqueta + tu 30% de ganancia
     const requiredMinimumPaid = costOfLabel * 1.30;
-
-    // Le damos un margen de $1 dólar por pequeñas variaciones de impuestos o centavos en la API
     if (amountPaidByClient < (requiredMinimumPaid - 1)) {
-        return NextResponse.json({ 
-            error: `⚠️ BLOQUEO FINANCIERO: La etiqueta cuesta $${costOfLabel.toFixed(2)}. Para mantener el 30% de ganancia, el cliente debió pagar mínimo $${requiredMinimumPaid.toFixed(2)}, pero solo pagó $${amountPaidByClient.toFixed(2)}. Faltan $${(requiredMinimumPaid - amountPaidByClient).toFixed(2)}.` 
-        }, { status: 400 });
+        return NextResponse.json({ error: `⚠️ BLOQUEO FINANCIERO: Etiqueta $${costOfLabel.toFixed(2)}. Mínimo: $${requiredMinimumPaid.toFixed(2)}, pagado: $${amountPaidByClient.toFixed(2)}.` }, { status: 400 });
     }
-    // ====================================================================
-
-  const boughtShipment = await easypost.Shipment.buy(shipment.id, selectedRate.id);
+    boughtShipment = await easypost.Shipment.buy(shipment.id, selectedRate.id);
+}
 
 await prisma.package.update({
     where: { id: packageId },

@@ -40,7 +40,9 @@ export async function POST(req: Request) {
         distanceMiles: reqDistanceMiles,
         heavyVehicle,
         palletCount,
-        isPalletMode
+        isPalletMode,
+easypostRateId,
+easypostShipmentId,
     } = await req.json();
 
     if (!amountNet || !paymentMethodId) {
@@ -454,7 +456,9 @@ const STRIPE_FIXED_FEE = 0.30;
                         paymentId: paymentIntent.id,
                         shippingAddress: shippingAddress || undefined,
                         totalAmount: Number((totalToCharge / billsArr.length).toFixed(2)),
-                        serviceType: isDoc ? "DOCUMENT" : (packageServiceType || undefined)
+               serviceType: isDoc ? "DOCUMENT" : (packageServiceType || undefined),
+                        easypostRateId: easypostRateId || undefined,
+                        easypostShipmentId: easypostShipmentId || undefined,
                     }
                 });
             }
