@@ -105,7 +105,8 @@ if (savedShipmentId && savedRateId) {
             to_address: toAddress,
             from_address: { company: 'GaspMaker Cargo', street1: '1861 NW 22nd St', city: 'Miami', state: 'FL', zip: '33142', country: 'US', phone: '7862820763' },
             parcel: { length: parseFloat(pkg.lengthIn as any) || 10, width: parseFloat(pkg.widthIn as any) || 6, height: parseFloat(pkg.heightIn as any) || 4, weight: (parseFloat(pkg.weightLbs as any) || 1) * 16 },
-            customs_info: customsInfo
+        customs_info: customsInfo,
+            options: { label_format: 'PDF', label_size: '4X6' }
         });
         if (!newShipment.rates || newShipment.rates.length === 0) throw new Error('EasyPost no devolvió tarifas.');
         const carrierRates = newShipment.rates.filter((r: any) => r.carrier.toLowerCase().includes(courierName));
@@ -130,7 +131,8 @@ if (savedShipmentId && savedRateId) {
         to_address: toAddress,
         from_address: { company: 'GaspMaker Cargo', street1: '1861 NW 22nd St', city: 'Miami', state: 'FL', zip: '33142', country: 'US', phone: '7862820763' },
         parcel: { length: parseFloat(pkg.lengthIn as any) || 10, width: parseFloat(pkg.widthIn as any) || 6, height: parseFloat(pkg.heightIn as any) || 4, weight: (parseFloat(pkg.weightLbs as any) || 1) * 16 },
-        customs_info: customsInfo
+   customs_info: customsInfo,
+        options: { label_format: 'PDF', label_size: '4X6' }
     });
     if (!shipment.rates || shipment.rates.length === 0) throw new Error('EasyPost no devolvió tarifas.');
     const carrierRates = shipment.rates.filter((r: any) => r.carrier.toLowerCase().includes(courierName));

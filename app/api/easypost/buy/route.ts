@@ -98,8 +98,9 @@ if (savedShipmentId && savedRateId) {
             to_address: { name: finalName, street1: finalStreet, city: finalCity, country: finalCountry, zip: finalZip !== '00000' ? finalZip : undefined, phone: finalPhone },
             from_address: { company: 'Gasp Maker Cargo', street1: '1861 NW 22nd St', city: 'Miami', state: 'FL', zip: '33142', country: 'US', phone: '7862820763' },
             parcel: { length: pkg.lengthIn, width: pkg.widthIn, height: pkg.heightIn, weight: pkg.weightLbs * 16 },
-            service: pkg.courierService || 'Standard',
-            carrier: pkg.selectedCourier
+          service: pkg.courierService || 'Standard',
+            carrier: pkg.selectedCourier,
+            options: { label_format: 'PDF', label_size: '4X6' }
         });
         const fallbackRate = newShipment.rates.find((r: any) =>
             r.carrier.toLowerCase() === courier &&
@@ -115,8 +116,9 @@ if (savedShipmentId && savedRateId) {
         to_address: { name: finalName, street1: finalStreet, city: finalCity, country: finalCountry, zip: finalZip !== '00000' ? finalZip : undefined, phone: finalPhone },
         from_address: { company: 'Gasp Maker Cargo', street1: '1861 NW 22nd St', city: 'Miami', state: 'FL', zip: '33142', country: 'US', phone: '7862820763' },
         parcel: { length: pkg.lengthIn, width: pkg.widthIn, height: pkg.heightIn, weight: pkg.weightLbs * 16 },
-        service: pkg.courierService || 'Standard',
-        carrier: pkg.selectedCourier
+      service: pkg.courierService || 'Standard',
+            carrier: pkg.selectedCourier,
+            options: { label_format: 'PDF', label_size: '4X6' }
     });
     const selectedRate = shipment.rates.find((r: any) =>
         r.carrier.toLowerCase() === courier &&

@@ -417,9 +417,10 @@ const auraResult = calculateAuraLocalDelivery(auraBoxes, safeDistanceMiles, aura
 
             const parcel = await easypost.Parcel.create(parcelData);
             
-            const shipment = await easypost.Shipment.create({
-                to_address: toAddress, from_address: fromAddress, parcel: parcel,
-            });
+          const shipment = await easypost.Shipment.create({
+    to_address: toAddress, from_address: fromAddress, parcel: parcel,
+    options: { label_format: 'PDF', label_size: '4X6' }
+    });
 
    if (shipment.rates) {
     // 🔥 Si todos los carriers devuelven el mismo día → EasyPost no tiene datos reales

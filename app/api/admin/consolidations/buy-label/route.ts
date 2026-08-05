@@ -95,9 +95,9 @@ export async function POST(req: Request) {
         customs_items: [customsItem]
     };
 
-    // 4. Crear Envío
+  // 4. Crear Envío
     const shipment = await easypost.Shipment.create({
-      to_address: toAddress, // 👈 USAMOS LA DIRECCIÓN GANADORA
+      to_address: toAddress,
       from_address: {
         company: 'GaspMaker Cargo',
         street1: '1861 NW 22nd St',
@@ -113,7 +113,8 @@ export async function POST(req: Request) {
         height: parseFloat(consolidation.heightIn as any) || 10,
         weight: (parseFloat(consolidation.weightLbs as any) || 1) * 16
       },
-      customs_info: customsInfo
+      customs_info: customsInfo,
+      options: { label_format: 'PDF', label_size: '4X6' }  // 🔥 Zebra 4x6
     });
 
     if (!shipment.rates || shipment.rates.length === 0) {
