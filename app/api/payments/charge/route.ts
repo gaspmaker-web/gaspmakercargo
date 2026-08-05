@@ -389,6 +389,8 @@ const STRIPE_FIXED_FEE = 0.30;
                     subtotalAmount: cleanSubtotal,
                     processingFee: cleanFee,
                     totalAmount: cleanTotal,
+                    easypostRateId: easypostRateId || undefined,
+                    easypostShipmentId: easypostShipmentId || undefined,
                     updatedAt: new Date()
                 }
             });
@@ -433,12 +435,18 @@ const STRIPE_FIXED_FEE = 0.30;
                         stripePaymentId: paymentIntent.id,
                         shippingAddress: shippingAddress || undefined,
                         shippingTotalPaid: Number((totalToCharge / idsArray.length).toFixed(2)),
-                        serviceType: isDoc ? 'DOCUMENT' : undefined,
-                        description: isDoc ? 'Envío de Documento' : pkg?.description
+            serviceType: isDoc ? 'DOCUMENT' : undefined,
+                        description: isDoc ? 'Envío de Documento' : pkg?.description,
+                        selectedCourier: selectedCourier || undefined,
+                        courierService: courierService || undefined,
+                        easypostRateId: easypostRateId || undefined,
+                        easypostShipmentId: easypostShipmentId || undefined,
                     }
                 });
             }
         }
+
+        // --- Bloque de Facturas/Consolidaciones (SHIPs) ---
 
         // --- Bloque de Facturas/Consolidaciones (SHIPs) ---
         if (billIds) {
