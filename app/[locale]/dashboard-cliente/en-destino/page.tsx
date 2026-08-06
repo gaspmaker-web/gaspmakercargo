@@ -62,6 +62,7 @@ export default async function EnDestinoPage({ params: { locale } }: { params: { 
   }));
 
   // 🔥 2. BUSCAMOS LOS PAQUETES SUELTOS (Sin consolidación)
+  console.log('SESSION USER ID:', session.user.id);
   const deliveredLoosePackages = await prisma.package.findMany({
     where: {
       userId: session.user.id,
