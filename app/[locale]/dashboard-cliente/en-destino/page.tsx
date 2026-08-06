@@ -68,15 +68,10 @@ const deliveredLoosePackages = await prisma.package.findMany({
       status: { in: ['ENTREGADO', 'DELIVERED', 'COMPLETADO'] },
       consolidatedShipmentId: null,
       selectedCourier: { not: 'CLIENTE_RETIRO' },
-      deliverySignature: { not: 'ENTREGA_TIENDA' },
-      NOT: {
-        OR: [
-          { courierService: { contains: 'Cita', mode: 'insensitive' } },
-          { courierService: { contains: 'Recogida', mode: 'insensitive' } },
-          { courierService: { contains: 'Tienda', mode: 'insensitive' } },
-          { courierService: { contains: 'Pickup', mode: 'insensitive' } }
-        ]
-      }
+      OR: [
+        { deliverySignature: null },
+        { deliverySignature: { not: 'ENTREGA_TIENDA' } }
+      ]
     },
     orderBy: { updatedAt: 'desc' }
   });
