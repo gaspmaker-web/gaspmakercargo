@@ -282,13 +282,13 @@ const setTextRate = (concept: string, countryCode: string | null, value: string)
   };
 
   const deleteCountry = async (countryCode: string) => {
-    await fetch('/api/admin/rates', {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ concept: 'air_per_lb', countryCode }),
-    });
-    setRates(prev => prev.filter(r => r.countryCode !== countryCode));
-  };
+  await fetch('/api/admin/rates', {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ countryCode }),
+  });
+  setRates(prev => prev.filter(r => r.countryCode !== countryCode));
+};
 
 const addCountry = () => {
   if (!newCountry) return;

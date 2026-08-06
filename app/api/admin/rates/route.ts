@@ -148,16 +148,15 @@ export async function DELETE(req: NextRequest) {
     const tenant = await getTenant();
     if (!tenant) return NextResponse.json({ error: 'Tenant no encontrado' }, { status: 404 });
 
-    const { concept, countryCode } = await req.json();
+  const { concept, countryCode } = await req.json();
 
-    await prisma.tenantRate.deleteMany({
-      where: {
-        tenantId: tenant.id,
-        concept,
-        countryCode: countryCode ?? null,
-      }
-    });
-
+await prisma.tenantRate.deleteMany({
+  where: {
+    tenantId: tenant.id,
+    ...(concept ? { concept } : {}),
+    countryCode: countryCode ?? null,
+  }
+});
     await invalidateTenantRatesCache(tenant.id);
 
     return NextResponse.json({ ok: true });
