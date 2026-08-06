@@ -516,7 +516,7 @@ if (showAir && airCountries.includes(targetForAir)) {
         // Mínimo escalonado por peso
         const applicableMin = chargeableWeight <= 10 
             ? minRate 
-            : chargeableWeight <= 44 
+            : chargeableWeight <= 36 
             ? minRateMid 
             : 0;
         let priceAir = Math.max(chargeableWeight * airPerLb, applicableMin);
