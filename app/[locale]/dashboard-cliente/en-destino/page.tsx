@@ -61,27 +61,17 @@ export default async function EnDestinoPage({ params: { locale } }: { params: { 
       )
   }));
 
-  // 🔥 2. BUSCAMOS LOS PAQUETES SUELTOS (Sin consolidación)
+// 🔥 2. BUSCAMOS LOS PAQUETES SUELTOS (Sin consolidación)
   console.log('SESSION USER ID:', session.user.id);
   const deliveredLoosePackages = await prisma.package.findMany({
     where: {
       userId: session.user.id,
       status: { in: ['ENTREGADO', 'DELIVERED', 'COMPLETADO'] },
       consolidatedShipmentId: null,
-      NOT: {
-          OR: [
-              { selectedCourier: 'CLIENTE_RETIRO' },
-              { deliverySignature: 'ENTREGA_TIENDA' },
-              { courierService: { contains: 'Cita', mode: 'insensitive' } },
-              { courierService: { contains: 'Recogida', mode: 'insensitive' } },
-              { courierService: { contains: 'Tienda', mode: 'insensitive' } },
-              { courierService: { contains: 'Pickup', mode: 'insensitive' } }
-          ]
-      }
     },
     orderBy: { updatedAt: 'desc' }
   });
-
+  console.log('LOOSE RESULT:', deliveredLoosePackages.length, deliveredLoosePackages.map((p: any) => p.gmcTrackingNumber));
   return (
     <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8 font-montserrat">
       <div className="max-w-4xl mx-auto">
