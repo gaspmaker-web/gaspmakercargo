@@ -12,6 +12,8 @@ export default async function EnDestinoPage({ params: { locale } }: { params: { 
   const session = await auth();
   const t = await getTranslations('DeliveredPage');
 
+  console.log('SESSION USER ID:', session?.user?.id);
+
   if (!session?.user) {
     redirect('/login-cliente');
   }
