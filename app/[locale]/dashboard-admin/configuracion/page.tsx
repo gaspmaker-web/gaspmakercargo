@@ -290,13 +290,14 @@ const setTextRate = (concept: string, countryCode: string | null, value: string)
     setRates(prev => prev.filter(r => r.countryCode !== countryCode));
   };
 
-  const addCountry = () => {
+const addCountry = () => {
   if (!newCountry) return;
   const exists = rates.some(r => r.countryCode === newCountry && r.concept === 'air_per_lb');
   if (!exists) {
     setRates(prev => [...prev,
       { concept: 'air_per_lb', countryCode: newCountry, value: 0 },
       { concept: 'min_rate', countryCode: newCountry, value: 0 },
+      { concept: 'min_rate_mid', countryCode: newCountry, value: 0 },
       { concept: 'ocean_per_cuft', countryCode: newCountry, value: 0 },
       { concept: 'ocean_min_1_5cuft', countryCode: newCountry, value: 0 },
     ]);
@@ -394,14 +395,15 @@ const internationalCountries = Array.from(new Set(
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead className="bg-gray-50">
-  <tr>
-    <th className="text-left p-4 font-medium text-gray-500">Country</th>
-    <th className="text-center p-4 font-medium text-gray-500">Air /lb</th>
-    <th className="text-center p-4 font-medium text-gray-500">Min. Air</th>
-    <th className="text-center p-4 font-medium text-gray-500">Ocean /ft³</th>
-    <th className="text-center p-4 font-medium text-gray-500">Min. Ocean</th>
-    <th className="p-4"></th>
-  </tr>
+ <tr>
+  <th className="text-left p-4 font-medium text-gray-500">Country</th>
+  <th className="text-center p-4 font-medium text-gray-500">Air /lb</th>
+  <th className="text-center p-4 font-medium text-gray-500">Min. Air (0-10 lbs)</th>
+  <th className="text-center p-4 font-medium text-gray-500">Min. Air (11-44 lbs)</th>
+  <th className="text-center p-4 font-medium text-gray-500">Ocean /ft³</th>
+  <th className="text-center p-4 font-medium text-gray-500">Min. Ocean</th>
+  <th className="p-4"></th>
+</tr>
 </thead>
 <tbody>
   {internationalCountries.map(code => {
@@ -432,17 +434,29 @@ const internationalCountries = Array.from(new Set(
             </div>
           </td>
 
-          {/* Mín. Aéreo */}
-          <td className="p-4">
-            <div className="flex items-center justify-center gap-1">
-              <span className="text-gray-400">$</span>
-              <input type="number" step="0.01"
-                value={getRate('min_rate', code)}
-                onChange={e => setRate('min_rate', code, parseFloat(e.target.value) || 0)}
-                className="w-20 text-center border border-gray-200 rounded-lg px-2 py-1"
-              />
-            </div>
-          </td>
+      {/* Min. Air (0-10 lbs) */}
+<td className="p-4">
+  <div className="flex items-center justify-center gap-1">
+    <span className="text-gray-400">$</span>
+    <input type="number" step="0.01"
+      value={getRate('min_rate', code)}
+      onChange={e => setRate('min_rate', code, parseFloat(e.target.value) || 0)}
+      className="w-20 text-center border border-gray-200 rounded-lg px-2 py-1"
+    />
+  </div>
+</td>
+
+{/* Min. Air (11-44 lbs) */}
+<td className="p-4">
+  <div className="flex items-center justify-center gap-1">
+    <span className="text-gray-400">$</span>
+    <input type="number" step="0.01"
+      value={getRate('min_rate_mid', code)}
+      onChange={e => setRate('min_rate_mid', code, parseFloat(e.target.value) || 0)}
+      className="w-20 text-center border border-gray-200 rounded-lg px-2 py-1"
+    />
+  </div>
+</td>
 
           {/* Marítimo /ft³ */}
           <td className="p-4">

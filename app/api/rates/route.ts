@@ -511,8 +511,15 @@ const targetForAir = isStThomas ? 'VI' : targetCountryCode;
 if (showAir && airCountries.includes(targetForAir)) {
     const airPerLb = rate('air_per_lb', targetForAir, 0);
     const minRate = rate('min_rate', targetForAir, 0);
+    const minRateMid = rate('min_rate_mid', targetForAir, 0);
     if (airPerLb > 0) {
-        let priceAir = Math.max(chargeableWeight * airPerLb, minRate);
+        // Mínimo escalonado por peso
+        const applicableMin = chargeableWeight <= 10 
+            ? minRate 
+            : chargeableWeight <= 44 
+            ? minRateMid 
+            : 0;
+        let priceAir = Math.max(chargeableWeight * airPerLb, applicableMin);
         if (isVipWholesale && chargeableWeight >= 230) {
             priceAir = chargeableWeight * 2.80;
         }
