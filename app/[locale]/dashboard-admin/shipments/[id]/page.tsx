@@ -41,7 +41,7 @@ export default async function ShipmentDetailPage({ params }: { params: { id: str
         
         <div className="mb-6 flex items-center gap-4">
             <Link href={`/dashboard-admin/consolidaciones`} className="text-gray-500 hover:text-black flex items-center gap-2 transition-colors">
-                <ArrowLeft size={20} /> Volver a Consolidaciones
+                <ArrowLeft size={20} /> Back to Consolidations
             </Link>
         </div>
 
@@ -70,7 +70,7 @@ export default async function ShipmentDetailPage({ params }: { params: { id: str
                 
                 <div className="md:col-span-1 border-r border-gray-100 pr-4">
                     <h3 className="text-xs font-bold text-gray-400 uppercase mb-4 flex items-center gap-2">
-                        <User size={14}/> Propietario
+                       <User size={14}/> Owner
                     </h3>
                     <div className="flex items-center gap-3 mb-3">
                         <div className="h-10 w-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-lg">
@@ -89,11 +89,11 @@ export default async function ShipmentDetailPage({ params }: { params: { id: str
 
                 <div className="md:col-span-1 border-r border-gray-100 pr-4">
                     <h3 className="text-xs font-bold text-gray-400 uppercase mb-4 flex items-center gap-2">
-                        <Scale size={14}/> Datos Consolidación
+                        <Scale size={14}/> Consolidation Data
                     </h3>
                     <div className="space-y-3">
                         <div className="flex justify-between items-center">
-                            <span className="text-sm text-gray-600">Peso Total:</span>
+                            <span className="text-sm text-gray-600">Total Weight:</span>
                             <span className="font-bold text-lg text-gray-900">
                                 {shipment.weightLbs || 0} <span className="text-xs text-gray-400">lb</span>
                             </span>
@@ -113,11 +113,11 @@ export default async function ShipmentDetailPage({ params }: { params: { id: str
 
                 <div className="md:col-span-1">
                     <h3 className="text-xs font-bold text-gray-400 uppercase mb-4 flex items-center gap-2">
-                        <Truck size={14}/> Detalles
+                        <Truck size={14}/> Details
                     </h3>
                     <div className="space-y-2 text-sm">
-                        <p><span className="text-gray-500">Servicio:</span> <span className="font-bold">{shipment.courierService}</span></p>
-                        <p><span className="text-gray-500">Tracking Salida:</span></p>
+                        <p><span className="text-gray-500">Service:</span> <span className="font-bold">{shipment.courierService}</span></p>
+                        <p><span className="text-gray-500">Outbound Tracking:</span></p>
                         <p className="font-mono bg-gray-100 p-2 rounded text-center text-xs break-all">
                             {shipment.finalTrackingNumber || 'Pendiente'}
                         </p>
@@ -127,7 +127,7 @@ export default async function ShipmentDetailPage({ params }: { params: { id: str
 
             <div className="border-t border-gray-200">
                 <div className="bg-gray-50 px-6 py-3 border-b border-gray-200">
-                    <h3 className="text-xs font-bold text-gray-500 uppercase">Contenido de la Caja</h3>
+                    <h3 className="text-xs font-bold text-gray-500 uppercase">Box Contents</h3>
                 </div>
                 <div className="divide-y divide-gray-100">
                     {shipment.packages.map((pkg) => (
@@ -152,7 +152,7 @@ export default async function ShipmentDetailPage({ params }: { params: { id: str
         {isDelivered && proofPackage ? (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
                 <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                    <CheckCircle className="text-green-600" /> Evidencia de Entrega Final
+                   <CheckCircle className="text-green-600" /> Final Delivery Evidence
                 </h3>
                 <AdminDeliveryProof pkg={proofPackage} />
             </div>
