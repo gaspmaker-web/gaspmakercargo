@@ -13,7 +13,6 @@ interface Props {
 }
 
 export default function DeliveredPackagesCarousel({ consolidations, loosePackages, userCountryCode }: Props) {
-  console.log('LOOSE:', loosePackages?.length, loosePackages?.map(p => p.gmcTrackingNumber));
   const t = useTranslations('PackageDetail');
   const tDelivered = useTranslations('DeliveredPage');
   const tEnDestino = useTranslations('DeliveredPage');

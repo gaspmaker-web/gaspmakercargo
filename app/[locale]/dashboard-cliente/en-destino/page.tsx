@@ -12,8 +12,6 @@ export default async function EnDestinoPage({ params: { locale } }: { params: { 
   const session = await auth();
   const t = await getTranslations('DeliveredPage');
 
-  console.log('SESSION USER ID:', session?.user?.id);
-
   if (!session?.user) {
     redirect('/login-cliente');
   }
@@ -71,11 +69,25 @@ const deliveredLoosePackages = await prisma.package.findMany({
       OR: [
         { deliverySignature: null },
         { deliverySignature: { not: 'ENTREGA_TIENDA' } }
+      ],
+      AND: [
+        {
+          OR: [
+            { courierService: null },
+            {
+              AND: [
+                { courierService: { not: { contains: 'Cita' } } },
+                { courierService: { not: { contains: 'Recogida' } } },
+                { courierService: { not: { contains: 'Tienda' } } },
+                { courierService: { not: { contains: 'Pickup' } } },
+              ]
+            }
+          ]
+        }
       ]
     },
     orderBy: { updatedAt: 'desc' }
   });
-  console.log('LOOSE RESULT:', deliveredLoosePackages.length, deliveredLoosePackages.map((p: any) => p.gmcTrackingNumber));
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8 font-montserrat">
