@@ -55,7 +55,7 @@ export async function POST(req: Request) {
         updateData.lengthIn = parseFloat(auraPieces[0].length) || 0;
         updateData.widthIn = parseFloat(auraPieces[0].width) || 0;
         updateData.heightIn = parseFloat(auraPieces[0].height) || 0;
-        updateData.declaredValue = 0;
+        updateData.declaredValue = finalValue ? parseFloat(finalValue) : 0;
         updateData.auraDetails = auraPieces;
 
         // Obtenemos el serviceType de la consolidación
