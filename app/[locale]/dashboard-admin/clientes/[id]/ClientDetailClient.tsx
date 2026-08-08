@@ -1,6 +1,7 @@
 "use client";
 
 import Link from 'next/link';
+import RoleManager from '@/components/admin/RoleManager';  // 🔥 NUEVO
 import { 
   ArrowLeft, 
   Mail, 
@@ -47,6 +48,13 @@ export default function ClientDetailClient({ client, locale }: { client: any, lo
                 <div className="flex items-center gap-2"><MapPin size={16} className="text-gmc-dorado-principal"/> {client.countryCode || 'N/A'}</div>
             </div>
         </div>
+
+      {/* 🔥 Role Manager */}
+        <RoleManager 
+          userId={client.id}
+          currentRole={client.role}
+          currentCountryCode={client.countryCode}
+        />
 
         {/* Tabla */}
         <h2 className="text-xl font-bold text-gmc-gris-oscuro mb-4 flex items-center gap-2">
