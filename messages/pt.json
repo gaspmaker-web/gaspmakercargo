@@ -1211,7 +1211,9 @@
     "upToDate": "Atualizado",
     "familyMembers": "Familiares",
     "addBtn": "+ Adicionar",
-    "limitReached": "Limite atingido"
+    "limitReached": "Limite atingido",
+"unlockFrom": "Desbloquear a partir de",
+"perMonth": "/mês"
     },
 "KycSetup": {
     "paymentSuccessTitle": "Assinatura Ativada!",

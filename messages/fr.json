@@ -1211,7 +1211,9 @@
     "upToDate": "À jour",
     "familyMembers": "Membres de la famille",
     "addBtn": "+ Ajouter",
-    "limitReached": "Limite atteinte"
+    "limitReached": "Limite atteinte",
+    "unlockFrom": "Débloquer à partir de",
+"perMonth": "/mois"
     },
  "KycSetup": {
     "paymentSuccessTitle": "Abonnement Activé !",
