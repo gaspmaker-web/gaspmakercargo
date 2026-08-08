@@ -1,22 +1,17 @@
 "use client";
 
 import Link from 'next/link';
-import RoleManager from '@/components/admin/RoleManager';  // 🔥 NUEVO
+import { useState } from 'react';
+import RoleManager from '@/components/admin/RoleManager';
+import EditPackageAdminModal from '@/components/admin/EditPackageAdminModal';
 import { 
-  ArrowLeft, 
-  Mail, 
-  Phone, 
-  MapPin, 
-  Package, 
-  FileText, 
-  AlertCircle, 
-  ExternalLink, 
-  Image as ImageIcon,
-  AlertTriangle,
-  Edit
+  ArrowLeft, Mail, Phone, MapPin, Package, FileText, 
+  AlertCircle, ExternalLink, Image as ImageIcon, AlertTriangle, Edit
 } from 'lucide-react';
 
 export default function ClientDetailClient({ client, locale }: { client: any, locale: string }) {
+  const [selectedPkg, setSelectedPkg] = useState<any>(null);
+
   return (
     <div className="min-h-screen bg-gray-50 p-6 font-montserrat">
       <div className="max-w-6xl mx-auto">
@@ -140,19 +135,27 @@ export default function ClientDetailClient({ client, locale }: { client: any, lo
                                                 ${(pkg.declaredValue || 0).toFixed(2)}
                                             </span>
                                         </td>
-
-                                        {/* 🔥 ACCIÓN RÁPIDA: IR A EDITAR EL PAQUETE */}
+{/* 🔥 ACCIÓN RÁPIDA: IR A EDITAR EL PAQUETE */}
                                         <td className="p-4 text-right">
-                                            <Link 
-                                                href={`/${locale}/dashboard-admin/paquetes/${pkg.id}`}
-                                                className={`inline-flex items-center gap-1.5 text-xs font-bold px-3 py-2 rounded-lg transition-all border ${
-                                                    needsPrice 
-                                                        ? 'bg-red-600 text-white hover:bg-red-700 border-red-700 shadow-md'
-                                                        : 'bg-white text-gray-600 hover:bg-gray-50 border-gray-200'
-                                                }`}
-                                            >
-                                                <Edit size={14} /> {needsPrice ? 'Set Price' : 'Edit'}
-                                            </Link>
+                                         <button
+  onClick={() => setSelectedPkg({
+    ...pkg,
+    trackingNumber: pkg.gmcTrackingNumber,
+    weightLbs: pkg.weightLbs,
+    lengthIn: pkg.lengthIn,
+    widthIn: pkg.widthIn,
+    heightIn: pkg.heightIn,
+    photoUrlMiami: pkg.photoUrlMiami,
+    invoiceUrl: pkg.invoiceUrl,
+  })}
+  className={`inline-flex items-center gap-1.5 text-xs font-bold px-3 py-2 rounded-lg transition-all border ${
+    needsPrice 
+      ? 'bg-red-600 text-white hover:bg-red-700 border-red-700 shadow-md'
+      : 'bg-white text-gray-600 hover:bg-gray-50 border-gray-200'
+  }`}
+>
+  <Edit size={14} /> {needsPrice ? 'Set Price' : 'Edit'}
+</button>
                                         </td>
                                     </tr>
                                 );
@@ -162,6 +165,15 @@ export default function ClientDetailClient({ client, locale }: { client: any, lo
                 </div>
             )}
         </div>
+
+     {/* Modal editar paquete */}
+      {selectedPkg && (
+        <EditPackageAdminModal
+          isOpen={!!selectedPkg}
+          onClose={() => setSelectedPkg(null)}
+          pkg={selectedPkg}
+        />
+      )}
       </div>
     </div>
   );
