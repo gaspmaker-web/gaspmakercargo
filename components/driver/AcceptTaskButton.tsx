@@ -22,7 +22,7 @@ export default function AcceptTaskButton({ taskId }: { taskId: string }) {
                 router.refresh(); 
             } else {
                 const data = await res.json();
-                alert(data.error || "Esta tarea ya no está disponible.");
+                alert(data.error || "This task is no longer available.");
                 router.refresh(); // Alguien más la ganó, refrescamos para quitarla
             }
         } catch (error) {
@@ -41,12 +41,12 @@ export default function AcceptTaskButton({ taskId }: { taskId: string }) {
             {loading ? (
                 <>
                     <Loader2 className="animate-spin" size={16}/>
-                    <span>Procesando...</span>
+                   <span>Processing...</span>
                 </>
             ) : (
                 <>
                     <CheckCircle size={16}/>
-                    ACEPTAR VIAJE
+                    ACCEPT TRIP
                 </>
             )}
         </button>
