@@ -142,16 +142,28 @@ export default async function HistorialEnviosPage({
                                         </div>
                                     </td>
                                     
-                                    <td className="px-6 py-4">
-                                        <div className="font-medium text-gray-900">{envio.user?.name}</div>
-                                        <div className="text-[11px] text-blue-600 font-bold mt-1 flex items-center gap-1 uppercase"><MapPin size={10}/> {envio.destino}</div>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold border ${isDelivered ? 'bg-green-100 text-green-700 border-green-200' : 'bg-blue-100 text-blue-700 border-blue-200'}`}>
-                                            {envio.status.replace(/_/g, ' ')}
-                                        </span>
-                                    </td>
-
+                                  <td className="px-6 py-4">
+  <div className="font-medium text-gray-900">{envio.user?.name}</div>
+  <div className="text-[11px] text-blue-600 font-bold mt-1 flex items-center gap-1 uppercase"><MapPin size={10}/> {envio.destino}</div>
+</td>
+<td className="px-6 py-4">
+  <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold border ${isDelivered ? 'bg-green-100 text-green-700 border-green-200' : 'bg-blue-100 text-blue-700 border-blue-200'}`}>
+    {(() => {
+      const statusMap: Record<string, string> = {
+        'ENVIADO': 'SHIPPED',
+        'ENTREGADO': 'DELIVERED',
+        'SOLICITUD_CONSOLIDACION': 'CONSOLIDATION REQUEST',
+        'EN_REPARTO': 'OUT FOR DELIVERY',
+        'EN_ALMACEN_DESTINO': 'AT DESTINATION WAREHOUSE',
+        'EN_RUTA': 'IN TRANSIT',
+        'EN_TRANSITO': 'IN TRANSIT',
+        'COMPLETADO': 'COMPLETED',
+        'CANCELADO': 'CANCELLED',
+      };
+      return statusMap[envio.status] || envio.status.replace(/_/g, ' ');
+    })()}
+  </span>
+</td>
                                     {/* 🔥 INTEGRAMOS EL COMPONENTE SCANUPLOADFORM AQUÍ */}
                                     <td className="px-6 py-4 text-center">
                                         {envio.awbUrl ? (
