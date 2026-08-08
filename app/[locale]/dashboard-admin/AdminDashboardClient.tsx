@@ -19,6 +19,7 @@ export default function AdminDashboardClient({ locale }: { locale: string }) {
     consolidaciones: 0,
     pickups: 0,
     entregasHoy: 0,
+    paquetesEntregadosHoy: 0,
     nuevosClientes: 0,
     ventas: 0,
     kycPendientes: 0,
