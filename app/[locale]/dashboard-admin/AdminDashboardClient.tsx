@@ -80,10 +80,10 @@ useEffect(() => {
         </div>
 
         {/* 1. SECCIÓN DE ESTADÍSTICAS (KPIs) */}
-<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-stretch">
           
           <Link href={`/${locale}/dashboard-admin/paquetes`} className="block group">
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center hover:shadow-md hover:border-blue-200 transition-all cursor-pointer">
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center h-full ...">
               <div>
                 <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Active Packages</p>
                 <h3 className="text-4xl font-extrabold text-gmc-gris-oscuro tracking-tight font-montserrat lining-nums group-hover:text-blue-600 transition-colors">
@@ -97,9 +97,9 @@ useEffect(() => {
           </Link>
 
           <Link href={`/${locale}/dashboard-admin/solicitudes-pickup?filter=entregados`} className="block group">
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center hover:shadow-md hover:border-green-200 transition-all cursor-pointer">
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center h-full ...">
               <div>
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Local Deliveries Today</p>
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Local Deliveries</p>
                 <h3 className="text-4xl font-extrabold text-gmc-gris-oscuro tracking-tight font-montserrat lining-nums group-hover:text-green-600 transition-colors">
                     {stats.entregasHoy || 0}
                 </h3> 
@@ -111,9 +111,9 @@ useEffect(() => {
           </Link>
 
           <Link href={`/${locale}/dashboard-admin/paquetes?filter=entregados`} className="block group">
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center hover:shadow-md hover:border-blue-200 transition-all cursor-pointer">
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center h-full ...">
               <div>
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Intl. Deliveries Today</p>
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Intl. Deliveries</p>
                 <h3 className="text-4xl font-extrabold text-gmc-gris-oscuro tracking-tight font-montserrat lining-nums group-hover:text-blue-600 transition-colors">
                     {stats.paquetesEntregadosHoy || 0}
                 </h3> 
@@ -125,7 +125,7 @@ useEffect(() => {
           </Link>
 
           <Link href={`/${locale}/dashboard-admin/clientes`} className="block group">
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center hover:shadow-md hover:border-purple-200 transition-all cursor-pointer">
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center h-full ...">
               <div>
                 <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">New Clients</p>
                 <h3 className="text-4xl font-extrabold text-gmc-gris-oscuro tracking-tight font-montserrat lining-nums group-hover:text-purple-600 transition-colors">
@@ -139,7 +139,7 @@ useEffect(() => {
           </Link>
 
    <Link href={`/${locale}/dashboard-admin/finanzas`} className="block group">
-  <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center border-b-4 border-b-gmc-dorado-principal hover:shadow-md transition-all cursor-pointer">
+  <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center h-full ...">
     <div>
       <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Sales (Week)</p>
       <h3 className="text-4xl font-extrabold text-gmc-gris-oscuro tracking-tight font-montserrat lining-nums group-hover:text-yellow-600 transition-colors">

@@ -21,7 +21,7 @@ const tenant = await getTenant();
 const tenantFilter = tenant?.id ? { tenant_id: tenant.id } : {};
 
     const hoy = new Date();
-    hoy.setHours(0, 0, 0, 0);
+    hoy.setUTCHours(0, 0, 0, 0);
     
     const haceSieteDias = new Date();
     haceSieteDias.setDate(haceSieteDias.getDate() - 7);
@@ -87,7 +87,10 @@ prisma.package.count({
     where: {
         status: 'ENTREGADO',
         updatedAt: { gte: hoy },
-        ...tenantFilter
+        OR: [
+            { tenant_id: tenant?.id || undefined },
+            { tenant_id: null }
+        ]
     }
 }),
       prisma.user.count({
