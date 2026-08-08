@@ -64,7 +64,7 @@ export default function PickupCapturePage({ params }: { params: { id: string, lo
         window.location.href = `/${params.locale}/dashboard-driver/tareas/${params.id}`;
       } else {
         const errorData = await res.json();
-        alert(`Error al guardar: ${errorData.error || 'Intenta de nuevo'}`);
+        alert(`Error saving: ${errorData.error || 'Try again'}`);
       }
 
     } catch (e) {
@@ -87,7 +87,7 @@ export default function PickupCapturePage({ params }: { params: { id: string, lo
       </div>
 
       <p className="text-gray-400 mb-6 text-center text-sm">
-     Take a clear photo of the package at the time of pickup.
+      Take a clear photo of the package at the time of pickup.
       </p>
 
       {/* ÁREA DE CÁMARA */}
@@ -111,7 +111,7 @@ export default function PickupCapturePage({ params }: { params: { id: string, lo
             className={`w-full max-w-sm py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-all shadow-lg active:scale-95 ${loading || !file ? 'bg-gray-700 text-gray-500 cursor-not-allowed' : 'bg-gmc-dorado-principal text-black hover:bg-yellow-400'}`}
         >
             {loading ? <Loader2 className="animate-spin"/> : <UploadCloud />}
-            {loading ? "GUARDANDO..." : "CONFIRMAR Y GUARDAR"}
+            {loading ? "SAVING..." : "CONFIRM & SAVE"}
         </button>
 
         {!loading && file && (
