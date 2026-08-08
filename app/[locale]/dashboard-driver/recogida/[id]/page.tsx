@@ -41,7 +41,7 @@ export default function PickupCapturePage({ params }: { params: { id: string, lo
       
       if (!uploadRes.ok) {
         console.error("Error Cloudinary:", await uploadRes.text());
-        throw new Error("Falló la subida de la imagen");
+        throw new Error("Image upload failed");
       }
       
       const uploadData = await uploadRes.json();
@@ -69,7 +69,7 @@ export default function PickupCapturePage({ params }: { params: { id: string, lo
 
     } catch (e) {
       console.error(e);
-      alert("Error de conexión. Verifica tu internet e intenta de nuevo.");
+      alert("Connection error. Check your internet and try again.");
     } finally {
       setLoading(false);
     }
@@ -83,11 +83,11 @@ export default function PickupCapturePage({ params }: { params: { id: string, lo
         <Link href={`/${params.locale}/dashboard-driver/tareas/${params.id}`} className="p-2 bg-gray-800 rounded-full hover:bg-gray-700 transition">
             <ArrowLeft size={20} className="text-white"/>
         </Link>
-        <h1 className="text-xl font-bold">Evidencia de Recogida</h1>
+        <h1 className="text-xl font-bold">Pickup Evidence</h1>
       </div>
 
       <p className="text-gray-400 mb-6 text-center text-sm">
-        Toma una foto clara del paquete al momento de recogerlo.
+     Take a clear photo of the package at the time of pickup.
       </p>
 
       {/* ÁREA DE CÁMARA */}
@@ -98,7 +98,7 @@ export default function PickupCapturePage({ params }: { params: { id: string, lo
             ) : (
                 <label className="flex flex-col items-center cursor-pointer p-10 w-full h-full justify-center hover:bg-gray-700/50 transition">
                     <Camera size={48} className="text-gmc-dorado-principal mb-3 opacity-80"/>
-                    <span className="text-xs text-gray-400 font-bold uppercase tracking-widest">Tocar para abrir cámara</span>
+                    <span className="text-xs text-gray-400 font-bold uppercase tracking-widest">Tap to open camera</span>
                     <input type="file" accept="image/*" capture="environment" onChange={handleFileChange} className="hidden" />
                 </label>
             )}
@@ -116,7 +116,7 @@ export default function PickupCapturePage({ params }: { params: { id: string, lo
 
         {!loading && file && (
             <button onClick={() => { setFile(null); setPreview(null); }} className="mt-4 text-sm text-red-400 hover:text-red-300 font-medium">
-                Borrar y tomar otra
+            Delete and retake
             </button>
         )}
       </div>
