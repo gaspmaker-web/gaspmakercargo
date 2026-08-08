@@ -63,7 +63,7 @@ export default function DeliveryClient({
             setStep(3);
             setTimeout(() => { router.push(`/${locale}/dashboard-driver`); router.refresh(); }, 3000);
         } else {
-            const err = await res.json(); alert("Error al guardar: " + (err.error || "Desconocido"));
+            const err = await res.json(); alert("Error saving: " + (err.error || "Unknown"));
         }
     } catch (e) { alert("Connection error"); } finally { setLoading(false); }
   };
@@ -72,7 +72,7 @@ export default function DeliveryClient({
       return (
           <div className="min-h-screen bg-green-600 flex flex-col items-center justify-center text-white p-6 animate-in fade-in">
               <CheckCircle size={80} className="mb-4 text-white"/>
-              <h1 className="text-3xl font-bold mb-2 uppercase italic">¡Entrega Exitosa!</h1>
+              <h1 className="text-3xl font-bold mb-2 uppercase italic">Delivery Successful!</h1>
           </div>
       );
   }
@@ -189,7 +189,7 @@ export default function DeliveryClient({
 
             <button onClick={handleCompleteDelivery} disabled={loading || !photoUrl} className={`w-full py-4 rounded-xl font-bold shadow-lg flex justify-center items-center gap-2 transition-all active:scale-[0.98] ${loading || !photoUrl ? 'bg-gray-300 text-gray-500' : 'bg-[#1e2330] text-white hover:bg-black'}`}>
                 {loading ? <Loader2 className="animate-spin" size={20}/> : <CheckCircle size={20}/>}
-                {loading ? 'GUARDANDO EVIDENCIA...' : 'FINALIZAR ENTREGA'}
+                {loading ? 'SAVING EVIDENCE...' : 'COMPLETE DELIVERY'}
             </button>
           </div>
       </div>
