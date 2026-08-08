@@ -16,7 +16,7 @@ export default function PackageDetailClient({ pkg, locale }: { pkg: any, locale:
         
         <div className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <Link href={`/${locale}/dashboard-admin/paquetes`} className="text-gray-500 hover:text-black flex items-center gap-2 transition-colors">
-                <ArrowLeft size={20} /> Volver a la Lista
+               <ArrowLeft size={20} /> Back to List
             </Link>
             
             {!isPreAlert && (
@@ -24,7 +24,7 @@ export default function PackageDetailClient({ pkg, locale }: { pkg: any, locale:
                     href={`/${locale}/dashboard-admin/paquetes/${pkg.id}/editar`}
                     className="bg-black text-white px-5 py-2 rounded-lg font-bold text-sm flex items-center gap-2 hover:bg-gray-800 transition shadow-md"
                 >
-                    <Edit size={16} /> Editar / Corregir Entrada
+                    <Edit size={16} /> Edit / Correct Entry
                 </Link>
             )}
         </div>
@@ -63,8 +63,8 @@ export default function PackageDetailClient({ pkg, locale }: { pkg: any, locale:
                         
                         <div className="md:col-span-1 border-r border-gray-100 pr-4">
                             <h3 className="text-xs font-bold text-gray-400 uppercase mb-4 flex items-center gap-2">
-                                <User size={14}/> Propietario
-                            </h3>
+                                <User size={14}/> Owner
+                             </h3>
                             <div className="flex items-center gap-3 mb-3">
                                 <div className="h-10 w-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-lg">
                                     {pkg.user?.name?.[0] || 'U'}
@@ -75,39 +75,39 @@ export default function PackageDetailClient({ pkg, locale }: { pkg: any, locale:
                                 </div>
                             </div>
                             <div className="bg-blue-50 px-3 py-2 rounded border border-blue-100 inline-block">
-                                <span className="text-xs text-blue-800 font-bold uppercase">Casillero: </span>
+                                <span className="text-xs text-blue-800 font-bold uppercase">Suite: </span>
                                 <span className="text-sm font-mono font-bold text-blue-900">{pkg.user?.suiteNo}</span>
                             </div>
                         </div>
 
                         <div className="md:col-span-1 border-r border-gray-100 pr-4">
                             <h3 className="text-xs font-bold text-gray-400 uppercase mb-4 flex items-center gap-2">
-                                <Scale size={14}/> Datos Físicos
+                                <Scale size={14}/> Physical Data
                             </h3>
                             <div className="space-y-3">
                                 <div className="flex justify-between items-center">
-                                    <span className="text-sm text-gray-600">Peso:</span>
+                                    <span className="text-sm text-gray-600">Weight:</span>
                                     <span className={`font-bold text-lg ${pkg.weightLbs === 0 ? 'text-red-500' : 'text-gray-900'}`}>
                                         {pkg.weightLbs || 0} <span className="text-xs text-gray-400">lb</span>
                                     </span>
                                 </div>
                                 <div className="flex justify-between items-center">
-                                    <span className="text-sm text-gray-600">Medidas:</span>
+                                    <span className="text-sm text-gray-600">Dimensions:</span>
                                     <span className="font-mono text-sm text-gray-800 bg-gray-100 px-2 py-1 rounded">
                                         {pkg.lengthIn || 0} x {pkg.widthIn || 0} x {pkg.heightIn || 0} <span className="text-xs text-gray-400">in</span>
                                     </span>
                                 </div>
                                 {pkg.weightLbs === 0 && (
                                     <p className="text-xs text-red-500 font-bold mt-2 bg-red-50 p-1 rounded text-center">
-                                        ⚠️ Pendiente de Pesar
-                                    </p>
+                                    ⚠️ Pending Weighing
+                              </p>
                                 )}
                             </div>
                         </div>
 
                         <div className="md:col-span-1">
                             <h3 className="text-xs font-bold text-gray-400 uppercase mb-4 flex items-center gap-2">
-                                <FileText size={14}/> Descripción / Notas
+                                <FileText size={14}/> Description / Notes
                             </h3>
                             <div className="bg-yellow-50 p-3 rounded-lg border border-yellow-100 text-sm text-gray-700 italic min-h-[80px] max-h-[150px] overflow-y-auto whitespace-pre-wrap">
                                 {pkg.description || "Sin descripción."}
@@ -120,7 +120,7 @@ export default function PackageDetailClient({ pkg, locale }: { pkg: any, locale:
                             
                             <div className="bg-white p-4 rounded-xl border border-gray-200">
                                 <h3 className="text-sm font-bold text-gray-800 mb-4 flex items-center gap-2">
-                                    <CheckCircle size={16} className="text-green-600"/> Foto Recepción (Miami)
+                                    <CheckCircle size={16} className="text-green-600"/> Reception Photo (Miami)
                                 </h3>
                                 {pkg.photoUrlMiami ? (
                                     <div className="relative h-64 w-full rounded-lg overflow-hidden border border-gray-200 shadow-inner group">
@@ -133,15 +133,15 @@ export default function PackageDetailClient({ pkg, locale }: { pkg: any, locale:
                                     </div>
                                 ) : (
                                     <div className="h-64 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200 flex flex-col items-center justify-center text-gray-400">
-                                        <span className="text-xs font-bold">Sin foto de almacén</span>
-                                        <span className="text-[10px] text-gray-300">Usa el botón "Editar" para subirla</span>
+                                      <span className="text-xs font-bold">No warehouse photo</span>
+                                      <span className="text-[10px] text-gray-300">Use the "Edit" button to upload it</span>
                                     </div>
                                 )}
                             </div>
 
                             <div className="bg-white p-4 rounded-xl border border-gray-200 opacity-75">
                                 <h3 className="text-sm font-bold text-gray-800 mb-4 flex items-center gap-2">
-                                    <Truck size={16} className="text-blue-600"/> Foto Entrega Final
+                                    <Truck size={16} className="text-blue-600"/> Final Delivery Photo
                                 </h3>
                                 {pkg.deliveryPhotoUrl ? (
                                     <div className="relative h-64 w-full rounded-lg overflow-hidden border border-gray-200 shadow-inner">
@@ -154,7 +154,7 @@ export default function PackageDetailClient({ pkg, locale }: { pkg: any, locale:
                                     </div>
                                 ) : (
                                     <div className="h-64 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200 flex flex-col items-center justify-center text-gray-400">
-                                        <span className="text-xs">Pendiente de entrega</span>
+                                        <span className="text-xs">Pending delivery</span>
                                     </div>
                                 )}
                             </div>

@@ -82,7 +82,7 @@ export default function ReceivePackageForm({ pkg }: ReceivePackageFormProps) {
   const handleReceive = async () => {
     // Validaciones básicas
     if (!formData.weightLbs || !formData.lengthIn || !formData.widthIn || !formData.heightIn) {
-      alert("⚠️ Faltan datos físicos (Peso o Medidas).");
+      alert("⚠️ Missing physical data (Weight or Dimensions).");
       return;
     }
 
@@ -106,7 +106,7 @@ export default function ReceivePackageForm({ pkg }: ReceivePackageFormProps) {
       });
 
       if (res.ok) {
-        alert("✅ Paquete recibido y actualizado correctamente.");
+        alert("✅ Package received and updated successfully.");
         router.refresh(); 
         router.push('/dashboard-admin/paquetes'); 
       } else {
@@ -115,7 +115,7 @@ export default function ReceivePackageForm({ pkg }: ReceivePackageFormProps) {
       }
     } catch (error) {
       console.error(error);
-      alert("Error de conexión.");
+      alert("Connection error.");
     } finally {
       setLoading(false);
     }
@@ -127,7 +127,7 @@ export default function ReceivePackageForm({ pkg }: ReceivePackageFormProps) {
       {/* 1. INFORMACIÓN DE LA PRE-ALERTA */}
       <div className="bg-blue-50 border border-blue-200 rounded-xl p-5 shadow-sm">
         <h3 className="text-blue-900 font-bold flex items-center gap-2 mb-4 text-lg border-b border-blue-200 pb-2">
-            <Info size={20} className="text-blue-600"/> Datos de la Pre-Alerta
+            <Info size={20} className="text-blue-600"/> Pre-Alert Data
         </h3>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm text-blue-900">
@@ -136,14 +136,14 @@ export default function ReceivePackageForm({ pkg }: ReceivePackageFormProps) {
                 <div className="flex items-center gap-2">
                     <User size={14} className="text-blue-400"/>
                     <div>
-                        <p className="font-bold text-blue-500 uppercase text-[10px]">Cliente</p>
+                        <p className="font-bold text-blue-500 uppercase text-[10px]">Client</p>
                         <p className="font-bold">{pkg.user?.name || 'N/A'}</p>
                     </div>
                 </div>
                 <div className="flex items-center gap-2">
                     <div className="w-3.5 flex justify-center"><span className="text-blue-400 font-bold text-xs">#</span></div>
                     <div>
-                        <p className="font-bold text-blue-500 uppercase text-[10px]">Casillero</p>
+                        <p className="font-bold text-blue-500 uppercase text-[10px]">Suite</p>
                         <p className="font-mono bg-blue-100 px-1 rounded inline-block text-xs">{pkg.user?.suiteNo || 'N/A'}</p>
                     </div>
                 </div>
@@ -153,14 +153,14 @@ export default function ReceivePackageForm({ pkg }: ReceivePackageFormProps) {
                 <div className="flex items-center gap-2">
                     <Truck size={14} className="text-blue-400"/>
                     <div>
-                        <p className="font-bold text-blue-500 uppercase text-[10px]">Transportista (USA)</p>
+                        <p className="font-bold text-blue-500 uppercase text-[10px]">Carrier (USA)</p>
                         <p className="font-bold uppercase text-blue-900">{pkg.courier || 'NO ESPECIFICADO'}</p>
                     </div>
                 </div>
                 <div className="flex items-center gap-2">
                     <DollarSign size={14} className="text-green-500"/>
                     <div>
-                        <p className="font-bold text-blue-500 uppercase text-[10px]">Valor Declarado</p>
+                        <p className="font-bold text-blue-500 uppercase text-[10px]">Declared Value</p>
                         <p className="font-bold text-green-700">${pkg.declaredValue ? pkg.declaredValue.toFixed(2) : '0.00'}</p>
                     </div>
                 </div>
@@ -168,7 +168,7 @@ export default function ReceivePackageForm({ pkg }: ReceivePackageFormProps) {
 
              <div className="space-y-2 border-l border-blue-200 pl-0 md:pl-4">
                  <div>
-                    <p className="font-bold text-blue-500 uppercase text-[10px] mb-1">Tracking Original (Carrier)</p>
+                    <p className="font-bold text-blue-500 uppercase text-[10px] mb-1">Original Tracking (Carrier)</p>
                     <p className="font-mono bg-white px-2 py-1 rounded border border-blue-200 text-xs break-all select-all">
                         {pkg.carrierTrackingNumber || 'N/A'}
                     </p>
@@ -176,7 +176,7 @@ export default function ReceivePackageForm({ pkg }: ReceivePackageFormProps) {
                  
                  {pkg.description && (
                      <div className="mt-2">
-                        <p className="font-bold text-blue-500 uppercase text-[10px] mb-1">Nota del Cliente:</p>
+                        <p className="font-bold text-blue-500 uppercase text-[10px] mb-1">Client Note:</p>
                         <p className="text-xs text-gray-600 bg-white/50 p-1 rounded italic">"{pkg.description}"</p>
                      </div>
                  )}
@@ -193,18 +193,18 @@ export default function ReceivePackageForm({ pkg }: ReceivePackageFormProps) {
                 <Package size={24} />
             </div>
             <div>
-                <h3 className="text-xl font-bold text-gray-800">Recepción en Almacén</h3>
-                <p className="text-sm text-gray-500">Confirma peso, medidas y evidencia fotográfica.</p>
+            <h3 className="text-xl font-bold text-gray-800">Warehouse Reception</h3>
+             <p className="text-sm text-gray-500">Confirm weight, dimensions and photo evidence.</p>
             </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             
             <div className="space-y-6">
-                <h4 className="font-bold text-gray-800 border-b pb-2 mb-4">📦 Datos Reales (Medidos)</h4>
+                <h4 className="font-bold text-gray-800 border-b pb-2 mb-4">📦 Real Data (Measured)</h4>
                 
                 <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase mb-2 flex items-center gap-1"><Scale size={14}/> Peso (Libras)</label>
+                  <label className="block text-xs font-bold text-gray-500 uppercase mb-2 flex items-center gap-1"><Scale size={14}/> Weight (Lbs)</label>
                     <div className="relative">
                         <input 
                             type="number" step="0.01"
@@ -218,27 +218,27 @@ export default function ReceivePackageForm({ pkg }: ReceivePackageFormProps) {
                 </div>
 
                 <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase mb-2 flex items-center gap-1"><Ruler size={14}/> Dimensiones (Pulgadas)</label>
+                    <label className="block text-xs font-bold text-gray-500 uppercase mb-2 flex items-center gap-1"><Ruler size={14}/> Dimensions (Inches)</label>
                     <div className="flex gap-2 items-center">
                         <div className="flex-1">
                             <input type="number" placeholder="L" className="w-full p-3 border rounded-lg text-center font-bold text-lg" value={formData.lengthIn} onChange={e => setFormData({...formData, lengthIn: e.target.value})} />
-                            <span className="text-[10px] text-gray-400 text-center block mt-1">Largo</span>
+                           <span className="text-[10px] text-gray-400 text-center block mt-1">Length</span>
                         </div>
                         <span className="text-gray-300 text-xl">×</span>
                         <div className="flex-1">
                             <input type="number" placeholder="W" className="w-full p-3 border rounded-lg text-center font-bold text-lg" value={formData.widthIn} onChange={e => setFormData({...formData, widthIn: e.target.value})} />
-                            <span className="text-[10px] text-gray-400 text-center block mt-1">Ancho</span>
+                           <span className="text-[10px] text-gray-400 text-center block mt-1">Width</span>
                         </div>
                         <span className="text-gray-300 text-xl">×</span>
                         <div className="flex-1">
                             <input type="number" placeholder="H" className="w-full p-3 border rounded-lg text-center font-bold text-lg" value={formData.heightIn} onChange={e => setFormData({...formData, heightIn: e.target.value})} />
-                            <span className="text-[10px] text-gray-400 text-center block mt-1">Alto</span>
+                            <span className="text-[10px] text-gray-400 text-center block mt-1">Height</span>
                         </div>
                     </div>
                 </div>
 
                 <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Foto Evidencia (Paquete)</label>
+                    <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Evidence Photo (Package)</label>
                     {!formData.photoUrlMiami ? (
                         <div className="border-2 border-dashed border-gray-300 rounded-xl h-40 flex flex-col items-center justify-center bg-gray-50 hover:bg-gray-100 transition cursor-pointer relative group">
                             <input 
@@ -254,7 +254,7 @@ export default function ReceivePackageForm({ pkg }: ReceivePackageFormProps) {
                             ) : (
                                 <>
                                     <Camera size={24} className="text-gray-400 mb-2"/>
-                                    <span className="text-xs font-bold text-gray-600">Tomar Foto Paquete</span>
+                                    <span className="text-xs font-bold text-gray-600">Take Package Photo</span>
                                 </>
                             )}
                         </div>
@@ -274,14 +274,14 @@ export default function ReceivePackageForm({ pkg }: ReceivePackageFormProps) {
 
             <div className="space-y-6">
                 <h4 className="font-bold text-gray-800 border-b pb-2 mb-4 flex items-center gap-2">
-                    <FileText size={18}/> Documentación & Notas
+                    <FileText size={18}/> Documentation & Notes
                 </h4>
 
                 <div className="bg-yellow-50 p-4 rounded-xl border border-yellow-100">
-                    <label className="block text-xs font-bold text-yellow-800 uppercase mb-2">Factura Comercial</label>
-                    <p className="text-[11px] text-yellow-700 mb-3 leading-tight">
-                        Si el driver trajo la factura física, súbela aquí.
-                    </p>
+                    <label className="block text-xs font-bold text-yellow-800 uppercase mb-2">Commercial Invoice</label>
+                   <p className="text-[11px] text-yellow-700 mb-3 leading-tight">
+                     If the driver brought the physical invoice, upload it here.
+                       </p>
 
                     <label className={`
                         flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-xl cursor-pointer transition-all
@@ -290,8 +290,8 @@ export default function ReceivePackageForm({ pkg }: ReceivePackageFormProps) {
                         {formData.invoiceUrl ? (
                             <div className="text-center animate-in zoom-in">
                                 <CheckCircle className="mx-auto text-green-600 mb-2" size={32}/>
-                                <span className="text-sm font-bold text-green-800">Factura Adjuntada</span>
-                                <span className="text-[10px] text-green-600 block mt-1">Click para cambiar</span>
+                               <span className="text-sm font-bold text-green-800">Invoice Attached</span>
+                               <span className="text-[10px] text-green-600 block mt-1">Click to change</span>
                             </div>
                         ) : (
                             <div className="text-center text-yellow-600">
@@ -300,7 +300,7 @@ export default function ReceivePackageForm({ pkg }: ReceivePackageFormProps) {
                                 ) : (
                                     <UploadCloud className="mx-auto mb-2" size={24}/>
                                 )}
-                                <span className="text-sm font-bold">Subir Factura</span>
+                                <span className="text-sm font-bold">Upload Invoice</span>
                             </div>
                         )}
                         <input type="file" accept="image/*,.pdf" className="hidden" onChange={handleInvoiceUpload} disabled={uploadingInvoice}/>
@@ -308,7 +308,7 @@ export default function ReceivePackageForm({ pkg }: ReceivePackageFormProps) {
                 </div>
 
                 <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase mb-2 flex items-center gap-1"><FileText size={14}/> Notas Internas</label>
+                    <label className="block text-xs font-bold text-gray-500 uppercase mb-2 flex items-center gap-1"><FileText size={14}/> Internal Notes</label>
                     <textarea 
                         rows={3}
                         value={formData.description}
@@ -320,9 +320,9 @@ export default function ReceivePackageForm({ pkg }: ReceivePackageFormProps) {
 
                 <div className="flex gap-2 items-start bg-green-50 p-3 rounded-lg border border-green-200 mt-4">
                     <CheckCircle size={16} className="text-green-600 mt-0.5 flex-shrink-0"/>
-                    <p className="text-[11px] text-green-800">
-                        Se guardará como <strong>RECIBIDO_MIAMI</strong> para activar la opción de pago en el cliente.
-                    </p>
+                   <p className="text-[11px] text-green-800">
+                     It will be saved as <strong>RECIBIDO_MIAMI</strong> to activate the payment option for the client.
+                   </p>
                 </div>
             </div>
         </div>
@@ -334,8 +334,8 @@ export default function ReceivePackageForm({ pkg }: ReceivePackageFormProps) {
                 className="w-full py-4 bg-[#222b3c] text-white font-bold rounded-xl hover:bg-black transition flex justify-center items-center gap-2 shadow-lg text-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
                 {loading ? <Loader2 className="animate-spin"/> : <Save size={22}/>}
-                GUARDAR Y CONFIRMAR
-            </button>
+                 SAVE AND CONFIRM
+              </button>
         </div>
       </div>
     </div>
