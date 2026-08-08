@@ -65,7 +65,7 @@ export default function DeliveryClient({
         } else {
             const err = await res.json(); alert("Error al guardar: " + (err.error || "Desconocido"));
         }
-    } catch (e) { alert("Error de conexión"); } finally { setLoading(false); }
+    } catch (e) { alert("Connection error"); } finally { setLoading(false); }
   };
 
   if (step === 3) {
@@ -83,14 +83,14 @@ export default function DeliveryClient({
         <div className="min-h-screen bg-gray-50/50 p-4 font-sans pb-24 animate-in fade-in flex flex-col items-center pt-8">
             <div className="w-full max-w-md">
                 <button onClick={() => router.push(`/${locale}/dashboard-driver`)} className="mb-6 flex items-center text-gray-500 font-bold text-sm hover:text-black transition">
-                    <ArrowLeft size={18} className="mr-1" /> Volver al Inicio
+                    <ArrowLeft size={18} className="mr-1" /> Back to Home
                 </button>
                 <div className={`bg-white rounded-2xl p-6 shadow-sm border-2 ring-4 mb-6 ${themeClasses}`}>
                     <div className="flex gap-4 items-center mb-4">
                         <div className="w-8 h-8 rounded-full bg-[#1e2330] text-white flex items-center justify-center font-bold text-sm shadow-md shrink-0">2</div>
                         <div>
-                            <h3 className="text-[11px] font-bold uppercase tracking-widest text-gray-800">Punto de Entrega</h3>
-                            <p className="text-[11px] text-gray-400 font-medium">Destino Final</p>
+                            <h3 className="text-[11px] font-bold uppercase tracking-widest text-gray-800">Delivery Point</h3>
+                            <p className="text-[11px] text-gray-400 font-medium">Final Destination</p>
                         </div>
                     </div>
                     <h2 className="text-xl font-bold text-gray-900 mb-6 leading-tight pr-4">{deliveryAddress}</h2>
@@ -103,7 +103,7 @@ export default function DeliveryClient({
                         </a>
                     </div>
                     <button onClick={() => setStep(2)} className="w-full bg-[#1e2330] text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg active:scale-95">
-                        <PackageCheck size={20}/> INICIAR ENTREGA
+                        <PackageCheck size={20}/> START DELIVERY
                     </button>
                 </div>
             </div>
@@ -115,11 +115,11 @@ export default function DeliveryClient({
     <div className="min-h-screen bg-gray-50 p-4 font-sans pb-10 animate-in slide-in-from-right pt-8 flex flex-col items-center">
       <div className="w-full max-w-md">
           <button onClick={() => router.back()} className="flex items-center text-gray-500 mb-6 font-bold text-sm hover:text-black transition">
-            <ArrowLeft size={18} className="mr-1"/> Volver a la Ruta
+            <ArrowLeft size={18} className="mr-1"/> Back to Route
           </button>
           
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-            <h1 className="text-xl font-bold text-gray-800 mb-2 uppercase tracking-wide">Evidencia de Entrega</h1>
+           <h1 className="text-xl font-bold text-gray-800 mb-2 uppercase tracking-wide">Delivery Evidence</h1>
             
             {/* 🔥 TÍTULO INTELIGENTE (Caja vs Paquete) */}
             <div className={`mb-6 p-3 rounded-lg border flex items-center gap-3 ${isConsolidation ? 'bg-purple-50 border-purple-100' : 'bg-gray-50 border-gray-100'}`}>
@@ -139,10 +139,10 @@ export default function DeliveryClient({
                 <div className="mb-6 border border-purple-200 rounded-xl overflow-hidden shadow-sm">
                     <div className="bg-[#222b3c] px-4 py-3 flex items-center justify-between">
                         <h3 className="text-xs font-bold text-[#EAD8B1] uppercase flex items-center gap-2">
-                            <Box size={14} /> Contenido de la Caja
+                            <Box size={14} /> Box Contents
                         </h3>
                         <span className="text-[10px] font-bold bg-white/20 text-white px-2 py-0.5 rounded-full">
-                            {childPackages.length} Paquetes
+                            {childPackages.length} Packages
                         </span>
                     </div>
                     <div className="divide-y divide-gray-100 bg-white max-h-48 overflow-y-auto">
@@ -150,7 +150,7 @@ export default function DeliveryClient({
                             <div key={pkg.id} className="p-3 hover:bg-gray-50 transition flex justify-between items-center gap-2">
                                 <div className="flex flex-col min-w-0">
                                     <span className="font-bold text-xs text-gray-800 font-mono truncate">{pkg.gmcTrackingNumber}</span>
-                                    <span className="text-[10px] text-gray-500 line-clamp-1">{pkg.description || 'Sin descripción'}</span>
+                                    <span className="text-[10px] text-gray-500 line-clamp-1">{pkg.description || 'No description'}</span>
                                 </div>
                                 <span className="text-[9px] font-mono text-gray-400 shrink-0">{pkg.carrierTrackingNumber || 'GMC'}</span>
                             </div>
@@ -160,12 +160,12 @@ export default function DeliveryClient({
             )}
 
             <div className="mb-6">
-                <label className="block text-xs font-bold text-gray-600 uppercase mb-2 flex items-center gap-1.5"><Camera size={16} className="text-blue-500"/> 1. Tomar Foto</label>
+                <label className="block text-xs font-bold text-gray-600 uppercase mb-2 flex items-center gap-1.5"><Camera size={16} className="text-blue-500"/> 1. Take Photo</label>
                 {!photoUrl ? (
                     <label className="w-full h-40 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center bg-gray-50 cursor-pointer hover:bg-gray-100 transition active:scale-[0.98]">
                         <input type="file" accept="image/*" capture="environment" className="hidden" onChange={handlePhotoUpload} disabled={uploading}/>
                         {uploading ? <Loader2 className="animate-spin text-blue-600 mb-2" size={32}/> : <Camera size={36} className="text-gray-400 mb-2"/>}
-                        <span className="text-sm font-bold text-gray-500">{uploading ? 'Subiendo foto...' : 'Toque para abrir la cámara'}</span>
+                        <span className="text-sm font-bold text-gray-500">{uploading ? 'Uploading photo...' : 'Tap to open camera'}</span>
                     </label>
                 ) : (
                     <div className="relative w-full h-48 rounded-xl overflow-hidden shadow-sm border border-gray-200">
@@ -178,12 +178,12 @@ export default function DeliveryClient({
             </div>
 
             <div className="mb-8">
-                <label className="block text-xs font-bold text-gray-600 uppercase mb-2 flex items-center gap-1.5"><PenTool size={16} className="text-purple-500"/> 2. Firma del Cliente</label>
+               <label className="block text-xs font-bold text-gray-600 uppercase mb-2 flex items-center gap-1.5"><PenTool size={16} className="text-purple-500"/> 2. Client Signature</label>
                 <div className="border border-gray-300 rounded-xl bg-gray-50 overflow-hidden shadow-inner touch-none">
                     <SignatureCanvas ref={sigPad} penColor="#1e2330" canvasProps={{width: 320, height: 160, className: 'sigCanvas w-full'}} />
                 </div>
                 <div className="flex justify-end mt-2">
-                    <button onClick={() => sigPad.current.clear()} className="text-[11px] text-red-500 font-bold uppercase tracking-widest bg-red-50 px-3 py-1 rounded-md border border-red-100">Borrar Firma</button>
+              <button onClick={() => sigPad.current.clear()} className="text-[11px] text-red-500 font-bold uppercase tracking-widest bg-red-50 px-3 py-1 rounded-md border border-red-100">Clear Signature</button>
                 </div>
             </div>
 
