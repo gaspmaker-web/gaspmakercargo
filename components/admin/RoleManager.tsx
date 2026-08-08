@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Shield, Loader2, Check } from 'lucide-react';
 
 const ROLES = [
-  { value: 'CLIENTE',   label: 'Cliente',   color: 'bg-blue-100 text-blue-800 border-blue-200' },
+  { value: 'CLIENTE',   label: 'Client',   color: 'bg-blue-100 text-blue-800 border-blue-200' },
   { value: 'DRIVER',    label: 'Driver',    color: 'bg-green-100 text-green-800 border-green-200' },
   { value: 'WAREHOUSE', label: 'Warehouse', color: 'bg-orange-100 text-orange-800 border-orange-200' },
   { value: 'ADMIN',     label: 'Admin',     color: 'bg-red-100 text-red-800 border-red-200' },
@@ -100,14 +100,14 @@ export default function RoleManager({ userId, currentRole, currentCountryCode }:
       {role === 'DRIVER' && (
         <div className="mb-4 animate-in fade-in slide-in-from-top-2 duration-200">
           <label className="block text-xs font-bold text-gray-400 uppercase mb-2">
-            País del Driver
+            Driver Country
           </label>
           <select
             value={countryCode}
             onChange={e => setCountryCode(e.target.value)}
             className="w-full p-3 border border-gray-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-gmc-dorado-principal focus:border-transparent"
           >
-            <option value="">Selecciona un país...</option>
+            <option value="">Select a country...</option>
             {COUNTRIES.map(c => (
               <option key={c.code} value={c.code}>{c.name} ({c.code})</option>
             ))}
@@ -123,15 +123,15 @@ export default function RoleManager({ userId, currentRole, currentCountryCode }:
           className="w-full py-2.5 bg-gmc-gris-oscuro text-white rounded-xl font-bold text-sm hover:bg-black transition-all disabled:opacity-50 flex items-center justify-center gap-2"
         >
           {success ? (
-            <><Check size={16} className="text-green-400" /> Guardado</>
+            <><Check size={16} className="text-green-400" /> Saved</>
           ) : (
-            'Guardar Rol'
+            'Save Role'
           )}
         </button>
       ) : (
         <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-xl">
           <p className="text-sm font-bold text-yellow-800 mb-3">
-            ¿Cambiar rol a <span className={`px-2 py-0.5 rounded ${currentRoleInfo?.color}`}>{role}</span>
+            Change role to <span className={`px-2 py-0.5 rounded ${currentRoleInfo?.color}`}>{role}</span>
             {role === 'DRIVER' && countryCode ? ` — ${countryCode}` : ''}?
           </p>
           <div className="flex gap-2">
@@ -141,13 +141,13 @@ export default function RoleManager({ userId, currentRole, currentCountryCode }:
               className="flex-1 py-2 bg-green-600 text-white rounded-lg font-bold text-sm hover:bg-green-700 transition flex items-center justify-center gap-2"
             >
               {loading ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
-              Confirmar
+              Confirm
             </button>
             <button
               onClick={() => setConfirming(false)}
               className="flex-1 py-2 bg-gray-200 text-gray-700 rounded-lg font-bold text-sm hover:bg-gray-300 transition"
             >
-              Cancelar
+              Cancel
             </button>
           </div>
         </div>
