@@ -15,10 +15,10 @@ export const dynamic = 'force-dynamic';
 
 // 🔥 DICCIONARIO DE VEHÍCULOS PARA EL CHOFER
 const VEHICLE_NAMES: Record<string, string> = {
-    'v_30': 'Auto / SUV',
+    'v_30': 'Car / SUV',
     'v_55': 'Minivan / Transit Connect',
     'v_75': 'Cargo Van',
-    'v_250': 'Camión de Carga'
+    'v_250': 'Cargo Truck'
 };
 
 export default async function DriverDashboardPage(props: any) {
@@ -45,8 +45,8 @@ export default async function DriverDashboardPage(props: any) {
     return (
         <div className="min-h-screen bg-slate-900 text-white p-6 flex flex-col items-center justify-center text-center">
             <ShieldAlert size={64} className="text-red-500 mb-4"/>
-            <h1 className="text-2xl font-bold">Zona No Asignada</h1>
-            <p className="text-slate-400">Tu usuario no tiene un código de país (Ej: US) asignado.</p>
+            <h1 className="text-2xl font-bold">Unassigned Zone</h1>
+            <p className="text-slate-400">Your user does not have a country code (e.g. US) assigned.</p>
             <div className="mt-6">
                 <DriverLogoutButton locale={locale} />
             </div>
@@ -182,9 +182,9 @@ export default async function DriverDashboardPage(props: any) {
       processedDeliveries.push({
           id: cons.id, 
           type: isAuraPallet ? 'LOCAL_DELIVERY' : 'CONSOLIDATION',
-          tracking: cons.gmcShipmentNumber || 'Consolidación',
-          userName: cons.user?.name || 'Cliente',
-          address: cons.shippingAddress || cons.user?.address || 'Dirección no especificada',
+          tracking: cons.gmcShipmentNumber || 'Consolidation',
+          userName: cons.user?.name || 'Client',
+          address: cons.shippingAddress || cons.user?.address || 'Address not specified',
           count: cons.packages.length,
           weightLbs: cons.weightLbs || 0, 
           childTrackings: cons.packages.map((p: any) => p.gmcTrackingNumber).filter((t: any) => t) 
@@ -197,9 +197,9 @@ export default async function DriverDashboardPage(props: any) {
       processedDeliveries.push({
           id: pkg.id, 
           type: isAuraPallet ? 'LOCAL_DELIVERY' : 'PACKAGE',
-          tracking: pkg.gmcTrackingNumber || pkg.carrierTrackingNumber || 'Paquete',
-          userName: pkg.user?.name || 'Cliente',
-          address: pkg.shippingAddress || pkg.user?.address || 'Dirección no especificada',
+          tracking: pkg.gmcTrackingNumber || pkg.carrierTrackingNumber || 'Package',
+          userName: pkg.user?.name || 'Client',
+          address: pkg.shippingAddress || pkg.user?.address || 'Address not specified',
           count: 1,
           weightLbs: pkg.weightLbs || 0,
           childTrackings: []
@@ -215,11 +215,11 @@ export default async function DriverDashboardPage(props: any) {
         <div className="relative z-10 flex justify-between items-center mb-4">
             <div>
                 <h1 className="text-2xl font-bold font-garamond uppercase tracking-wide">
-                    HOLA, {driver?.name?.split(' ')[0]}
+                    HI, {driver?.name?.split(' ')[0]}
                 </h1>
                 <p className="text-sm text-gray-400 flex items-center gap-1 mt-1 font-medium">
                     <MapPin size={14} className="text-gmc-dorado-principal"/> 
-                    Zona Operativa: <span className="text-white font-bold">{driverZone}</span>
+                    Operational Zone: <span className="text-white font-bold">{driverZone}</span>
                 </p>
             </div>
             
@@ -240,7 +240,7 @@ export default async function DriverDashboardPage(props: any) {
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                       <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
                     </span>
-                    Nuevas Oportunidades ({availableTasks.length})
+                    New Opportunities ({availableTasks.length})
                 </h2>
                 
                 <div className="flex overflow-x-auto gap-4 pb-6 -mx-4 px-4 scrollbar-hide snap-x snap-mandatory">
@@ -258,7 +258,7 @@ export default async function DriverDashboardPage(props: any) {
                                     </span>
                                     <span className="text-[9px] font-bold text-gray-600 bg-gray-100 px-2 py-0.5 rounded flex items-center gap-1 border border-gray-200">
                                         <Truck size={10} className="text-gray-400"/> 
-                                        {VEHICLE_NAMES[(task as any).volumeInfo] || (task as any).volumeInfo || 'Vehículo N/A'}
+                                        {VEHICLE_NAMES[(task as any).volumeInfo] || (task as any).volumeInfo || 'Vehicle N/A'}
                                     </span>
                                 </div>
                                 
@@ -297,15 +297,15 @@ export default async function DriverDashboardPage(props: any) {
         <div>
             <h2 className="text-gray-800 font-bold mb-4 flex items-center gap-2 px-1">
                 <Briefcase size={20} className="text-gray-600"/> 
-                Mi Ruta ({totalActiveTasks})
+                My Route ({totalActiveTasks})
             </h2>
 
             <div className="space-y-3">
                 {totalActiveTasks === 0 ? (
                     <div className="bg-white p-10 rounded-2xl border-2 border-dashed border-gray-200 text-center">
                         <Truck size={40} className="mx-auto text-gray-200 mb-3"/>
-                        <p className="text-gray-400 font-medium text-sm">Tu ruta está vacía.</p>
-                        <p className="text-xs text-gray-400 mt-1">¡Acepta tareas del carrusel para comenzar!</p>
+                        <p className="text-gray-400 font-medium text-sm">Your route is empty.</p>
+                        <p className="text-xs text-gray-400 mt-1">Accept tasks from the carousel to get started!</p>
                     </div>
                 ) : (
                     <>
@@ -322,11 +322,11 @@ export default async function DriverDashboardPage(props: any) {
                                         <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">#{task.id.slice(0,5)}</span>
                                         <span className="text-[9px] font-bold text-gray-500 bg-gray-50 border border-gray-200 px-1.5 py-0.5 rounded flex items-center gap-1 uppercase">
                                             <Truck size={10} className="text-gray-400"/>
-                                            {VEHICLE_NAMES[(task as any).volumeInfo] || 'Vehículo N/A'}
+                                            {VEHICLE_NAMES[(task as any).volumeInfo] || 'Vehicle N/A'}
                                         </span>
                                     </div>
                                     <span className="bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded text-[10px] font-bold flex items-center gap-1">
-                                        <Clock size={10}/> EN PROCESO
+                                        <Clock size={10}/> IN PROGRESS
                                     </span>
                                 </div>
                                 
@@ -336,7 +336,7 @@ export default async function DriverDashboardPage(props: any) {
                                         {task.pickupDate ? new Date(task.pickupDate).toISOString().split('T')[0] : ''}
                                     </div>
                                     <p className="font-bold text-gray-800 text-sm truncate">{task.originAddress}</p>
-                                    <p className="text-xs text-gray-500 truncate">Destino: {task.dropOffAddress || 'Almacén'}</p>
+                                    <p className="text-xs text-gray-500 truncate">Destination: {task.dropOffAddress || 'Warehouse'}</p>
                                 </div>
                                 
                                 <div className="flex justify-end pr-2">
@@ -363,7 +363,7 @@ export default async function DriverDashboardPage(props: any) {
                                         {(item.type === 'CONSOLIDATION' || item.type === 'LOCAL_DELIVERY') && item.childTrackings?.length > 0 && (
                                             <div className="flex flex-col mt-1 space-y-0.5">
                                                 <span className="text-[9px] text-gray-400 font-mono flex items-center gap-1">
-                                                   <Layers size={10}/> Contiene {item.count} cajas
+                                                   <Layers size={10}/> Contains {item.count} boxes
                                                 </span>
                                             </div>
                                         )}
