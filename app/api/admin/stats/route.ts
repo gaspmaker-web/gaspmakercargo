@@ -33,6 +33,7 @@ const tenantFilter = tenant?.id ? { tenant_id: tenant.id } : {};
       pickupsPendientes,
       ventasData,
       entregasHoy,
+      paquetesEntregadosHoy, 
       nuevosClientes,
       tareasBuzonPendientes,
       kycTitularesPendientes,
@@ -72,14 +73,23 @@ const tenantFilter = tenant?.id ? { tenant_id: tenant.id } : {};
         _sum: { totalAmount: true },
         where: { createdAt: { gte: haceSieteDias }, ...tenantFilter }
       }),
-      prisma.pickupRequest.count({
-     where: { 
-    status: 'ENTREGADO',
-    updatedAt: { gte: hoy },
-    serviceType: { not: 'STORAGE_FEE' },
-    ...tenantFilter
-}
-      }),
+// entregas locales hoy
+prisma.pickupRequest.count({
+    where: { 
+        status: 'ENTREGADO',
+        updatedAt: { gte: hoy },
+        serviceType: { not: 'STORAGE_FEE' },
+        ...tenantFilter
+    }
+}),
+// paquetes internacionales entregados hoy
+prisma.package.count({
+    where: {
+        status: 'ENTREGADO',
+        updatedAt: { gte: hoy },
+        ...tenantFilter
+    }
+}),
       prisma.user.count({
         where: { 
             role: 'CLIENTE',
@@ -145,6 +155,7 @@ const tenantFilter = tenant?.id ? { tenant_id: tenant.id } : {};
         pickups: pickupsPendientes,
         ventas: ventasData._sum.totalAmount || 0,
         entregasHoy: entregasHoy,
+        paquetesEntregadosHoy: paquetesEntregadosHoy,
         nuevosClientes: nuevosClientes,
         tareasBuzon: tareasBuzonPendientes,
         kycPendientes: kycTitularesPendientes + kycAdicionalesPendientes,

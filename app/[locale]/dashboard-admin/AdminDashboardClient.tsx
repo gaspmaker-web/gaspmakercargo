@@ -79,7 +79,7 @@ useEffect(() => {
         </div>
 
         {/* 1. SECCIÓN DE ESTADÍSTICAS (KPIs) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           
           <Link href={`/${locale}/dashboard-admin/paquetes`} className="block group">
             <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center hover:shadow-md hover:border-blue-200 transition-all cursor-pointer">
@@ -95,17 +95,33 @@ useEffect(() => {
             </div>
           </Link>
 
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center">
-            <div>
-              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Deliveries Today</p>
-              <h3 className="text-4xl font-extrabold text-gmc-gris-oscuro tracking-tight font-montserrat lining-nums">
-                  {stats.entregasHoy || 0}
-              </h3> 
+          <Link href={`/${locale}/dashboard-admin/solicitudes-pickup?filter=entregados`} className="block group">
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center hover:shadow-md hover:border-green-200 transition-all cursor-pointer">
+              <div>
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Local Deliveries Today</p>
+                <h3 className="text-4xl font-extrabold text-gmc-gris-oscuro tracking-tight font-montserrat lining-nums group-hover:text-green-600 transition-colors">
+                    {stats.entregasHoy || 0}
+                </h3> 
+              </div>
+              <div className="p-3 bg-green-50 text-green-600 rounded-lg">
+                <Truck size={24} strokeWidth={2.5} />
+              </div>
             </div>
-            <div className="p-3 bg-green-50 text-green-600 rounded-lg">
-              <Truck size={24} strokeWidth={2.5} />
+          </Link>
+
+          <Link href={`/${locale}/dashboard-admin/paquetes?filter=entregados`} className="block group">
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center hover:shadow-md hover:border-blue-200 transition-all cursor-pointer">
+              <div>
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Intl. Deliveries Today</p>
+                <h3 className="text-4xl font-extrabold text-gmc-gris-oscuro tracking-tight font-montserrat lining-nums group-hover:text-blue-600 transition-colors">
+                    {stats.paquetesEntregadosHoy || 0}
+                </h3> 
+              </div>
+              <div className="p-3 bg-blue-50 text-blue-600 rounded-lg">
+                <Truck size={24} strokeWidth={2.5} />
+              </div>
             </div>
-          </div>
+          </Link>
 
           <Link href={`/${locale}/dashboard-admin/clientes`} className="block group">
             <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center hover:shadow-md hover:border-purple-200 transition-all cursor-pointer">

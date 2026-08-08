@@ -79,8 +79,7 @@ export const authConfig = {
     async jwt({ token, user, trigger, session }: any) { // Agregamos :any para evitar quejas
       // 1. Al iniciar sesión (primer carga)
       if (user) {
-        // 🕵️ DEBUG: Verificamos en la terminal que el rol llegue desde auth.ts
-        console.log("✅ AUTH CONFIG: Recibiendo usuario:", user.email, "| Rol:", (user as any).role);
+       
 
         token.id = user.id;
         token.role = (user as any).role;

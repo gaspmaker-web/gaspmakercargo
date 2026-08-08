@@ -48,22 +48,22 @@ export default function PackageStatusManager({ pkg, isConsolidation = false }: {
           </p>
         </div>
         <div className="flex gap-2">
-          <button
-            onClick={() => changeStatus(confirming)}
-            className="bg-green-600 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-green-700 transition"
-          >
-            ✅ Confirmar
-          </button>
-          <button
-            onClick={() => setConfirming(null)}
-            className="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-bold text-sm hover:bg-gray-300 transition"
-          >
-            Cancelar
-          </button>
-        </div>
-      </div>
-    );
-  }
+         <button
+  onClick={() => changeStatus(confirming)}
+  className="bg-green-600 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-green-700 transition"
+>
+  ✅ Confirm
+</button>
+<button
+  onClick={() => setConfirming(null)}
+  className="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-bold text-sm hover:bg-gray-300 transition"
+>
+  Cancel
+</button>
+</div>
+</div>
+);
+}
 
   // 1. GATILLO MIAMI
   if (['PROCESADO', 'PAGADO', 'RECIBIDO_MIAMI', 'EN_ALMACEN'].includes(pkg.status)) {
@@ -72,9 +72,9 @@ export default function PackageStatusManager({ pkg, isConsolidation = false }: {
         <div className="flex items-center gap-3">
           <div className="bg-blue-100 p-2 rounded-full text-blue-600"><Plane size={24}/></div>
           <div>
-            <h4 className="font-bold text-blue-900">Despacho Internacional</h4>
-            <p className="text-xs text-blue-600">El paquete está listo para salir de Miami.</p>
-          </div>
+            <h4 className="font-bold text-blue-900">International Dispatch</h4>
+            <p className="text-xs text-blue-600">The package is ready to leave Miami.</p>
+            </div>
         </div>
         <button 
           onClick={() => setConfirming('EN_TRANSITO')} 
@@ -82,7 +82,7 @@ export default function PackageStatusManager({ pkg, isConsolidation = false }: {
           className="w-full sm:w-auto bg-blue-600 text-white px-6 py-3 rounded-lg font-bold text-sm hover:bg-blue-700 transition flex items-center justify-center gap-2 shadow-md disabled:opacity-50"
         >
           {loading ? <Loader2 className="animate-spin"/> : <Plane size={18}/>}
-          ENVIAR (EN TRÁNSITO)
+          SHIP (IN TRANSIT)
         </button>
       </div>
     );
@@ -95,8 +95,8 @@ export default function PackageStatusManager({ pkg, isConsolidation = false }: {
         <div className="flex items-center gap-3">
           <div className="bg-purple-100 p-2 rounded-full text-purple-600"><PackageCheck size={24}/></div>
           <div>
-            <h4 className="font-bold text-purple-900">Recepción en Destino</h4>
-            <p className="text-xs text-purple-600">Confirma que tienes el paquete en mano.</p>
+         <h4 className="font-bold text-purple-900">Destination Reception</h4>
+          <p className="text-xs text-purple-600">Confirm that you have the package in hand.</p>
           </div>
         </div>
         <button 
@@ -105,7 +105,7 @@ export default function PackageStatusManager({ pkg, isConsolidation = false }: {
           className="w-full sm:w-auto bg-purple-600 text-white px-6 py-3 rounded-lg font-bold text-sm hover:bg-purple-700 transition flex items-center justify-center gap-2 shadow-md disabled:opacity-50"
         >
           {loading ? <Loader2 className="animate-spin"/> : <Truck size={18}/>}
-          RECIBIR (SACAR A REPARTO)
+          RECEIVE (OUT FOR DELIVERY)
         </button>
       </div>
     );
@@ -118,12 +118,12 @@ export default function PackageStatusManager({ pkg, isConsolidation = false }: {
         <div className="flex items-center gap-3">
           <div className="bg-orange-100 p-2 rounded-full text-orange-600"><Truck size={20}/></div>
           <div>
-            <h4 className="font-bold text-orange-800">En Ruta con Chofer</h4>
-            <p className="text-xs text-orange-600">Esperando que el driver confirme la entrega en App.</p>
+            <h4 className="font-bold text-orange-800">Out for Delivery with Driver</h4>
+            <p className="text-xs text-orange-600">Waiting for the driver to confirm delivery in the App.</p>
           </div>
         </div>
         <span className="text-xs font-bold bg-white text-orange-600 px-3 py-1 rounded border border-orange-200 animate-pulse">
-          En Progreso...
+          In Progress...
         </span>
       </div>
     );
