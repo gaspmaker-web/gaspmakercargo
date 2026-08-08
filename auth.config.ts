@@ -32,7 +32,7 @@ export const authConfig = {
         if (role === 'DRIVER') {
           return Response.redirect(new URL('/dashboard-driver', nextUrl));
         }
-        if (role === 'ADMIN' || role === 'WAREHOUSE') {
+        if (role === 'ADMIN' || role === 'WAREHOUSE' || role === 'CONSOLIDATION') {
           return Response.redirect(new URL('/dashboard-admin', nextUrl));
         }
         return Response.redirect(new URL('/dashboard-cliente', nextUrl));
@@ -42,7 +42,7 @@ export const authConfig = {
       if (isOnDashboardAdmin) {
         if (isLoggedIn) {
             // ✅ Permitimos entrar a ADMIN y a WAREHOUSE
-            return role === 'ADMIN' || role === 'WAREHOUSE';
+            return role === 'ADMIN' || role === 'WAREHOUSE' || role === 'CONSOLIDATION';
         }
         return false; // Redirigir al login
       }

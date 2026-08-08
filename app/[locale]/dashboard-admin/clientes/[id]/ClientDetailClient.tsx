@@ -9,7 +9,7 @@ import {
   AlertCircle, ExternalLink, Image as ImageIcon, AlertTriangle, Edit
 } from 'lucide-react';
 
-export default function ClientDetailClient({ client, locale }: { client: any, locale: string }) {
+export default function ClientDetailClient({ client, locale, adminRole }: { client: any, locale: string, adminRole?: string }) {
   const [selectedPkg, setSelectedPkg] = useState<any>(null);
 
   return (
@@ -44,12 +44,14 @@ export default function ClientDetailClient({ client, locale }: { client: any, lo
             </div>
         </div>
 
-      {/* 🔥 Role Manager */}
+    {/* 🔥 Role Manager — solo ADMIN puede cambiar roles */}
+      {adminRole?.toUpperCase() === 'ADMIN' && (
         <RoleManager 
           userId={client.id}
           currentRole={client.role}
           currentCountryCode={client.countryCode}
         />
+      )}
 
         {/* Tabla */}
         <h2 className="text-xl font-bold text-gmc-gris-oscuro mb-4 flex items-center gap-2">

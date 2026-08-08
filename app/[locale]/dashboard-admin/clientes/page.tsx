@@ -31,9 +31,8 @@ export default async function GestionClientesPage({
         redirect(`/${params.locale}/dashboard-admin`);
     }
 
-    // 3. 🛡️ SEGURIDAD FINAL
-    // Si por alguna razón no es ADMIN (y tampoco era Warehouse que ya filtramos), fuera.
-    if (session.user.role !== 'ADMIN') {
+   // 3. 🛡️ SEGURIDAD FINAL
+    if (session.user.role !== 'ADMIN' && session.user.role !== 'CONSOLIDATION') {
         redirect(`/${params.locale}/dashboard-cliente`);
     }
 

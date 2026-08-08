@@ -88,6 +88,7 @@ export default function ClientListTable({ clients, locale }: ClientListTableProp
                  client.role === 'WAREHOUSE' ? 'bg-orange-500 text-white' :
                  client.role === 'DRIVER' ? 'bg-green-500 text-white' :
                  client.role === 'VIP' ? 'bg-yellow-400 text-yellow-900' :
+                 client.role === 'CONSOLIDATION' ? 'bg-violet-500 text-white' :
                   'bg-blue-100 text-blue-700'
                  }`}>
                  {client.role}

@@ -11,7 +11,7 @@ export default async function AdminClientDetailPage({ params }: { params: { id: 
   const session = await auth();
 
   // Seguridad
-  if (session && (session.user.role !== 'ADMIN' && session.user.role !== 'WAREHOUSE')) {
+ if (session && (session.user.role !== 'ADMIN' && session.user.role !== 'WAREHOUSE' && session.user.role !== 'CONSOLIDATION')) {
     // redirect('/login-cliente'); 
   }
 
@@ -71,5 +71,5 @@ export default async function AdminClientDetailPage({ params }: { params: { id: 
   // Serializamos para pasar al cliente
   const serializedClient = JSON.parse(JSON.stringify(client));
 
-  return <ClientDetailClient client={serializedClient} locale={params.locale} />;
+  return <ClientDetailClient client={serializedClient} locale={params.locale} adminRole={session?.user?.role} />;
 }

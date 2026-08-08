@@ -26,7 +26,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Faltan datos' }, { status: 400 });
     }
 
-    const validRoles = ['CLIENTE', 'DRIVER', 'WAREHOUSE', 'ADMIN'];
+    const validRoles = ['CLIENTE', 'DRIVER', 'WAREHOUSE', 'ADMIN', 'CONSOLIDATION'];
     if (!validRoles.includes(role.toUpperCase())) {
       return NextResponse.json({ error: 'Rol inválido' }, { status: 400 });
     }

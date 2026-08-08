@@ -65,7 +65,7 @@ requestHeaders.set('x-forwarded-host', req.headers.get('host') || '');
   const isDriverArea = pathname.includes('/dashboard-driver');
   const isProtectedRoute = isClientArea || isAdminArea || isDriverArea;
 
-  // --- 2. Protección Básica: Login Requerido ---
+// --- 2. Protección Básica: Login Requerido ---
   if (isProtectedRoute && !isLoggedIn) {
     return NextResponse.redirect(new URL(`/${currentLocale}/login-cliente`, req.url));
   }
@@ -82,11 +82,16 @@ requestHeaders.set('x-forwarded-host', req.headers.get('host') || '');
         if (role === 'WAREHOUSE') {
             return NextResponse.redirect(new URL(`/${currentLocale}/dashboard-admin/paquetes`, req.url));
         }
+        if (role === 'CONSOLIDATION') {
+            return NextResponse.redirect(new URL(`/${currentLocale}/dashboard-admin/consolidaciones`, req.url));
+        }
         return NextResponse.redirect(new URL(`/${currentLocale}/dashboard-cliente`, req.url));
     }
 
-    if ((role === 'ADMIN' || role === 'WAREHOUSE') && (isClientArea || isDriverArea)) {
-        const target = role === 'WAREHOUSE' ? 'dashboard-admin/paquetes' : 'dashboard-admin';
+    if ((role === 'ADMIN' || role === 'WAREHOUSE' || role === 'CONSOLIDATION') && (isClientArea || isDriverArea)) {
+        const target = role === 'WAREHOUSE' ? 'dashboard-admin/paquetes' 
+            : role === 'CONSOLIDATION' ? 'dashboard-admin/consolidaciones'
+            : 'dashboard-admin';
         return NextResponse.redirect(new URL(`/${currentLocale}/${target}`, req.url));
     }
 
@@ -94,7 +99,6 @@ requestHeaders.set('x-forwarded-host', req.headers.get('host') || '');
       const isAllowedPath = 
         pathname.includes('/paquetes') || 
         pathname.includes('/crear-envio') || 
-        pathname.includes('/consolidaciones') ||
         pathname.includes('/pay-and-go') ||
         pathname.includes('/tareas-buzon') ||
         pathname.includes('/recepcion-buzones') ||
@@ -102,6 +106,17 @@ requestHeaders.set('x-forwarded-host', req.headers.get('host') || '');
 
       if (!isAllowedPath) {
          return NextResponse.redirect(new URL(`/${currentLocale}/dashboard-admin/paquetes`, req.url));
+      }
+    }
+
+    if (role === 'CONSOLIDATION' && isAdminArea) {
+      const isAllowedPath = 
+        pathname.includes('/paquetes') || 
+        pathname.includes('/consolidaciones') ||
+        pathname.includes('/clientes');
+
+      if (!isAllowedPath) {
+        return NextResponse.redirect(new URL(`/${currentLocale}/dashboard-admin/consolidaciones`, req.url));
       }
     }
 

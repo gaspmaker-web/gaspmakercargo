@@ -78,12 +78,12 @@ export default function AdminSidebar() {
 
 const menuItems = [
     { name: "Dashboard", href: `/${currentLocale}/dashboard-admin`, icon: LayoutDashboard, roles: ["ADMIN"] },
-    { name: "Packages", href: `/${currentLocale}/dashboard-admin/paquetes`, icon: Package, roles: ["ADMIN", "WAREHOUSE"] },
+    { name: "Packages", href: `/${currentLocale}/dashboard-admin/paquetes`, icon: Package, roles: ["ADMIN", "WAREHOUSE", "CONSOLIDATION"] },
     { name: "Create Shipment", href: `/${currentLocale}/dashboard-admin/crear-envio`, icon: Truck, roles: ["ADMIN", "WAREHOUSE"] },
     { name: "Pay & Go", href: `/${currentLocale}/dashboard-admin/pay-and-go`, icon: Zap, roles: ["ADMIN", "WAREHOUSE"] },
-    { name: "Consolidations", href: `/${currentLocale}/dashboard-admin/consolidaciones`, icon: Layers, roles: ["ADMIN", "WAREHOUSE"], badgeCount: pendingConsolidationsCount, badgeColor: "bg-rose-500" },
+    { name: "Consolidations", href: `/${currentLocale}/dashboard-admin/consolidaciones`, icon: Layers, roles: ["ADMIN", "CONSOLIDATION"], badgeCount: pendingConsolidationsCount, badgeColor: "bg-rose-500" },
     { name: "Referral Control", href: `/${currentLocale}/dashboard-admin/referidos`, icon: Gift, roles: ["ADMIN"] },
-    { name: "Personal Shopper", href: `/${currentLocale}/dashboard-admin/compras`, icon: ShoppingBag, roles: ["ADMIN", "WAREHOUSE"], badgeCount: pendingShopperCount, badgeColor: "bg-pink-500" },
+    { name: "Personal Shopper", href: `/${currentLocale}/dashboard-admin/compras`, icon: ShoppingBag, roles: ["ADMIN"], badgeCount: pendingShopperCount, badgeColor: "bg-pink-500" },
     {
       name: "Virtual Mailbox", icon: Mailbox, roles: ["ADMIN", "WAREHOUSE"],
       hasNotification: kycPendingCount > 0 || tasksPendingCount > 0 || receptionPendingCount > 0 || expiredCount > 0 || pickupsPendingCount > 0,
@@ -95,7 +95,7 @@ const menuItems = [
       ]
     },
     { name: "Amazon Catalog", href: `/${currentLocale}/dashboard-admin/catalogo`, icon: ShoppingBag, roles: ["ADMIN"] },
-    { name: "Clients", href: `/${currentLocale}/dashboard-admin/clientes`, icon: Users, roles: ["ADMIN"], badgeCount: pendingInvoicesCount, badgeColor: "bg-red-500" },
+    { name: "Clients", href: `/${currentLocale}/dashboard-admin/clientes`, icon: Users, roles: ["ADMIN", "CONSOLIDATION"], badgeCount: pendingInvoicesCount, badgeColor: "bg-red-500" },
     { name: "Finances", href: `/${currentLocale}/dashboard-admin/finanzas`, icon: DollarSign, roles: ["ADMIN"] },
     { name: "Settings", href: `/${currentLocale}/dashboard-admin/configuracion`, icon: Settings, roles: ["ADMIN"] }
   ];
