@@ -30,10 +30,10 @@ export default async function DriverTaskPage({ params }: { params: { id: string,
   if (!task || !['PAGADO', 'ACEPTADO', 'EN_CAMINO', 'EN_REPARTO', 'ENTREGADO', 'COMPLETADO'].includes(task.status)) {
       return (
         <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-gray-50 font-montserrat text-center">
-            <h1 className="text-2xl font-bold text-gray-800 mb-2">Tarea No Disponible</h1>
-            <p className="text-sm text-gray-500 mb-6">Esta tarea puede haber sido cancelada o ya no existe.</p>
+           <h1 className="text-2xl font-bold text-gray-800 mb-2">Task Not Available</h1>
+           <p className="text-sm text-gray-500 mb-6">This task may have been cancelled or no longer exists.</p>
              <Link href={`/${params.locale}/dashboard-driver`} className="text-gmc-dorado-principal font-bold flex items-center gap-2 bg-white px-6 py-3 rounded-full shadow-md">
-                <ArrowLeft size={20}/> Volver al Tablero
+            <ArrowLeft size={20}/> Back to Dashboard
             </Link>
         </div>
       );
@@ -74,10 +74,10 @@ export default async function DriverTaskPage({ params }: { params: { id: string,
             href={`/${params.locale}/dashboard-driver`} 
             className="inline-flex items-center text-gray-500 hover:text-black font-bold text-sm bg-white px-4 py-2 rounded-full shadow-sm border border-gray-100 active:scale-95 transition"
         >
-            <ArrowLeft size={18} className="mr-1" /> Volver
+            <ArrowLeft size={18} className="mr-1" /> Back
         </Link>
         <div className="text-right">
-             <span className="block text-[10px] text-gray-400 font-bold uppercase tracking-wider">ORDEN</span>
+             <span className="block text-[10px] text-gray-400 font-bold uppercase tracking-wider">ORDER</span>
              <span className="text-xs font-mono font-bold text-gray-600">#{task.id.slice(0,6).toUpperCase()}</span>
         </div>
       </div>
@@ -92,8 +92,8 @@ export default async function DriverTaskPage({ params }: { params: { id: string,
                         {isPickupDone ? <CheckCircle size={18}/> : '1'}
                     </div>
                     <div>
-                        <h3 className={`font-bold text-sm uppercase tracking-wide ${isPickupDone ? 'text-green-700' : 'text-blue-700'}`}>Punto de Recogida</h3>
-                        <p className="text-xs text-gray-400 font-medium">Origen</p>
+                        <h3 className={`font-bold text-sm uppercase tracking-wide ${isPickupDone ? 'text-green-700' : 'text-blue-700'}`}>Pickup Point</h3>
+                        <p className="text-xs text-gray-400 font-medium">Origin</p>
                     </div>
                 </div>
             </div>
@@ -108,7 +108,7 @@ export default async function DriverTaskPage({ params }: { params: { id: string,
                     {isPickupDone ? (
                         <div className="flex flex-col gap-2 animate-in fade-in zoom-in duration-300">
                              <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-green-100 text-green-700 rounded-lg text-xs font-bold w-fit border border-green-200">
-                                <CheckCircle size={14}/> Recogida Completada
+                                <CheckCircle size={14}/> Pickup Completed
                             </div>
                             
                             {task.photoPickupUrl && (
@@ -120,7 +120,7 @@ export default async function DriverTaskPage({ params }: { params: { id: string,
                                     />
                                     <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                                         <a href={task.photoPickupUrl} target="_blank" className="text-white text-xs font-bold flex items-center gap-1 bg-black/50 px-3 py-1 rounded-full">
-                                            <ExternalLink size={14}/> Ver Grande
+                                            <ExternalLink size={14}/> View Full Size
                                         </a>
                                     </div>
                                 </div>
@@ -131,7 +131,7 @@ export default async function DriverTaskPage({ params }: { params: { id: string,
                             href={`/${params.locale}/dashboard-driver/recogida/${task.id}`}
                             className="block w-full bg-blue-600 text-white py-3.5 rounded-xl font-bold text-center shadow-lg hover:bg-blue-700 transition active:scale-95 flex items-center justify-center gap-2"
                         >
-                            <Camera size={20}/> CONFIRMAR RECOGIDA
+                            <Camera size={20}/> CONFIRM PICKUP
                         </Link>
                     )}
                 </div>
@@ -153,9 +153,9 @@ export default async function DriverTaskPage({ params }: { params: { id: string,
                     </div>
                     <div>
                         <h3 className={`font-bold text-sm uppercase tracking-wide ${!isPickupDone ? 'text-gray-500' : (isDeliveryDone ? 'text-green-700' : 'text-gray-900')}`}>
-                            Punto de Entrega
+                          Delivery Point
                         </h3>
-                        <p className="text-xs text-gray-400 font-medium">Destino Final</p>
+                        <p className="text-xs text-gray-400 font-medium">Final Destination</p>
                     </div>
                 </div>
                 {!isPickupDone && <Lock className="text-gray-400" size={20}/>}
@@ -163,7 +163,7 @@ export default async function DriverTaskPage({ params }: { params: { id: string,
 
             <div className="pl-11">
                 <p className={`text-lg font-bold leading-tight mb-2 ${!isPickupDone ? 'text-gray-500' : 'text-gray-800'}`}>
-                    {task.dropOffAddress || 'Almacén Central GMC'}
+                    {task.dropOffAddress || 'GMC Central Warehouse'}
                 </p>
 
                 {isPickupDone && !isDeliveryDone && (
@@ -173,12 +173,12 @@ export default async function DriverTaskPage({ params }: { params: { id: string,
                 <div className="mt-4">
                     {!isPickupDone ? (
                          <div className="w-full bg-gray-200 text-gray-400 py-3.5 rounded-xl font-bold flex items-center justify-center gap-2">
-                            <Lock size={16}/> Pendiente de Recogida
+                            <Lock size={16}/> Pending Pickup
                         </div>
                     ) : isDeliveryDone ? (
                         <div className="flex flex-col gap-2 animate-in fade-in zoom-in duration-300">
                             <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-green-100 text-green-700 rounded-lg text-xs font-bold w-full justify-center border border-green-200">
-                                <CheckCircle size={14}/> Entrega Finalizada
+                                <CheckCircle size={14}/> Delivery Completed
                             </div>
                              {task.photoDeliveryUrl && (
                                 <div className="mt-2 relative w-full h-32 rounded-lg overflow-hidden border border-green-200 shadow-sm group bg-gray-100">
@@ -189,7 +189,7 @@ export default async function DriverTaskPage({ params }: { params: { id: string,
                                     />
                                     <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                                         <a href={task.photoDeliveryUrl} target="_blank" className="text-white text-xs font-bold flex items-center gap-1 bg-black/50 px-3 py-1 rounded-full">
-                                            <ExternalLink size={14}/> Ver Grande
+                                            <ExternalLink size={14}/> View Full Size
                                         </a>
                                     </div>
                                 </div>
@@ -200,7 +200,7 @@ export default async function DriverTaskPage({ params }: { params: { id: string,
                             href={`/${params.locale}/dashboard-driver/entregas/${task.id}`}
                             className="block w-full bg-[#222b3c] text-white py-3.5 rounded-xl font-bold text-center shadow-lg hover:bg-black transition active:scale-95 flex items-center justify-center gap-2"
                         >
-                            <PackageCheck size={20}/> INICIAR ENTREGA
+                            <PackageCheck size={20}/> START DELIVERY
                         </Link>
                     )}
                 </div>
@@ -211,7 +211,7 @@ export default async function DriverTaskPage({ params }: { params: { id: string,
         <div className="bg-yellow-50 p-4 rounded-xl border border-yellow-100 shadow-sm flex gap-3 items-start mt-6">
             <AlertCircle size={20} className="text-yellow-600 shrink-0 mt-0.5"/>
             <div className="flex-1">
-                <h3 className="text-[10px] font-bold text-yellow-800 uppercase mb-1">Nota del Cliente</h3>
+                <h3 className="text-[10px] font-bold text-yellow-800 uppercase mb-1">Client Note</h3>
                 <p className="text-gray-800 text-sm italic">"{task.description || 'Sin instrucciones adicionales.'}"</p>
             </div>
         </div>
@@ -224,7 +224,7 @@ export default async function DriverTaskPage({ params }: { params: { id: string,
              </div>
              {task.contactPhone && (
                  <a href={`tel:${task.contactPhone}`} className="flex items-center gap-1 text-green-700 bg-green-100 hover:bg-green-200 transition px-4 py-2 rounded-full text-xs font-bold shadow-sm">
-                    <Phone size={14}/> Llamar
+                    <Phone size={14}/> Call
                  </a>
              )}
         </div>
