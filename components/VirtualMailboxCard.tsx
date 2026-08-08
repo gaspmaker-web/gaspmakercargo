@@ -119,10 +119,10 @@ export default function VirtualMailboxCard({
                 href="/dashboard-cliente/mailbox-setup" 
                 className="bg-[#1a1f2e] text-white p-4 flex justify-between items-center hover:bg-gmc-dorado-principal hover:text-black transition-colors group-hover:bg-[#222b3c] mt-auto"
             >
-                <span className="text-sm font-bold leading-tight text-left">
-                    Desbloquear desde<br/>
-                    <span className="text-gmc-dorado-principal group-hover:text-black transition-colors">$7.99/mes</span>
-                </span>
+              <span className="text-sm font-bold leading-tight text-left">
+                Unlock from<br/>
+              <span className="text-gmc-dorado-principal group-hover:text-black transition-colors">$7.99/mo</span>
+           </span>
                 <ArrowRight size={18} className="text-gray-400 group-hover:text-black transition-colors" />
             </Link>
         </div>
