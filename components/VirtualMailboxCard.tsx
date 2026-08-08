@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useTranslations } from 'next-intl';
 import { useRouter } from "next/navigation";
 import MailboxCheckoutModal from '@/components/dashboard/MailboxCheckoutModal';
+import { useTenantRates } from '@/hooks/useTenantRates';
 
 interface MailboxStatus {
   hasPlan: boolean;
@@ -41,6 +42,7 @@ export default function VirtualMailboxCard({
   
   const t = useTranslations('VirtualMailboxCard'); 
   const router = useRouter();
+  const tenantRates = useTenantRates();
   
   const [data, setData] = useState<MailboxStatus | null>(null);
   const [loading, setLoading] = useState(true);
@@ -120,9 +122,9 @@ export default function VirtualMailboxCard({
                 className="bg-[#1a1f2e] text-white p-4 flex justify-between items-center hover:bg-gmc-dorado-principal hover:text-black transition-colors group-hover:bg-[#222b3c] mt-auto"
             >
               <span className="text-sm font-bold leading-tight text-left">
-                Unlock from<br/>
-              <span className="text-gmc-dorado-principal group-hover:text-black transition-colors">$7.99/mo</span>
-           </span>
+  {t('unlockFrom')}<br/>
+  <span className="text-gmc-dorado-principal group-hover:text-black transition-colors">${tenantRates.mailbox_basic_monthly.toFixed(2)}{t('perMonth')}</span>
+</span>
                 <ArrowRight size={18} className="text-gray-400 group-hover:text-black transition-colors" />
             </Link>
         </div>
