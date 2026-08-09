@@ -37,12 +37,14 @@ export default function PickupSplitPanel({ pickupId, status, serviceType, photoU
 
   if (!canReceive) {
     return (
-      <div className="bg-orange-50 text-orange-700 p-4 rounded-xl border border-orange-200 flex items-center gap-3">
-        <AlertCircle size={20} />
-        <span className="text-sm font-medium">Waiting for driver delivery... (Status: {status})</span>
-      </div>
-    );
-  }
+ <div className="bg-orange-50 text-orange-700 p-4 rounded-xl border border-orange-200 flex items-center gap-3">
+  <AlertCircle size={20} />
+  <span className="text-sm font-medium">Waiting for driver delivery... (Status: {
+    ({'PAGADO': 'PAID', 'PENDIENTE': 'PENDING', 'EN_CAMINO': 'ON THE WAY', 'ENTREGADO': 'DELIVERED', 'PROCESADO': 'PROCESSED'} as Record<string, string>)[status] || status
+  })</span>
+</div>
+);
+}
 
   const handleAddBox = () => {
     setBoxes([...boxes, { description: '', weight: '', length: '', width: '', height: '', value: '' }]);
