@@ -138,7 +138,7 @@ export default async function PickupRequestDetailPage({ params }: { params: { id
                                 req.status === 'PROCESADO' ? 'bg-gray-600 text-gray-300 border-gray-500' :
                                 'bg-white/10 text-white border-white/20'
                             }`}>
-                                {req.status.replace('_', ' ')}
+                                {({'PAGADO': 'PAID', 'PENDIENTE': 'PENDING', 'EN_CAMINO': 'ON THE WAY', 'ENTREGADO': 'DELIVERED', 'PROCESADO': 'PROCESSED', 'COMPLETADO': 'COMPLETED', 'CANCELADO': 'CANCELLED'} as Record<string, string>)[req.status] || req.status.replace('_', ' ')}
                             </span>
                         </div>
                     </div>
@@ -174,20 +174,34 @@ export default async function PickupRequestDetailPage({ params }: { params: { id
                             </p>
                         </div>
 
-                        {/* Ruta */}
+                 {/* Ruta */}
                         <div className="md:col-span-2 bg-gray-50 p-5 rounded-xl border border-gray-200 relative">
                             <div className="absolute left-5 top-5 bottom-5 w-0.5 bg-gray-300 border-l border-dashed border-gray-300"></div>
                             
+                            {/* Origin A */}
                             <div className="relative pl-8 mb-6">
                                 <div className="absolute left-0 top-1 w-3 h-3 bg-blue-500 rounded-full border-2 border-white shadow-sm -ml-[5px]"></div>
                                 <p className="text-xs font-bold text-gray-400 uppercase mb-1">Origin (A)</p>
                                 <p className="font-medium text-gray-800 text-lg">{req.originAddress}</p>
                             </div>
 
+                            {/* Stops intermedios */}
+                            {req.extraStops && Array.isArray(req.extraStops) && (req.extraStops as any[]).map((stop: any, idx: number) => (
+                                <div key={idx} className="relative pl-8 mb-6">
+                                    <div className="absolute left-0 top-1 w-3 h-3 bg-yellow-500 rounded-full border-2 border-white shadow-sm -ml-[5px]"></div>
+                                    <p className="text-xs font-bold text-gray-400 uppercase mb-1">Stop {String.fromCharCode(66 + idx)}</p>
+                                    <p className="font-medium text-gray-800">{stop.address || stop}</p>
+                                    {stop.description && <p className="text-xs text-gray-500 mt-0.5">{stop.description}</p>}
+                                </div>
+                            ))}
+
+                            {/* Destino final */}
                             <div className="relative pl-8">
                                 <div className="absolute left-0 top-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white shadow-sm -ml-[5px]"></div>
-                                <p className="text-xs font-bold text-gray-400 uppercase mb-1">Destination (B)</p>
-                                <p className="font-medium text-gray-800">{req.dropOffAddress || 'Almacén Central GMC'}</p>
+                                <p className="text-xs font-bold text-gray-400 uppercase mb-1">
+                                    {req.serviceType === 'SHIPPING' ? 'GMC Warehouse (Miami)' : `Destination (${String.fromCharCode(66 + ((req.extraStops as any[]) || []).length)})`}
+                                </p>
+                                <p className="font-medium text-gray-800">{req.dropOffAddress || '1861 NW 22nd St, Miami, FL 33142'}</p>
                             </div>
                         </div>
 
@@ -197,7 +211,7 @@ export default async function PickupRequestDetailPage({ params }: { params: { id
                                 <Package size={14}/> Cargo Details
                             </h3>
                             <div className="bg-yellow-50 p-4 rounded-xl border border-yellow-100 text-gray-700 italic flex items-start gap-3">
-                                <span className="text-2xl text-yellow-400 leading-none">“</span>
+                                <span className="text-2xl text-yellow-400 leading-none">"</span>
                                 <p>{req.description || 'No description'}</p>
                             </div>
                         </div>

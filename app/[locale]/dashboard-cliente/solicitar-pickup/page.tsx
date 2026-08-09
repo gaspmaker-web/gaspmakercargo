@@ -507,8 +507,9 @@ export default function SolicitarPickupPage() {
             distanceMiles: quote.distanceMiles,
             heavyVehicle: formData.heavyVehicle,
             palletCount: formData.palletCount,
-      isPalletMode: formData.weightTier === 'w_151_plus',
-      extraStops: stops.filter(s => s.address),
+            isPalletMode: formData.weightTier === 'w_151_plus',
+            volumeInfo: autoVehicle.type,
+            extraStops: stops.filter(s => s.address),
         })
     });
 
@@ -529,7 +530,7 @@ export default function SolicitarPickupPage() {
             }
         }
 
-      const payload = {
+const payload = {
     ...formData,
     serviceType,
     status: 'PAGADO',
@@ -546,6 +547,7 @@ export default function SolicitarPickupPage() {
     weightLbs: calcWeight,
     distanceMiles: quote.distanceMiles,
     isPalletMode: formData.weightTier === 'w_151_plus',
+    volumeInfo: autoVehicle.type,  // 🔥 Vehículo seleccionado automáticamente
     extraStops: stops.map(s => ({
       id: s.id,
       type: s.type,
