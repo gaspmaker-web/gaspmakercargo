@@ -483,7 +483,7 @@ const handleSelectRate = (billId: string, rate: Rate) => {
       try {
           let selectedCourier = null;
           let courierService = null;
-          let packageServiceType = 'SHIPPING_INTL'; 
+       let packageServiceType = 'SHIPPING_INTL'; 
 
           if (selectedBillIds.length > 0) {
               const primaryId = selectedBillIds[0];
@@ -493,7 +493,8 @@ const handleSelectRate = (billId: string, rate: Rate) => {
               if (rate) {
                   selectedCourier = rate.carrier; 
                   courierService = rate.service;
-                  packageServiceType = 'SHIPPING_INTL'; 
+                  // 🔥 Preservar serviceType original de la consolidación
+                  packageServiceType = originalBill?.serviceType || 'SHIPPING_INTL';
               } else {
                   const isStorePickup = originalBill?.serviceType === 'PICKUP' || 
                                         originalBill?.courierService === 'Entregar en Tienda' ||
