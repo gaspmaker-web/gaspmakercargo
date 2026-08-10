@@ -66,7 +66,7 @@ function calculateFees(pkg: any, t: any) {
         pickupHandlingFee: parseFloat(handlingFee.toFixed(2)), 
         storageDebt: parseFloat(storageFee.toFixed(2)), 
         volumeCft: parseFloat(volumeCft.toFixed(2)),
-        isBlocked: storageFee >= 1.00 
+        isBlocked: storageFee >= 5.00 
     };
 }
 
