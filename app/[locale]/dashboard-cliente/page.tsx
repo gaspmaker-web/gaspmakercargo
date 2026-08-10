@@ -120,8 +120,8 @@ const normalizedPackages = allPackages.map(pkg => calculateFees(pkg, t));
 
   // 🔥 Bloqueados primero
   const sortedPackages = [...normalizedPackages].sort((a: any, b: any) => {
-    const aBlocked = a.storageDebt > 0 ? 1 : 0;
-    const bBlocked = b.storageDebt > 0 ? 1 : 0;
+    const aBlocked = a.isBlocked ? 1 : 0;
+    const bBlocked = b.isBlocked ? 1 : 0;
     if (bBlocked !== aBlocked) return bBlocked - aBlocked;
     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
   });
