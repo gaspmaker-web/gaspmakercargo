@@ -69,6 +69,36 @@ export default function FinanzasTable({ grandTotal }: FinanzasTableProps) {
     'Pickup': 'bg-orange-50 text-orange-600 border border-orange-100',
     'Almacenaje': 'bg-amber-50 text-amber-600 border border-amber-100',
   };
+const translateType = (type: string): string => {
+  const map: Record<string, string> = {
+    'Paquete': 'Package',
+    'Consolidación': 'Consolidation',
+    'Buzón Virtual': 'Virtual Mailbox',
+    'Pickup': 'Pickup',
+    'Almacenaje': 'Storage Fee',
+    'Storage Fee': 'Storage Fee',
+  };
+  return map[type] || type;
+};
+
+const translateStatus = (status: string): string => {
+  const map: Record<string, string> = {
+    'PAGADO': 'PAID',
+    'COMPLETADO': 'COMPLETED',
+    'PROCESADO': 'PROCESSED',
+    'SOLICITUD_CONSOLIDACION': 'CONSOLIDATION REQUEST',
+    'PENDIENTE_PAGO': 'PENDING PAYMENT',
+    'ENVIADO': 'SHIPPED',
+    'RECIBIDO_MIAMI': 'RECEIVED MIAMI',
+    'PENDIENTE': 'PENDING',
+    'EN_ALMACEN': 'IN WAREHOUSE',
+    'EN_TRANSITO': 'IN TRANSIT',
+    'EN_REPARTO': 'OUT FOR DELIVERY',
+    'ENTREGADO': 'DELIVERED',
+    'LISTO_PARA_ENVIO': 'READY TO SHIP',
+  };
+  return map[status] || status;
+};
 
 return (
   <div className="space-y-4">
@@ -164,7 +194,7 @@ return (
                   <td className="px-6 py-4">
                     <div className="flex flex-col gap-1">
                       <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase w-fit ${typeColors[tx.type] || 'bg-gray-100 text-gray-600'}`}>
-                        {tx.type}
+                        {translateType(tx.type)}
                       </span>
                       {tx.description && (
                         <span className="text-[10px] text-gray-400">{tx.description}</span>
@@ -184,7 +214,7 @@ return (
                   </td>
                   <td className="px-6 py-4">
                     <span className="px-2 py-1 bg-gray-50 rounded border border-gray-200 text-[10px] font-bold text-gray-500 uppercase">
-                      {tx.status}
+                      {translateStatus(tx.status)}
                     </span>
                   </td>
                 </tr>
