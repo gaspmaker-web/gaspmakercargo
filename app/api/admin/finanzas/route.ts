@@ -41,10 +41,12 @@ export async function GET(req: NextRequest) {
         include: { user: { select: { name: true, email: true } } }
       }) : Promise.resolve([]),
 
-      type === 'all' || type === 'pickup' ? prisma.pickupRequest.findMany({
-        where: {
-          ...(search ? { user: { name: { contains: search, mode: 'insensitive' } } } : {}),
-        },
+      type === 'all' || type === 'pickup' || type === 'storage' ? prisma.pickupRequest.findMany({
+    where: {
+      ...(search ? { user: { name: { contains: search, mode: 'insensitive' } } } : {}),
+      ...(type === 'pickup' ? { serviceType: { not: 'STORAGE_FEE' } } : {}),
+      ...(type === 'storage' ? { serviceType: 'STORAGE_FEE' } : {}),
+    },
         orderBy: { createdAt: 'desc' },
         include: { user: { select: { name: true, email: true } } }
       }) : Promise.resolve([]),

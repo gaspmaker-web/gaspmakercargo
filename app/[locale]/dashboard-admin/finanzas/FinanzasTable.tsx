@@ -129,6 +129,7 @@ return (
              <option value="package">Packages</option>
              <option value="consolidation">Consolidations</option>
              <option value="pickup">Pickups</option>
+             <option value="storage">Storage Fee</option>
              <option value="mailbox">Virtual Mailbox</option>
               </select>
             </div>
