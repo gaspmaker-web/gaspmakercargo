@@ -153,10 +153,12 @@ const normalizedPackages = allPackages.map(pkg => calculateFees(pkg, t));
     return isDelivered && !isPickupPackage(pkg); 
   }).length;
 
-  const activePackages = sortedPackages.filter(pkg => {
+ const activePackages = sortedPackages.filter(pkg => {
     const s = pkg.status?.toUpperCase().trim() || '';
-    return !['ENTREGADO', 'DELIVERED', 'CANCELADO', 'ENTREGADO_HISTORICO', 'EN_PROCESAMIENTO'].includes(s);
-  });
+    const isExcluded = ['ENTREGADO', 'DELIVERED', 'CANCELADO', 'ENTREGADO_HISTORICO', 'EN_PROCESAMIENTO'].includes(s);
+    const isInConsolidation = !!pkg.consolidatedShipmentId;
+    return !isExcluded && !isInConsolidation;
+});
   
 
   const pendingBills = await prisma.consolidatedShipment.findMany({
