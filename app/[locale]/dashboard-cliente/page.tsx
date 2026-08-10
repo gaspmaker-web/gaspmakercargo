@@ -116,7 +116,15 @@ export default async function DashboardPage({ params: { locale } }: Props) {
   });
 
   const t = await getTranslations({ locale, namespace: 'Dashboard' });
-  const normalizedPackages = allPackages.map(pkg => calculateFees(pkg, t));
+const normalizedPackages = allPackages.map(pkg => calculateFees(pkg, t));
+
+  // 🔥 Bloqueados primero
+  normalizedPackages.sort((a: any, b: any) => {
+    const aBlocked = a.storageDebt > 0 ? 1 : 0;
+    const bBlocked = b.storageDebt > 0 ? 1 : 0;
+    if (bBlocked !== aBlocked) return bBlocked - aBlocked;
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  });
 
   const isPickupPackage = (pkg: any) => {
       const isClientRetiro = pkg.selectedCourier === 'CLIENTE_RETIRO';
@@ -149,6 +157,7 @@ export default async function DashboardPage({ params: { locale } }: Props) {
     const s = pkg.status?.toUpperCase().trim() || '';
     return !['ENTREGADO', 'DELIVERED', 'CANCELADO', 'ENTREGADO_HISTORICO', 'EN_PROCESAMIENTO'].includes(s);
   });
+  
 
   const pendingBills = await prisma.consolidatedShipment.findMany({
     where: { 
