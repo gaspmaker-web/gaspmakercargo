@@ -119,7 +119,7 @@ export default async function DashboardPage({ params: { locale } }: Props) {
 const normalizedPackages = allPackages.map(pkg => calculateFees(pkg, t));
 
   // 🔥 Bloqueados primero
-  normalizedPackages.sort((a: any, b: any) => {
+  const sortedPackages = [...normalizedPackages].sort((a: any, b: any) => {
     const aBlocked = a.storageDebt > 0 ? 1 : 0;
     const bBlocked = b.storageDebt > 0 ? 1 : 0;
     if (bBlocked !== aBlocked) return bBlocked - aBlocked;
@@ -153,7 +153,7 @@ const normalizedPackages = allPackages.map(pkg => calculateFees(pkg, t));
     return isDelivered && !isPickupPackage(pkg); 
   }).length;
 
-  const activePackages = normalizedPackages.filter(pkg => {
+  const activePackages = sortedPackages.filter(pkg => {
     const s = pkg.status?.toUpperCase().trim() || '';
     return !['ENTREGADO', 'DELIVERED', 'CANCELADO', 'ENTREGADO_HISTORICO', 'EN_PROCESAMIENTO'].includes(s);
   });
