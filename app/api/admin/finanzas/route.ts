@@ -101,7 +101,7 @@ const storageFreeDays = tenantIdForRates ? (await getTenantRate(tenantIdForRates
       })),
       ...pickups.map(pk => ({
         id: pk.id.substring(0, 8).toUpperCase(),
-        type: pk.serviceType === 'STORAGE' ? 'Almacenaje' : 'Pickup',
+        type: (pk.serviceType === 'STORAGE' || pk.serviceType === 'STORAGE_FEE') ? 'Storage Fee' : 'Pickup',
         date: pk.createdAt,
         amount: pk.totalPaid || 0,
         debt: Math.max(0, (pk.subtotal || 0) - (pk.totalPaid || 0)),
