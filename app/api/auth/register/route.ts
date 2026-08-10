@@ -26,7 +26,8 @@ const slug = process.env.TENANT_SLUG || 'gaspmaker';
 const tenantId = TENANT_IDS[slug] || null;
 
     // 🔥 AÑADIMOS 'referredBy' para recibir el código del amigo que lo invitó
-    const { email, password, name, countryCode, phone, dateOfBirth, referredBy } = body;
+    const { email: rawEmail, password, name, countryCode, phone, dateOfBirth, referredBy } = body;
+    const email = rawEmail.toLowerCase().trim();
 
     if (!email || !password || !name) {
       return NextResponse.json({ message: "Faltan datos obligatorios" }, { status: 400 });

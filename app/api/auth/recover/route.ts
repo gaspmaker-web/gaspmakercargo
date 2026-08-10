@@ -13,7 +13,8 @@ export async function POST(req: Request) {
 
     const resend = new Resend(process.env.RESEND_API_KEY);
 
-    const { email } = await req.json();
+    const { email: rawEmail } = await req.json();
+    const email = rawEmail.toLowerCase().trim();
 
     // 1. Verificar si el usuario existe
     const user = await prisma.user.findUnique({
@@ -45,7 +46,7 @@ export async function POST(req: Request) {
     // 5. Enviar Email con Resend
     await resend.emails.send({
       from: 'Gasp Maker Cargo <info@gaspmakercargo.com>', //  dominio verificado
-      to: email,
+      to: email.toLowerCase().trim(),
       subject: 'Recuperar tu contraseña - Gasp Maker Cargo',
       html: `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
