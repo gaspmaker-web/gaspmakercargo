@@ -66,8 +66,8 @@ export default function RegisterClient({ initialReferralCode }: RegisterClientPr
         setSelectedCountry(country);
     };
 
-    // Fallback para el código de área si no está definido
-    const displayDialCode = selectedCountry?.dial_code || '+1';
+   // Fallback para el código de área si no está definido
+const displayDialCode = (selectedCountry?.dial_code || '+1').replace(/-/g, '');
 
     const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
