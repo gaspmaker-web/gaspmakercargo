@@ -112,7 +112,8 @@ export default function RegisterClient({ initialReferralCode }: RegisterClientPr
         
         const isoDateOfBirth = `${formattedYear}-${formattedMonth}-${formattedDay}T00:00:00.000Z`;
 
-        const fullPhoneNumber = `${displayDialCode} ${phoneNumber}`;
+        const cleanDialCode = displayDialCode.replace(/-/g, '');
+        const fullPhoneNumber = `${cleanDialCode} ${phoneNumber}`;
 
         setIsLoading(true);
 
