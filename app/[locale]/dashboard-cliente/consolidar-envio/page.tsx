@@ -177,8 +177,8 @@ export default function ConsolidateShipmentPage() {
                         className="p-6 flex justify-between items-center cursor-pointer hover:bg-gray-50 bg-white"
                     >
                         <div>
-                            <h3 className="font-bold text-gmc-gris-oscuro text-lg">Selecciona Paquetes</h3>
-                            <p className="text-xs text-gray-500">{inventory.length} paquetes disponibles</p>
+                          <h3 className="font-bold text-gmc-gris-oscuro text-lg">{t('selectPackages')}</h3>
+                          <p className="text-xs text-gray-500">{inventory.length} paquetes disponibles</p>
                         </div>
                         <div className="text-gray-400">
                             {isInventoryOpen ? <ChevronUp size={20}/> : <ChevronDown size={20}/>}
@@ -279,8 +279,8 @@ export default function ConsolidateShipmentPage() {
                     <div className="flex items-center gap-2 mb-4 bg-gray-700 p-3 rounded-lg">
                         <Package size={18} className="text-gmc-dorado-principal"/>
                         <span className="text-sm font-bold text-white">
-                            {totals.count === 0 ? "Selecciona paquetes" : 
-                             totals.isConsolidation ? `Consolidación (${totals.count} pqts)` : "Envío Individual"}
+                           {totals.count === 0 ? t('selectPackages') : 
+                           totals.isConsolidation ? `${t('consolidation')} (${totals.count} pqts)` : t('individualShipment')}
                         </span>
                     </div>
 
@@ -334,7 +334,7 @@ export default function ConsolidateShipmentPage() {
                         className="w-full py-4 bg-gmc-dorado-principal text-gmc-gris-oscuro font-bold rounded-xl hover:bg-white transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                     >
                         {processing ? <Loader2 className="animate-spin"/> : <Plane size={20}/>}
-                        {processing ? 'Procesando...' : 'Pagar y Enviar'}
+                        {processing ? t('processing') : t('payAndSend')}
                     </button>
                    
                     {totals.isOverweight && (

@@ -389,7 +389,11 @@
     "15_21_days": "15-21 días",
     "day": "día",
     "days": "días",
-    "inclCustoms": "incl. aduana"
+    "inclCustoms": "incl. aduana",
+    "selectPackages": "Selecciona Paquetes",
+    "payAndSend": "Pagar y Enviar",
+    "consolidation": "Consolidación",
+    "individualShipment": "Envío Individual"
   },
   "PendingBills": {
     "title": "Facturas Pendientes",

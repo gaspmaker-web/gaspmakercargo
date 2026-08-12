@@ -393,7 +393,11 @@
     "15_21_days": "15-21 days",
     "day": "day",
     "days": "days",
-    "inclCustoms": "incl. customs"
+    "inclCustoms": "incl. customs",
+    "selectPackages": "Select Packages",
+    "payAndSend": "Pay and Ship",
+    "consolidation": "Consolidation",
+    "individualShipment": "Individual Shipment"
     
   },
   "PendingBills": {

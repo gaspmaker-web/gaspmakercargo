@@ -392,7 +392,11 @@
     "15_21_days": "15-21 jours",
     "day": "jour",
     "days": "jours",
-    "inclCustoms": "douane incluse"
+    "inclCustoms": "douane incluse",
+    "selectPackages": "Sélectionner les Colis",
+    "payAndSend": "Payer et Envoyer",
+    "consolidation": "Consolidation",
+    "individualShipment": "Envoi Individuel"
   },
   "PendingBills": {
     "title": "Factures en Attente",
