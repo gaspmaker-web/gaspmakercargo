@@ -44,7 +44,7 @@ export default function ReceiveShipmentButton({ shipmentId, currentStatus, count
     if (currentStatus === 'EN_ALMACEN_DESTINO' || currentStatus === 'EN_REPARTO' || currentStatus === 'ENTREGADO' || currentStatus === 'COMPLETADO') {
         return (
             <button disabled className="bg-green-100 text-green-800 px-6 py-3 rounded-lg font-bold flex items-center gap-2 cursor-not-allowed opacity-80">
-                <CheckCircle size={20} /> YA RECIBIDO / EN RUTA
+                <CheckCircle size={20} /> ALREADY RECEIVED / EN ROUTE
             </button>
         );
     }
@@ -61,13 +61,13 @@ export default function ReceiveShipmentButton({ shipmentId, currentStatus, count
                     onClick={handleReceive}
                     className="bg-green-600 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-green-700 transition"
                 >
-                    ✅ Sí, confirmar
+                    ✅ Confirm
                 </button>
                 <button
                     onClick={() => setConfirming(false)}
                     className="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-bold text-sm hover:bg-gray-300 transition"
                 >
-                    Cancelar
+                    Cancel
                 </button>
             </div>
         );
@@ -80,7 +80,7 @@ export default function ReceiveShipmentButton({ shipmentId, currentStatus, count
             className="bg-gmc-dorado-principal hover:bg-yellow-500 text-white px-6 py-3 rounded-lg font-bold shadow-md transition-all flex items-center gap-2"
         >
             {loading ? <Loader2 className="animate-spin" /> : <Play size={20} fill="currentColor" />}
-            {loading ? 'Procesando...' : 'RECIBIR (SACAR A REPARTO)'}
+            {loading ? 'Processing...' : 'RECEIVE (OUT FOR DELIVERY)'}
         </button>
     );
 }
