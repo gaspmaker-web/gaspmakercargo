@@ -64,39 +64,30 @@ export async function POST(req: NextRequest) {
 
 // Upsert tarifas
 if (rates && Array.isArray(rates)) {
-  for (const rate of rates) {
-    const existing = await prisma.tenantRate.findFirst({
-      where: {
-        tenantId: tenant.id,
-        concept: rate.concept,
-        countryCode: rate.countryCode ?? null,
-      }
-    });
-
-if (existing) {
-  const valueChanged = Number(existing.value) !== Number(rate.value);
-  const textChanged = existing.textValue !== (rate.textValue ?? null);
-  if (valueChanged || textChanged) {
-    await prisma.tenantRate.update({
-      where: { id: existing.id },
-      data: { 
-        value: rate.value,
-        ...(rate.textValue !== undefined && { textValue: rate.textValue }),
-      },
-    });
-  }
-} else {
-  await prisma.tenantRate.create({
-    data: {
-      tenantId: tenant.id,
-      concept: rate.concept,
-      countryCode: rate.countryCode ?? null,
-      value: rate.value,
-      ...(rate.textValue !== undefined && { textValue: rate.textValue }),
+  await prisma.$transaction(async (tx) => {
+    for (const rate of rates) {
+      await tx.tenantRate.upsert({
+        where: {
+          tenantId_concept_countryCode: {
+            tenantId: tenant.id,
+            concept: rate.concept,
+            countryCode: rate.countryCode ?? '',
+          }
+        },
+        update: {
+          value: rate.value,
+          ...(rate.textValue !== undefined && { textValue: rate.textValue }),
+        },
+        create: {
+          tenantId: tenant.id,
+          concept: rate.concept,
+          countryCode: rate.countryCode ?? null,
+          value: rate.value,
+          ...(rate.textValue !== undefined && { textValue: rate.textValue }),
+        }
+      });
     }
-  });
-}
-  }
+  }, { timeout: 30000 });
 }
 
 // Actualizar API keys si vienen

@@ -221,6 +221,7 @@ interface ApiKeys {
 
 export default function ConfiguracionPage() {
   const [rates, setRates] = useState<Rate[]>([]);
+  const [dirtyRates, setDirtyRates] = useState<Set<string>>(new Set());
   const [apiKeys, setApiKeys] = useState<ApiKeys>({ easypost_api_key: '', stripe_publishable_key: '', stripe_secret_key: '' });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -229,9 +230,9 @@ export default function ConfiguracionPage() {
   const [activeTab, setActiveTab] = useState<'international' | 'global' | 'local' | 'apis'>('international');
   const [newCountry, setNewCountry] = useState('');
   const [mailboxPriceIds, setMailboxPriceIds] = useState({
-  stripe_mailbox_basic_price_id: '',
-  stripe_mailbox_premium_price_id: '',
-});
+    stripe_mailbox_basic_price_id: '',
+    stripe_mailbox_premium_price_id: '',
+  });
 
 useEffect(() => {
   fetch('/api/admin/rates')
@@ -253,6 +254,7 @@ useEffect(() => {
 };
 
 const setTextRate = (concept: string, countryCode: string | null, value: string) => {
+  setDirtyRates(prev => new Set(prev).add(`${concept}__${countryCode ?? ''}`));
   setRates(prev => {
     const exists = prev.findIndex(r => r.concept === concept && r.countryCode === countryCode);
     if (exists >= 0) {
@@ -269,7 +271,8 @@ const setTextRate = (concept: string, countryCode: string | null, value: string)
     return r?.value ?? 0;
   };
 
-  const setRate = (concept: string, countryCode: string | null, value: number) => {
+const setRate = (concept: string, countryCode: string | null, value: number) => {
+    setDirtyRates(prev => new Set(prev).add(`${concept}__${countryCode ?? ''}`));
     setRates(prev => {
       const exists = prev.findIndex(r => r.concept === concept && r.countryCode === countryCode);
       if (exists >= 0) {
@@ -305,18 +308,32 @@ const addCountry = () => {
   setNewCountry('');
 };
 
-  const save = async () => {
+const save = async () => {
     setSaving(true);
-    await fetch('/api/admin/rates', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ rates, apiKeys, mailboxPriceIds }),
-    });
-    setSaving(false);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
+    try {
+      const changedRates = rates.filter(r => 
+        dirtyRates.has(`${r.concept}__${r.countryCode ?? ''}`)
+      );
+      const res = await fetch('/api/admin/rates', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rates: changedRates, apiKeys, mailboxPriceIds }),
+      });
+      if (res.ok) {
+        setSaved(true);
+        setDirtyRates(new Set());
+        setTimeout(() => setSaved(false), 3000);
+      } else {
+        const data = await res.json();
+        alert(data.error || 'Error saving rates');
+      }
+    } catch (e) {
+      console.error('Save error:', e);
+      alert('Connection error');
+    } finally {
+      setSaving(false);
+    }
   };
-
 // Países únicos con tarifas internacionales
 const internationalCountries = Array.from(new Set(
   rates
