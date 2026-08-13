@@ -1405,7 +1405,8 @@
     "noCards": "Aucune carte enregistrée.",
     "addPaymentMethod": "Ajoutez un moyen de paiement dans les Paramètres pour continuer.",
     "itemsRequested": "Articles Demandés",
-    "paymentCompleted": "Paiement Terminé avec Succès"
+    "paymentCompleted": "Paiement Terminé avec Succès",
+    "processing": "Traitement..."
   },
   "MailboxPublic": {
   "metadataTitle": "Boîte Postale Virtuelle USA | Gasp Maker Cargo",

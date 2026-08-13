@@ -1384,7 +1384,8 @@
     "noCards": "No saved cards found.",
     "addPaymentMethod": "Add a payment method in Settings to continue.",
     "itemsRequested": "Items Requested",
-    "paymentCompleted": "Payment Completed Successfully"
+    "paymentCompleted": "Payment Completed Successfully",
+    "processing": "Processing..."
   },
   "MailboxPublic": {
     "metadataTitle": "Virtual Mailbox USA | Gasp Maker Cargo",

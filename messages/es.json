@@ -1425,7 +1425,9 @@
     "noCards": "No tienes tarjetas guardadas.",
     "addPaymentMethod": "Agrega un método de pago en Configuración para continuar.",
     "itemsRequested": "Artículos Solicitados",
-    "paymentCompleted": "Pago Completado con Éxito"
+    "paymentCompleted": "Pago Completado con Éxito",
+    "processing": "Procesando..."
+
 },
 "MailboxPublic": {
     "metadataTitle": "Buzón Virtual USA | Gasp Maker Cargo",
