@@ -77,6 +77,10 @@ easypostShipmentId,
     if (isPickupService && amountNet) {
         const { calculateAuraLocalDelivery } = await import('@/lib/aura-engine');
         const { getProcessingFee } = await import('@/lib/stripeCalc');
+        const { getTenantId: getTenantIdLocal } = await import('@/lib/tenant-cache');
+        const { getTenantRate: getTenantRateLocal } = await import('@/lib/tenant-rates');
+        const tenantSlugLocal = process.env.TENANT_SLUG || 'gaspmaker';
+        const tenantIdLocal = await getTenantIdLocal(tenantSlugLocal);
 
         const wLbs     = Number(weightLbs) || 0;
         const dMiles   = Number(reqDistanceMiles) || 0;
@@ -85,17 +89,21 @@ easypostShipmentId,
 
         let serverSubtotal = 0;
 
-        if (isPalletMode) {
+      if (isPalletMode) {
             // 🔒 Lógica pallet manual — igual que el frontend (no está en Aura Engine)
             if (vehicle === 'BOX_TRUCK') {
-                serverSubtotal = 175;
+                serverSubtotal = tenantIdLocal ? (await getTenantRateLocal(tenantIdLocal, 'local_pallet_box_truck') ?? 175) : 175;
             } else {
-                serverSubtotal = pCount === 2 ? 125 : 95;
+                serverSubtotal = pCount === 2 
+                    ? (tenantIdLocal ? (await getTenantRateLocal(tenantIdLocal, 'local_pallet_cargo_van_2') ?? 125) : 125)
+                    : (tenantIdLocal ? (await getTenantRateLocal(tenantIdLocal, 'local_pallet_cargo_van_1') ?? 95) : 95);
             }
             // Cargo de distancia (radio base 10 mi)
             if (dMiles > 10) {
-                const rate = vehicle === 'BOX_TRUCK' ? 2.50 : 1.75;
-                serverSubtotal += parseFloat(((dMiles - 10) * rate).toFixed(2));
+                const ratePerMile = vehicle === 'BOX_TRUCK' 
+                    ? (tenantIdLocal ? await getTenantRateLocal(tenantIdLocal, 'local_per_mile_box_truck') ?? 2.50 : 2.50)
+                    : (tenantIdLocal ? await getTenantRateLocal(tenantIdLocal, 'local_per_mile_cargo_van') ?? 1.75 : 1.75);
+                serverSubtotal += parseFloat(((dMiles - 10) * ratePerMile).toFixed(2));
             }
         } else if (wLbs > 0) {
             // 🔒 Aura Engine — modo SIMULACIÓN (0-150 lbs)
