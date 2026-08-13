@@ -33,7 +33,21 @@ export default async function ShipmentDetailPage({ params }: { params: { id: str
 
   const proofPackage = shipment.packages.find(p => p.deliveryPhotoUrl || p.deliverySignature);
   
-  const isDelivered = shipment.status === 'ENTREGADO' || shipment.status === 'DELIVERED' || shipment.status === 'COMPLETADO';
+ const isDelivered = shipment.status === 'ENTREGADO' || shipment.status === 'DELIVERED' || shipment.status === 'COMPLETADO';
+
+  const translateStatus = (status: string): string => {
+    const map: Record<string, string> = {
+      'ENVIADO': 'SHIPPED',
+      'EN_TRANSITO': 'IN TRANSIT',
+      'EN_REPARTO': 'OUT FOR DELIVERY',
+      'ENTREGADO': 'DELIVERED',
+      'PAGADO': 'PAID',
+      'PENDIENTE_PAGO': 'PENDING PAYMENT',
+      'SOLICITUD_CONSOLIDACION': 'CONSOLIDATION REQUEST',
+      'COMPLETADO': 'COMPLETED',
+    };
+    return map[status] || status.replace(/_/g, ' ');
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 p-6 font-montserrat">
@@ -61,7 +75,7 @@ export default async function ShipmentDetailPage({ params }: { params: { id: str
                 </div>
                 <div>
                     <span className={`px-4 py-2 rounded-lg text-sm font-bold border ${isDelivered ? 'bg-green-600 border-green-500' : 'bg-purple-600 border-purple-500'} text-white`}>
-                        {shipment.status.replace(/_/g, ' ')}
+                        {translateStatus(shipment.status)}
                     </span>
                 </div>
             </div>
@@ -99,13 +113,13 @@ export default async function ShipmentDetailPage({ params }: { params: { id: str
                             </span>
                         </div>
                         <div className="flex justify-between items-center">
-                            <span className="text-sm text-gray-600">Medidas:</span>
+                            <span className="text-sm text-gray-600">Dimensions:</span>
                             <span className="font-mono text-sm text-gray-800 bg-gray-100 px-2 py-1 rounded">
                                 {shipment.lengthIn || 0} x {shipment.widthIn || 0} x {shipment.heightIn || 0} <span className="text-xs text-gray-400">in</span>
                             </span>
                         </div>
                         <div className="flex justify-between items-center mt-2 pt-2 border-t border-gray-100">
-                             <span className="text-xs text-gray-500">Paquetes:</span>
+                             <span className="text-xs text-gray-500">Packages:</span>
                              <span className="font-bold bg-purple-100 text-purple-700 px-2 rounded-full text-xs">{shipment.packages.length}</span>
                         </div>
                     </div>

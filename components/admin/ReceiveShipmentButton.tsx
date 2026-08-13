@@ -55,7 +55,7 @@ export default function ReceiveShipmentButton({ shipmentId, currentStatus, count
             <div className="flex items-center gap-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                 <AlertTriangle size={18} className="text-yellow-600 shrink-0" />
                 <p className="text-sm font-bold text-yellow-800 flex-1">
-                    ¿Confirmas que recibiste en {countryName} y sale a reparto?
+                    Confirm that you received in {countryName} and it's out for delivery?
                 </p>
                 <button
                     onClick={handleReceive}

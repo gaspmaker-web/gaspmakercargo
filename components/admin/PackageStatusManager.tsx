@@ -43,8 +43,8 @@ export default function PackageStatusManager({ pkg, isConsolidation = false }: {
           <AlertTriangle size={20} className={isReparto ? 'text-purple-600' : 'text-blue-600'} />
           <p className="text-sm font-bold">
             {isReparto
-              ? "¿Confirmas que el paquete LLEGÓ a destino y sale a reparto?"
-              : "¿Confirmas que el paquete sale de Miami en tránsito?"}
+             ? "Confirm that the package ARRIVED at destination and is out for delivery?"
+             : "Confirm that the package is leaving Miami in transit?"}
           </p>
         </div>
         <div className="flex gap-2">
