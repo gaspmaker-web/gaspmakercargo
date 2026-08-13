@@ -348,10 +348,14 @@ const handleSelectRate = (billId: string, rate: Rate) => {
               let itemServicePrice = 0;
               const weight = Number(bill.weightLbs) || 0;
               
+           const destCode = bill.destinationCountryCode?.toUpperCase() || '';
+              const vipMinW = (tenantRates[`vip_wholesale_min_weight__${destCode}`] as number) ?? 230;
+              const vipRateAir = (tenantRates[`vip_wholesale_rate_air__${destCode}`] as number) ?? 2.80;
+
               if (rate) {
-                  // 🛡️ BLOQUEO ESTRICTO: Solo aplica 2.80 si NO ES Local y NO ES Marítimo
-                  if (isVip && weight >= 230 && !isLocalAura && !isLocal && !isOcean) {
-                      itemServicePrice = weight * 2.80;
+                  // 🛡️ BLOQUEO ESTRICTO: Solo aplica VIP si NO ES Local y NO ES Marítimo
+                  if (isVip && weight >= vipMinW && !isLocalAura && !isLocal && !isOcean) {
+                      itemServicePrice = weight * vipRateAir;
                   } else {
                       itemServicePrice = rate.price;
                   }
@@ -361,8 +365,8 @@ const handleSelectRate = (billId: string, rate: Rate) => {
                       itemServicePrice = bill.totalAmount || 0;
                   } else {
                       // 🛡️ BLOQUEO ESTRICTO AQUÍ TAMBIÉN
-                      if (isVip && weight >= 230 && !isLocalAura && !isLocal && !isOcean) {
-                          itemServicePrice = weight * 2.80;
+                      if (isVip && weight >= vipMinW && !isLocalAura && !isLocal && !isOcean) {
+                          itemServicePrice = weight * vipRateAir;
                       } else {
                           const totalFromServer = bill.totalAmount || 0;
                           itemServicePrice = Math.max(0, totalFromServer - (bill.handlingFee || 0) - ins);
