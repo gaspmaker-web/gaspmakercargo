@@ -812,8 +812,8 @@ const payload = {
                                             </div>
                                             <p className="text-[11px] text-gray-500 mt-2 text-center">
                                                 {formData.heavyVehicle === 'CARGO_VAN' 
-    ? <><strong>${formData.palletCount === 2 ? '125.00' : '95.00'}</strong> ({formData.palletCount} pallet{formData.palletCount > 1 ? 's' : ''})</>
-    : <><strong>$175.00</strong> ({formData.palletCount} pallets — flat rate)</>
+    ? <><strong>${formData.palletCount === 2 ? tenantRates.local_pallet_cargo_van_2?.toFixed(2) : tenantRates.local_pallet_cargo_van_1?.toFixed(2)}</strong> ({formData.palletCount} pallet{formData.palletCount > 1 ? 's' : ''})</>
+: <><strong>${tenantRates.local_pallet_box_truck?.toFixed(2)}</strong> ({formData.palletCount} pallets — flat rate)</>
 }
                                             </p>
                                         </div>
