@@ -577,10 +577,51 @@ const internationalCountries = Array.from(new Set(
                     <option value="15_21_days">15-21 days</option>
                   </select>
                 </div>
+           </div>
+
+              {/* 🌟 VIP Wholesale */}
+              <p className="text-xs font-bold text-yellow-700 uppercase tracking-wider mb-3 mt-4">
+                🌟 VIP Wholesale
+              </p>
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="text-xs text-yellow-600 font-bold block mb-1">Min Weight (lbs)</label>
+                  <input
+                    type="number" step="1"
+                    value={getRate('vip_wholesale_min_weight', code) || 230}
+                    onChange={e => setRate('vip_wholesale_min_weight', code, parseFloat(e.target.value) || 0)}
+                    className="w-full border border-yellow-200 rounded-lg px-2 py-1.5 text-sm bg-white"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-yellow-600 font-bold block mb-1">Air Rate ($/lb)</label>
+                  <div className="flex items-center gap-1">
+                    <span className="text-gray-400 text-sm">$</span>
+                    <input
+                      type="number" step="0.01"
+                      value={getRate('vip_wholesale_rate_air', code) || 2.80}
+                      onChange={e => setRate('vip_wholesale_rate_air', code, parseFloat(e.target.value) || 0)}
+                      className="w-full border border-yellow-200 rounded-lg px-2 py-1.5 text-sm bg-white"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-xs text-yellow-600 font-bold block mb-1">Ocean Rate ($/cuft)</label>
+                  <div className="flex items-center gap-1">
+                    <span className="text-gray-400 text-sm">$</span>
+                    <input
+                      type="number" step="0.01"
+                      value={getRate('vip_wholesale_rate_ocean', code) || 0}
+                      onChange={e => setRate('vip_wholesale_rate_ocean', code, parseFloat(e.target.value) || 0)}
+                      className="w-full border border-yellow-200 rounded-lg px-2 py-1.5 text-sm bg-white"
+                    />
+                  </div>
+                </div>
               </div>
             </td>
           </tr>
         )}
+        
       </React.Fragment>
     );
   })}

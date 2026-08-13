@@ -520,9 +520,11 @@ if (showAir && airCountries.includes(targetForAir)) {
             ? minRateMid 
             : 0;
         let priceAir = Math.max(chargeableWeight * airPerLb, applicableMin);
-        if (isVipWholesale && chargeableWeight >= 230) {
-            priceAir = chargeableWeight * 2.80;
-        }
+    const vipMinWeight = rate('vip_wholesale_min_weight', targetForAir, 230);
+    const vipRateAir = rate('vip_wholesale_rate_air', targetForAir, 2.80);
+if (isVipWholesale && chargeableWeight >= vipMinWeight) {
+    priceAir = chargeableWeight * vipRateAir;
+}
         rawRates.push({
             id: `GMC-${targetForAir}-AIR`,
             carrier: 'Gasp Maker Cargo',
@@ -566,6 +568,13 @@ if (showOcean && oceanCountries.includes(targetCountryCode)) {
         else if (safeCuft <= 20 && min_16_20 > 0) priceOcean = min_16_20;
         else if (safeCuft <= 25 && min_21_25 > 0) priceOcean = min_21_25;
         else priceOcean = parseFloat((safeCuft * oceanPerCuft).toFixed(2));
+
+        // 🌟 VIP Wholesale — marítimo
+        const vipMinWeightOcean = rate('vip_wholesale_min_weight', targetCountryCode, 230);
+        const vipRateOcean = rate('vip_wholesale_rate_ocean', targetCountryCode, 0);
+        if (isVipWholesale && vipRateOcean > 0 && chargeableWeight >= vipMinWeightOcean) {
+            priceOcean = parseFloat((safeCuft * vipRateOcean).toFixed(2));
+        }
 
         rawRates.push({
             id: `GMC-${targetCountryCode}-OCEAN`,
