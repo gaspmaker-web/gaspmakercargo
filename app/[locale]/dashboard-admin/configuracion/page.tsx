@@ -432,7 +432,7 @@ const internationalCountries = Array.from(new Set(
       <td className="p-4 font-medium">
         <button
           onClick={() => setExpandedCountry(isExpanded ? null : code)}
-          className="flex items-center gap-2 hover:text-blue-600 transition-colors"
+          className="flex items-center gap-2 hover:text-blue-600 transition-colors whitespace-nowrap"
         >
           {country?.name || code}
           <span className="text-xs text-gray-400">{isExpanded ? '▲' : '▼'}</span>
