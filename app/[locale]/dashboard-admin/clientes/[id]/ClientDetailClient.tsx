@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import RoleManager from '@/components/admin/RoleManager';
+import PlanManager from '@/components/admin/PlanManager';
 import EditPackageAdminModal from '@/components/admin/EditPackageAdminModal';
 import { 
   ArrowLeft, Mail, Phone, MapPin, Package, FileText, 
@@ -45,11 +46,19 @@ export default function ClientDetailClient({ client, locale, adminRole }: { clie
         </div>
 
     {/* 🔥 Role Manager — solo ADMIN puede cambiar roles */}
-      {adminRole?.toUpperCase() === 'ADMIN' && (
+  {adminRole?.toUpperCase() === 'ADMIN' && (
         <RoleManager 
           userId={client.id}
           currentRole={client.role}
           currentCountryCode={client.countryCode}
+        />
+      )}
+
+      {adminRole?.toUpperCase() === 'ADMIN' && (
+        <PlanManager
+          userId={client.id}
+          currentPlan={client.planType}
+          currentNoConsolidationFee={client.noConsolidationFee}
         />
       )}
 
