@@ -685,7 +685,7 @@ const handleSelectRate = (billId: string, rate: Rate) => {
                                     const isLocalVisual = bill.serviceType === 'LOCAL_DELIVERY';
 
                                     const isVipVisual = planType === 'VIP_WHOLESALE';
-                                    const defaultHandlingVisual = isVipVisual ? 0.50 : 0.60;
+                                    const defaultHandlingVisual = isVipVisual ? (tenantRates.handling_vip ?? 0.50) : (tenantRates.handling_standard ?? 0.60);
                                     let effectiveHandling = 0;
                                     
                                     // 🔥 PROTEGEMOS EL HANDLING FEE (Para que no se cobre por paquete en Marítimo/Local)
