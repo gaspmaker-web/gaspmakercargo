@@ -143,7 +143,8 @@ export default async function PagarFacturasPage({ params: { locale } }: { params
     return {
       id: s.id,
       type: type, 
-      description: `${typeLabel} #${labelId}`,
+      description: `#${labelId}`,
+      labelId: labelId,
       gmcShipmentNumber: s.gmcShipmentNumber,
       createdAt: s.createdAt,
       

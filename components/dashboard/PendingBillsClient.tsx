@@ -72,6 +72,14 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
   const router = useRouter();
   const paymentSectionRef = useRef<HTMLDivElement>(null);
 
+  const getTypeLabel = (type: string) => {
+    if (type === 'WAREHOUSE_PICKUP') return t('serviceTypePickup');
+    if (type === 'STORAGE') return t('serviceTypeStorage');
+    if (type === 'LOCAL_DELIVERY') return t('serviceTypeLocal');
+    if (type === 'OCEAN_CONSOLIDATION') return t('serviceTypeOcean');
+    return t('serviceTypeConsolidation');
+  };
+
  // Estado de Datos
   const [bills, setBills] = useState<any[]>(initialBills || []);
   const [cards, setCards] = useState<any[]>([]);
@@ -796,7 +804,7 @@ const handleSelectRate = (billId: string, rate: Rate) => {
                                                         {isSelected && <Check size={14} strokeWidth={4}/>}
                                                     </div>
                                                     <div>
-                                                        <h3 className="font-bold text-gray-800 text-base leading-tight">{bill.description || t('content')}</h3>
+                                                        <h3 className="font-bold text-gray-800 text-base leading-tight">{getTypeLabel(bill.type)} {bill.description}</h3>
                                                         <p className="text-[11px] text-gray-400 font-mono mt-1 uppercase tracking-wider">ID: {bill.gmcShipmentNumber}</p>
                                                         
                                                         <div className="flex flex-wrap gap-2 mt-2">

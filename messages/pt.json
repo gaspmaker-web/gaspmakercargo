@@ -441,7 +441,12 @@
     "addCardWallet": "Adicionar Cartão na Carteira",
     "addNewCard": "Adicionar novo (Ir p/ Configurações)",
     "oceanNotAvailableTitle": "Serviço indisponível",
-    "oceanNotAvailableDesc": "O serviço marítimo não está disponível para endereços na Flórida. Selecione um endereço internacional."
+    "oceanNotAvailableDesc": "O serviço marítimo não está disponível para endereços na Flórida. Selecione um endereço internacional.",
+    "serviceTypeConsolidation": "Consolidação",
+"serviceTypePickup": "Retirada no Armazém",
+"serviceTypeStorage": "Taxa de Armazenagem",
+"serviceTypeLocal": "Entrega Local (Aura)",
+"serviceTypeOcean": "Consolidação Marítima"
   },
   "PreAlertPage": {
     "title": "Pré-Alertar Pacote",

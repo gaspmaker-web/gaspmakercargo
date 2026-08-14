@@ -441,7 +441,12 @@
     "addCardWallet": "Ajouter une Carte au Portefeuille",
     "addNewCard": "Ajouter (Aller aux Paramètres)",
     "oceanNotAvailableTitle": "Service indisponible",
-    "oceanNotAvailableDesc": "Le service maritime n'est pas disponible pour les adresses en Floride. Veuillez sélectionner une adresse internationale."
+    "oceanNotAvailableDesc": "Le service maritime n'est pas disponible pour les adresses en Floride. Veuillez sélectionner une adresse internationale.",
+    "serviceTypeConsolidation": "Consolidation",
+"serviceTypePickup": "Retrait en Entrepôt",
+"serviceTypeStorage": "Frais de Stockage",
+"serviceTypeLocal": "Livraison Locale (Aura)",
+"serviceTypeOcean": "Consolidation Maritime"
   },
   "PreAlertPage": {
     "title": "Pré-Alerter un Colis",
