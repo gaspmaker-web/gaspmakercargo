@@ -229,9 +229,18 @@ const processed = data.rates.map((r: Rate) => {
         logo: getCarrierLogo(r.carrier) 
     };
 });
-    if(processed.length === 0) processed.push({ id: 'std-gmc', carrier: 'Gasp Maker Cargo', service: 'Standard', price: (bill.weightLbs * 4.5) + 15, currency: 'USD', days: '5-7', logo: '/gaspmakercargoproject.png' });
+   // 🔥 ENTERPRISE: Si es OCEAN_CONSOLIDATION → solo mostrar rates marítimos
+    const filteredRates = isOceanBillRate 
+        ? processed.filter((r: Rate) => 
+            r.id?.includes('OCEAN') || 
+            r.service?.toLowerCase().includes('maritime') ||
+            r.service?.toLowerCase().includes('marítim')
+          )
+        : processed;
+
+    if(filteredRates.length === 0) filteredRates.push({ id: 'std-gmc', carrier: 'Gasp Maker Cargo', service: 'Standard', price: (bill.weightLbs * 4.5) + 15, currency: 'USD', days: '5-7', logo: '/gaspmakercargoproject.png' });
     
-    setRatesMap(prev => ({ ...prev, [bill.id]: processed }));
+    setRatesMap(prev => ({ ...prev, [bill.id]: filteredRates }));
 } else {
     alert(t('errorGeneric') || "No rates found.");
 }
