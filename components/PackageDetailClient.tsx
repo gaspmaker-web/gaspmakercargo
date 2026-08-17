@@ -152,6 +152,13 @@ export default function PackageDetailClient({
       totalSpecialCharges += 40.00;
       activeSpecialCharges.push({ label: t("eeiCustomsFee"), amount: 40.00 });
   }
+  if (specialChargesObj.containerFee && specialChargesObj.containerFee > 0) {
+    totalSpecialCharges += specialChargesObj.containerFee;
+    activeSpecialCharges.push({ 
+        label: `Container (${specialChargesObj.containerType || ''})`, 
+        amount: specialChargesObj.containerFee 
+    });
+}
 
   const hasSpecialCharges = totalSpecialCharges > 0;
   // =====================================================================================
