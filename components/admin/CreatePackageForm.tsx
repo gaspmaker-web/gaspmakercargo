@@ -44,12 +44,17 @@ export default function CreatePackageForm() {
       eei: false
   });
 
-  // 🏢 TARIFAS DINÁMICAS DESDE BD
+// 🏢 TARIFAS DINÁMICAS DESDE BD
 const [hazmatRates, setHazmatRates] = useState({
   hazmat_prep_fee: 120.00,
   hazmat_shipping_line_fee: 180.00,
   air_hazmat_fee: 275.00,
   eei_fee: 40.00,
+  container_eh: 20.00,
+  container_e: 30.00,
+  container_d: 60.00,
+  container_jumbo_fiber: 50.00,
+  container_caja_regular: 7.00,
 });
 
 useEffect(() => {
@@ -61,12 +66,17 @@ useEffect(() => {
           const r = data.rates.find((r: any) => r.concept === concept && !r.countryCode);
           return r ? Number(r.value) : null;
         };
-        setHazmatRates({
-          hazmat_prep_fee: getRate('hazmat_prep_fee') ?? 120.00,
-          hazmat_shipping_line_fee: getRate('hazmat_shipping_line_fee') ?? 180.00,
-          air_hazmat_fee: getRate('air_hazmat_fee') ?? 275.00,
-          eei_fee: getRate('eei_fee') ?? 40.00,
-        });
+      setHazmatRates({
+  hazmat_prep_fee: getRate('hazmat_prep_fee') ?? 120.00,
+  hazmat_shipping_line_fee: getRate('hazmat_shipping_line_fee') ?? 180.00,
+  air_hazmat_fee: getRate('air_hazmat_fee') ?? 275.00,
+  eei_fee: getRate('eei_fee') ?? 40.00,
+  container_eh: getRate('container_eh') ?? 20.00,
+  container_e: getRate('container_e') ?? 30.00,
+  container_d: getRate('container_d') ?? 60.00,
+  container_jumbo_fiber: getRate('container_jumbo_fiber') ?? 50.00,
+  container_caja_regular: getRate('container_caja_regular') ?? 7.00,
+});
       }
     })
     .catch(() => {});
@@ -75,6 +85,16 @@ useEffect(() => {
   const toggleCharge = (charge: keyof typeof specialCharges) => {
       setSpecialCharges(prev => ({ ...prev, [charge]: !prev[charge] }));
   };
+
+  const [containerType, setContainerType] = useState<string | null>(null);
+
+const CONTAINER_OPTIONS = [
+  { id: 'EH', label: 'EH Container', price: hazmatRates.container_eh },
+  { id: 'E', label: 'E Container', price: hazmatRates.container_e },
+  { id: 'D', label: 'D Container', price: hazmatRates.container_d },
+  { id: 'JUMBO_FIBER', label: 'Jumbo Fiber', price: hazmatRates.container_jumbo_fiber },
+  { id: 'REGULAR', label: 'Regular Box', price: hazmatRates.container_caja_regular },
+];
   // ========================================================================
 
   // ========================================================================
@@ -273,8 +293,14 @@ const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         invoiceUrl: invoiceUrl, 
         countryCode: 'US',
         declaredValue: parseFloat(data.declaredValue) || 0,
-        // 🔥 ENVIAMOS LOS CARGOS ESPECIALES AL BACKEND
-        extraCharges: specialCharges 
+     // 🔥 ENVIAMOS LOS CARGOS ESPECIALES AL BACKEND
+extraCharges: {
+  ...specialCharges,
+  containerType: containerType,
+  containerFee: containerType 
+    ? CONTAINER_OPTIONS.find(c => c.id === containerType)?.price || 0 
+    : 0
+}
       };
 
       const res = await fetch('/api/packages/create', {
@@ -305,6 +331,7 @@ const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
       setInvoiceUrl(null); 
       setCustomsItems([{ qty: 1, description: '', value: '' }]); 
       setSpecialCharges({ hazmatPrepFee: false, hazmatShippingLineFee: false, airHazmat: false, eei: false });
+      setContainerType(null);
       window.scrollTo({ top: 0, behavior: 'smooth' });
 
     } catch (error: any) {
@@ -720,6 +747,49 @@ const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
                 </div>
             </div>
 
+{/* 🚢 MARITIME CONTAINER */}
+            <div className="bg-blue-50/50 p-4 rounded-xl border border-blue-200 w-full overflow-hidden">
+                <div className="flex items-center gap-2 mb-4">
+                    <span className="text-lg">🚢</span>
+                    <label className="text-sm font-bold text-blue-800 uppercase tracking-wider">
+                        Maritime Container (Optional)
+                    </label>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {CONTAINER_OPTIONS.map((c) => (
+                        <label
+                            key={c.id}
+                            className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${
+                                containerType === c.id
+                                    ? 'bg-blue-100 border-blue-500 shadow-sm'
+                                    : 'bg-white border-blue-100 hover:bg-blue-50'
+                            }`}
+                        >
+                            <input
+                                type="radio"
+                                name="containerType"
+                                checked={containerType === c.id}
+                                onChange={() => setContainerType(prev => prev === c.id ? null : c.id)}
+                                className="w-4 h-4 text-blue-600 shrink-0"
+                            />
+                            <div>
+                                <p className="text-sm font-bold text-gray-800">{c.label}</p>
+                                <p className="text-xs text-blue-600 font-bold mt-0.5">+${c.price}.00</p>
+                            </div>
+                        </label>
+                    ))}
+                </div>
+                {containerType && (
+                    <button
+                        type="button"
+                        onClick={() => setContainerType(null)}
+                        className="mt-3 text-xs text-red-500 hover:text-red-700 font-bold flex items-center gap-1"
+                    >
+                        <X size={12}/> Clear selection
+                    </button>
+                )}
+            </div>
+
             {/* BOTÓN SUBMIT */}
             <div className="pt-4 pb-8 md:pb-2 w-full">
                 <button 
@@ -736,7 +806,6 @@ const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
                     )}
                 </button>
             </div>
-
         </form>
       </div>
     </>
