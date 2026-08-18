@@ -286,7 +286,7 @@ useEffect(() => {
               <div className="flex items-start justify-between gap-2">
   <div className="flex-1">
     <h3 className="text-base font-bold text-gmc-gris-oscuro group-hover:text-slate-700 transition-colors">Master Archive</h3>
-    <p className="text-xs text-gray-500 mt-1 font-medium">Control and shredding of correspondence.</p>
+    <p className="text-xs text-gray-500 mt-1 font-medium">Shredding control.</p>
   </div>
   <div className="bg-slate-100 p-2 rounded-lg text-slate-600 group-hover:bg-slate-200 transition-colors border border-slate-200 shrink-0">
     <Archive size={20} strokeWidth={2} />
