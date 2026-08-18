@@ -339,9 +339,9 @@ useEffect(() => {
                 <div className="flex items-start justify-between">
                   <div>
                     <h3 className="text-base font-bold text-gmc-gris-oscuro group-hover:text-rose-600 transition-colors">Consolidations</h3>
-                    <p className="text-xs text-gray-500 mt-1 font-medium">View consolidation requests.</p>
+                    <p className="text-xs text-gray-500 mt-1 font-medium">Consolidation requests.</p>
                   </div>
-                  <div className="bg-rose-50 p-2 rounded-lg text-rose-600 group-hover:bg-rose-100 transition-colors border border-rose-100">
+                  <div className="bg-rose-50 p-2 rounded-lg text-rose-600 group-hover:bg-rose-100 transition-colors border border-rose-100 shrink-0">
                     <Layers size={20} strokeWidth={2} />
                   </div>
                 </div>
