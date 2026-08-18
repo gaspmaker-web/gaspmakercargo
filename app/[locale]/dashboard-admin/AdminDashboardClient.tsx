@@ -5,8 +5,8 @@ import Link from 'next/link';
 import { useSession } from 'next-auth/react'; 
 import { 
   Package, Users, Truck, MapPin, PlusCircle, Layers, 
-  Activity, DollarSign, ClipboardList, Car, Loader2, TrendingUp, Container, Store, ShieldAlert, Mailbox, FileSearch, Archive, ShoppingBag, Gift, ShoppingCart 
-} from 'lucide-react'; 
+  Activity, DollarSign, ClipboardList, Car, Loader2, TrendingUp, Container, Store, ShieldAlert, Mailbox, FileSearch, Archive, ShoppingBag, Gift, ShoppingCart, ChevronDown
+} from 'lucide-react';
 
 export default function AdminDashboardClient({ locale }: { locale: string }) {
   const [activities, setActivities] = useState<any[]>([]);
@@ -80,77 +80,77 @@ useEffect(() => {
         </div>
 
         {/* 1. SECCIÓN DE ESTADÍSTICAS (KPIs) */}
-         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-stretch">
+      <div className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none'] md:grid md:grid-cols-2 lg:grid-cols-5 md:overflow-visible">
           
-          <Link href={`/${locale}/dashboard-admin/paquetes`} className="block group">
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center h-full ...">
-              <div>
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Active Packages</p>
-                <h3 className="text-4xl font-extrabold text-gmc-gris-oscuro tracking-tight font-montserrat lining-nums group-hover:text-blue-600 transition-colors">
-                    {stats.paquetes}
-                </h3>
-              </div>
-              <div className="p-3 bg-blue-50 text-blue-600 rounded-lg group-hover:bg-blue-100 transition-colors">
-                <Package size={24} strokeWidth={2.5} />
-              </div>
-            </div>
-          </Link>
-
-          <Link href={`/${locale}/dashboard-admin/solicitudes-pickup?filter=entregados`} className="block group">
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center h-full ...">
-              <div>
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Local Deliveries</p>
-                <h3 className="text-4xl font-extrabold text-gmc-gris-oscuro tracking-tight font-montserrat lining-nums group-hover:text-green-600 transition-colors">
-                    {stats.entregasHoy || 0}
-                </h3> 
-              </div>
-              <div className="p-3 bg-green-50 text-green-600 rounded-lg">
-                <Truck size={24} strokeWidth={2.5} />
-              </div>
-            </div>
-          </Link>
-
-          <Link href={`/${locale}/dashboard-admin/paquetes?filter=entregados`} className="block group">
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center h-full ...">
-              <div>
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Intl. Deliveries</p>
-                <h3 className="text-4xl font-extrabold text-gmc-gris-oscuro tracking-tight font-montserrat lining-nums group-hover:text-blue-600 transition-colors">
-                    {stats.paquetesEntregadosHoy || 0}
-                </h3> 
-              </div>
-              <div className="p-3 bg-blue-50 text-blue-600 rounded-lg">
-                <Truck size={24} strokeWidth={2.5} />
-              </div>
-            </div>
-          </Link>
-
-          <Link href={`/${locale}/dashboard-admin/clientes`} className="block group">
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center h-full ...">
-              <div>
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">New Clients</p>
-                <h3 className="text-4xl font-extrabold text-gmc-gris-oscuro tracking-tight font-montserrat lining-nums group-hover:text-purple-600 transition-colors">
-                    {stats.usuarios}
-                </h3>
-              </div>
-              <div className="p-3 bg-purple-50 text-purple-600 rounded-lg group-hover:bg-purple-100 transition-colors">
-                <Users size={24} strokeWidth={2.5} />
-              </div>
-            </div>
-          </Link>
-
-   <Link href={`/${locale}/dashboard-admin/finanzas`} className="block group">
-  <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center h-full ...">
-    <div>
-      <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Sales (Week)</p>
-      <h3 className="text-4xl font-extrabold text-gmc-gris-oscuro tracking-tight font-montserrat lining-nums group-hover:text-yellow-600 transition-colors">
-          ${(stats.ventas || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-      </h3>
+  <Link href={`/${locale}/dashboard-admin/paquetes`} className="block group shrink-0 w-[70vw] snap-center md:w-auto">
+    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center h-full">
+      <div>
+        <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Active Packages</p>
+        <h3 className="text-4xl font-extrabold text-gmc-gris-oscuro tracking-tight font-montserrat lining-nums group-hover:text-blue-600 transition-colors">
+            {stats.paquetes}
+        </h3>
+      </div>
+      <div className="p-3 bg-blue-50 text-blue-600 rounded-lg group-hover:bg-blue-100 transition-colors">
+        <Package size={24} strokeWidth={2.5} />
+      </div>
     </div>
-    <div className="p-3 bg-yellow-50 text-yellow-600 rounded-lg group-hover:bg-yellow-100 transition-colors">
-      <DollarSign size={24} strokeWidth={2.5} />
+  </Link>
+
+  <Link href={`/${locale}/dashboard-admin/solicitudes-pickup?filter=entregados`} className="block group shrink-0 w-[70vw] snap-center md:w-auto">
+    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center h-full">
+      <div>
+        <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Local Deliveries</p>
+        <h3 className="text-4xl font-extrabold text-gmc-gris-oscuro tracking-tight font-montserrat lining-nums group-hover:text-green-600 transition-colors">
+            {stats.entregasHoy || 0}
+        </h3> 
+      </div>
+      <div className="p-3 bg-green-50 text-green-600 rounded-lg">
+        <Truck size={24} strokeWidth={2.5} />
+      </div>
     </div>
-  </div>
-</Link>
+  </Link>
+
+  <Link href={`/${locale}/dashboard-admin/paquetes?filter=entregados`} className="block group shrink-0 w-[70vw] snap-center md:w-auto">
+    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center h-full">
+      <div>
+        <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Intl. Deliveries</p>
+        <h3 className="text-4xl font-extrabold text-gmc-gris-oscuro tracking-tight font-montserrat lining-nums group-hover:text-blue-600 transition-colors">
+            {stats.paquetesEntregadosHoy || 0}
+        </h3> 
+      </div>
+      <div className="p-3 bg-blue-50 text-blue-600 rounded-lg">
+        <Truck size={24} strokeWidth={2.5} />
+      </div>
+    </div>
+  </Link>
+
+  <Link href={`/${locale}/dashboard-admin/clientes`} className="block group shrink-0 w-[70vw] snap-center md:w-auto">
+    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center h-full">
+      <div>
+        <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">New Clients</p>
+        <h3 className="text-4xl font-extrabold text-gmc-gris-oscuro tracking-tight font-montserrat lining-nums group-hover:text-purple-600 transition-colors">
+            {stats.usuarios}
+        </h3>
+      </div>
+      <div className="p-3 bg-purple-50 text-purple-600 rounded-lg group-hover:bg-purple-100 transition-colors">
+        <Users size={24} strokeWidth={2.5} />
+      </div>
+    </div>
+  </Link>
+
+  <Link href={`/${locale}/dashboard-admin/finanzas`} className="block group shrink-0 w-[70vw] snap-center md:w-auto">
+    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center h-full">
+      <div>
+        <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Sales (Week)</p>
+        <h3 className="text-4xl font-extrabold text-gmc-gris-oscuro tracking-tight font-montserrat lining-nums group-hover:text-yellow-600 transition-colors">
+            ${(stats.ventas || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+        </h3>
+      </div>
+      <div className="p-3 bg-yellow-50 text-yellow-600 rounded-lg group-hover:bg-yellow-100 transition-colors">
+        <DollarSign size={24} strokeWidth={2.5} />
+      </div>
+    </div>
+  </Link>
 </div>
 
 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -161,7 +161,7 @@ useEffect(() => {
               <Activity size={20} className="text-gmc-dorado-principal" /> Quick Actions
             </h2>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-2 gap-3">
               
               <Link href={`/${locale}/dashboard-admin/pay-and-go`} 
                 className="group bg-slate-900 p-5 rounded-xl border border-slate-700 hover:border-gmc-dorado-principal hover:shadow-[0_0_15px_rgba(234,216,177,0.3)] transition-all cursor-pointer block relative md:col-span-2 overflow-hidden">
@@ -407,36 +407,47 @@ useEffect(() => {
               </Link>
             </div>
 
-             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mt-6">
-                <h3 className="font-bold text-gmc-gris-oscuro mb-4 uppercase text-xs tracking-wider flex items-center gap-2">
-                  <Activity size={14} className="text-gmc-dorado-principal" /> Activity Log
-                </h3>
-                {activities.length === 0 ? (
-                  <div className="text-sm text-gray-400 text-center py-8 bg-gray-50 rounded-lg border border-dashed border-gray-200 font-medium">
-                  No recent activity recorded today.
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    {activities.map((activity) => (
-                      <div key={activity.id} className="flex items-start gap-3 p-2 hover:bg-gray-50 rounded-lg transition-colors">
+           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mt-6">
+    <h3 
+        className="font-bold text-gmc-gris-oscuro mb-4 uppercase text-xs tracking-wider flex items-center justify-between gap-2 cursor-pointer md:cursor-default"
+        onClick={() => {
+            const el = document.getElementById('activity-log-content');
+            if (el) el.classList.toggle('hidden');
+        }}
+    >
+        <span className="flex items-center gap-2">
+            <Activity size={14} className="text-gmc-dorado-principal" /> Activity Log
+        </span>
+        <span className="md:hidden text-gray-400"><ChevronDown size={16} /></span>
+    </h3>
+    <div id="activity-log-content" className="hidden md:block">
+        {activities.length === 0 ? (
+            <div className="text-sm text-gray-400 text-center py-8 bg-gray-50 rounded-lg border border-dashed border-gray-200 font-medium">
+                No recent activity recorded today.
+            </div>
+        ) : (
+            <div className="space-y-2">
+                {activities.map((activity) => (
+                    <div key={activity.id} className="flex items-start gap-3 p-2 hover:bg-gray-50 rounded-lg transition-colors">
                         <div className={`w-2 h-2 rounded-full mt-2 shrink-0 ${
-                          activity.color === 'blue' ? 'bg-blue-500' :
-                          activity.color === 'green' ? 'bg-green-500' :
-                          activity.color === 'purple' ? 'bg-purple-500' : 'bg-gray-400'
+                            activity.color === 'blue' ? 'bg-blue-500' :
+                            activity.color === 'green' ? 'bg-green-500' :
+                            activity.color === 'purple' ? 'bg-purple-500' : 'bg-gray-400'
                         }`} />
                         <div className="flex-1 min-w-0">
-                          <p className="text-xs font-bold text-gray-700 truncate">{activity.title}</p>
-                          <p className="text-xs text-gray-400 truncate">{activity.subtitle}</p>
+                            <p className="text-xs font-bold text-gray-700 truncate">{activity.title}</p>
+                            <p className="text-xs text-gray-400 truncate">{activity.subtitle}</p>
                         </div>
                         <span className="text-[10px] text-gray-400 shrink-0">
-                          {new Date(activity.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            {new Date(activity.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-             </div>
-          </div>
+                    </div>
+                ))}
+            </div>
+        )}
+    </div>
+</div>
+</div>
 
           {/* 4. MAPA DE DRIVERS EN VIVO */}
           <div className="space-y-6">
