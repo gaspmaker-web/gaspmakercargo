@@ -283,15 +283,15 @@ useEffect(() => {
 
               <Link href={`/${locale}/dashboard-admin/inventario-buzones`} 
                 className="group bg-white p-5 rounded-xl border border-gray-200 hover:border-slate-600 hover:shadow-md transition-all cursor-pointer block">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-base font-bold text-gmc-gris-oscuro group-hover:text-slate-700 transition-colors">Master Archive</h3>
-                    <p className="text-xs text-gray-500 mt-1 font-medium">Control and shredding of correspondence.</p>
-                  </div>
-                  <div className="bg-slate-100 p-2 rounded-lg text-slate-600 group-hover:bg-slate-200 transition-colors border border-slate-200">
-                    <Archive size={20} strokeWidth={2} />
-                  </div>
-                </div>
+              <div className="flex items-start justify-between gap-2">
+  <div className="flex-1">
+    <h3 className="text-base font-bold text-gmc-gris-oscuro group-hover:text-slate-700 transition-colors">Master Archive</h3>
+    <p className="text-xs text-gray-500 mt-1 font-medium">Control and shredding of correspondence.</p>
+  </div>
+  <div className="bg-slate-100 p-2 rounded-lg text-slate-600 group-hover:bg-slate-200 transition-colors border border-slate-200 shrink-0">
+    <Archive size={20} strokeWidth={2} />
+  </div>
+</div>
               </Link>
               
               <Link href={`/${locale}/dashboard-admin/crear-envio`} 
