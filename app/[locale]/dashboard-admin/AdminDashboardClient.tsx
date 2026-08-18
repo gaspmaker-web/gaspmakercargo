@@ -12,6 +12,7 @@ export default function AdminDashboardClient({ locale }: { locale: string }) {
   const [activities, setActivities] = useState<any[]>([]);
   const { data: session } = useSession();
   const [loading, setLoading] = useState(true);
+  const [activityExpanded, setActivityExpanded] = useState(false);
   
   const [stats, setStats] = useState({
     usuarios: 0,
@@ -408,19 +409,16 @@ useEffect(() => {
             </div>
 
            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mt-6">
-    <h3 
-        className="font-bold text-gmc-gris-oscuro mb-4 uppercase text-xs tracking-wider flex items-center justify-between gap-2 cursor-pointer md:cursor-default"
-        onClick={() => {
-            const el = document.getElementById('activity-log-content');
-            if (el) el.classList.toggle('hidden');
-        }}
-    >
-        <span className="flex items-center gap-2">
-            <Activity size={14} className="text-gmc-dorado-principal" /> Activity Log
-        </span>
-        <span className="md:hidden text-gray-400"><ChevronDown size={16} /></span>
-    </h3>
-    <div id="activity-log-content" className="hidden md:block">
+<h3 
+    className="font-bold text-gmc-gris-oscuro mb-4 uppercase text-xs tracking-wider flex items-center justify-between gap-2 cursor-pointer md:cursor-default"
+    onClick={() => setActivityExpanded(!activityExpanded)}
+>
+    <span className="flex items-center gap-2">
+        <Activity size={14} className="text-gmc-dorado-principal" /> Activity Log
+    </span>
+    <span className="md:hidden text-gray-400"><ChevronDown size={16} /></span>
+</h3>
+<div className={`${activityExpanded ? 'block' : 'hidden'} md:block`}>
         {activities.length === 0 ? (
             <div className="text-sm text-gray-400 text-center py-8 bg-gray-50 rounded-lg border border-dashed border-gray-200 font-medium">
                 No recent activity recorded today.
