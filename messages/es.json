@@ -946,7 +946,10 @@
     "enReparto": "EN REPARTO",
     "pagado": "PAGADO",
     "paqueteConsolidado": "Paquete Consolidado",
-    "paquetesConsolidados": "Paquetes Consolidados"
+    "paquetesConsolidados": "Paquetes Consolidados",
+    "solicitudConsolidacion": "SOLICITUD CONSOLIDACIÓN",
+    "enProcesoConsolidacion": "EN PROCESO DE CONSOLIDACIÓN",
+    "despachado": "DESPACHADO"
 },
  "DeliveredPage": {
     "title": "En Destino (Historial)",

@@ -927,7 +927,10 @@
     "enReparto": "EN LIVRAISON",
     "pagado": "PAYÉ",
     "paqueteConsolidado": "Colis Consolidé",
-    "paquetesConsolidados": "Colis Consolidés"
+    "paquetesConsolidados": "Colis Consolidés",
+    "solicitudConsolidacion": "DEMANDE DE CONSOLIDATION",
+    "enProcesoConsolidacion": "EN COURS DE CONSOLIDATION",
+    "despachado": "EXPÉDIÉ" 
 },
  "DeliveredPage": {
     "title": "Livré (Historique)",

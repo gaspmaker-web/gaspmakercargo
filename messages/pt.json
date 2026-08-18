@@ -927,7 +927,10 @@
     "enReparto": "SAIU PARA ENTREGA",
     "pagado": "PAGO",
     "paqueteConsolidado": "Pacote Consolidado",
-    "paquetesConsolidados": "Pacotes Consolidados"
+    "paquetesConsolidados": "Pacotes Consolidados",
+    "solicitudConsolidacion": "PEDIDO DE CONSOLIDAÇÃO",
+    "enProcesoConsolidacion": "EM PROCESSO DE CONSOLIDAÇÃO",
+    "despachado": "DESPACHADO"
 },
  "DeliveredPage": {
     "title": "Entregue (Histórico)",

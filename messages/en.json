@@ -906,7 +906,10 @@
     "enReparto": "OUT FOR DELIVERY",
     "pagado": "PAID",
     "paqueteConsolidado": "Consolidated Package",
-    "paquetesConsolidados": "Consolidated Packages"
+    "paquetesConsolidados": "Consolidated Packages",
+    "solicitudConsolidacion": "CONSOLIDATION REQUEST",
+    "enProcesoConsolidacion": "IN CONSOLIDATION",
+    "despachado": "DISPATCHED"
 },
  "DeliveredPage": {
     "title": "Delivered (History)",

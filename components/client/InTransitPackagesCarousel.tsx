@@ -53,6 +53,15 @@ export default function InTransitPackagesCarousel({ packages, userCountryCode }:
         return tPage.has('enReparto') ? tPage('enReparto') : 'EN REPARTO';
     }
     
+if (upperStatus === 'SOLICITUD_CONSOLIDACION' || upperStatus === 'CONSOLIDATION_REQUEST') {
+        return tPage.has('solicitudConsolidacion') ? tPage('solicitudConsolidacion') : 'CONSOLIDATION REQUEST';
+    }
+    if (upperStatus === 'EN_PROCESO_CONSOLIDACION') {
+        return tPage.has('enProcesoConsolidacion') ? tPage('enProcesoConsolidacion') : 'IN CONSOLIDATION';
+    }
+    if (upperStatus === 'DESPACHADO') {
+        return tPage.has('despachado') ? tPage('despachado') : 'DISPATCHED';
+    }
     return status.replace(/_/g, ' ');
   };
 
