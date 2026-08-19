@@ -113,7 +113,7 @@ export default async function ActivePackagesPage({
           gmcTrackingNumber: ship.gmcShipmentNumber,
           carrierTrackingNumber: `CAJA (${ship.weightLbs || 0} lbs)`, 
           user: ship.user,
-          description: 'Consolidación', 
+          description: 'Consolidation',
           serviceType: ship.serviceType, 
           createdAt: ship.createdAt,
           selectedCourier: ship.selectedCourier,

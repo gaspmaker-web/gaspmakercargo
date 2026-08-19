@@ -121,7 +121,7 @@ export default function ActivePackagesClient({ allItems, currentLocale }: Packag
                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
                         <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
                     </span>
-                    Mostrando únicamente paquetes pagados pendientes de despacho ({displayItems.length})
+                    Showing only paid packages pending dispatch ({displayItems.length})
                 </div>
                 <button 
                     onClick={() => router.push(`/${currentLocale}/dashboard-admin/paquetes`)}
@@ -170,10 +170,10 @@ export default function ActivePackagesClient({ allItems, currentLocale }: Packag
                              <tr>
                                 <td colSpan={7} className="p-10 text-center text-gray-400">
                                     {filterParam === 'pagados' 
-                                        ? 'No hay paquetes pagados pendientes.' 
+                                        ? 'No paid packages pending dispatch.' 
                                         : filterParam === 'prealertas' 
-                                        ? 'No hay pre-alertas pendientes de recepción.' 
-                                        : 'No hay paquetes activos.'}
+                                        ? 'No pre-alerts pending reception.' 
+                                        : 'No active packages.'}
                                 </td>
                              </tr>
                         ) : (
@@ -416,7 +416,7 @@ export default function ActivePackagesClient({ allItems, currentLocale }: Packag
                     <div className="p-6">
                         <div className="text-center mb-5">
                             <p className="text-sm text-gray-500 leading-relaxed mb-4">
-                                Estás a punto de marcar este paquete como <strong>DELIVERED</strong> to the client at the warehouse.
+                                You are about to mark this package as <strong>DELIVERED</strong> to the client at the warehouse.
                             </p>
                             <div className="bg-gray-50 p-3 rounded-lg border border-gray-200 text-left">
                                 <label className="block text-xs font-bold text-gray-400 uppercase mb-1">
@@ -441,14 +441,14 @@ export default function ActivePackagesClient({ allItems, currentLocale }: Packag
                                 onClick={() => setIsDeliverModalOpen(false)}
                                 className="flex-1 py-2.5 text-gray-600 font-bold text-sm hover:bg-gray-100 rounded-xl transition-colors border border-gray-200"
                             >
-                                Cancelar
+                                Cancel
                             </button>
                             <button 
                                 onClick={handleConfirmDelivery}
                                 disabled={isSubmitting || !staffName.trim()}
                                 className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl font-bold text-sm shadow-md flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                             >
-                                {isSubmitting ? 'Procesando...' : 'Confirmar Entrega'}
+                                {isSubmitting ? 'Processing...' : 'Confirm Delivery'}
                             </button>
                         </div>
                     </div>
