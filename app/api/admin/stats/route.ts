@@ -69,10 +69,15 @@ const tenantFilter = tenant?.id ? { tenant_id: tenant.id } : {};
     ...tenantFilter
 }
       }),
-      prisma.consolidatedShipment.aggregate({
-        _sum: { totalAmount: true },
-        where: { createdAt: { gte: haceSieteDias }, ...tenantFilter }
-      }),
+    prisma.consolidatedShipment.aggregate({
+    _sum: { totalAmount: true },
+    where: { 
+        updatedAt: { gte: haceSieteDias },
+        status: { in: ['ENVIADO', 'SHIPPED', 'ENTREGADO', 'PAGADO'] },
+        ...tenantFilter 
+    }
+}),
+
 // entregas locales hoy
 prisma.pickupRequest.count({
     where: { 
