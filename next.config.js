@@ -10,6 +10,15 @@ const withPWA = require("@ducanh2912/next-pwa").default({
   register: true,
   skipWaiting: true,
   sw: process.env.TENANT_SLUG === 'cargoos' ? 'cargoos-sw.js' : 'sw.js',
+  workboxOptions: {
+    navigateFallbackDenylist: [/^\/api\//],
+    runtimeCaching: [
+      {
+        urlPattern: /^\/api\//,
+        handler: 'NetworkOnly',
+      },
+    ],
+  },
 });
 /** @type {import('next').NextConfig} */
 const nextConfig = {
