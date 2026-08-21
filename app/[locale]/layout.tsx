@@ -10,6 +10,7 @@ import HeaderWrapper from '@/components/HeaderWrapper';
 import CookieBanner from '@/components/ui/CookieBanner';
 import TawkLoader from '@/components/TawkLoader'; 
 import { getTenant, getTenantCSSVars } from '@/lib/tenant';
+import Script from 'next/script';
 
 // 🔥 QUITA LA IMPORTACIÓN DE ONESIGNAL DE AQUÍ 🔥
 import { auth } from "@/auth"; 
@@ -76,23 +77,24 @@ const tenantSlug = tenant?.slug || process.env.TENANT_SLUG || 'gaspmaker';
         
         
 {/* 🔥 META PIXEL 🔥 */}
-<script dangerouslySetInnerHTML={{ __html: `
-  !function(f,b,e,v,n,t,s)
-  {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-  n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-  if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-  n.queue=[];t=b.createElement(e);t.async=!0;
-  t.src=v;s=b.getElementsByTagName(e)[0];
-  s.parentNode.insertBefore(t,s)}(window, document,'script',
-  'https://connect.facebook.net/en_US/fbevents.js');
-  fbq('init', '1372892784992511');
-  fbq('track', 'PageView');
-`}} />
-<noscript>
-  <img height="1" width="1" style={{display:'none'}}
-    src="https://www.facebook.com/tr?id=1372892784992511&ev=PageView&noscript=1"
-  />
-</noscript>
+<Script
+  id="facebook-pixel"
+  strategy="afterInteractive"
+  dangerouslySetInnerHTML={{
+    __html: `
+      !function(f,b,e,v,n,t,s)
+      {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+      n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+      if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+      n.queue=[];t=b.createElement(e);t.async=!0;
+      t.src=v;s=b.getElementsByTagName(e)[0];
+      s.parentNode.insertBefore(t,s)}(window, document,'script',
+      'https://connect.facebook.net/en_US/fbevents.js');
+      fbq('init', '1372892784992511');
+      fbq('track', 'PageView');
+    `,
+  }}
+/>
 
 <NextIntlClientProvider locale={locale} messages={messages}>
   <Providers>
