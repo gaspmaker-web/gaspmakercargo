@@ -210,9 +210,9 @@ export default function ActivePackagesClient({ allItems, currentLocale }: Packag
                                         else price = 30.00;
                                     }
                                 } else if (pkg.consolidatedShipmentId) {
-                                    // 📦 Paquete Individual dentro de una caja normal
-                                    price = pkg.shippingSubtotal || 0;
-                                } else {
+                               // 📦 Paquete dentro de consolidación — no mostrar precio individual
+                               price = 0;
+                                 }else {
                                     // 🚚 Envío Normal
                                     price = pkg.shippingTotalPaid || pkg.shippingSubtotal || pkg.totalAmount || 0;
                                 }
@@ -320,10 +320,14 @@ export default function ActivePackagesClient({ allItems, currentLocale }: Packag
                                     </td>
 
                                     <td className="p-4 text-right">
-                                        <div className="flex items-center justify-end gap-1 font-bold text-green-700">
-                                            <DollarSign size={14} className="text-green-500"/>
-                                            {price > 0 ? price.toFixed(2) : '0.00'}
-                                        </div>
+                                       <div className="flex items-center justify-end gap-1 font-bold text-green-700">
+                                       <DollarSign size={14} className="text-green-500"/>
+                                       {pkg.consolidatedShipmentId ? (
+                                       <span className="text-xs text-gray-400 font-medium">In consolidation</span>
+                                       ) : (
+                                       price > 0 ? price.toFixed(2) : '0.00'
+                                       )}
+                                    </div>
                                     </td>
 
                                     <td className="p-4 text-center">
