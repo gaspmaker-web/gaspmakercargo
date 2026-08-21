@@ -54,12 +54,11 @@ export default async function ActivePackagesPage({
          // Si está suelto, pasa.
          if (!pkg.consolidatedShipmentId) return true;
          
-         // 🔥 EL TRUCO: Si la caja maestra SOLO tiene 1 paquete, extraemos la info real del paquete (GM-US) 
+    // 🔥 EL TRUCO: Si la caja maestra SOLO tiene 1 paquete, extraemos la info real del paquete (GM-US) 
          // y ocultamos el disfraz de la caja consolidada.
          if (pkg.consolidatedShipment && pkg.consolidatedShipment._count.packages === 1) return true;
          
-         if (pkg.consolidatedShipment && !['CONSOLIDATION', 'SHIPPING_INTL', 'DOCUMENT'].includes(pkg.consolidatedShipment.serviceType)) return true;
-         
+         // 🔥 Si tiene más de 1 paquete en la consolidación, NO mostramos el hijo — ya aparece la caja maestra
          return false;
       }).map(pkg => {
         const isDocument = pkg.courier === 'Buzón Virtual' || (pkg.carrierTrackingNumber || '').startsWith('DOC-') || (pkg.gmcTrackingNumber || '').startsWith('GMC-DOC-');
@@ -78,7 +77,7 @@ export default async function ActivePackagesPage({
       const activeShipmentsRaw = await prisma.consolidatedShipment.findMany({
         where: {
           status: { notIn: ['ENTREGADO', 'CANCELADO'] },
-          serviceType: { in: ['CONSOLIDATION', 'SHIPPING_INTL', 'DOCUMENT'] }, 
+          serviceType: { in: ['CONSOLIDATION', 'SHIPPING_INTL', 'DOCUMENT', 'OCEAN_CONSOLIDATION', 'LOCAL_DELIVERY'] }, 
           ...(query ? {
             OR: [
               { id: { contains: query, mode: 'insensitive' } }, 
