@@ -45,7 +45,7 @@ export default async function LeadsPage({
   } catch (error) {
     console.error('Error loading leads:', error);
     leads = [];
-  }
+   }
 
   const serializedLeads = JSON.parse(JSON.stringify(leads));
 
