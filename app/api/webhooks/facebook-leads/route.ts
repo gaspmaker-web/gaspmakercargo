@@ -101,6 +101,22 @@ export async function POST(req: Request) {
       },
     });
 
+    // Guardar en tabla Lead
+await (prisma as any).lead.upsert({
+  where: { lead_id: leadId },
+  update: {},
+  create: {
+    lead_id: leadId,
+    full_name: name,
+    email: email,
+    phone_number: phone,
+    form_id: leadData.form_id || '',
+    source: 'facebook',
+    status: 'new',
+    created_time: new Date(),
+  },
+}); 
+
     // Enviar email de bienvenida
     await resend.emails.send({
       from: 'Gasp Maker Cargo <info@gaspmakercargo.com>',
