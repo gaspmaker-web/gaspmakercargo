@@ -61,34 +61,25 @@ export default function LeadsTable({ leads, locale }: { leads: any[]; locale: st
           <tbody className="divide-y divide-gray-50">
             {data.map((lead) => (
               <tr key={lead.id} className="hover:bg-gray-50 transition-colors">
-                
-                {/* Name */}
+
                 <td className="px-6 py-4">
                   <p className="font-bold text-gray-800">{lead.full_name}</p>
                   <p className="text-xs text-gray-400">ID: {lead.lead_id}</p>
                 </td>
 
-                {/* Contact */}
                 <td className="px-6 py-4">
                   <div className="flex flex-col gap-1">
-                    
-                      href={`mailto:${lead.email}`}
-                      className="flex items-center gap-1 text-blue-600 hover:underline text-xs"
-                    >
+                    <a href={`mailto:${lead.email}`} className="flex items-center gap-1 text-blue-600 hover:underline text-xs">
                       <Mail size={12} />
                       {lead.email}
                     </a>
-                    
-                      href={`tel:${lead.phone_number}`}
-                      className="flex items-center gap-1 text-green-600 hover:underline text-xs"
-                    >
+                    <a href={`tel:${lead.phone_number}`} className="flex items-center gap-1 text-green-600 hover:underline text-xs">
                       <Phone size={12} />
                       {lead.phone_number}
                     </a>
                   </div>
                 </td>
 
-                {/* Date */}
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-1 text-gray-500 text-xs">
                     <Calendar size={12} />
@@ -104,16 +95,13 @@ export default function LeadsTable({ leads, locale }: { leads: any[]; locale: st
                   </div>
                 </td>
 
-                {/* Status */}
                 <td className="px-6 py-4">
                   <div className="relative">
                     <select
                       value={lead.status || 'new'}
                       onChange={(e) => updateStatus(lead.id, e.target.value)}
                       disabled={updating === lead.id}
-                      className={`text-xs font-bold px-3 py-1.5 rounded-full border-0 cursor-pointer appearance-none pr-6 ${
-                        STATUS_COLORS[lead.status || 'new']
-                      } ${updating === lead.id ? 'opacity-50' : ''}`}
+                      className={`text-xs font-bold px-3 py-1.5 rounded-full border-0 cursor-pointer appearance-none pr-6 ${STATUS_COLORS[lead.status || 'new']} ${updating === lead.id ? 'opacity-50' : ''}`}
                     >
                       {STATUS_OPTIONS.map((s) => (
                         <option key={s} value={s}>
@@ -125,7 +113,6 @@ export default function LeadsTable({ leads, locale }: { leads: any[]; locale: st
                   </div>
                 </td>
 
-                {/* Notes */}
                 <td className="px-6 py-4">
                   <p className="text-xs text-gray-400 italic">
                     {lead.notes || '—'}
