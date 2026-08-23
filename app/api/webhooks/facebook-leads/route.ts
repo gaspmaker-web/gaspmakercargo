@@ -1,8 +1,15 @@
 import { NextResponse } from 'next/server';
+import { getCountryFromPhone } from '@/lib/phone-to-country';
 
 export const dynamic = 'force-dynamic';
 
-// 🔥 VERIFICACIÓN DEL WEBHOOK (Facebook requiere esto al configurar)
+function generateLockerNumber(countryCode: string): string {
+  const code = countryCode.toUpperCase();
+  const digits = Math.floor(10000 + Math.random() * 90000).toString();
+  return `${code}-${digits}`;
+}
+
+// 🔥 VERIFICACIÓN DEL WEBHOOK
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const mode = searchParams.get('hub.mode');
@@ -21,13 +28,11 @@ export async function POST(req: Request) {
   try {
     const prisma = (await import('@/lib/prisma')).default;
     const bcrypt = (await import('bcryptjs')).default;
-    const { generateLockerNumber } = await import('@/lib/utils');
     const { Resend } = await import('resend');
     const resend = new Resend(process.env.RESEND_API_KEY);
 
     const body = await req.json();
 
-    // Extraer los leads del payload de Facebook
     const entry = body.entry?.[0];
     const changes = entry?.changes?.[0];
     const leadData = changes?.value;
@@ -36,7 +41,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ status: 'ignored' });
     }
 
-    // 🔥 Obtener datos del formulario desde Facebook Graph API
     const leadId = leadData.leadgen_id;
     const accessToken = process.env.FACEBOOK_PAGE_ACCESS_TOKEN;
 
@@ -45,6 +49,11 @@ export async function POST(req: Request) {
     );
     const fbData = await fbRes.json();
 
+    if (fbData.error) {
+      console.error('Facebook API error:', fbData.error);
+      return NextResponse.json({ error: fbData.error.message }, { status: 400 });
+    }
+
     // Extraer campos del formulario
     const fields: Record<string, string> = {};
     fbData.field_data?.forEach((f: any) => {
@@ -52,55 +61,56 @@ export async function POST(req: Request) {
     });
 
     const email = fields['email']?.toLowerCase().trim();
-    const name = fields['full_name'] || fields['first_name'] + ' ' + (fields['last_name'] || '');
+    const name = (fields['full_name'] || `${fields['first_name'] || ''} ${fields['last_name'] || ''}`).trim();
     const phone = fields['phone_number'] || '';
-    const countryCode = fields['country'] || 'TT'; // Default Trinidad
 
     if (!email || !name) {
+      console.error('Missing required fields:', { email, name });
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
+
+    // 🌍 Detectar país automáticamente por teléfono
+    const countryCode = fields['country']?.toUpperCase() || getCountryFromPhone(phone);
 
     // Verificar si ya existe
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {
+      console.log(`⏭️ Already exists: ${email}`);
       return NextResponse.json({ status: 'already_exists' });
     }
 
-    // Generar contraseña temporal
+    // Generar credenciales
     const tempPassword = Math.random().toString(36).slice(-8).toUpperCase();
     const hashedPassword = await bcrypt.hash(tempPassword, 10);
     const suiteNo = generateLockerNumber(countryCode);
 
-    const TENANT_IDS: Record<string, string> = {
-      'gaspmaker': '654f5866-247c-4463-b7c7-5e4400c17bc2',
-    };
-    const tenantId = TENANT_IDS['gaspmaker'];
+    const TENANT_ID = '654f5866-247c-4463-b7c7-5e4400c17bc2';
 
     // Crear usuario
     await prisma.user.create({
       data: {
         email,
-        name: name.trim(),
+        name,
         password: hashedPassword,
         suiteNo,
         role: 'CLIENTE',
-        tenant_id: tenantId,
+        tenant_id: TENANT_ID,
         countryCode,
         phone,
-        referredBy: null
-      }
+        referredBy: null,
+      },
     });
 
-    // Enviar email con contraseña temporal
+    // Enviar email de bienvenida
     await resend.emails.send({
       from: 'Gasp Maker Cargo <info@gaspmakercargo.com>',
       to: email,
       subject: 'Welcome to Gasp Maker Cargo! Your account is ready 📦',
       html: `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
-          <h1 style="color: #FBBF24;">Hello, ${name.trim()}!</h1>
+          <h1 style="color: #FBBF24;">Hello, ${name}!</h1>
           <p>Your Gasp Maker Cargo account has been created automatically.</p>
-          
+
           <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; text-align: center; margin: 30px 0;">
             <p style="margin: 0; font-size: 14px; color: #666;">Your Suite Number:</p>
             <p style="font-size: 28px; font-weight: bold; color: #111;">${suiteNo}</p>
@@ -113,17 +123,17 @@ export async function POST(req: Request) {
           </div>
 
           <div style="text-align: center; margin-top: 30px;">
-            <a href="https://www.gaspmakercargo.com/en/login-cliente" 
+            <a href="https://www.gaspmakercargo.com/en/login-cliente"
                style="background-color: #FBBF24; color: #000; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
               Login to My Account
             </a>
           </div>
         </div>
-      `
+      `,
     });
 
-    console.log(`✅ Facebook Lead registered: ${email} | Suite: ${suiteNo}`);
-    return NextResponse.json({ status: 'success', email, suiteNo });
+    console.log(`✅ Lead registered: ${email} | Suite: ${suiteNo} | Country: ${countryCode}`);
+    return NextResponse.json({ status: 'success', email, suiteNo, countryCode });
 
   } catch (error: any) {
     console.error('Facebook webhook error:', error);
