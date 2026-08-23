@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useSession } from 'next-auth/react'; 
 import { 
   Package, Users, Truck, MapPin, PlusCircle, Layers, 
-  Activity, DollarSign, ClipboardList, Car, Loader2, TrendingUp, Container, Store, ShieldAlert, Mailbox, FileSearch, Archive, ShoppingBag, Gift, ShoppingCart, ChevronDown
+  Activity, DollarSign, ClipboardList, Car, Loader2, TrendingUp, Container, Store, ShieldAlert, Mailbox, FileSearch, Archive, ShoppingBag, Gift, ShoppingCart, ChevronDown, UserPlus
 } from 'lucide-react';
 
 export default function AdminDashboardClient({ locale }: { locale: string }) {
@@ -379,9 +379,23 @@ useEffect(() => {
                     <Users size={20} strokeWidth={2} />
                   </div>
                 </div>
+                            </Link>
+
+              {/* 🔥 FACEBOOK LEADS CRM */}
+              <Link href={`/${locale}/dashboard-admin/leads`}
+                className="group bg-white p-5 rounded-xl border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all cursor-pointer block">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h3 className="text-base font-bold text-gmc-gris-oscuro group-hover:text-blue-600 transition-colors">Facebook Leads</h3>
+                    <p className="text-xs text-gray-500 mt-1 font-medium">Manage ad campaign leads.</p>
+                  </div>
+                  <div className="bg-blue-50 p-2 rounded-lg text-blue-600 group-hover:bg-blue-100 transition-colors border border-blue-100">
+                    <UserPlus size={20} strokeWidth={2} />
+                  </div>
+                </div>
               </Link>
 
-              <Link href={`/${locale}/dashboard-admin/historial-envios`} 
+              <Link href={`/${locale}/dashboard-admin/historial-envios`}
                 className="group bg-white p-5 rounded-xl border border-gray-200 hover:border-teal-500 hover:shadow-md transition-all cursor-pointer block">
                 <div className="flex items-start justify-between">
                   <div>

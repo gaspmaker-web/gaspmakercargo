@@ -606,3 +606,20 @@ model TenantRate {
   @@unique([tenantId, concept, countryCode])
   @@map("tenant_rates")
 }
+
+model Lead {
+  id           String    @id @default(uuid())
+  lead_id      String    @unique
+  full_name    String?
+  phone_number String?
+  email        String?
+  form_id      String?
+  source       String?   @default("facebook")
+  status       String?   @default("new")
+  notes        String?
+  contacted_at DateTime?
+  created_time DateTime?
+  created_at   DateTime  @default(now())
+
+  @@map("Lead")
+}
