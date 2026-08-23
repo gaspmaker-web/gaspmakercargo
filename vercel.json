@@ -3,6 +3,10 @@
     {
       "path": "/api/cron/daily-storage",
       "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron/sync-facebook-leads",
+      "schedule": "0 * * * *"
     }
   ]
 }
