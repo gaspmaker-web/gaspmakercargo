@@ -212,7 +212,7 @@ if (isConsolidatedBox) {
 } else if (pkg.consolidatedShipmentId) {
     // 📦 Paquete dentro de consolidación — mostrar precio si fue pagado individualmente
     price = pkg.shippingTotalPaid || 0;
-    
+
                                     // 🚚 Envío Normal
                                     price = pkg.shippingTotalPaid || pkg.shippingSubtotal || pkg.totalAmount || 0;
                                 }
@@ -318,18 +318,16 @@ if (isConsolidatedBox) {
                                             </div>
                                         )}
                                     </td>
-
-                                    <td className="p-4 text-right">
-                                       <div className="flex items-center justify-end gap-1 font-bold text-green-700">
-                                       <DollarSign size={14} className="text-green-500"/>
-                                       {pkg.consolidatedShipmentId ? (
-                                       <span className="text-xs text-gray-400 font-medium">In consolidation</span>
-                                       ) : (
-                                       price > 0 ? price.toFixed(2) : '0.00'
-                                       )}
+                                     <td className="p-4 text-right">
+                                     <div className="flex items-center justify-end gap-1 font-bold text-green-700">
+                                     <DollarSign size={14} className="text-green-500"/>
+                                    {pkg.consolidatedShipmentId && !pkg.shippingTotalPaid ? (
+                                    <span className="text-xs text-gray-400 font-medium">In consolidation</span>
+                                      ) : (
+                                     price > 0 ? price.toFixed(2) : '0.00'
+                                     )}
                                     </div>
-                                    </td>
-
+                                   </td>
                                     <td className="p-4 text-center">
                                         {pkg.status === 'ENVIADO' ? (
                                             <span className="text-[10px] font-bold px-2 py-1 rounded-full border bg-blue-100 text-blue-800 border-blue-200 shadow-sm flex items-center justify-center gap-1">
