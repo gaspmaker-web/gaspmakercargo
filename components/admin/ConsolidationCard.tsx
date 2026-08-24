@@ -98,6 +98,7 @@ const CONTAINER_OPTIONS = [
 
   const isLocalDelivery = request.serviceType === 'LOCAL_DELIVERY';
   const isOcean = request.serviceType === 'OCEAN_CONSOLIDATION';
+  const isPickup = request.serviceType === 'PICKUP' || request.gmcShipmentNumber?.startsWith('PICKUP');
   
   // 🔥 LA LLAVE MAESTRA: Activamos las filas dinámicas si es Camión o Barco
   const isDynamicPalletMode = isLocalDelivery || isOcean;
@@ -228,19 +229,23 @@ const CONTAINER_OPTIONS = [
             
             {/* BADGES VISUALES DEL TIPO DE SERVICIO */}
             <div className={`flex flex-col items-end text-sm ${isLocalDelivery ? 'text-gray-300' : 'text-gray-600'}`}>
-                {isLocalDelivery ? (
-                    <div className="flex items-center gap-1.5 font-bold text-white bg-gray-800 px-2 py-1 rounded text-xs">
-                        <Truck size={14} /> LOCAL (AURA)
-                    </div>
-                ) : isOcean ? (
-                    <div className="flex items-center gap-1.5 font-bold text-white bg-blue-600 px-2 py-1 rounded text-xs shadow-sm border border-blue-700">
-                        <Ship size={14} /> {request.destinationCountryCode || 'DESTINATION'} (OCEAN)
-                    </div>
-                ) : (
-                    <div className="flex items-center gap-1.5 font-bold text-indigo-700 bg-indigo-100 px-2 py-1 rounded text-xs border border-indigo-200">
-                        <Plane size={14} /> {request.destinationCountryCode || 'DESTINATION'} (AIR)
-                    </div>
-                )}
+              {isLocalDelivery ? (
+    <div className="flex items-center gap-1.5 font-bold text-white bg-gray-800 px-2 py-1 rounded text-xs">
+        <Truck size={14} /> LOCAL (AURA)
+    </div>
+) : isOcean ? (
+    <div className="flex items-center gap-1.5 font-bold text-white bg-blue-600 px-2 py-1 rounded text-xs shadow-sm border border-blue-700">
+        <Ship size={14} /> {request.destinationCountryCode || 'DESTINATION'} (OCEAN)
+    </div>
+) : isPickup ? (
+    <div className="flex items-center gap-1.5 font-bold text-green-700 bg-green-100 px-2 py-1 rounded text-xs border border-green-200">
+        <Package size={14} /> STORE PICKUP
+    </div>
+) : (
+    <div className="flex items-center gap-1.5 font-bold text-indigo-700 bg-indigo-100 px-2 py-1 rounded text-xs border border-indigo-200">
+        <Plane size={14} /> {request.destinationCountryCode || 'DESTINATION'} (AIR)
+    </div>
+)}
                 
                 <div className="flex items-center gap-1 mt-1 text-xs">
                     <Calendar size={12} />
