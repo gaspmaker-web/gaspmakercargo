@@ -117,7 +117,7 @@ const menuItems = [
       {isOpen && <div className="fixed inset-0 bg-black/50 z-40 md:hidden backdrop-blur-sm" onClick={() => setIsOpen(false)} />}
 
      <aside className={`
-  bg-white h-screen border-r border-gray-200 flex flex-col fixed left-0 top-0 z-50
+  bg-white h-screen flex flex-col fixed left-0 top-0 z-50 md:border-r md:border-gray-200
   transition-all duration-300 ease-in-out overflow-hidden
   ${isOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'}
   md:translate-x-0 md:shadow-none
