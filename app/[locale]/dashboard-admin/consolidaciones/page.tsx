@@ -17,6 +17,7 @@ import {
 import MenuAccionesConsolidacion from '@/components/admin/MenuAccionesConsolidacion';
 import ConsolidationCard from '@/components/admin/ConsolidationCard'; 
 import SearchConsolidations from '@/components/admin/SearchConsolidations';
+import CashPaymentButton from '@/components/admin/CashPaymentButton';
 
 // 👇 1. IMPORTAR EL COMPONENTE NUEVO
 import BotonComprarLabelConsolidado from '@/components/admin/BotonComprarLabelConsolidado';
@@ -168,10 +169,13 @@ export default async function ConsolidacionesPage({
                                             {envio.weightLbs} lb • {envio.gmcShipmentNumber}
                                         </p>
                                     </div>
-                                    <div className="text-right shrink-0 ml-2">
-                                         <p className="text-lg font-bold text-gray-800">${envio.totalAmount?.toFixed(2)}</p>
-                                         <p className="text-[10px] text-gray-400 uppercase">Outstanding</p>
-                                    </div>
+                                   <div className="text-right shrink-0 ml-2">
+    <p className="text-lg font-bold text-gray-800">${envio.totalAmount?.toFixed(2)}</p>
+    <p className="text-[10px] text-gray-400 uppercase">Outstanding</p>
+    {isPickup && (
+        <CashPaymentButton shipmentId={envio.id} shipmentNumber={envio.gmcShipmentNumber || ''} />
+    )}
+</div>
                                 </div>
                              )
                          })}
