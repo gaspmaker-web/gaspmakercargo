@@ -103,6 +103,25 @@ const CONTAINER_OPTIONS = [
   // 🔥 LA LLAVE MAESTRA: Activamos las filas dinámicas si es Camión o Barco
   const isDynamicPalletMode = isLocalDelivery || isOcean;
 
+  const handleCashPayment = async () => {
+    if (!confirm(`Mark ${request.gmcShipmentNumber} as paid with cash?`)) return;
+    try {
+        const res = await fetch(`/api/admin/consolidations/cash-payment`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ shipmentId: request.id }),
+        });
+        if (res.ok) {
+            alert('✅ Payment registered successfully.');
+            window.location.reload();
+        } else {
+            const data = await res.json();
+            alert(data.error || 'Error registering payment.');
+        }
+    } catch (error) {
+        alert('Connection error.');
+    }
+};
   // --- Funciones para manejar las filas de los Pallets ---
   const handleAddPiece = () => {
     setAuraPieces([...auraPieces, { weight: '', length: '', width: '', height: '' }]);
@@ -276,23 +295,32 @@ const CONTAINER_OPTIONS = [
                 ))}
             </div>
 
-            <div className={`flex justify-end pt-4 border-t ${isLocalDelivery ? 'border-gray-200' : 'border-gray-100'}`}>
-                <button 
-                    onClick={(e) => {
-                        e.stopPropagation(); 
-                        setShowModal(true);
-                    }}
-                    className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-colors flex items-center gap-2 ${
-                        isLocalDelivery 
-                            ? 'bg-black text-white hover:bg-gray-800' 
-                            : isOcean
-                            ? 'bg-blue-600 text-white hover:bg-blue-700'
-                            : 'bg-indigo-600 text-white hover:bg-indigo-700'
-                    }`}
-                >
-                    {isLocalDelivery ? 'Measure Aura Pallets' : isOcean ? 'Measure Ocean Pallets' : 'Process Air'} <ArrowRight size={16} />
-                </button>
-            </div>
+  <div className={`flex justify-end pt-4 border-t ${isLocalDelivery ? 'border-gray-200' : 'border-gray-100'}`}>
+    {isPickup ? (
+        <button
+            onClick={handleCashPayment}
+            className="px-6 py-2.5 rounded-xl font-bold text-sm transition-colors flex items-center gap-2 bg-green-600 text-white hover:bg-green-700"
+        >
+            <DollarSign size={16} /> Mark as Paid (Cash)
+        </button>
+    ) : (
+        <button 
+            onClick={(e) => {
+                e.stopPropagation(); 
+                setShowModal(true);
+            }}
+            className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-colors flex items-center gap-2 ${
+                isLocalDelivery 
+                    ? 'bg-black text-white hover:bg-gray-800' 
+                    : isOcean
+                    ? 'bg-blue-600 text-white hover:bg-blue-700'
+                    : 'bg-indigo-600 text-white hover:bg-indigo-700'
+            }`}
+        >
+            {isLocalDelivery ? 'Measure Aura Pallets' : isOcean ? 'Measure Ocean Pallets' : 'Process Air'} <ArrowRight size={16} />
+        </button>
+    )}
+</div>
         </div>
       </div>
 
