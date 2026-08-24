@@ -97,6 +97,7 @@ const menuItems = [
     },
     { name: "Amazon Catalog", href: `/${currentLocale}/dashboard-admin/catalogo`, icon: ShoppingBag, roles: ["ADMIN"] },
     { name: "Clients", href: `/${currentLocale}/dashboard-admin/clientes`, icon: Users, roles: ["ADMIN", "CONSOLIDATION"], badgeCount: pendingInvoicesCount, badgeColor: "bg-red-500" },
+    { name: "Facebook Leads", href: `/${currentLocale}/dashboard-admin/leads`, icon: UserPlus, roles: ["ADMIN"] },
     { name: "Finances", href: `/${currentLocale}/dashboard-admin/finanzas`, icon: DollarSign, roles: ["ADMIN"] },
     { name: "Settings", href: `/${currentLocale}/dashboard-admin/configuracion`, icon: Settings, roles: ["ADMIN"] }
   ];
@@ -173,7 +174,7 @@ const menuItems = [
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 p-2 space-y-1 overflow-y-auto">
+        <nav className="flex-1 p-2 space-y-1 overflow-y-auto scrollbar-hide">
           {allowedLinks.map((item) => {
             const showRedDot = item.name === "Paquetes" && (paidPackagesCount > 0 || preAlertsCount > 0);
 
