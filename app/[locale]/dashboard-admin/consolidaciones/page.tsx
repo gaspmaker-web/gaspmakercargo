@@ -32,7 +32,7 @@ export default async function ConsolidacionesPage({
   const consolidacionesDB = await prisma.consolidatedShipment.findMany({
     where: {
         // 🔥 CORRECCIÓN: Se añadió 'OCEAN_CONSOLIDATION' a la lista permitida
-        serviceType: { in: ['CONSOLIDATION', 'SHIPPING_INTL', 'LOCAL_DELIVERY', 'OCEAN_CONSOLIDATION'] },
+        serviceType: { in: ['CONSOLIDATION', 'SHIPPING_INTL', 'LOCAL_DELIVERY', 'OCEAN_CONSOLIDATION', 'PICKUP'] },
         ...(query ? {
             OR: [
                 { user: { name: { contains: query, mode: 'insensitive' } } },
