@@ -143,9 +143,9 @@ const menuItems = [
           )}
 
           {/* X móvil */}
-          <button onClick={() => setIsOpen(false)} className="md:hidden absolute top-4 right-4 text-gray-400 hover:text-red-500 bg-gray-50 p-1.5 rounded-full">
-            <X size={20} />
-          </button>
+        <button onClick={() => setIsOpen(true)} className="hidden fixed top-4 left-4 z-40 bg-white p-2 rounded-lg shadow-md border border-gray-200 text-gmc-gris-oscuro">
+  <Menu size={24} />
+</button>
 
           {/* 🔥 Botón collapse DESKTOP */}
           <button
