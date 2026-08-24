@@ -209,10 +209,10 @@ export default function ActivePackagesClient({ allItems, currentLocale }: Packag
                                         else if (w <= 150) price = 12.50;
                                         else price = 30.00;
                                     }
-                                } else if (pkg.consolidatedShipmentId) {
-                               // 📦 Paquete dentro de consolidación — no mostrar precio individual
-                               price = 0;
-                                 }else {
+                              } else if (pkg.consolidatedShipmentId) {
+                              // 📦 Paquete dentro de consolidación — mostrar shippingTotalPaid si existe
+                                price = pkg.shippingTotalPaid || 0;
+                                }else {
                                     // 🚚 Envío Normal
                                     price = pkg.shippingTotalPaid || pkg.shippingSubtotal || pkg.totalAmount || 0;
                                 }
