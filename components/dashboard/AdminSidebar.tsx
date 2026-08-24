@@ -170,6 +170,7 @@ const menuItems = [
     {userRole === 'ADMIN' ? 'A' : 'W'}
   </div>
 )}
+        </div>
 
         {/* Nav */}
         <nav className="flex-1 p-2 space-y-1 overflow-y-auto">
