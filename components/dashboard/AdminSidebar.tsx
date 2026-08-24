@@ -10,11 +10,12 @@ import {
   ShoppingBag, Gift, PanelLeftClose, PanelLeftOpen
 } from 'lucide-react';
 import { signOut } from 'next-auth/react';
+import { useSidebar } from '@/lib/admin-sidebar-context';
 
 export default function AdminSidebar() {
   const pathname = usePathname();
   const { data: session } = useSession();
-  const [isOpen, setIsOpen] = useState(false);
+  const { isOpen, setIsOpen } = useSidebar();
   const [collapsed, setCollapsed] = useState(false);
   const [openSubmenu, setOpenSubmenu] = useState<string | null>(null); 
 

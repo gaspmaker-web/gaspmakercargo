@@ -5,11 +5,12 @@ import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { LayoutDashboard, Package, Layers, Users, Menu, X } from 'lucide-react';
 import { useSession } from 'next-auth/react';
+import { useSidebar } from '@/lib/admin-sidebar-context';
 
 export default function AdminBottomNav() {
   const pathname = usePathname();
   const { data: session } = useSession();
-  const [menuOpen, setMenuOpen] = useState(false);
+  const { isOpen: menuOpen, setIsOpen: setMenuOpen } = useSidebar();
   const [counts, setCounts] = useState({ consolidaciones: 0, clientes: 0, paquetes: 0 });
 
   const segments = pathname.split('/');
@@ -65,13 +66,7 @@ export default function AdminBottomNav() {
 
   return (
     <>
-      {/* Overlay menu completo */}
-      {menuOpen && (
-        <div
-          className="md:hidden fixed inset-0 bg-black/50 z-40 backdrop-blur-sm"
-          onClick={() => setMenuOpen(false)}
-        />
-      )}
+
 
       {/* Bottom Nav */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-100 shadow-lg safe-area-pb">
