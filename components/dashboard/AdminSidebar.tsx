@@ -112,8 +112,8 @@ const menuItems = [
 
   return (
     <>
-{/* Hamburguesa MÓVIL — oculta, se abre desde bottom nav */}
-{isOpen && <div className="fixed inset-0 bg-black/50 z-40 md:hidden backdrop-blur-sm" onClick={() => setIsOpen(false)} />}
+      {/* Hamburguesa MÓVIL — oculta, se abre desde bottom nav */}
+      {isOpen && <div className="fixed inset-0 bg-black/50 z-40 md:hidden backdrop-blur-sm" onClick={() => setIsOpen(false)} />}
 
       <aside className={`
         bg-white h-screen border-r border-gray-200 flex flex-col fixed left-0 top-0 z-50
