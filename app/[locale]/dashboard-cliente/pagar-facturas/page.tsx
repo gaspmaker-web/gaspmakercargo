@@ -83,8 +83,14 @@ export default async function PagarFacturasPage({ params: { locale } }: { params
             });
         }
         
-        finalSubtotal = 0; 
-        handlingFee = totalHandlingForPickup;
+       // Si ya tiene totalAmount guardado, usarlo. Si no, calcular handling
+if (s.totalAmount && s.totalAmount > 0) {
+    finalSubtotal = s.totalAmount;
+    handlingFee = 0;
+} else {
+    finalSubtotal = 0;
+    handlingFee = totalHandlingForPickup;
+}
         
     } else if (isStorage) {
         // 📦 ESCENARIO 2: PAGO DE ALMACENAJE

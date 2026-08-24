@@ -283,10 +283,15 @@ const handleSelectRate = (billId: string, rate: Rate) => {
       selectedBillIds.forEach(id => {
           const bill = bills.find(b => b.id === id);
           if (bill) {
-              const isConsolidated = bill.serviceType === 'CONSOLIDATION' || 
-                                     bill.serviceType === 'OCEAN_CONSOLIDATION' ||
-                                     bill.description?.toLowerCase().includes('consolid') ||
-                                     (bill.packages && bill.packages.length > 1);
+              const isStorePickupVisual = bill.serviceType === 'PICKUP' || 
+bill.gmcShipmentNumber?.toUpperCase().startsWith('PICKUP');
+
+const isConsolidated = !isStorePickupVisual && (
+  bill.serviceType === 'CONSOLIDATION' || 
+  bill.serviceType === 'OCEAN_CONSOLIDATION' ||
+  bill.description?.toLowerCase().includes('consolid') ||
+  (bill.packages && bill.packages.length > 1)
+);
               
               let billHandlingFee = 0;
               const rate = selectedRateMap[id];
