@@ -192,27 +192,27 @@ export default function ActivePackagesClient({ allItems, currentLocale }: Packag
                                 const isReadyToShip = (!isConsolidatedBox && (pkg.status === 'EN_PROCESO_ENVIO' || pkg.status === 'ENVIADO' || hasCourierAssigned)) || 
                                                       (isConsolidatedBox && (pkg.status === 'PAGADO' || pkg.status === 'ENVIADO' || hasCourierAssigned));
 
-                               let price = pkg.shippingTotalPaid || 0;
+                         let price = pkg.shippingTotalPaid || pkg.shippingSubtotal || 0;
 
-                                if (isConsolidatedBox) {
-                                    // 📦 Cajas Maestras
-                                    price = pkg.totalAmount || pkg.shippingTotalPaid || 0;
-                                } else if (isStorePickup) { // 🔥 TIENE PRIORIDAD AHORA
-                                    // 🏪 Retiro en Bodega
-                                    const isDocument = pkg.courier === 'Buzón Virtual' || (pkg.carrierTrackingNumber || '').startsWith('DOC-') || (pkg.gmcTrackingNumber || '').startsWith('GMC-DOC-');
-                                    if (isDocument) {
-                                        price = 0;
-                                    } else {
-                                        const w = pkg.weightLbs || 1;
-                                        if (w <= 10) price = 2.50;
-                                        else if (w <= 50) price = 5.00;
-                                        else if (w <= 150) price = 12.50;
-                                        else price = 30.00;
-                                    }
-                              } else if (pkg.consolidatedShipmentId) {
-                              // 📦 Paquete dentro de consolidación — mostrar shippingTotalPaid si existe
-                                price = pkg.shippingTotalPaid || 0;
-                                }else {
+if (isConsolidatedBox) {
+    // 📦 Cajas Maestras
+    price = pkg.totalAmount || pkg.shippingTotalPaid || 0;
+} else if (isStorePickup) {
+    // 🏪 Retiro en Bodega
+    const isDocument = pkg.courier === 'Buzón Virtual' || (pkg.carrierTrackingNumber || '').startsWith('DOC-') || (pkg.gmcTrackingNumber || '').startsWith('GMC-DOC-');
+    if (isDocument) {
+        price = 0;
+    } else {
+        const w = pkg.weightLbs || 1;
+        if (w <= 10) price = 2.50;
+        else if (w <= 50) price = 5.00;
+        else if (w <= 150) price = 12.50;
+        else price = 30.00;
+    }
+} else if (pkg.consolidatedShipmentId) {
+    // 📦 Paquete dentro de consolidación — mostrar precio si fue pagado individualmente
+    price = pkg.shippingTotalPaid || 0;
+    
                                     // 🚚 Envío Normal
                                     price = pkg.shippingTotalPaid || pkg.shippingSubtotal || pkg.totalAmount || 0;
                                 }
