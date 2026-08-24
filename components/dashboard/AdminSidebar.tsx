@@ -120,7 +120,7 @@ const menuItems = [
         transition-all duration-300 ease-in-out
         ${isOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'}
         md:translate-x-0 md:shadow-none
-       ${collapsed ? 'w-16' : 'w-[80vw] md:w-64'}
+       ${collapsed ? 'w-16' : 'w-[85vw] md:w-64'}
       `}>
 
         {/* Header */}
