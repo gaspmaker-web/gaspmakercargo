@@ -9,6 +9,7 @@ import {
   CheckCircle,
   FileWarning,
   ChevronRight,
+  Package,
   Plane,
   MapPin,
   Ship // 🔥 Se importó el icono del barco
@@ -143,6 +144,7 @@ export default async function ConsolidacionesPage({
                          {esperandoPago.map((envio) => {
                              const isLocalDelivery = envio.serviceType === 'LOCAL_DELIVERY' || envio.courierService?.toLowerCase().includes('local delivery');
                              const isOcean = envio.serviceType === 'OCEAN_CONSOLIDATION'; // 🔥 Nuevo reconocimiento
+                             const isPickup = envio.serviceType === 'PICKUP' || envio.gmcShipmentNumber?.startsWith('PICKUP');
 
                              return (
                                 <div key={envio.id} className="p-4 rounded-xl border border-gray-200 flex justify-between items-center bg-gray-50">
@@ -150,14 +152,16 @@ export default async function ConsolidacionesPage({
                                         <div className="flex items-center gap-2 mb-1">
                                             <span className="text-[10px] font-bold bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded">PENDIENTE</span>
                                             
-                                            {/* 🔥 Etiquetas dinámicas adaptadas al nuevo servicio */}
-                                            {isLocalDelivery ? (
-                                                <span className="text-[10px] font-bold bg-black text-white px-2 py-0.5 rounded flex items-center gap-1"><MapPin size={10}/> LOCAL</span>
-                                            ) : isOcean ? (
-                                                <span className="text-[10px] font-bold bg-blue-600 text-white px-2 py-0.5 rounded flex items-center gap-1"><Ship size={10}/> OCEAN</span>
-                                            ) : (
-                                                <span className="text-[10px] font-bold bg-purple-100 text-purple-700 px-2 py-0.5 rounded flex items-center gap-1"><Plane size={10}/> AIR</span>
-                                            )}
+                                           {/* 🔥 Etiquetas dinámicas adaptadas al nuevo servicio */}
+{isLocalDelivery ? (
+    <span className="text-[10px] font-bold bg-black text-white px-2 py-0.5 rounded flex items-center gap-1"><MapPin size={10}/> LOCAL</span>
+) : isOcean ? (
+    <span className="text-[10px] font-bold bg-blue-600 text-white px-2 py-0.5 rounded flex items-center gap-1"><Ship size={10}/> OCEAN</span>
+) : isPickup ? (
+    <span className="text-[10px] font-bold bg-green-100 text-green-700 px-2 py-0.5 rounded flex items-center gap-1"><Package size={10}/> STORE PICKUP</span>
+) : (
+    <span className="text-[10px] font-bold bg-purple-100 text-purple-700 px-2 py-0.5 rounded flex items-center gap-1"><Plane size={10}/> AIR</span>
+)}
                                         </div>
                                         <h3 className="font-bold text-gray-800 line-clamp-1">{envio.user?.name}</h3>
                                         <p className="text-sm text-gray-500 font-mono">
@@ -189,6 +193,7 @@ export default async function ConsolidacionesPage({
                             
                             const isLocalDelivery = envio.serviceType === 'LOCAL_DELIVERY' || service.includes('local delivery');
                             const isOcean = envio.serviceType === 'OCEAN_CONSOLIDATION'; // 🔥 Nuevo reconocimiento
+                            const isPickup = envio.serviceType === 'PICKUP' || envio.gmcShipmentNumber?.startsWith('PICKUP');
 
                             return (
                                 <div key={envio.id} className="bg-green-50/50 p-4 rounded-xl border border-green-200 flex flex-col md:flex-row justify-between items-center gap-4 relative group">
