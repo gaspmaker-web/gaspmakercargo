@@ -7,7 +7,7 @@ import { useSession } from 'next-auth/react';
 import { 
   Package, Truck, Layers, Users, DollarSign, Settings, LayoutDashboard,
   LogOut, Menu, X, Bell, Zap, AlertCircle, Mailbox, ChevronDown,
-  ShoppingBag, Gift, PanelLeftClose, PanelLeftOpen
+  ShoppingBag, Gift, PanelLeftClose, PanelLeftOpen, ArrowLeft
 } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 import { useSidebar } from '@/lib/admin-sidebar-context';
@@ -120,7 +120,7 @@ const menuItems = [
         transition-all duration-300 ease-in-out
         ${isOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'}
         md:translate-x-0 md:shadow-none
-       ${collapsed ? 'w-16' : 'w-[85vw] md:w-64'}
+       ${collapsed ? 'w-16' : 'w-full md:w-64'}
       `}>
 
         {/* Header */}
@@ -140,34 +140,36 @@ const menuItems = [
             </div>
           )}
 
-          {/* X móvil */}
-        <button onClick={() => setIsOpen(true)} className="hidden fixed top-4 left-4 z-40 bg-white p-2 rounded-lg shadow-md border border-gray-200 text-gmc-gris-oscuro">
-  <Menu size={24} />
+{/* ← Cerrar en móvil */}
+<button 
+  onClick={() => setIsOpen(false)} 
+  className="md:hidden absolute top-2 right-2 z-10 text-gray-500 hover:text-gray-800 bg-gray-100 p-1.5 rounded-full"
+>
+  <ArrowLeft size={20} />
 </button>
 
-          {/* 🔥 Botón collapse DESKTOP */}
-          <button
-            onClick={() => setCollapsed(!collapsed)}
-            className="hidden md:flex absolute top-4 right-2 p-1.5 rounded-lg text-gray-400 hover:text-gmc-gris-oscuro hover:bg-gray-100 transition-colors"
-            title={collapsed ? 'Expand' : 'Collapse'}
-          >
-            {collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
-          </button>
+{/* 🔥 Botón collapse DESKTOP */}
+<button
+  onClick={() => setCollapsed(!collapsed)}
+  className="hidden md:flex absolute top-4 right-2 p-1.5 rounded-lg text-gray-400 hover:text-gmc-gris-oscuro hover:bg-gray-100 transition-colors"
+  title={collapsed ? 'Expand' : 'Collapse'}
+>
+  {collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
+</button>
 
-          {/* Logo / badge */}
-          {!collapsed ? (
-            <>
-              <h2 className="text-2xl font-bold text-gmc-gris-oscuro font-garamond mt-2">GaspMaker</h2>
-              <span className={`text-[10px] font-bold px-3 py-1 rounded-full mt-2 uppercase tracking-widest shadow-sm ${userRole === 'ADMIN' ? 'bg-purple-100 text-purple-700 border border-purple-200' : 'bg-blue-100 text-blue-700 border border-blue-200'}`}>
-                {userRole === 'WAREHOUSE' ? 'WAREHOUSE' : 'ADMINISTRATOR'}
-              </span>
-            </>
-          ) : (
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold mt-2 ${userRole === 'ADMIN' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
-              {userRole === 'ADMIN' ? 'A' : 'W'}
-            </div>
-          )}
-        </div>
+{/* Logo / badge */}
+{!collapsed ? (
+  <>
+    <h2 className="text-2xl font-bold text-gmc-gris-oscuro font-garamond mt-2">GaspMaker</h2>
+    <span className={`text-[10px] font-bold px-3 py-1 rounded-full mt-2 uppercase tracking-widest shadow-sm ${userRole === 'ADMIN' ? 'bg-purple-100 text-purple-700 border border-purple-200' : 'bg-blue-100 text-blue-700 border border-blue-200'}`}>
+      {userRole === 'WAREHOUSE' ? 'WAREHOUSE' : 'ADMINISTRATOR'}
+    </span>
+  </>
+) : (
+  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold mt-2 ${userRole === 'ADMIN' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
+    {userRole === 'ADMIN' ? 'A' : 'W'}
+  </div>
+)}
 
         {/* Nav */}
         <nav className="flex-1 p-2 space-y-1 overflow-y-auto">
