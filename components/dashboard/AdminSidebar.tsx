@@ -112,18 +112,15 @@ const menuItems = [
 
   return (
     <>
-      {/* Hamburguesa MÓVIL */}
-      <button onClick={() => setIsOpen(true)} className="md:hidden fixed top-4 left-4 z-40 bg-white p-2 rounded-lg shadow-md border border-gray-200 text-gmc-gris-oscuro">
-        <Menu size={24} />
-      </button>
-      {isOpen && <div className="fixed inset-0 bg-black/50 z-40 md:hidden backdrop-blur-sm" onClick={() => setIsOpen(false)} />}
+{/* Hamburguesa MÓVIL — oculta, se abre desde bottom nav */}
+{isOpen && <div className="fixed inset-0 bg-black/50 z-40 md:hidden backdrop-blur-sm" onClick={() => setIsOpen(false)} />}
 
       <aside className={`
         bg-white h-screen border-r border-gray-200 flex flex-col fixed left-0 top-0 z-50
         transition-all duration-300 ease-in-out
         ${isOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'}
         md:translate-x-0 md:shadow-none
-        ${collapsed ? 'w-16' : 'w-64'}
+       ${collapsed ? 'w-16' : 'w-[80vw] md:w-64'}
       `}>
 
         {/* Header */}
