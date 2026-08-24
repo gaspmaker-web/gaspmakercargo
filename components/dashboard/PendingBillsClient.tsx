@@ -818,7 +818,7 @@ const isConsolidated = !isStorePickupVisual && (
                                                                     📦 {bill.packages.length} {t('packages')}
                                                                 </span>
                                                             )}
-                                                            {effectiveHandling > 0 && <span className="text-[10px] bg-yellow-50 text-yellow-700 px-2 py-1 rounded font-bold border border-yellow-100">Fee ${effectiveHandling.toFixed(2)}</span>}
+                                                            {effectiveHandling > 0 && !bill.gmcShipmentNumber?.toUpperCase().startsWith('PICKUP') && <span className="text-[10px] bg-yellow-50 text-yellow-700 px-2 py-1 rounded font-bold border border-yellow-100">Fee ${effectiveHandling.toFixed(2)}</span>}
                                                         </div>
                                                     </div>
                                                 </div>
