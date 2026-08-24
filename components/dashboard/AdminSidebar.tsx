@@ -174,7 +174,7 @@ const menuItems = [
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 p-2 space-y-1 overflow-y-auto scrollbar-hide">
+        <nav className="flex-1 p-2 space-y-1 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
           {allowedLinks.map((item) => {
             const showRedDot = item.name === "Paquetes" && (paidPackagesCount > 0 || preAlertsCount > 0);
 
