@@ -30,13 +30,16 @@ export async function POST(req: Request) {
     const tenantFilter = tenant?.id ? { tenant_id: tenant.id } : {};
 
     const body = await req.json();
-    const { 
-        packageIds, 
-        type, 
-        scheduledDate, scheduledTime,
-        selectedCourier, courierService, totalWeight, subtotal, processingFee, totalPaid, stripePaymentId, 
-        shippingAddress 
-    } = body;
+const { 
+    packageIds, 
+    type, 
+    scheduledDate, scheduledTime,
+    selectedCourier, courierService, totalWeight, subtotal, processingFee, totalPaid, stripePaymentId, 
+    shippingAddress,
+    insuranceCost,
+    handlingFee,
+    specialCharges,
+} = body;
 
     if (!packageIds || packageIds.length === 0) {
         return NextResponse.json({ message: "No has seleccionado ningún paquete." }, { status: 400 });
@@ -200,27 +203,33 @@ export async function POST(req: Request) {
         }
     }
 
- const shipment = await prisma.consolidatedShipment.create({
+const shipment = await prisma.consolidatedShipment.create({
     data: {
         userId: session.user.id,
-        tenant_id: tenant?.id || null,  // ← AÑADIR
+        tenant_id: tenant?.id || null,
         gmcShipmentNumber: shipmentNumber,
         status: initialStatus,
-        destinationCountryCode: finalCountryCode, // <-- ¡Respeta si Nelsom es de Trinidad!
-        serviceType: finalServiceType,            // <-- ¡Manda la señal a ConsolidationCard.tsx!
-        
-            subtotalAmount: subtotal,
-            processingFee: processingFee,
-            totalAmount: totalPaid,
-            paymentId: stripePaymentId,
-            selectedCourier,
-            courierService: smartCourierService || null, 
-            weightLbs: totalWeight,
-            shippingAddress: shippingAddress || null,
-            packages: { connect: packageIds.map((id: string) => ({ id })) }
-        }
-    });
-
+        destinationCountryCode: finalCountryCode,
+        serviceType: finalServiceType,
+        subtotalAmount: subtotal,
+        processingFee: processingFee,
+        totalAmount: totalPaid,
+        paymentId: stripePaymentId,
+        selectedCourier,
+        courierService: smartCourierService || null,
+        weightLbs: totalWeight,
+        shippingAddress: shippingAddress || null,
+        extraCharges: {
+          freightCost: subtotal || 0,
+          insuranceAmount: insuranceCost || 0,
+          handlingFee: handlingFee || 0,
+          containerFee: specialCharges || 0,
+          processingFee: processingFee || 0,
+          total: totalPaid || 0,
+        },
+        packages: { connect: packageIds.map((id: string) => ({ id })) }
+    }
+});
     // Actualizamos paquetes
     const newPackageStatus = (finalServiceType === 'CONSOLIDATION' || finalServiceType === 'OCEAN_CONSOLIDATION' || finalServiceType === 'LOCAL_DELIVERY') 
         ? 'EN_PROCESO_CONSOLIDACION' 
