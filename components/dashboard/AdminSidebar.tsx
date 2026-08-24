@@ -7,7 +7,7 @@ import { useSession } from 'next-auth/react';
 import { 
   Package, Truck, Layers, Users, DollarSign, Settings, LayoutDashboard,
   LogOut, Menu, X, Bell, Zap, AlertCircle, Mailbox, ChevronDown,
-  ShoppingBag, Gift, PanelLeftClose, PanelLeftOpen, ArrowLeft
+  ShoppingBag, Gift, PanelLeftClose, PanelLeftOpen, ArrowLeft, UserPlus
 } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 import { useSidebar } from '@/lib/admin-sidebar-context';
