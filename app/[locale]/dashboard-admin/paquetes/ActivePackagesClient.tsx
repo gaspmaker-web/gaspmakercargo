@@ -53,11 +53,15 @@ export default function ActivePackagesClient({ allItems, currentLocale }: Packag
       return true;
   });
 
- const handleOpenDeliverModal = (pkgId: string, pkg?: any) => {
+const handleOpenDeliverModal = (pkgId: string, pkg?: any) => {
     const isStorePickup = pkg?.consolidatedShipment?.serviceType === 'PICKUP' ||
         pkg?.consolidatedShipment?.gmcShipmentNumber?.toUpperCase().startsWith('PICKUP');
     
-    if (isStorePickup && pkg?.consolidatedShipmentId) {
+    // Si es Store Pickup Y no tiene paymentId (no pagó online) → modal de cash
+    const alreadyPaidOnline = pkg?.consolidatedShipment?.paymentId && 
+        !pkg?.consolidatedShipment?.paymentId?.startsWith('CASH-');
+    
+    if (isStorePickup && pkg?.consolidatedShipmentId && !alreadyPaidOnline) {
         setSelectedPkg(pkg);
         setIsCashPickupModalOpen(true);
     } else {
