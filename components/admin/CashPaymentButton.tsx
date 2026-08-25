@@ -152,6 +152,7 @@ export default function CashPaymentButton({
 
               <div class="total">TOTAL PAID: $${details.totalAmount?.toFixed(2)}</div>
               <div style="text-align:right; font-size:12px; color:#666;">Payment Method: CASH</div>
+<div style="text-align:right; font-size:12px; color:#666;">Delivered by: ${staffName}</div>
 
               <div class="footer">
                 <p>Thank you for your business!</p>
