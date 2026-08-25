@@ -9,6 +9,7 @@ import {
   CheckCircle,
   FileWarning,
   ChevronRight,
+  Calendar,
   Package,
   Plane,
   MapPin,
@@ -34,7 +35,7 @@ export default async function ConsolidacionesPage({
   const consolidacionesDB = await prisma.consolidatedShipment.findMany({
     where: {
         // 🔥 CORRECCIÓN: Se añadió 'OCEAN_CONSOLIDATION' a la lista permitida
-        serviceType: { in: ['CONSOLIDATION', 'SHIPPING_INTL', 'LOCAL_DELIVERY', 'OCEAN_CONSOLIDATION', 'PICKUP'] },
+        serviceType: { in: ['CONSOLIDATION', 'SHIPPING_INTL', 'LOCAL_DELIVERY', 'OCEAN_CONSOLIDATION', 'PICKUP', 'STORE_PICKUP'] },
         ...(query ? {
             OR: [
                 { user: { name: { contains: query, mode: 'insensitive' } } },
@@ -51,7 +52,9 @@ export default async function ConsolidacionesPage({
   });
 
 const consolidaciones = consolidacionesDB.filter(c => {
-    const isPickup = c.serviceType === 'PICKUP' || c.gmcShipmentNumber?.startsWith('PICKUP');
+    const isPickup = c.serviceType === 'PICKUP' || 
+        c.serviceType === 'STORE_PICKUP' ||
+        c.gmcShipmentNumber?.startsWith('PICKUP');
     if (isPickup) return true; // Siempre mostrar Store Pickups
     const cantidadDePaquetes = c.packages?.length || 0;
     if (cantidadDePaquetes <= 1) {
@@ -59,15 +62,23 @@ const consolidaciones = consolidacionesDB.filter(c => {
     }
     return true; 
 });
-
-  const listosParaDespachar = consolidaciones.filter(c => {
+const listosParaDespachar = consolidaciones.filter(c => {
     const s = c.status;
     const isPaidState = s === 'PAGADO' || s === 'POR_ENVIAR' || s === 'PAID' || s === 'LISTO_PARA_ENVIO' || s === 'LISTO PARA ENVIO';
     const hasMoney = (c.totalAmount || 0) > 0;
-    return isPaidState && hasMoney;
-  });
+    const isPickup = c.serviceType === 'PICKUP' || 
+        c.serviceType === 'STORE_PICKUP' ||
+        c.gmcShipmentNumber?.startsWith('PICKUP');
+    return isPaidState && hasMoney && !isPickup;
+});
 
   const esperandoPago = consolidaciones.filter(c => c.status === 'PENDIENTE_PAGO');
+  const pickupsListosParaRecoger = consolidaciones.filter(c => {
+    const isPickup = c.serviceType === 'PICKUP' || 
+        c.serviceType === 'STORE_PICKUP' ||
+        c.gmcShipmentNumber?.startsWith('PICKUP');
+    return isPickup && c.status === 'PAGADO';
+});
 
   function isZeroError(envio: any) {
       return (envio.totalAmount || 0) === 0 && (envio.status === 'LISTO_PARA_ENVIO' || envio.status === 'LISTO PARA ENVIO');
@@ -150,10 +161,10 @@ const consolidaciones = consolidacionesDB.filter(c => {
                              const isPickup = envio.serviceType === 'PICKUP' || envio.gmcShipmentNumber?.startsWith('PICKUP');
 
                              return (
-                                <div key={envio.id} className="p-4 rounded-xl border border-gray-200 flex justify-between items-center bg-gray-50">
+                                <div key={envio.id} className="p-4 rounded-xl border border-gray-200 flex flex-col gap-2 bg-gray-50">
                                     <div>
                                         <div className="flex items-center gap-2 mb-1">
-                                            <span className="text-[10px] font-bold bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded">PENDIENTE</span>
+                                            <span className="text-[10px] font-bold bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded">PENDING</span>
                                             
                                            {/* 🔥 Etiquetas dinámicas adaptadas al nuevo servicio */}
 {isLocalDelivery ? (
@@ -171,9 +182,11 @@ const consolidaciones = consolidacionesDB.filter(c => {
                                             {envio.weightLbs} lb • {envio.gmcShipmentNumber}
                                         </p>
                                     </div>
-                                   <div className="text-right shrink-0 ml-2">
-    <p className="text-lg font-bold text-gray-800">${envio.totalAmount?.toFixed(2)}</p>
-    <p className="text-[10px] text-gray-400 uppercase">Outstanding</p>
+                                  <div className="border-t border-gray-200 pt-2 mt-1">
+    <div className="flex justify-between items-center mb-2">
+        <p className="text-lg font-bold text-gray-800">${envio.totalAmount?.toFixed(2)}</p>
+        <p className="text-[10px] text-gray-400 uppercase">Outstanding</p>
+    </div>
     {isPickup && (
         <CashPaymentButton shipmentId={envio.id} shipmentNumber={envio.gmcShipmentNumber || ''} />
     )}
@@ -184,6 +197,50 @@ const consolidaciones = consolidacionesDB.filter(c => {
                     </div>
                 </div>
             )}
+
+            {/* 🏪 STORE PICKUP — READY FOR COLLECTION */}
+{pickupsListosParaRecoger.length > 0 && (
+    <div className="bg-white rounded-2xl p-6 shadow-md border border-emerald-100">
+        <h2 className="text-xl font-bold mb-4 flex items-center gap-2 text-emerald-700">
+            <Package className="text-emerald-600"/> Store Pickup — Ready for Collection ({pickupsListosParaRecoger.length})
+        </h2>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {pickupsListosParaRecoger.map((envio) => {
+                const appointment = envio.courierService?.replace('Cita: ', '') === 'Recogida en Tienda' 
+    ? 'Store Pickup' 
+    : envio.courierService?.replace('Cita: ', '') || 'No appointment';
+                return (
+                    <div key={envio.id} className="p-4 rounded-xl border border-emerald-200 bg-emerald-50">
+                        <div className="flex items-center gap-2 mb-2">
+                            <span className="text-[10px] font-bold bg-emerald-600 text-white px-2 py-0.5 rounded">PAID</span>
+                            <span className="text-[10px] font-bold bg-green-100 text-green-700 px-2 py-0.5 rounded flex items-center gap-1">
+                                <Package size={10}/> STORE PICKUP
+                            </span>
+                        </div>
+                        <h3 className="font-bold text-gray-800">{envio.user?.name}</h3>
+                        <p className="text-xs text-gray-500 font-mono mb-1">{envio.gmcShipmentNumber}</p>
+                        <div className="flex items-center gap-1 text-xs text-blue-600 mb-1">
+                            <Calendar size={12}/>
+                            <span>{appointment}</span>
+                        </div>
+                        <div className="flex items-center gap-1 text-xs text-gray-500 mb-3">
+                            <Package size={12}/>
+                            <span>{envio.packages?.length || 0} packages • {envio.weightLbs} lbs</span>
+                        </div>
+                        <div className="border-t border-emerald-200 pt-2">
+    <p className="font-bold text-emerald-700 mb-2">${envio.totalAmount?.toFixed(2)}</p>
+    <CashPaymentButton
+                                shipmentId={envio.id} 
+                                shipmentNumber={envio.gmcShipmentNumber || ''}
+                                deliverOnly={true}
+                            />
+                        </div>
+                    </div>
+                );
+            })}
+        </div>
+    </div>
+)}
 
             {/* 3. LISTOS PARA DESPACHAR */}
             {listosParaDespachar.length > 0 ? (

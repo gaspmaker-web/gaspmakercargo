@@ -28,11 +28,13 @@ export default function CashPaymentButton({
     shipmentId, 
     shipmentNumber,
     autoOpen = false,
+    deliverOnly = false,
     onClose
 }: { 
     shipmentId: string; 
     shipmentNumber: string;
     autoOpen?: boolean;
+    deliverOnly?: boolean;
     onClose?: () => void;
 }) {
   const [loading, setLoading] = useState(false);
@@ -182,19 +184,20 @@ export default function CashPaymentButton({
         disabled={loadingDetails}
         className="mt-2 w-full px-4 py-2 rounded-lg font-bold text-xs transition-colors flex items-center justify-center gap-2 bg-green-600 text-white hover:bg-green-700 disabled:opacity-50"
       >
-        {loadingDetails ? <Loader2 size={14} className="animate-spin" /> : <DollarSign size={14} />}
-        Mark as Paid (Cash)
-      </button>
+  {loadingDetails ? <Loader2 size={14} className="animate-spin" /> : deliverOnly ? <Package size={14} /> : <DollarSign size={14} />}
+  {deliverOnly ? 'Deliver to Client' : 'Mark as Paid (Cash)'}
+</button>
 
       {showModal && details && (
         <div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
             
             {/* Header */}
-            <div className="bg-green-600 p-4 flex justify-between items-center">
-              <h3 className="font-bold text-white flex items-center gap-2">
-                <DollarSign size={20} /> Cash Payment — {details.gmcShipmentNumber}
-              </h3>
+           <div className={`p-4 flex justify-between items-center ${deliverOnly ? 'bg-emerald-600' : 'bg-green-600'}`}>
+            <h3 className="font-bold text-white flex items-center gap-2">
+    {deliverOnly ? <Package size={20} /> : <DollarSign size={20} />}
+    {deliverOnly ? 'Deliver to Client' : 'Cash Payment'} — {details.gmcShipmentNumber}
+</h3>
               <button onClick={() => setShowModal(false)} className="text-white hover:text-green-200">
                 <X size={24} />
               </button>
@@ -218,7 +221,11 @@ export default function CashPaymentButton({
                   <Calendar size={16} className="text-blue-500" />
                   <div>
                     <p className="text-xs text-gray-400">Appointment</p>
-                    <p className="font-bold text-sm">{details.courierService?.replace('Cita: ', '')}</p>
+                    <p className="font-bold text-sm">
+    {details.courierService === 'Recogida en Tienda' 
+        ? 'Store Pickup' 
+        : details.courierService?.replace('Cita: ', '')}
+</p>
                   </div>
                 </div>
                 <div className="bg-purple-50 rounded-xl p-3 flex-1 flex items-center gap-2">
@@ -247,7 +254,7 @@ export default function CashPaymentButton({
               {/* Total */}
               {/* Total */}
 <div className="bg-green-50 rounded-xl p-4 flex justify-between items-center border border-green-200">
-    <span className="font-bold text-gray-700">TOTAL TO COLLECT:</span>
+    <span className="font-bold text-gray-700">{deliverOnly ? 'TOTAL PAID:' : 'TOTAL TO COLLECT:'}</span>
     <span className="text-2xl font-bold text-green-700">${details.totalAmount?.toFixed(2)}</span>
 </div>
 
@@ -281,7 +288,7 @@ export default function CashPaymentButton({
                 className="flex-1 bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50"
               >
                 {loading ? <Loader2 size={16} className="animate-spin" /> : <Printer size={16} />}
-                {loading ? 'Processing...' : 'Confirm & Print Receipt'}
+                {loading ? 'Processing...' : deliverOnly ? 'Confirm Delivery & Print' : 'Confirm & Print Receipt'}
               </button>
             </div>
           </div>

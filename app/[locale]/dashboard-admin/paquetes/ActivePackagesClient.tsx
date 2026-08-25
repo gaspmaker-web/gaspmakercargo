@@ -55,6 +55,7 @@ export default function ActivePackagesClient({ allItems, currentLocale }: Packag
 
 const handleOpenDeliverModal = (pkgId: string, pkg?: any) => {
     const isStorePickup = pkg?.consolidatedShipment?.serviceType === 'PICKUP' ||
+        pkg?.consolidatedShipment?.serviceType === 'STORE_PICKUP' ||
         pkg?.consolidatedShipment?.gmcShipmentNumber?.toUpperCase().startsWith('PICKUP');
     
     // Si es Store Pickup Y no tiene paymentId (no pagó online) → modal de cash
@@ -197,17 +198,19 @@ const handleConfirmDelivery = async () => {
                             displayItems.map((pkg: any) => {
                                 const isConsolidatedBox = pkg.type === 'SHIPMENT'; 
 
-                               // 🔥 USAMOS EL ID DEL GRUPO PARA QUE COINCIDA CON EL RECIBO DEL CLIENTE
-                                const idToUse = pkg.consolidatedShipmentId ? pkg.consolidatedShipmentId : pkg.id;
-                                const shortId = idToUse ? idToUse.substring(0, 8).toUpperCase() : 'N/A';
-                                
-                                const isPreAlert = pkg.status === 'PRE_ALERTA' || pkg.status === 'PRE_ALERTADO';
-                                const isProcessing = pkg.status === 'EN_PROCESAMIENTO';
-                                const isStorePickup = !isConsolidatedBox && (pkg.status === 'PENDIENTE_RETIRO' || pkg.selectedCourier === 'CLIENTE_RETIRO');
+                  // 🔥 USAMOS EL ID DEL GRUPO PARA QUE COINCIDA CON EL RECIBO DEL CLIENTE
+const idToUse = pkg.consolidatedShipmentId ? pkg.consolidatedShipmentId : pkg.id;
+const shortId = idToUse ? idToUse.substring(0, 8).toUpperCase() : 'N/A';
 
-                                const hasCourierAssigned = Boolean(pkg.selectedCourier && pkg.selectedCourier !== 'CLIENTE_RETIRO');
-                                const isReadyToShip = (!isConsolidatedBox && (pkg.status === 'EN_PROCESO_ENVIO' || pkg.status === 'ENVIADO' || hasCourierAssigned)) || 
-                                                      (isConsolidatedBox && (pkg.status === 'PAGADO' || pkg.status === 'ENVIADO' || hasCourierAssigned));
+const isPreAlert = pkg.status === 'PRE_ALERTA' || pkg.status === 'PRE_ALERTADO';
+const isProcessing = pkg.status === 'EN_PROCESAMIENTO';
+const isStorePickup = !isConsolidatedBox && 
+    (pkg.status === 'PENDIENTE_RETIRO' || pkg.selectedCourier === 'CLIENTE_RETIRO') &&
+    !pkg.shippingTotalPaid;
+
+const hasCourierAssigned = Boolean(pkg.selectedCourier && pkg.selectedCourier !== 'CLIENTE_RETIRO');
+const isReadyToShip = (!isConsolidatedBox && (pkg.status === 'EN_PROCESO_ENVIO' || pkg.status === 'ENVIADO' || hasCourierAssigned)) || 
+                      (isConsolidatedBox && (pkg.status === 'PAGADO' || pkg.status === 'ENVIADO' || hasCourierAssigned));
 
                          let price = pkg.shippingTotalPaid || pkg.shippingSubtotal || 0;
 
@@ -227,8 +230,8 @@ if (isConsolidatedBox) {
         else price = 30.00;
     }
 } else if (pkg.consolidatedShipmentId) {
-    // 📦 Paquete dentro de consolidación — mostrar precio si fue pagado individualmente
-    price = pkg.shippingTotalPaid || 0;
+    // 📦 Paquete dentro de consolidación — mostrar shippingTotalPaid si existe
+    price = pkg.shippingTotalPaid || pkg.consolidatedShipment?.totalAmount || 0;
 
                                     // 🚚 Envío Normal
                                     price = pkg.shippingTotalPaid || pkg.shippingSubtotal || pkg.totalAmount || 0;
