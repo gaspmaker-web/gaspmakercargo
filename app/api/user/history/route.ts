@@ -83,7 +83,9 @@ export async function GET() {
         const isLocal = addr.includes('MIAMI') || addr.includes('FL') || addr.includes('DORAL') || addr.includes('MEDLEY') || addr.includes('AURA') || courierSvc.includes('AURA') || courierSvc.includes('LOCAL');
 
         const isStorage = ship.serviceType === 'STORAGE_FEE';
-        const isStorePickup = ship.serviceType === 'STORE_PICKUP';
+        const isStorePickup = ship.serviceType === 'STORE_PICKUP' || 
+    ship.serviceType === 'PICKUP' ||
+    ship.gmcShipmentNumber?.startsWith('PICKUP');
         
         const finalType = isLocal ? 'DELIVERY' : (isStorePickup ? 'STORE_PICKUP' : (isStorage ? 'STORAGE_FEE' : 'SHIPPING_INTL')); 
         
