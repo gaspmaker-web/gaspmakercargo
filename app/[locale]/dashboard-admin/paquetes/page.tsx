@@ -38,14 +38,16 @@ export default async function ActivePackagesPage({
         },
         include: {
           user: { select: { id: true, name: true, suiteNo: true, countryCode: true, phone: true, email: true } },
-          consolidatedShipment: { 
-            select: { 
-                serviceType: true,
-                totalAmount: true,
-                paymentId: true,
-                _count: { select: { packages: true } }
-            } 
-          }
+         consolidatedShipment: { 
+    select: { 
+        id: true,
+        serviceType: true,
+        totalAmount: true,
+        paymentId: true,
+        gmcShipmentNumber: true,
+        _count: { select: { packages: true } }
+    } 
+}
         },
         orderBy: { createdAt: 'desc' }
       });

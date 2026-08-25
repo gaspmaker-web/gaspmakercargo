@@ -50,13 +50,15 @@ export default async function ConsolidacionesPage({
     orderBy: { updatedAt: 'desc' } 
   });
 
-  const consolidaciones = consolidacionesDB.filter(c => {
-      const cantidadDePaquetes = c.packages?.length || 0;
-      if (cantidadDePaquetes <= 1) {
-          return false; 
-      }
-      return true; 
-  });
+const consolidaciones = consolidacionesDB.filter(c => {
+    const isPickup = c.serviceType === 'PICKUP' || c.gmcShipmentNumber?.startsWith('PICKUP');
+    if (isPickup) return true; // Siempre mostrar Store Pickups
+    const cantidadDePaquetes = c.packages?.length || 0;
+    if (cantidadDePaquetes <= 1) {
+        return false; 
+    }
+    return true; 
+});
 
   const listosParaDespachar = consolidaciones.filter(c => {
     const s = c.status;

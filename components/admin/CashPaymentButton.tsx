@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { DollarSign, Loader2, X, User, Package, Calendar, Clock, Printer } from 'lucide-react';
 
 interface PackageItem {
@@ -24,13 +24,29 @@ interface ShipmentDetails {
   packages: PackageItem[];
 }
 
-export default function CashPaymentButton({ shipmentId, shipmentNumber }: { shipmentId: string; shipmentNumber: string }) {
+export default function CashPaymentButton({ 
+    shipmentId, 
+    shipmentNumber,
+    autoOpen = false,
+    onClose
+}: { 
+    shipmentId: string; 
+    shipmentNumber: string;
+    autoOpen?: boolean;
+    onClose?: () => void;
+}) {
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [details, setDetails] = useState<ShipmentDetails | null>(null);
   const [loadingDetails, setLoadingDetails] = useState(false);
   const [paid, setPaid] = useState(false);
   const [staffName, setStaffName] = useState('');
+
+  useEffect(() => {
+    if (autoOpen) {
+      loadDetails();
+    }
+  }, [autoOpen]);
 
   async function loadDetails() {
     setLoadingDetails(true);

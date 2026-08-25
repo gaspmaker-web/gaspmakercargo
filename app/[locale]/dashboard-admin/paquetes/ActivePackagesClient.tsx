@@ -11,6 +11,7 @@ import {
 import PackageSearch from '@/components/admin/PackageSearch';
 import PackageActions from '@/components/admin/PackageActions'; 
 import BackButton from '@/components/admin/BackButton';
+import CashPaymentButton from '@/components/admin/CashPaymentButton';
 
 interface PackageProps {
     allItems: any[];
@@ -21,12 +22,16 @@ export default function ActivePackagesClient({ allItems, currentLocale }: Packag
   const router = useRouter();
   const searchParams = useSearchParams();
   const filterParam = searchParams.get('filter');
+
+  
   
   // --- ESTADOS PARA EL MODAL DE ENTREGA ---
   const [isDeliverModalOpen, setIsDeliverModalOpen] = useState(false);
   const [selectedPackageId, setSelectedPackageId] = useState<string | null>(null);
   const [staffName, setStaffName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedPkg, setSelectedPkg] = useState<any | null>(null);
+  const [isCashPickupModalOpen, setIsCashPickupModalOpen] = useState(false);
 
   // 🔥 LÓGICA DEL FILTRO (AHORA INCLUYE PRE-ALERTAS)
   const displayItems = allItems.filter((pkg: any) => {
@@ -48,17 +53,25 @@ export default function ActivePackagesClient({ allItems, currentLocale }: Packag
       return true;
   });
 
-  const handleOpenDeliverModal = (pkgId: string) => {
-      setSelectedPackageId(pkgId);
-      setStaffName(""); 
-      setIsDeliverModalOpen(true);
-  };
+ const handleOpenDeliverModal = (pkgId: string, pkg?: any) => {
+    const isStorePickup = pkg?.consolidatedShipment?.serviceType === 'PICKUP' ||
+        pkg?.consolidatedShipment?.gmcShipmentNumber?.toUpperCase().startsWith('PICKUP');
+    
+    if (isStorePickup && pkg?.consolidatedShipmentId) {
+        setSelectedPkg(pkg);
+        setIsCashPickupModalOpen(true);
+    } else {
+        setSelectedPackageId(pkgId);
+        setStaffName("");
+        setIsDeliverModalOpen(true);
+    }
+};
 
-  const handleConfirmDelivery = async () => {
-      if (!staffName.trim()) {
-          alert("Por favor, escribe el nombre del personal.");
-          return;
-      }
+const handleConfirmDelivery = async () => {
+    if (!staffName.trim()) {
+        alert("Por favor, escribe el nombre del personal.");
+        return;
+    }
 
       setIsSubmitting(true);
       try {
@@ -388,7 +401,7 @@ if (isConsolidatedBox) {
                                             <PackageActions 
                                                 pkg={pkg} 
                                                 locale={currentLocale} 
-                                                onDeliverStore={() => handleOpenDeliverModal(pkg.id)}
+                                                onDeliverStore={() => handleOpenDeliverModal(pkg.id, pkg)}
                                             />
                                         </div>
                                     </td>
@@ -400,7 +413,19 @@ if (isConsolidatedBox) {
             </div>
         </div>
 
-        {/* Modal de Entrega (se mantiene intacto) */}
+
+        
+{/* Modal de Cash Pickup */}
+{isCashPickupModalOpen && selectedPkg && (
+    <CashPaymentButton
+        shipmentId={selectedPkg.consolidatedShipmentId}
+        shipmentNumber={selectedPkg.consolidatedShipment?.gmcShipmentNumber || 'PICKUP'}
+        autoOpen={true}
+        onClose={() => { setIsCashPickupModalOpen(false); setSelectedPkg(null); }}
+    />
+)}
+
+{/* Modal de Entrega (se mantiene intacto) */}
         {isDeliverModalOpen && (
             <div className="fixed inset-0 bg-black/60 z-[9999] flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in">
                 <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-200 border border-gray-100">
