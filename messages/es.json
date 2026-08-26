@@ -903,6 +903,8 @@
     "intlEntregaLocal": "Entrega Local (Aura)",
     "intlBuzonBasico": "SUSCRIPCIÓN BUZÓN BÁSICO",
     "intlBuzonPremium": "SUSCRIPCIÓN BUZÓN PREMIUM",
+    "storePickupCash": "Retiro en Tienda — Pago en Efectivo",
+    "storePickupOnline": "Retiro en Tienda — Pago en Línea",
     "intlEnvioMaritimo": "Envío Marítimo (Gasp Maker Cargo)"
   },
 "StorageLock": {

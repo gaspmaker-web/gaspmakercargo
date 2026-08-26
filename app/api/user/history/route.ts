@@ -105,7 +105,7 @@ export async function GET() {
     : (isLocal 
         ? `Entrega Local (Aura)` 
         : (isStorePickup 
-            ? `Retiro en Tienda (${ship.selectedCourier || 'GMC'})` 
+            ? (ship.paymentId?.startsWith('CASH-') ? 'storePickupCash' : 'storePickupOnline')
             : (courierSvc.includes('MARITIME') || courierSvc.includes('OCEAN') || courierSvc.includes('LAPARKAN')
                 ? `Envío Marítimo (Gasp Maker Cargo)`
                 : `Envío Internacional (${ship.selectedCourier || 'GMC'})`))),
@@ -113,15 +113,19 @@ export async function GET() {
             totalPaid: ship.totalAmount,
             courier: ship.selectedCourier || ship.courierService,
 
-            // EL DETALLE
-            service: isStorage 
-                ? `${ship.packages.length} paquetes` 
-                : packageContent, 
-            
-            tracking: ship.finalTrackingNumber, 
-            packagesCount: ship.packages.length
-        };
-    });
+     // EL DETALLE
+service: isStorage 
+    ? `${ship.packages.length} paquetes` 
+    : packageContent, 
+
+tracking: ship.finalTrackingNumber, 
+packagesCount: ship.packages.length,
+packages: isStorePickup ? ship.packages.map((p: any) => ({
+    gmcTrackingNumber: p.gmcTrackingNumber,
+    description: p.description
+})) : []
+};
+});
 
     // 🔥 NORMALIZAR PAQUETES INDIVIDUALES
     const normalizedSinglePackages = singlePackages.map(pkg => {

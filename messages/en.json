@@ -862,6 +862,8 @@
     "intlEntregaLocal": "Local Delivery (Aura)",
     "intlBuzonBasico": "BASIC MAILBOX SUBSCRIPTION",
     "intlBuzonPremium": "PREMIUM MAILBOX SUBSCRIPTION",
+    "storePickupCash": "Store Pickup — Cash Payment",
+    "storePickupOnline": "Store Pickup — Online Payment",
     "intlEnvioMaritimo": "Maritime Shipping (Gasp Maker Cargo)"
   },
   "StorageLock": {

@@ -103,9 +103,15 @@ if (upperTitle.includes('ENVÍO MARÍTIMO') || upperTitle.includes('ENVIO MARITI
                                 cardTitle = t.has('intlPersonalShopper') ? t('intlPersonalShopper') : 'Personal Shopper';
                             } else if (upperTitle.includes('BUZÓN BÁSICO') || upperTitle.includes('BUZON BASICO')) {
                                 cardTitle = t.has('intlBuzonBasico') ? t('intlBuzonBasico') : 'SUSCRIPCIÓN BUZÓN BÁSICO';
-                            } else if (upperTitle.includes('BUZÓN PREMIUM') || upperTitle.includes('BUZON PREMIUM')) {
-                                cardTitle = t.has('intlBuzonPremium') ? t('intlBuzonPremium') : 'SUSCRIPCIÓN BUZÓN PREMIUM';
-                            }
+                          } else if (upperTitle.includes('BUZÓN PREMIUM') || upperTitle.includes('BUZON PREMIUM')) {
+    cardTitle = t.has('intlBuzonPremium') ? t('intlBuzonPremium') : 'SUSCRIPCIÓN BUZÓN PREMIUM';
+} else if (upperTitle === 'STOREPICKUPCASH') {
+    cardTitle = t.has('storePickupCash') ? t('storePickupCash') : 'Store Pickup — Cash Payment';
+} else if (upperTitle === 'STOREPICKUPONLINE') {
+    cardTitle = t.has('storePickupOnline') ? t('storePickupOnline') : 'Store Pickup — Online Payment';
+} else if (upperTitle.includes('RETIRO EN TIENDA') || type === 'STORE_PICKUP') {
+    cardTitle = t.has('storePickupOnline') ? t('storePickupOnline') : 'Store Pickup — Online Payment';
+}
 
                             return (
                                 <div 
@@ -143,11 +149,26 @@ if (upperTitle.includes('ENVÍO MARÍTIMO') || upperTitle.includes('ENVIO MARITI
                                                         <span className="break-words leading-tight text-gray-700"><strong className="text-gray-900 block text-[10px] uppercase text-gray-400 mb-0.5">{t('dest')}</strong> {req.dropOffAddress}</span>
                                                     </div>
                                                 </>
-                                            ) : (
-                                                <div className="flex items-center gap-2 text-gray-500 italic">
-                                                    <Package size={14}/> <span>{t('internalMgmt') || 'Gestión Interna / Servicio'}</span>
-                                                </div>
-                                            )}
+                                        ) : req.serviceType === 'STORE_PICKUP' && req.packages?.length > 0 ? (
+    <div className="space-y-1">
+        <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">
+            📦 {req.packages.length} {req.packages.length === 1 ? 'Package' : 'Packages'}
+        </p>
+        {req.packages.slice(0, 3).map((pkg: any, i: number) => (
+            <div key={i} className="flex justify-between text-xs text-gray-600">
+                <span className="font-mono text-gray-400 text-[10px]">{pkg.gmcTrackingNumber}</span>
+                <span className="truncate mx-1">{pkg.description}</span>
+            </div>
+        ))}
+        {req.packages.length > 3 && (
+            <p className="text-[10px] text-gray-400">+{req.packages.length - 3} more...</p>
+        )}
+    </div>
+) : (
+    <div className="flex items-center gap-2 text-gray-500 italic">
+        <Package size={14}/> <span>{t('internalMgmt') || 'Gestión Interna / Servicio'}</span>
+    </div>
+)}
                                         </div>
 
                                         {/* 🔥 Solo mostramos fotos si realmente existen */}

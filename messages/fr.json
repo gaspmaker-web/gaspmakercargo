@@ -884,6 +884,8 @@
     "intlEntregaLocal": "Livraison Locale (Aura)",
     "intlBuzonBasico": "ABONNEMENT BOÎTE AUX LETTRES DE BASE",
     "intlBuzonPremium": "ABONNEMENT BOÎTE AUX LETTRES PREMIUM",
+    "storePickupCash": "Retrait en Magasin — Paiement en Espèces",
+    "storePickupOnline": "Retrait en Magasin — Paiement en Ligne",
     "intlEnvioMaritimo": "Expédition Maritime (Gasp Maker Cargo)"
   },
  "StorageLock": {

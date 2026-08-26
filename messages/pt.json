@@ -884,6 +884,8 @@
     "intlEntregaLocal": "Entrega Local (Aura)",
     "intlBuzonBasico": "ASSINATURA DE CAIXA POSTAL BÁSICA",
     "intlBuzonPremium": "ASSINATURA DE CAIXA POSTAL PREMIUM",
+    "storePickupCash": "Retirada na Loja — Pagamento em Dinheiro",
+    "storePickupOnline": "Retirada na Loja — Pagamento Online",
     "intlEnvioMaritimo": "Envio Marítimo (Gasp Maker Cargo)"
   },
 "StorageLock": {
