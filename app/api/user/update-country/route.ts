@@ -15,7 +15,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "No autorizado" }, { status: 401 });
     }
 
-    const { countryCode } = await req.json();
+    const { countryCode: rawCode } = await req.json();
+    const countryCode = rawCode?.toUpperCase();
 
     if (!countryCode) {
       return NextResponse.json({ message: "Código de país requerido" }, { status: 400 });

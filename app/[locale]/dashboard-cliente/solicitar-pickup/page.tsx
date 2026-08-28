@@ -119,6 +119,8 @@ export default function SolicitarPickupPage() {
       total: 0, subtotal: 0, processingFee: 0, baseFare: 0, distanceSurcharge: 0, distanceMiles: 0, appliedStrategy: 'WEIGHT'
   });
 
+  const [shippingEstimate, setShippingEstimate] = useState<any>(null);
+  const [loadingEstimate, setLoadingEstimate] = useState(false);
   const [orderId, setOrderId] = useState<string | null>(null);
 
   // ─── ARQUITECTURA UBER/LYFT: UN SOLO ARRAY DE PARADAS ──────────────
@@ -371,6 +373,17 @@ export default function SolicitarPickupPage() {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stops, serviceType, isLoaded, autoVehicle.type]);
+
+  // 🔥 ESTIMADO DE ENVÍO INTERNACIONAL
+useEffect(() => {
+    if (!calcWeight) return;
+    setLoadingEstimate(true);
+    fetch(`/api/tenant/shipping-estimate?weight=${calcWeight}`)
+        .then(r => r.json())
+        .then(data => setShippingEstimate(data.estimate))
+        .catch(() => setShippingEstimate(null))
+        .finally(() => setLoadingEstimate(false));
+}, [calcWeight]);
 
   const calculateComplexRoute = async (origin: string, destination: string, currentStops?: Stop[]) => {
     if (!isLoaded || typeof google === 'undefined' || !origin) return;
@@ -914,12 +927,37 @@ const payload = {
                                     <span>Processing Fee</span>
                                     <span>+${quote.processingFee.toFixed(2)}</span>
                                 </div>
-                                <div className="flex justify-between text-xl font-bold pt-2 border-t border-gray-600 text-gmc-dorado-principal">
-                                    <span>{t('sumTotal')}</span>
-                                    <span>${quote.total.toFixed(2)}</span>
-                                </div>
-                            </div>
+                            <div className="flex justify-between text-xl font-bold pt-2 border-t border-gray-600 text-gmc-dorado-principal">
+    <span>{t('sumTotal')}</span>
+    <span>${quote.total.toFixed(2)}</span>
+</div>
 
+{/* 🌍 ESTIMADO ENVÍO INTERNACIONAL */}
+{shippingEstimate && (
+    <div className="mt-3 p-3 bg-gray-700/50 rounded-xl border border-gray-600 space-y-1.5">
+        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1">
+            ✈️ {t('estIntlShipping')}
+        </p>
+        <div className="flex justify-between text-xs text-gray-300">
+            <span>{t('estFreight')} ({shippingEstimate.serviceType})</span>
+            <span>${shippingEstimate.freightCost.toFixed(2)}</span>
+        </div>
+        {shippingEstimate.insurance > 0 && (
+            <div className="flex justify-between text-xs text-gray-300">
+                <span>{t('estInsurance')} (3%)</span>
+                <span>+${shippingEstimate.insurance.toFixed(2)}</span>
+            </div>
+        )}
+        <div className="flex justify-between text-sm font-bold text-white border-t border-gray-600 pt-1.5">
+            <span>{t('estTotalPickupIntl')}</span>
+            <span>${(quote.total + shippingEstimate.total).toFixed(2)}</span>
+        </div>
+        <p className="text-[9px] text-gray-500 italic">
+            * {t('estDisclaimer')}
+        </p>
+    </div>
+)}
+</div>
                             {/* Vehicle badge (igual que cotizador público) */}
                             <div className="flex items-center gap-2 p-3 bg-gray-700/50 rounded-xl border border-gray-600 mb-4">
                                 <div className="w-8 h-8 bg-gray-600 rounded-lg flex items-center justify-center">
