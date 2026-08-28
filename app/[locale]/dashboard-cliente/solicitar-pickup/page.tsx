@@ -933,7 +933,7 @@ const payload = {
 </div>
 
 {/* 🌍 ESTIMADO ENVÍO INTERNACIONAL */}
-{shippingEstimate && (
+{shippingEstimate && serviceType === 'SHIPPING_INTL' && (
     <div className="mt-3 p-3 bg-gray-700/50 rounded-xl border border-gray-600 space-y-1.5">
         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1">
             ✈️ {t('estIntlShipping')}
