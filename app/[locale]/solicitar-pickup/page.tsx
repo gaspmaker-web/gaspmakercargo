@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { useJsApiLoader } from '@react-google-maps/api';
 import { getProcessingFee } from '@/lib/stripeCalc';
+import { useTenantRates } from '@/hooks/useTenantRates';
 import { calculateAuraLocalDelivery, getVehicleByWeight, AuraBox } from '@/lib/aura-engine';
 
 // 🔥 DnD-Kit con TouchSensor para móvil
@@ -43,6 +44,7 @@ const WEIGHT_OPTIONS = [
 
 export default function PublicQuotePage() {
     const t = useTranslations('Pickup');
+    const tenantRates = useTenantRates();
     const locale = useLocale();
 
     const VEHICLE_DISPLAY: Record<string, { icon: React.ReactNode; title: string; desc: string; dims: string }> = {
@@ -180,8 +182,10 @@ export default function PublicQuotePage() {
         const box: AuraBox = { length: 10, width: 10, height: 10, realWeight: calcWeight };
         let baseFare = calculateAuraLocalDelivery([box], quote.distanceMiles).baseFare;
         if (isPalletMode) {
-            baseFare = formData.heavyVehicle === 'BOX_TRUCK' ? 175
-                : formData.palletCount === 2 ? 125 : 95;
+            const boxTruckRates: Record<number, number> = { 3: 195, 4: 250, 5: 300, 6: 350 };
+baseFare = formData.heavyVehicle === 'BOX_TRUCK'
+    ? ((tenantRates[`local_pallet_box_truck_${formData.palletCount}` as keyof typeof tenantRates] as number) ?? boxTruckRates[formData.palletCount] ?? 195)
+    : formData.palletCount === 2 ? tenantRates.local_pallet_cargo_van_2 : tenantRates.local_pallet_cargo_van_1;
         }
         let distanceSurcharge = 0;
         if (quote.distanceMiles > 10) {
@@ -416,7 +420,7 @@ export default function PublicQuotePage() {
                                             <p className="text-[11px] text-gray-500 mt-2 text-center">
                                                 {formData.heavyVehicle === 'CARGO_VAN'
                                                     ? <><strong>${formData.palletCount === 2 ? '125.00' : '95.00'}</strong> ({formData.palletCount} pallet{formData.palletCount > 1 ? 's' : ''})</>
-                                                    : <><strong>$175.00</strong> ({formData.palletCount} pallets — flat rate)</>}
+                                                    : <><strong>${((tenantRates[`local_pallet_box_truck_${formData.palletCount}` as keyof typeof tenantRates] as number) ?? { 3: 195, 4: 250, 5: 300, 6: 350 }[formData.palletCount] ?? 195).toFixed(2)}</strong> ({formData.palletCount} pallets)</>}
                                             </p>
                                         </div>
                                     </div>
