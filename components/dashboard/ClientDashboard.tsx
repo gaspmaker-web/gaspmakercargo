@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { User } from 'next-auth';
 import type { Package, ConsolidatedShipment } from '@prisma/client';
 import AddressCard from '@/components/AddressCard';
@@ -96,6 +96,7 @@ export default function ClientDashboard({
   const [pickupDate, setPickupDate] = useState("");
   const [pickupTime, setPickupTime] = useState("");
   const [isProcessingPickup, setIsProcessingPickup] = useState(false);
+  const [shippingEstimate, setShippingEstimate] = useState<any>(null);
 
   // 1. FILTRADO
   const displayPackages = packages.filter(pkg => 
@@ -132,10 +133,20 @@ export default function ClientDashboard({
       }
   };
 
-  const selectedPackagesData = packages.filter(p => selectedPkgs.includes(p.id));
-  const totalSelectedWeight = selectedPackagesData.reduce((acc, p) => acc + (Number(p.weightLbs) || 0), 0);
-  const totalSelectedVolume = selectedPackagesData.reduce((acc, p) => acc + (Number(p.volumeCft) || 0), 0);
+const selectedPackagesData = packages.filter(p => selectedPkgs.includes(p.id));
+const totalSelectedWeight = selectedPackagesData.reduce((acc, p) => acc + (Number(p.weightLbs) || 0), 0);
+const totalSelectedVolume = selectedPackagesData.reduce((acc, p) => acc + (Number(p.volumeCft) || 0), 0);
 
+useEffect(() => {
+    if (!totalSelectedWeight || !isPickupModalOpen) {
+        setShippingEstimate(null);
+        return;
+    }
+    fetch(`/api/tenant/shipping-estimate?weight=${totalSelectedWeight}`)
+        .then(r => r.json())
+        .then(data => setShippingEstimate(data.estimate))
+        .catch(() => setShippingEstimate(null));
+}, [totalSelectedWeight, isPickupModalOpen]);
  // =========================================================================
   // 🚚 ACCIÓN 1: CONSOLIDAR / LOCAL DELIVERY / OCEAN
   // =========================================================================
@@ -868,14 +879,39 @@ export default function ClientDashboard({
                                 <span>{t('feeHandling')}</span>
                                 <span className="font-bold">${totalHandlingFee.toFixed(2)}</span>
                             </div>
-                            <div className="border-t border-blue-200 pt-2 mt-2 flex justify-between text-base font-bold text-blue-800">
-                                <span>{t('feeTotal')}</span>
-                                <span>${grandTotalPickup.toFixed(2)}</span>
-                            </div>
-                        </div>
+                       <div className="border-t border-blue-200 pt-2 mt-2 flex justify-between text-base font-bold text-blue-800">
+    <span>{t('feeTotal')}</span>
+    <span>${grandTotalPickup.toFixed(2)}</span>
+</div>
+</div>
 
-                        <div className="space-y-4">
-                            <div>
+{shippingEstimate && (
+    <div className="mb-6 p-3 bg-gray-50 rounded-xl border border-gray-200 space-y-1.5">
+        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+            ✈️ {t('estIntlShipping')}
+        </p>
+        <div className="flex justify-between text-xs text-gray-600">
+            <span>{t('estFreight')} ({shippingEstimate.serviceType})</span>
+            <span>${shippingEstimate.freightCost.toFixed(2)}</span>
+        </div>
+        {shippingEstimate.insurance > 0 && (
+            <div className="flex justify-between text-xs text-gray-600">
+                <span>{t('estInsurance')} (3%)</span>
+                <span>+${shippingEstimate.insurance.toFixed(2)}</span>
+            </div>
+        )}
+        <div className="flex justify-between text-sm font-bold text-gray-800 border-t border-gray-200 pt-1.5">
+            <span>{t('estTotalPickupIntl')}</span>
+            <span>${(grandTotalPickup + shippingEstimate.total).toFixed(2)}</span>
+        </div>
+        <p className="text-[9px] text-gray-400 italic">
+            * {t('estDisclaimerPickup')}
+        </p>
+    </div>
+)}
+
+<div className="space-y-4">
+    <div>
                                 <label className="block text-xs font-bold text-gray-500 uppercase mb-1">{t('labelDate')}</label>
                                 <div className="relative">
                                     <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={20}/>
