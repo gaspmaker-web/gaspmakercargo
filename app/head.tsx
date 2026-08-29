@@ -9,6 +9,7 @@ export default function Head() {
       <meta name="description" content="Recogida de paquetes — app" />
       <link rel="icon" href="/favicon.ico" />
       <title>Recogida de paquetes</title>
+      <meta name='impact-site-verification' content='1acfc731-03a2-4b79-a466-fe21c9302873' />
     </>
   )
 }
