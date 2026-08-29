@@ -8,6 +8,7 @@ import { ShoppingBag, ExternalLink } from 'lucide-react';
 const AFFILIATE_STORES = [
   // 🔥 AQUÍ ESTÁ TU ENLACE OFICIAL DE AMAZON
   { id: 'amazon', name: 'Amazon', bg: 'bg-[#FF9900]', url: 'https://www.amazon.com/?tag=gaspmakercarg-20' },
+  { id: 'miami-showroom', name: 'Miami Showroom', bg: 'bg-[#9B59B6]', url: 'https://www.amazon.com/shop/gaspmakercarg/list/2T5JSLRPS6L3M?tag=gaspmakercarg-20&ref_=cm_sw_r_cp_ud_aipsfshop_KX5027SVZW7VTQR7JK1C_1&ccs_id=fdde18cb-9b2c-4a97-97b6-a0e744a254de' },
   { id: 'ebay', name: 'eBay', bg: 'bg-[#E53238]', url: 'https://www.ebay.com/' },
   { id: 'shein', name: 'Shein', bg: 'bg-[#222222]', url: 'https://us.shein.com/' },
   { id: 'walmart', name: 'Walmart', bg: 'bg-[#0071CE]', url: 'https://www.walmart.com/' },
@@ -34,7 +35,7 @@ export default function RecommendedStores() {
         </div>
 
         {/* Cuadrícula de Tiendas */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 md:gap-6">
           {AFFILIATE_STORES.map((store) => (
             <a
               key={store.id}
