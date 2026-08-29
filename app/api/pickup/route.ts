@@ -72,10 +72,10 @@ export async function POST(request: Request) {
         const palletMode = Boolean(body.isPalletMode);
 
        if (palletMode) {
-    const palletBoxTruck = Number(tenantRatesData['local_pallet_box_truck'] ?? 175);
+    const boxTruckRates: Record<number, number> = { 3: 195, 4: 250, 5: 300, 6: 350 };
+    const palletBoxTruck = Number(tenantRatesData[`local_pallet_box_truck_${pCount}`] ?? boxTruckRates[pCount] ?? 195);
     const palletCargoVan2 = Number(tenantRatesData['local_pallet_cargo_van_2'] ?? 125);
     const palletCargoVan1 = Number(tenantRatesData['local_pallet_cargo_van_1'] ?? 95);
-
     if (vehicle === 'BOX_TRUCK') {
         subtotal = palletBoxTruck;
     } else {

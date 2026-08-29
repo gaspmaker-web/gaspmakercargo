@@ -92,7 +92,9 @@ easypostShipmentId,
       if (isPalletMode) {
             // 🔒 Lógica pallet manual — igual que el frontend (no está en Aura Engine)
             if (vehicle === 'BOX_TRUCK') {
-                serverSubtotal = tenantIdLocal ? (await getTenantRateLocal(tenantIdLocal, 'local_pallet_box_truck') ?? 175) : 175;
+                const boxTruckRates: Record<number, number> = { 3: 195, 4: 250, 5: 300, 6: 350 };
+const rateKey = `local_pallet_box_truck_${pCount}` as string;
+serverSubtotal = tenantIdLocal ? (await getTenantRateLocal(tenantIdLocal, rateKey) ?? boxTruckRates[pCount] ?? 195) : (boxTruckRates[pCount] ?? 195);
             } else {
                 serverSubtotal = pCount === 2 
                     ? (tenantIdLocal ? (await getTenantRateLocal(tenantIdLocal, 'local_pallet_cargo_van_2') ?? 125) : 125)

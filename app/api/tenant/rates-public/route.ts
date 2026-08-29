@@ -52,7 +52,10 @@ return NextResponse.json({
   local_pre_built_radius_miles: Number(rates['local_pre_built_radius_miles'] ?? 20),
   local_pallet_cargo_van_1: Number(rates['local_pallet_cargo_van_1'] ?? 95),
   local_pallet_cargo_van_2: Number(rates['local_pallet_cargo_van_2'] ?? 125),
-  local_pallet_box_truck: Number(rates['local_pallet_box_truck'] ?? 175),
+  local_pallet_box_truck_3: Number(rates['local_pallet_box_truck_3'] ?? 195),
+local_pallet_box_truck_4: Number(rates['local_pallet_box_truck_4'] ?? 250),
+local_pallet_box_truck_5: Number(rates['local_pallet_box_truck_5'] ?? 300),
+local_pallet_box_truck_6: Number(rates['local_pallet_box_truck_6'] ?? 350),
 });
 } catch (error) {
     console.error('Error loading public rates:', error);

@@ -29,7 +29,10 @@ interface TenantRatesPublic {
   local_pre_built_radius_miles: number;
   local_pallet_cargo_van_1: number;
   local_pallet_cargo_van_2: number;
-  local_pallet_box_truck: number;
+  local_pallet_box_truck_3: number;
+local_pallet_box_truck_4: number;
+local_pallet_box_truck_5: number;
+local_pallet_box_truck_6: number;
 }
 
 const DEFAULT_RATES: TenantRatesPublic = {
@@ -60,7 +63,10 @@ const DEFAULT_RATES: TenantRatesPublic = {
   local_pre_built_radius_miles: 20,
   local_pallet_cargo_van_1: 95,
   local_pallet_cargo_van_2: 125,
-  local_pallet_box_truck: 175,
+  local_pallet_box_truck_3: 195,
+local_pallet_box_truck_4: 250,
+local_pallet_box_truck_5: 300,
+local_pallet_box_truck_6: 350,
 };
 
 export function useTenantRates(): TenantRatesPublic {

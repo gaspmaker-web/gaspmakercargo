@@ -328,7 +328,9 @@ export default function SolicitarPickupPage() {
            baseFare = auraQuote.baseFare;
            if (isPalletMode) {
            if (formData.heavyVehicle === 'BOX_TRUCK') {
-           baseFare = tenantRates.local_pallet_box_truck;
+           const boxTruckRates: Record<number, number> = { 3: 195, 4: 250, 5: 300, 6: 350 };
+const rateKey = `local_pallet_box_truck_${formData.palletCount}` as keyof typeof tenantRates;
+baseFare = (tenantRates[rateKey] as number) ?? boxTruckRates[formData.palletCount] ?? 195;
            } else {
             baseFare = formData.palletCount === 2 ? tenantRates.local_pallet_cargo_van_2 : tenantRates.local_pallet_cargo_van_1;
               }
@@ -826,7 +828,7 @@ const payload = {
                                             <p className="text-[11px] text-gray-500 mt-2 text-center">
                                                 {formData.heavyVehicle === 'CARGO_VAN' 
     ? <><strong>${formData.palletCount === 2 ? tenantRates.local_pallet_cargo_van_2?.toFixed(2) : tenantRates.local_pallet_cargo_van_1?.toFixed(2)}</strong> ({formData.palletCount} pallet{formData.palletCount > 1 ? 's' : ''})</>
-: <><strong>${tenantRates.local_pallet_box_truck?.toFixed(2)}</strong> ({formData.palletCount} pallets — flat rate)</>
+: <><strong>${((tenantRates[`local_pallet_box_truck_${formData.palletCount}` as keyof typeof tenantRates] as number) ?? 195).toFixed(2)}</strong> ({formData.palletCount} pallets)</>
 }
                                             </p>
                                         </div>

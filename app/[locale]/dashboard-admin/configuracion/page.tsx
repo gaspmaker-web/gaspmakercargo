@@ -841,7 +841,10 @@ const internationalCountries = Array.from(new Set(
         {[
           { concept: 'local_pallet_cargo_van_1', label: 'Cargo Van — 1 Pallet' },
           { concept: 'local_pallet_cargo_van_2', label: 'Cargo Van — 2 Pallets' },
-          { concept: 'local_pallet_box_truck', label: 'Box Truck — 3-6 Pallets' },
+          { concept: 'local_pallet_box_truck_3', label: 'Box Truck — 3 Pallets' },
+{ concept: 'local_pallet_box_truck_4', label: 'Box Truck — 4 Pallets' },
+{ concept: 'local_pallet_box_truck_5', label: 'Box Truck — 5 Pallets' },
+{ concept: 'local_pallet_box_truck_6', label: 'Box Truck — 6 Pallets' },
         ].map(({ concept, label }) => (
           <div key={concept}>
             <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 block">{label}</label>
