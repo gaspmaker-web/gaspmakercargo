@@ -194,7 +194,7 @@ baseFare = formData.heavyVehicle === 'BOX_TRUCK'
         const subtotal = baseFare + distanceSurcharge;
         const processingFee = subtotal > 0 ? getProcessingFee(subtotal) : 0;
         setQuote(prev => ({ ...prev, baseFare, distanceSurcharge, subtotal, processingFee, total: subtotal + processingFee }));
-    }, [calcWeight, quote.distanceMiles, isLoaded, serviceType, autoVehicle.rate, formData.palletCount, formData.heavyVehicle, isPalletMode]);
+    }, [calcWeight, quote.distanceMiles, isLoaded, serviceType, autoVehicle.rate, formData.palletCount, formData.heavyVehicle, isPalletMode, tenantRates]);
 
     // ─── Distance recalc ────────────────────────────────────────────────
     useEffect(() => {
