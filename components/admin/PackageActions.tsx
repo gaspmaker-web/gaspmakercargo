@@ -98,16 +98,18 @@ export default function PackageActions({ pkg, locale, onDeliverStore }: PackageA
     const userPhone = pkg.user?.phone || 'Not Provided';
     const userEmail = pkg.user?.email || 'N/A';
     
-    if (pkg.shippingAddress) {
-        const parts = pkg.shippingAddress.split('|');
-        if (parts.length > 1) {
-            receiverName = parts[0].trim();
-            receiverAddressBlock = parts[1].trim();
-        } else {
-            receiverAddressBlock = pkg.shippingAddress;
-        }
+  if (pkg.shippingAddress) {
+    const parts = pkg.shippingAddress.split('|');
+    if (parts.length > 1) {
+        receiverName = parts[0].trim();
+        receiverAddressBlock = parts[1].trim();
+    } else {
+        receiverAddressBlock = pkg.shippingAddress;
     }
-
+} else if (pkg.user?.addresses && pkg.user.addresses.length > 0) {
+    const defaultAddr = pkg.user.addresses[0];
+    receiverAddressBlock = `${defaultAddr.address || ''}, ${defaultAddr.cityZip || ''}, ${defaultAddr.country || ''}`.trim();
+}
     const trackingForInvoice = pkg.finalTrackingNumber || pkg.carrierTrackingNumber || pkg.gmcTrackingNumber || pkg.gmcShipmentNumber || 'PENDIENTE';
 
     // 🔥 NUEVO: CÁLCULO DE DIMENSIONES Y PESO VOLUMÉTRICO 🔥

@@ -89,7 +89,15 @@ export default async function ActivePackagesPage({
           } : {})
         },
         include: {
-          user: { select: { id: true, name: true, suiteNo: true, countryCode: true, phone: true, email: true } },
+          user: { 
+    select: { 
+        id: true, name: true, suiteNo: true, countryCode: true, phone: true, email: true,
+        addresses: {
+            where: { isDefault: true },
+            take: 1
+        }
+    } 
+},
           packages: { 
               select: { 
                   id: true, 
