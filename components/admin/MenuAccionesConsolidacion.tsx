@@ -166,7 +166,7 @@ export default function MenuAccionesConsolidacion({ shipment }: Props) {
                 
                 <div className="flex justify-between items-center mb-4">
                     <h3 className="text-lg font-bold text-gray-800">
-                        {dispatchSuccess ? '¡Despacho Confirmado!' : (isGMC ? 'Confirmar Despacho GMC' : 'Tracking Manual')}
+                        {dispatchSuccess ? 'Dispatch Confirmed!' : (isGMC ? 'Confirm GMC Dispatch' : 'Manual Tracking')}
                     </h3>
                     {/* Botón X cierra y refresca si ya hubo éxito */}
                     <button onClick={dispatchSuccess ? handleCloseSuccess : () => setShowDispatchModal(false)}>
@@ -180,16 +180,16 @@ export default function MenuAccionesConsolidacion({ shipment }: Props) {
                         <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center text-green-600 mb-4 animate-bounce-slow">
                             <CheckCircle size={32}/>
                         </div>
-                        <p className="text-gray-600 mb-2">Se ha generado el tracking:</p>
+                        <p className="text-gray-600 mb-2">Tracking number generated:</p>
                         <div className="bg-gray-100 p-3 rounded-lg font-mono font-bold text-xl text-gray-800 mb-6 border border-gray-200 select-all">
                             {trackingNumber}
                         </div>
                         
-                        <p className="text-xs text-gray-400 mb-2 uppercase font-bold">Imprimir Etiqueta de Salida</p>
+                       <p className="text-xs text-gray-400 mb-2 uppercase font-bold">Print Departure Label</p>
                         <PrintButtons />
 
                         <button onClick={handleCloseSuccess} className="mt-6 text-sm text-gray-400 hover:text-gray-600 underline">
-                            Cerrar y Actualizar
+                           Cerrar y Actualizar → Close & Refresh
                         </button>
                     </div>
                 ) : (
@@ -208,7 +208,7 @@ export default function MenuAccionesConsolidacion({ shipment }: Props) {
                                 type="text" 
                                 value={trackingNumber} 
                                 onChange={(e) => setTrackingNumber(e.target.value)}
-                                placeholder="Escanea o escribe..."
+                                placeholder="Scan or type..."
                                 className="w-full border-2 border-gray-200 focus:border-blue-500 rounded-lg p-3 font-mono text-lg text-gray-800 outline-none transition-colors"
                                 autoFocus
                             />
@@ -219,7 +219,7 @@ export default function MenuAccionesConsolidacion({ shipment }: Props) {
                                 onClick={() => setShowDispatchModal(false)}
                                 className="flex-1 py-3 rounded-lg border border-gray-300 text-gray-600 font-bold hover:bg-gray-50"
                             >
-                                Cancelar
+                                Cancelar → Cancel
                             </button>
                             <button 
                                 onClick={handleDispatch}
@@ -227,7 +227,7 @@ export default function MenuAccionesConsolidacion({ shipment }: Props) {
                                 className={`flex-1 py-3 rounded-lg text-white font-bold flex justify-center items-center gap-2 shadow-lg ${isGMC ? 'bg-green-600 hover:bg-green-700 shadow-green-200' : 'bg-blue-600 hover:bg-blue-700 shadow-blue-200'}`}
                             >
                                 {isSaving ? <Loader2 className="animate-spin"/> : <Save size={18}/>}
-                                {isGMC ? 'Confirmar Salida' : 'Guardar Tracking'}
+                                {isGMC ? 'Confirm Departure' : 'Save Tracking'}
                             </button>
                         </div>
                     </>
