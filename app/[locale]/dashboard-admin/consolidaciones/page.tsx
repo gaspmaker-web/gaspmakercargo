@@ -290,7 +290,7 @@ const listosParaDespachar = consolidaciones.filter(c => {
                                         <h3 className="font-bold text-lg text-gray-900">{envio.user?.name}</h3>
                                         <div className="flex gap-4 text-sm text-gray-600 mt-1">
                                             <span>⚖️ {envio.weightLbs} lb</span>
-                                            <span>📦 {envio.packages?.length || 0} Cajas</span>
+                                            <span>📦 {envio.packages?.length || 0} {envio.packages?.length === 1 ? 'Box' : 'Boxes'}</span>
                                             <span className={`font-bold uppercase ${
                                                 isLocalDelivery ? 'text-gray-800' : isOcean ? 'text-blue-700' : 'text-purple-700'
                                             }`}>
@@ -300,7 +300,7 @@ const listosParaDespachar = consolidaciones.filter(c => {
                                     </div>
                                     <div className="flex items-center gap-4 w-full md:w-auto justify-end">
                                         <div className="text-right mr-2">
-                                            <p className="text-xs text-gray-400 uppercase font-bold tracking-wide">Total Pagado</p>
+                                            <p className="text-xs text-gray-400 uppercase font-bold tracking-wide">Total Paid</p>
                                             <p className="font-bold text-green-700 text-xl">${envio.totalAmount?.toFixed(2)}</p>
                                         </div>
                                         
