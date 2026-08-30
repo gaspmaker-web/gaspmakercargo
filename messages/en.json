@@ -859,6 +859,7 @@
     "internalMgmt": "Internal management",
     "evidence": "Evidence",
     "totalPaid": "Total Paid",
+    "downloadInvoice": "Download Invoice",
     "noMovements": "No movements found",
     "tryFilter": "Try changing filters.",
     "tabServices": "Services",

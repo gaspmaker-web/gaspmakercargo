@@ -881,6 +881,7 @@
     "internalMgmt": "Gestion interne",
     "evidence": "Preuve",
     "totalPaid": "Total Payé",
+    "downloadInvoice": "Télécharger la Facture",
     "noMovements": "Aucun mouvement",
     "tryFilter": "Changez les filtres.",
     "tabServices": "Services",

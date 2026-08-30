@@ -900,6 +900,7 @@
     "internalMgmt": "Gestión interna",
     "evidence": "Evidencia",
     "totalPaid": "Total Pagado",
+    "downloadInvoice": "Descargar Factura",
     "noMovements": "Sin movimientos",
     "tryFilter": "Intenta cambiar los filtros.",
     "tabServices": "Servicios",

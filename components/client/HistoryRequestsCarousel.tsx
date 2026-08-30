@@ -300,7 +300,7 @@ if (upperTitle.includes('ENVÍO MARÍTIMO') || upperTitle.includes('ENVIO MARITI
             onClick={() => handleGenerateInvoice(req)}
             className="w-full py-2 text-xs font-bold text-gray-500 hover:text-gray-800 border border-gray-200 rounded-lg hover:bg-white transition-all flex items-center justify-center gap-1"
         >
-            <FileText size={12} /> Download Invoice
+            <FileText size={12} /> {t('downloadInvoice')}
         </button>
     )}
 </div>
