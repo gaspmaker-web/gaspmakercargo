@@ -260,6 +260,21 @@ if (upperTitle.includes('ENVÍO MARÍTIMO') || upperTitle.includes('ENVIO MARITI
             <p className="text-[10px] text-gray-400">+{req.packages.length - 3} more...</p>
         )}
     </div>
+) : req.packages?.length > 0 ? (
+    <div className="space-y-1">
+        <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">
+            📦 {req.packages.length} {req.packages.length === 1 ? 'Package' : 'Packages'}
+        </p>
+        {req.packages.slice(0, 3).map((pkg: any, i: number) => (
+            <div key={i} className="flex justify-between text-xs text-gray-600">
+                <span className="font-mono text-gray-400 text-[10px]">{pkg.gmcTrackingNumber}</span>
+                <span className="truncate mx-1">{pkg.description}</span>
+            </div>
+        ))}
+        {req.packages.length > 3 && (
+            <p className="text-[10px] text-gray-400">+{req.packages.length - 3} more...</p>
+        )}
+    </div>
 ) : (
     <div className="flex items-center gap-2 text-gray-500 italic">
         <Package size={14}/> <span>{t('internalMgmt') || 'Gestión Interna / Servicio'}</span>
