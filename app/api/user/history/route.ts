@@ -140,10 +140,12 @@ service: isStorage
 
 tracking: ship.finalTrackingNumber,
 packagesCount: ship.packages.length,
-packages: isStorePickup ? ship.packages.map((p: any) => ({
+packages: ship.packages.map((p: any) => ({
     gmcTrackingNumber: p.gmcTrackingNumber,
-    description: p.description
-})) : [],
+    description: p.description,
+    weightLbs: p.weightLbs,
+    declaredValue: p.declaredValue,
+})),
 weightLbs: ship.weightLbs,
 declaredValue: ship.declaredValue,
 shippingAddress: ship.shippingAddress,
