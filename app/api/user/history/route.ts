@@ -19,14 +19,34 @@ export async function GET() {
         where: { userId }, orderBy: { createdAt: 'desc' }
     });
 
-    // 2. Consolidated Shipments (Incluimos paquetes para leer sus descripciones)
-    const internationalShipments = await prisma.consolidatedShipment.findMany({
-        where: { userId }, 
-        include: { 
-            packages: {
-                select: { description: true, gmcTrackingNumber: true }
+  // 2. Consolidated Shipments (Incluimos paquetes para leer sus descripciones)
+const internationalShipments = await prisma.consolidatedShipment.findMany({
+    where: { userId }, 
+    include: { 
+        packages: {
+            select: { 
+                description: true, 
+                gmcTrackingNumber: true,
+                weightLbs: true,
+                declaredValue: true,
+                lengthIn: true,
+                widthIn: true,
+                heightIn: true
             } 
-        }, 
+        },
+        user: {
+            select: {
+                name: true,
+                email: true,
+                phone: true,
+                suiteNo: true,
+                addresses: {
+                    where: { isDefault: true },
+                    take: 1
+                }
+            }
+        }
+    },
         orderBy: { createdAt: 'desc' }
     });
 
@@ -113,17 +133,25 @@ export async function GET() {
             totalPaid: ship.totalAmount,
             courier: ship.selectedCourier || ship.courierService,
 
-     // EL DETALLE
+// EL DETALLE
 service: isStorage 
     ? `${ship.packages.length} paquetes` 
     : packageContent, 
 
-tracking: ship.finalTrackingNumber, 
+tracking: ship.finalTrackingNumber,
 packagesCount: ship.packages.length,
 packages: isStorePickup ? ship.packages.map((p: any) => ({
     gmcTrackingNumber: p.gmcTrackingNumber,
     description: p.description
-})) : []
+})) : [],
+weightLbs: ship.weightLbs,
+declaredValue: ship.declaredValue,
+shippingAddress: ship.shippingAddress,
+selectedCourier: ship.selectedCourier,
+gmcShipmentNumber: ship.gmcShipmentNumber,
+finalTrackingNumber: ship.finalTrackingNumber,
+user: ship.user,
+packagesDetail: ship.packages,
 };
 });
 

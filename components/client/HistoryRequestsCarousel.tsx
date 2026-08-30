@@ -60,6 +60,102 @@ const HistoryGroup = ({ type, requests }: { type: string, requests: any[] }) => 
 
     const totalSpent = requests.reduce((sum, req) => sum + (req.totalPaid || req.totalAmount || req.amountNet || 0), 0);
     const isInternationalGroup = ['SHIPPING_INTL', 'CONSOLIDATION'].includes(type);
+    const handleGenerateInvoice = (req: any) => {
+    const date = new Date().toLocaleDateString('en-US');
+    const tracking = req.finalTrackingNumber || req.gmcShipmentNumber || req.id?.slice(0,8).toUpperCase() || 'N/A';
+    const total = (req.totalPaid || req.totalAmount || 0).toFixed(2);
+    const clientName = req.user?.name || 'Client';
+    const clientEmail = req.user?.email || '';
+    const clientPhone = req.user?.phone || '';
+    
+    let addressBlock = 'Address not specified';
+    if (req.shippingAddress) {
+        const parts = req.shippingAddress.split('|');
+        addressBlock = parts.length > 1 ? parts[1].trim() : req.shippingAddress;
+    } else if (req.user?.addresses?.length > 0) {
+        const addr = req.user.addresses[0];
+        addressBlock = `${addr.address || ''}, ${addr.cityZip || ''}, ${addr.country || ''}`.trim();
+    }
+
+    const invoiceWindow = window.open('', '_blank');
+    if (!invoiceWindow) return alert('Please allow pop-ups.');
+
+    invoiceWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Invoice - ${tracking}</title>
+            <style>
+                body { font-family: Arial, sans-serif; max-width: 700px; margin: 0 auto; padding: 20px; color: #333; }
+                .header { display: flex; justify-content: space-between; border-bottom: 2px solid #000; padding-bottom: 15px; margin-bottom: 20px; }
+                .logo { font-size: 22px; font-weight: bold; }
+                table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+                th { background: #f3f4f6; padding: 8px; text-align: left; font-size: 11px; border: 1px solid #ddd; }
+                td { padding: 8px; border: 1px solid #ddd; font-size: 12px; }
+                .total { font-size: 18px; font-weight: bold; text-align: right; margin-top: 20px; border-top: 2px solid #000; padding-top: 10px; }
+                .footer { text-align: center; font-size: 10px; color: #999; margin-top: 30px; }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <div>
+                    <div class="logo">⚡ GASP MAKER CARGO</div>
+                    <p style="margin:4px 0; font-size:11px;">1861 NW 22nd St, Miami, FL 33142</p>
+                    <p style="margin:0; font-size:11px;">info@gaspmakercargo.com</p>
+                </div>
+                <div style="text-align:right;">
+                    <p style="font-size:11px; margin:0;"><strong>Invoice Date:</strong> ${date}</p>
+                    <p style="font-size:11px; margin:4px 0;"><strong>Tracking:</strong> ${tracking}</p>
+                </div>
+            </div>
+
+            <table style="margin-bottom:15px; border:none;">
+                <tr>
+                    <td style="border:none; padding:4px 0; width:50%; vertical-align:top;">
+                        <strong>Shipper:</strong><br/>
+                        Gasp Maker Cargo<br/>
+                        1861 NW 22nd St<br/>
+                        Miami, FL 33142, USA
+                    </td>
+                    <td style="border:none; padding:4px 0; vertical-align:top;">
+                        <strong>Recipient / Importer:</strong><br/>
+                        ${clientName}<br/>
+                        ${addressBlock}<br/>
+                        Phone: ${clientPhone}<br/>
+                        Email: ${clientEmail}
+                    </td>
+                </tr>
+            </table>
+
+            <table>
+                <tr>
+                    <th>Description</th>
+                    <th>Tracking</th>
+                    <th>Weight</th>
+                    <th>Value</th>
+                </tr>
+                ${(req.packagesDetail || req.packages || []).map((p: any) => `
+                    <tr>
+                        <td>${p.description || 'Personal Effects'}</td>
+                        <td style="font-family:monospace;">${p.gmcTrackingNumber || '-'}</td>
+                        <td>${p.weightLbs || '-'} lbs</td>
+                        <td>$${(p.declaredValue || 0).toFixed(2)}</td>
+                    </tr>
+                `).join('')}
+            </table>
+
+            <div class="total">TOTAL PAID: $${total}</div>
+
+            <div class="footer">
+                <p>Thank you for shipping with Gasp Maker Cargo!</p>
+                <p>gaspmakercargo.com</p>
+            </div>
+        </body>
+        </html>
+    `);
+    invoiceWindow.document.close();
+    invoiceWindow.print();
+};
 
     return (
         <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden mb-6 transition-all hover:shadow-md animate-in fade-in slide-in-from-bottom-2">
@@ -192,20 +288,30 @@ if (upperTitle.includes('ENVÍO MARÍTIMO') || upperTitle.includes('ENVIO MARITI
                                         )}
                                     </div>
 
-                                    <div className="p-4 bg-gray-50 border-t border-gray-100 flex justify-between items-center mt-auto">
-                                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t('totalPaid')}</span>
-                                        <span className="text-xl font-bold text-gray-800 flex items-baseline">
-                                            <span className="text-sm text-gray-400 mr-0.5">$</span>{(req.totalPaid || req.totalAmount || req.amountNet || 0).toFixed(2)}
-                                        </span>
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-                </div>
-            )}
-        </div>
-    );
+          <div className="p-4 bg-gray-50 border-t border-gray-100 mt-auto">
+    <div className="flex justify-between items-center mb-2">
+        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{t('totalPaid')}</span>
+        <span className="text-xl font-bold text-gray-800 flex items-baseline">
+            <span className="text-sm text-gray-400 mr-0.5">$</span>{(req.totalPaid || req.totalAmount || req.amountNet || 0).toFixed(2)}
+        </span>
+    </div>
+    {(req.serviceType === 'SHIPPING_INTL' || req.serviceType === 'STORE_PICKUP') && (req.totalPaid || req.totalAmount) > 0 && (
+        <button
+            onClick={() => handleGenerateInvoice(req)}
+            className="w-full py-2 text-xs font-bold text-gray-500 hover:text-gray-800 border border-gray-200 rounded-lg hover:bg-white transition-all flex items-center justify-center gap-1"
+        >
+            <FileText size={12} /> Download Invoice
+        </button>
+    )}
+</div>
+</div>
+);
+})}
+</div>
+</div>
+)}
+</div>
+);
 };
 
 export default function HistoryRequestsCarousel({ requests }: { requests: any[] }) {
