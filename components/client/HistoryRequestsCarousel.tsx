@@ -295,7 +295,7 @@ if (upperTitle.includes('ENVÍO MARÍTIMO') || upperTitle.includes('ENVIO MARITI
             <span className="text-sm text-gray-400 mr-0.5">$</span>{(req.totalPaid || req.totalAmount || req.amountNet || 0).toFixed(2)}
         </span>
     </div>
-    {(req.serviceType === 'SHIPPING_INTL' || req.serviceType === 'STORE_PICKUP') && (req.totalPaid || req.totalAmount) > 0 && (
+{(req.totalPaid || req.totalAmount) > 0 && (
         <button
             onClick={() => handleGenerateInvoice(req)}
             className="w-full py-2 text-xs font-bold text-gray-500 hover:text-gray-800 border border-gray-200 rounded-lg hover:bg-white transition-all flex items-center justify-center gap-1"
