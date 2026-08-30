@@ -246,7 +246,7 @@ const listosParaDespachar = consolidaciones.filter(c => {
             {listosParaDespachar.length > 0 ? (
                 <div className="bg-white rounded-2xl p-6 shadow-md border border-green-100">
                     <h2 className="text-xl font-bold mb-4 flex items-center gap-2 text-green-700">
-                        <Truck className="animate-pulse"/> Listos para Despachar ({listosParaDespachar.length})
+                        <Truck className="animate-pulse"/> Ready to Dispatch ({listosParaDespachar.length})
                     </h2>
                     <div className="grid gap-4">
                         {listosParaDespachar.map((envio) => {
