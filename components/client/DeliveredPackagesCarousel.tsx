@@ -182,12 +182,14 @@ export default function DeliveredPackagesCarousel({ consolidations, loosePackage
     </a>
 )}
 
-{/* Enlace a Prueba de Entrega del Consolidado */}
-<Link 
-    href={`/${locale}/dashboard-cliente/paquetes/${shipment.packages?.[0]?.id}`}
->
-    <ExternalLink size={16}/> {tDelivered.has('viewProof') ? tDelivered('viewProof') : "View Proof"}
-</Link>
+{(!shipment.finalTrackingNumber || shipment.selectedCourier?.toLowerCase().includes('gasp')) && (
+    <Link 
+        href={`/${locale}/dashboard-cliente/paquetes/${shipment.packages?.[0]?.id}`}
+        className="w-full py-3 rounded-xl bg-gray-900 text-white text-sm font-bold flex items-center justify-center gap-2 hover:bg-black transition-all shadow-lg shadow-gray-200 active:scale-[0.98]"
+    >
+        <ExternalLink size={16}/> {tDelivered.has('viewProof') ? tDelivered('viewProof') : "View Proof"}
+    </Link>
+)}
                                 {shipment.awbDocumentUrl && (
                                   <a 
                                     href={shipment.awbDocumentUrl} 
