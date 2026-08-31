@@ -23,8 +23,12 @@ const tenantFilter = tenant?.id ? { tenant_id: tenant.id } : {};
     const hoy = new Date();
     hoy.setUTCHours(0, 0, 0, 0);
     
-    const haceSieteDias = new Date();
-    haceSieteDias.setDate(haceSieteDias.getDate() - 7);
+  // 🔥 ENTERPRISE: Semana empieza el lunes
+const diaSemana = hoy.getDay(); // 0=domingo, 1=lunes...
+const diasDesdeElLunes = diaSemana === 0 ? 6 : diaSemana - 1;
+const haceSieteDias = new Date(hoy);
+haceSieteDias.setDate(hoy.getDate() - diasDesdeElLunes);
+haceSieteDias.setHours(0, 0, 0, 0);
 
     const [
       paquetesActivos,
