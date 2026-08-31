@@ -192,6 +192,7 @@
     "referralDesc": "Invita a tus amigos y gana crédito.",
     "btnPickup": "RECOGER",
     "btnConsolidate": "Empacar en 1 Caja (Aéreo)",
+    "btnConsolidateAir": "CONSOLIDAR AÉREO",
     "modalPickupTitle": "Agendar Recogida",
     "modalPickupDesc": "Selecciona cuándo pasarás por tus paquetes. Calcularemos los costos aplicables.",
     "feeStorage": "Almacenaje (Larga Estancia):",

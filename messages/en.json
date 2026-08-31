@@ -196,6 +196,7 @@
     "referralDesc": "Invite friends and earn credit.",
     "btnPickup": "PICKUP",
     "btnConsolidate": "Pack in 1 Box (Air)",
+    "btnConsolidateAir": "CONSOLIDATE AIR",
     "modalPickupTitle": "Schedule Pickup",
     "modalPickupDesc": "Select when you will pick up your packages. We will calculate applicable fees.",
     "feeStorage": "Storage (Long Term):",

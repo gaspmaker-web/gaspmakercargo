@@ -195,6 +195,7 @@
     "referralDesc": "Invitez des amis et gagnez du crédit.",
     "btnPickup": "RETIRER",
     "btnConsolidate": "Emballer dans 1 Boîte (Aérien)",
+    "btnConsolidateAir": "CONSOLIDER PAR AVION",
     "modalPickupTitle": "Planifier Retrait",
     "modalPickupDesc": "Sélectionnez quand vous récupérerez vos colis. Nous calculerons les frais applicables.",
     "feeStorage": "Stockage (Long Terme) :",
