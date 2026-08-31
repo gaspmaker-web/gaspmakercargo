@@ -263,6 +263,8 @@
     "additionalApprovedTitle": "👥 Personne Supplémentaire Approuvée",
     "additionalApprovedDesc": "Les documents de votre personne supplémentaire ont été vérifiés. Elle peut désormais recevoir officiellement du courrier à votre PMB #{suite}.",
     "paymentSuccessTitle": "Paiement Réussi ! ✅",
+    "deliveryCompletedTitle": "Livraison Complétée! 🏁",
+    "deliveryCompletedDesc": "Votre {type} a été complété avec succès.",
     "paymentSuccessDesc": "Nous avons traité votre paiement avec succès. Voici votre reçu de transaction : {amount} $",
     "mailboxApprovedTitle": "🎉 Boîte aux Lettres Approuvée et Active !",
     "mailboxApprovedDesc": "Vos documents ont été vérifiés. Votre numéro officiel est PMB #{suite}. Vous pouvez maintenant commencer à recevoir des colis et du courrier !",

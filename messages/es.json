@@ -260,6 +260,8 @@
     "additionalApprovedTitle": "👥 Persona Adicional Aprobada",
     "additionalApprovedDesc": "Los documentos de tu persona adicional han sido verificados. Ya puede recibir correo oficialmente en tu PMB #{suite}.",
     "paymentSuccessTitle": "¡Pago Exitoso! ✅",
+    "deliveryCompletedTitle": "¡Entrega Completada! 🏁",
+    "deliveryCompletedDesc": "Tu {type} ha sido completado exitosamente.",
     "paymentSuccessDesc": "Hemos procesado tu pago con éxito. Aquí está tu recibo de transacción: ${amount}",
     "mailboxApprovedTitle": "🎉 ¡Casillero Aprobado y Activo!",
     "mailboxApprovedDesc": "Tus documentos han sido verificados. Tu número oficial es PMB #{suite}. ¡Ya puedes empezar a recibir paquetes y correspondencia!",

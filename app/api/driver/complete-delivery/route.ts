@@ -180,11 +180,11 @@ async function notifyClient(userId: string, type: string, refId: string) {
     if (!userId) return;
     const { sendNotification } = await import("@/lib/notifications");
     
-    await sendNotification({
-        userId,
-        title: "¡Entrega Completada! 🏁",
-        message: `Tu ${type} ha sido completado exitosamente.`,
-        href: "/dashboard-cliente/historial-solicitudes",
-        type: "SUCCESS"
-    });
+ await sendNotification({
+    userId,
+    title: JSON.stringify({ key: "deliveryCompletedTitle" }),
+    message: JSON.stringify({ key: "deliveryCompletedDesc", type }),
+    href: "/dashboard-cliente/historial-solicitudes",
+    type: "SUCCESS"
+});
 }

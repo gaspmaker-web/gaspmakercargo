@@ -264,6 +264,8 @@
     "additionalApprovedTitle": "👥 Additional Person Approved",
     "additionalApprovedDesc": "The documents for your additional person have been verified. They can now officially receive mail at your PMB #{suite}.",
     "paymentSuccessTitle": "Payment Successful! ✅",
+    "deliveryCompletedTitle": "Delivery Completed! 🏁",
+    "deliveryCompletedDesc": "Your {type} has been completed successfully.",
     "paymentSuccessDesc": "We have processed your payment successfully. Here is your transaction receipt: ${amount}",
     "mailboxApprovedTitle": "🎉 Mailbox Approved and Active!",
     "mailboxApprovedDesc": "Your documents have been verified. Your official number is PMB #{suite}. You can now start receiving packages and mail!",
