@@ -144,7 +144,7 @@ export default function MenuPerfilClient() {
         <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-white font-garamond tracking-wide mb-1">{user?.name}</h1>
             <p className="text-gmc-dorado-principal/80 text-sm font-medium tracking-wider">{user?.email}</p>
-            <p className="text-gray-400 text-xs mt-2 uppercase tracking-[2px]">Miembro desde {memberSince}</p>
+            <p className="text-gray-400 text-xs mt-2 uppercase tracking-[2px]">{t('memberSince')} {memberSince}</p>
         </div>
 
         {/* 🚨 BOTONES CORREGIDOS CON getLink() 🚨 */}

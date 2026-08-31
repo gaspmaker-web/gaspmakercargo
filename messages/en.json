@@ -999,6 +999,7 @@
     "error": "Error updating number."
   },
   "MobileMenu": {
+    "memberSince": "Member since",
     "myDashboard": "My Dashboard",
     "settings": "Settings",
     "invite": "Invite Friends",

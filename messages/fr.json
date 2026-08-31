@@ -1020,6 +1020,7 @@
     "error": "Erreur lors de la mise à jour."
   },
 "MobileMenu": {
+  "memberSince": "Membre depuis",
   "myDashboard": "Mon Tableau de Bord",
   "settings": "Paramètres",
   "invite": "Inviter des amis",

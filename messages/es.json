@@ -1039,6 +1039,7 @@
     "error": "Error al actualizar el número."
   },
   "MobileMenu": {
+    "memberSince": "Miembro desde",
     "myDashboard": "Mi Dashboard",
     "settings": "Configuración",
     "invite": "Invitar amigos",
