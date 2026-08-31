@@ -26,7 +26,7 @@ export async function POST(req: Request) {
         // 🔐 Verificar webhook secret de EasyPost
         const webhookSecret = process.env.easypost_webhook_secret;
         if (webhookSecret) {
-            const signature = req.headers.get('x-hmac-signature-256');
+            const signature = req.headers.get('x-hmac-signature') || req.headers.get('x-hmac-signature-256');
             if (!signature) {
                 return NextResponse.json({ error: 'No signature' }, { status: 401 });
             }
