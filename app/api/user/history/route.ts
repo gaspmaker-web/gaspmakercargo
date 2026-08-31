@@ -59,16 +59,27 @@ const internationalShipments = await prisma.consolidatedShipment.findMany({
         },
         orderBy: { createdAt: 'desc' }
     });
-
-    // 4. Shopper Orders (Compras)
-    const shopperOrders = await prisma.shopperOrder.findMany({
-        where: { 
-            userId,
-            status: { not: 'PENDING_QUOTE' } // Ocultamos cotizaciones que aún no se han pagado o aprobado
-        },
-        include: { items: { select: { name: true } } },
-        orderBy: { createdAt: 'desc' }
-    });
+// 4. Shopper Orders (Compras)
+const shopperOrders = await prisma.shopperOrder.findMany({
+    where: { 
+        userId,
+        status: { not: 'PENDING_QUOTE' }
+    },
+    include: { 
+        items: { 
+            select: { 
+                name: true, 
+                productUrl: true,
+                quantity: true,
+                declaredPrice: true,
+                actualPrice: true,
+                details: true,
+                storeName: true
+            } 
+        } 
+    },
+    orderBy: { createdAt: 'desc' }
+});
 
     // 5. Mailbox Transactions (Buzón Virtual)
     const mailboxTransactions = await prisma.mailboxTransaction.findMany({
@@ -187,16 +198,24 @@ return {
         };
     });
 
-    // NORMALIZAR SHOPPER
-    const normalizedShopper = shopperOrders.map(order => ({
-        id: order.id,
-        createdAt: order.createdAt,
-        status: order.status,
-        serviceType: order.serviceType || 'PERSONAL_SHOPPER',
-        description: `Personal Shopper (${order.items.length} items)`,
-        totalPaid: order.totalAmount || order.itemsSubtotal || 0,
-        service: order.items.length > 0 ? order.items.map(i => i.name).join(', ') : 'Compra Asistida'
-    }));
+// NORMALIZAR SHOPPER
+const normalizedShopper = shopperOrders.map(order => ({
+    id: order.id,
+    createdAt: order.createdAt,
+    status: order.status,
+    serviceType: order.serviceType || 'PERSONAL_SHOPPER',
+    description: `Personal Shopper (${order.items.length} items)`,
+    totalPaid: order.totalAmount || order.itemsSubtotal || 0,
+    service: order.items.length > 0 ? order.items.map(i => i.name).join(', ') : 'Compra Asistida',
+    packages: order.items.map(i => ({
+        gmcTrackingNumber: '',
+        description: `${i.name || i.storeName || 'Product'}${i.details ? ` (${i.details})` : ''}`,
+        weightLbs: null,
+        declaredValue: i.actualPrice || i.declaredPrice || 0,
+        quantity: i.quantity || 1,
+        productUrl: i.productUrl || ''
+    }))
+}));
 
     // NORMALIZAR MAILBOX
     const normalizedMailbox = mailboxTransactions.map(tx => ({
