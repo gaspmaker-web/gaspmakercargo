@@ -5,6 +5,7 @@ import { Search, MapPin, Calendar, Package, ExternalLink, Box, Copy, CheckCircle
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
+import { getTrackingUrl } from '@/lib/getTrackingUrl';
 
 interface Props {
   consolidations: any[];
@@ -247,46 +248,47 @@ export default function DeliveredPackagesCarousel({ consolidations, loosePackage
 
                             <div className="flex flex-col gap-2 mt-auto relative z-10 pt-2 border-t border-gray-100">
                                <Link 
-                                    href={`/${locale}/dashboard-cliente/rastreo/${pkg.gmcTrackingNumber}`}
-                                    className="w-full flex items-center justify-center gap-2 bg-gmc-dorado-principal hover:bg-yellow-600 text-white text-sm font-bold py-3 px-4 rounded-xl transition-all active:scale-[0.98] shadow-sm"
-                                >
-                                    📍 {tDelivered.has('trackPackage') ? tDelivered('trackPackage') : "Track Package"}
-                                </Link>
+   href={`/${locale}/dashboard-cliente/rastreo/${pkg.gmcTrackingNumber}`}
+    className="w-full flex items-center justify-center gap-2 bg-gmc-dorado-principal hover:bg-yellow-600 text-white text-sm font-bold py-3 px-4 rounded-xl transition-all active:scale-[0.98] shadow-sm"
+>
+    📍 {tDelivered.has('trackPackage') ? tDelivered('trackPackage') : "Track Package"}
+</Link>
 
-                                <Link 
-                                    href={`/${locale}/dashboard-cliente/paquetes/${pkg.id}`}
-                                    className="w-full py-3 rounded-xl bg-gray-900 text-white text-sm font-bold flex items-center justify-center gap-2 hover:bg-black transition-all shadow-lg shadow-gray-200 active:scale-[0.98]"
-                                >
-                                    <ExternalLink size={16}/> {tDelivered.has('viewProof') ? tDelivered('viewProof') : "View Proof"}
-                                </Link>
-                                
-                                {pkg.awbDocumentUrl && (
-                                  <a 
-                                    href={pkg.awbDocumentUrl} 
-                                    target="_blank" 
-                                    rel="noopener noreferrer"
-                                    className="w-full flex items-center justify-center gap-2 bg-white border-2 border-gray-100 hover:border-gray-200 text-gray-700 text-sm font-bold py-2.5 px-4 rounded-xl transition-all shadow-sm uppercase tracking-wide"
-                                  >
-                                    📄 {tEnDestino.has('viewCustomsDoc') ? tEnDestino('viewCustomsDoc') : "Ver Documento Aduanal"}
-                                  </a>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                );
-            })}
+{pkg.finalTrackingNumber && (
+    <a href={getTrackingUrl(pkg.selectedCourier || pkg.carrier || '', pkg.finalTrackingNumber)} target="_blank" rel="noopener noreferrer" className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold py-2.5 px-4 rounded-xl transition-all shadow-sm">
+        <ExternalLink size={14}/> Track on Carrier
+    </a>
+)}
+
+<Link 
+    href={`/${locale}/dashboard-cliente/paquetes/${pkg.id}`}
+    className="w-full py-3 rounded-xl bg-gray-900 text-white text-sm font-bold flex items-center justify-center gap-2 hover:bg-black transition-all shadow-lg shadow-gray-200 active:scale-[0.98]"
+>
+    <ExternalLink size={16}/> {tDelivered.has('viewProof') ? tDelivered('viewProof') : "View Proof"}
+</Link>
+
+{pkg.awbDocumentUrl && (
+    <a href={pkg.awbDocumentUrl} target="_blank" rel="noopener noreferrer" className="w-full flex items-center justify-center gap-2 bg-white border-2 border-gray-100 hover:border-gray-200 text-gray-700 text-sm font-bold py-2.5 px-4 rounded-xl transition-all shadow-sm uppercase tracking-wide">
+        📄 {tEnDestino.has('viewCustomsDoc') ? tEnDestino('viewCustomsDoc') : "Ver Documento Aduanal"}
+    </a>
+)}
+</div>
+</div>
+</div>
+);
+})}
+</div>
+) : (
+    <div className="text-center py-16 bg-white rounded-3xl border border-dashed border-gray-200">
+        <div className="mx-auto w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
+            <Package size={32} className="text-gray-300"/>
         </div>
-      ) : (
-        <div className="text-center py-16 bg-white rounded-3xl border border-dashed border-gray-200">
-            <div className="mx-auto w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
-                <Package size={32} className="text-gray-300"/>
-            </div>
-            <h3 className="text-lg font-bold text-gray-900">{tDelivered.has('noDeliveries') ? tDelivered('noDeliveries') : "No deliveries found"}</h3>
-            <p className="text-gray-500 text-sm mt-1">{tDelivered.has('trySearch') ? tDelivered('trySearch') : "Try another search term."}</p>
-        </div>
-      )}
+        <h3 className="text-lg font-bold text-gray-900">{tDelivered.has('noDeliveries') ? tDelivered('noDeliveries') : "No deliveries found"}</h3>
+        <p className="text-gray-500 text-sm mt-1">{tDelivered.has('trySearch') ? tDelivered('trySearch') : "Try another search term."}</p>
     </div>
-  );
+)}
+</div>
+);
 }
 
 function CheckCircleIcon({ size }: { size: number }) {
