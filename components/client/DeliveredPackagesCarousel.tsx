@@ -169,17 +169,22 @@ export default function DeliveredPackagesCarousel({ consolidations, loosePackage
 
                             {/* ZONA DE BOTONES */}
                             <div className="flex flex-col gap-2 mt-auto border-t border-gray-100 pt-3">
-                                <Link 
-                                    href={`/${locale}/dashboard-cliente/rastreo/${shipment.gmcShipmentNumber}`}
-                                    className="w-full flex items-center justify-center gap-2 bg-gmc-dorado-principal hover:bg-yellow-600 text-white text-sm font-bold py-3 px-4 rounded-xl transition-all active:scale-[0.98] shadow-sm"
-                                >
-                                    📍 {tDelivered.has('trackPackage') ? tDelivered('trackPackage') : "Track Package"}
-                                </Link>
+<Link 
+    href={`/${locale}/dashboard-cliente/rastreo/${shipment.gmcShipmentNumber}`}
+    className="w-full flex items-center justify-center gap-2 bg-gmc-dorado-principal hover:bg-yellow-600 text-white text-sm font-bold py-3 px-4 rounded-xl transition-all active:scale-[0.98] shadow-sm"
+>
+    📍 {tDelivered.has('trackPackage') ? tDelivered('trackPackage') : "Track Package"}
+</Link>
 
-                              {/* Enlace a Prueba de Entrega del Consolidado */}
+{shipment.finalTrackingNumber && (
+    <a href={getTrackingUrl(shipment.selectedCourier || '', shipment.finalTrackingNumber)} target="_blank" rel="noopener noreferrer" className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold py-2.5 px-4 rounded-xl transition-all shadow-sm">
+        <ExternalLink size={14}/> Track on Carrier
+    </a>
+)}
+
+{/* Enlace a Prueba de Entrega del Consolidado */}
 <Link 
     href={`/${locale}/dashboard-cliente/paquetes/${shipment.packages?.[0]?.id}`}
-    className="w-full py-3 rounded-xl bg-gray-900 text-white text-sm font-bold flex items-center justify-center gap-2 hover:bg-black transition-all shadow-lg shadow-gray-200 active:scale-[0.98]"
 >
     <ExternalLink size={16}/> {tDelivered.has('viewProof') ? tDelivered('viewProof') : "View Proof"}
 </Link>
