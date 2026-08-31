@@ -86,7 +86,23 @@ const deliveredLoosePackages = await prisma.package.findMany({
         }
       ]
     },
-    orderBy: { updatedAt: 'desc' }
+  orderBy: { updatedAt: 'desc' },
+select: {
+    id: true,
+    gmcTrackingNumber: true,
+    carrierTrackingNumber: true,
+    finalTrackingNumber: true,
+    selectedCourier: true,
+    courier: true,
+    description: true,
+    weightLbs: true,
+    status: true,
+    updatedAt: true,
+    createdAt: true,
+    shippingAddress: true,
+    deliveryPhotoUrl: true,
+    awbDocumentUrl: true,
+}
   });
 
   return (
