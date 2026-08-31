@@ -598,6 +598,7 @@
     "submit": "Iniciar Sesión",
     "loading": "Iniciando...",
     "noAccount": "¿No tienes una cuenta?",
+    "processing": "Procesando...",
     "registerHere": "Regístrate aquí"
   },
   "RecoverPassword": {

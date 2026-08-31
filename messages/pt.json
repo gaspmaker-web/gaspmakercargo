@@ -602,6 +602,7 @@
     "loading": "Entrando...",
     "noAccount": "Não tem uma conta?",
     "registerLink": "Cadastre-se aqui",
+    "processing": "Processando...",
     "registerHere": "Cadastre-se aqui"
   },
   "RecoverPassword": {

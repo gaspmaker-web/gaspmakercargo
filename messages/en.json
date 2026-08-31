@@ -582,6 +582,7 @@
     "submit": "Sign In",
     "loading": "Signing in...",
     "noAccount": "Don't have an account?",
+    "processing": "Processing...",
     "registerHere": "Register here"
   },
   "RecoverPassword": {

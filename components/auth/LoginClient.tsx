@@ -143,7 +143,7 @@ export default function LoginClient() {
             {isLoading ? (
                 <>
                  <span className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></span>
-                 <span>Procesando...</span>
+                 <span>{t('processing') || 'Processing...'}</span>
                 </>
             ) : (t("submit") ?? "Ingresar")}
           </button>
