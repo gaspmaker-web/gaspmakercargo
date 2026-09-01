@@ -837,7 +837,9 @@ const isConsolidated = !isStorePickupVisual && (
                                                             {auraList.map((bulto: any, idx: number) => (
                                                                 <div key={idx} className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold border w-fit shadow-sm ${isOceanVisual ? 'bg-blue-50/50 text-blue-800 border-blue-200' : 'bg-gray-100 text-gray-700 border-gray-200'}`}>
                                                                     {isOceanVisual ? <Ship size={14} className="text-blue-500"/> : <Truck size={14} className="text-gray-500"/>}
-                                                                    <span className={isOceanVisual ? 'text-blue-900' : 'text-gray-900'}>Pallet #{idx + 1}:</span>
+                                                                    <span className={isOceanVisual ? 'text-blue-900' : 'text-gray-900'}>
+                                                                    {isOceanVisual ? `Pallet #${idx + 1}` : `Box #${idx + 1}`}:
+                                                                    </span>
                                                                     <span className="opacity-30 ml-1 mr-1">|</span>
                                                                     <Scale size={12} className={isOceanVisual ? "text-blue-500" : "text-gray-500"}/> {bulto.weight} lb
                                                                     <span className="opacity-30 ml-1 mr-1">|</span>
