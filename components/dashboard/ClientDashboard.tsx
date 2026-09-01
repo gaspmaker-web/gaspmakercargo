@@ -678,14 +678,28 @@ useEffect(() => {
               </Link>
             </div>
             
-            <Link href="/dashboard-cliente/referidos" className="block bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-4 rounded-xl shadow-md group relative overflow-hidden hover:shadow-xl transition-all mt-auto">
-              <div className="relative z-10 flex justify-between items-center gap-4">
-                <div className="flex-1 min-w-0"><p className="font-bold text-sm flex items-center gap-2 mb-0.5 leading-tight"><Gift size={18} className="text-yellow-300 animate-bounce shrink-0" /> <span className="truncate">{t('referralTitle')}</span></p><p className="text-indigo-100 text-xs leading-tight truncate">{t('referralDesc')}</p></div>
-                <div className="bg-white/20 p-2 rounded-full group-hover:bg-white group-hover:text-indigo-600 transition-colors shrink-0"><ArrowRight size={16} /></div>
-              </div>
-            </Link>
-          </div>
+      <Link href="/dashboard-cliente/referidos" className="block bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-4 rounded-xl shadow-md group relative overflow-hidden hover:shadow-xl transition-all mt-auto">
+    <div className="relative z-10 flex justify-between items-center gap-4">
+        <div className="flex-1 min-w-0"><p className="font-bold text-sm flex items-center gap-2 mb-0.5 leading-tight"><Gift size={18} className="text-yellow-300 animate-bounce shrink-0" /> <span className="truncate">{t('referralTitle')}</span></p><p className="text-indigo-100 text-xs leading-tight truncate">{t('referralDesc')}</p></div>
+        <div className="bg-white/20 p-2 rounded-full group-hover:bg-white group-hover:text-indigo-600 transition-colors shrink-0"><ArrowRight size={16} /></div>
+    </div>
+</Link>
+
+<a href="https://www.instagram.com/gaspmakercargo" target="_blank" rel="noopener noreferrer"
+    className="block p-4 rounded-xl shadow-md relative overflow-hidden hover:shadow-xl transition-all mt-2"
+    style={{ background: 'linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888)' }}
+>
+    <div className="flex justify-between items-center gap-4">
+        <div className="flex-1 min-w-0">
+            <p className="font-bold text-sm text-white flex items-center gap-2 mb-0.5">📸 {t('instagramTitle')}</p>
+            <p className="text-white/80 text-xs">{t('instagramDesc')}</p>
         </div>
+        <div className="bg-white/20 p-2 rounded-full shrink-0"><ArrowRight size={16} className="text-white" /></div>
+    </div>
+</a>
+</div>
+</div>
+        
 
        {/* ===================================================================
            BOTÓN FLOTANTE (BARRA DE ACCIÓN ENTERPRISE CON RESPONSIVE MOBILE)
