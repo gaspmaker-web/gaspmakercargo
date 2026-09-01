@@ -824,31 +824,35 @@ const isConsolidated = !isStorePickupVisual && (
                                                 </div>
                                             </div>
 
-                                            {/* ========================================================= */}
-                                            {/* 🔥 RENDERIZADO VISUAL DINÁMICO DE PALLETS MÚLTIPLES 🔥   */}
-                                            {/* ========================================================= */}
-                                            {(() => {
-                                                const auraList = typeof bill.auraDetails === 'string' ? JSON.parse(bill.auraDetails) : bill.auraDetails;
-                                                const isAuraDetails = Array.isArray(auraList) && auraList.length > 0;
+                                          {/* ========================================================= */}
+{/* 🔥 RENDERIZADO VISUAL DINÁMICO DE PALLETS MÚLTIPLES 🔥   */}
+{/* ========================================================= */}
+{(() => {
+    const auraList = typeof bill.auraDetails === 'string' ? JSON.parse(bill.auraDetails) : bill.auraDetails;
+    const isAuraDetails = Array.isArray(auraList) && auraList.length > 0;
 
-                                                if (isAuraDetails) {
-                                                    return (
-                                                        <div className="mb-5 pl-10 flex flex-col gap-2">
-                                                            {auraList.map((bulto: any, idx: number) => (
-                                                                <div key={idx} className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold border w-full shadow-sm ${isOceanVisual ? 'bg-blue-50/50 text-blue-800 border-blue-200' : 'bg-gray-100 text-gray-700 border-gray-200'}`}>
-                                                                    {isOceanVisual ? <Ship size={14} className="text-blue-500"/> : <Box size={14} className="text-gray-500"/>}
-                                                                    <span className={isOceanVisual ? 'text-blue-900' : 'text-gray-900'}>
-                                                                    {isOceanVisual ? `Pallet #${idx + 1}` : `Box #${idx + 1}`}:
-                                                                    </span>
-                                                                    <span className="opacity-30 ml-1 mr-1">|</span>
-                                                                    <Scale size={12} className={isOceanVisual ? "text-blue-500" : "text-gray-500"}/> {bulto.weight} lb
-                                                                    <span className="opacity-30 ml-1 mr-1">|</span>
-                                                                    <Ruler size={12} className={isOceanVisual ? "text-blue-500" : "text-gray-500"}/> {bulto.length}x{bulto.width}x{bulto.height} in
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    );
-                                                }
+    if (isAuraDetails) {
+        return (
+            <div className="mb-5 pl-10 flex flex-col gap-2">
+                {auraList.map((bulto: any, idx: number) => (
+                    <div key={idx} className={`flex items-center justify-between px-3 py-2 rounded-lg text-xs font-bold border w-full shadow-sm ${isOceanVisual ? 'bg-blue-50/50 text-blue-800 border-blue-200' : 'bg-gray-100 text-gray-700 border-gray-200'}`}>
+                        <span className="flex items-center gap-2">
+                            {isOceanVisual ? <Ship size={14} className="text-blue-500"/> : <Box size={14} className="text-gray-500"/>}
+                            <span className={isOceanVisual ? 'text-blue-900' : 'text-gray-900'}>
+                                {isOceanVisual ? `Pallet #${idx + 1}` : `Box #${idx + 1}`}:
+                            </span>
+                        </span>
+                        <span className="flex items-center gap-1">
+                            <Scale size={12} className={isOceanVisual ? "text-blue-500" : "text-gray-500"}/> {bulto.weight} lb
+                        </span>
+                        <span className="flex items-center gap-1">
+                            <Ruler size={12} className={isOceanVisual ? "text-blue-500" : "text-gray-500"}/> {bulto.length}x{bulto.width}x{bulto.height} in
+                        </span>
+                    </div>
+                ))}
+            </div>
+        );
+    }
 
                                                 // Fallback si no tiene pallets múltiples (Ej: Aéreo)
                                                 return (
