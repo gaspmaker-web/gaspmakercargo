@@ -94,17 +94,37 @@ export const ShippingLabel = React.forwardRef<HTMLDivElement, ShippingLabelProps
             <p style={{ fontSize: '14px', marginTop: '2px', fontWeight: 'bold' }}>{data.countryCode.toUpperCase()}</p>
           </div>
 
-          {/* DETALLES */}
-          <div style={{ borderTop: '2px solid black', borderBottom: '2px solid black', padding: '8px 0', margin: '5px 0', display: 'flex', justifyContent: 'space-between' }}>
-            <div>
-              <p style={{ fontSize: '10px', fontWeight: 'bold', margin: 0 }}>WEIGHT:</p>
-              <p style={{ fontSize: '14px', margin: 0 }}>{data.weight} LBS</p>
-            </div>
-            <div>
-              <p style={{ fontSize: '10px', fontWeight: 'bold', margin: 0 }}>DATE:</p>
-              <p style={{ fontSize: '14px', margin: 0 }}>{data.date}</p>
-            </div>
-          </div>
+     {/* DETALLES */}
+<div style={{ borderTop: '2px solid black', borderBottom: '2px solid black', padding: '8px 0', margin: '5px 0' }}>
+    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
+        <div>
+            <p style={{ fontSize: '10px', fontWeight: 'bold', margin: 0 }}>WEIGHT:</p>
+            <p style={{ fontSize: '14px', margin: 0 }}>{data.weight} LBS</p>
+        </div>
+        <div>
+            <p style={{ fontSize: '10px', fontWeight: 'bold', margin: 0 }}>DATE:</p>
+            <p style={{ fontSize: '14px', margin: 0 }}>{data.date}</p>
+        </div>
+    </div>
+    {data.courier && (
+        <div style={{ marginTop: '4px' }}>
+            <p style={{ fontSize: '10px', fontWeight: 'bold', margin: 0 }}>CARRIER:</p>
+            <p style={{ fontSize: '13px', margin: 0 }}>{data.courier}</p>
+        </div>
+    )}
+    {data.shipmentNumber && (
+        <div style={{ marginTop: '4px' }}>
+            <p style={{ fontSize: '10px', fontWeight: 'bold', margin: 0 }}>SHIPMENT #:</p>
+            <p style={{ fontSize: '13px', margin: 0 }}>{data.shipmentNumber}</p>
+        </div>
+    )}
+    {data.description && (
+        <div style={{ marginTop: '4px' }}>
+            <p style={{ fontSize: '10px', fontWeight: 'bold', margin: 0 }}>DESCRIPTION:</p>
+            <p style={{ fontSize: '12px', margin: 0 }}>{data.description}</p>
+        </div>
+    )}
+</div>
 
           {/* CÓDIGO DE BARRAS */}
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: 'auto', paddingTop: '5px' }}>
