@@ -408,7 +408,10 @@ const isConsolidated = !isStorePickupVisual && (
           const currentBill = bills.find(b => b.id === id);
           const currentRate = selectedRateMap[id];
           
-          const hasAuraBolsillo = currentBill?.auraDetails && Array.isArray(currentBill.auraDetails) && currentBill.auraDetails.length > 0;
+          const hasAuraBolsillo = currentBill?.serviceType === 'LOCAL_DELIVERY' && 
+    currentBill?.auraDetails && 
+    Array.isArray(currentBill.auraDetails) && 
+    currentBill.auraDetails.length > 0;
           if (
               currentBill?.serviceType === 'LOCAL_DELIVERY' || 
               hasAuraBolsillo || 
