@@ -21,7 +21,9 @@ function PrintLabelContent() {
     countryCode: searchParams.get('countryCode') || '',
     date: searchParams.get('date') || '',
     description: searchParams.get('description') || '',
-    format: format,
+courier: searchParams.get('courier') || '',
+shipmentNumber: searchParams.get('shipmentNumber') || '',
+format: format,
   };
 
   // Definimos el tamaño de la hoja CSS para que la impresora lo detecte

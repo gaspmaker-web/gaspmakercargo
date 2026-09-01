@@ -99,8 +99,10 @@ export default function MenuAccionesConsolidacion({ shipment }: Props) {
           weight: (shipment.weightLbs || 0).toString(),
           countryCode: shipment.user?.countryCode || 'US',
           date: new Date().toLocaleDateString(),
-          description: 'Consolidación',
-          format: format
+         description: `${shipment.serviceType || 'Consolidación'} — ${shipment.packages?.length || 0} pkgs`,
+courier: shipment.selectedCourier || 'Gasp Maker Cargo',
+shipmentNumber: shipment.gmcShipmentNumber || '',
+format: format
       });
 
       const url = `/print/label?${params.toString()}`;

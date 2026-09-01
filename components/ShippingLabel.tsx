@@ -10,8 +10,10 @@ export interface LabelData {
   weight: number;
   countryCode: string;
   date: string;
-  description: string;
-  format?: '4x6' | '30334'; // <--- NUEVO CAMPO: Para saber qué diseño pintar
+ description: string;
+format?: '4x6' | '30334';
+courier?: string;
+shipmentNumber?: string;// <--- NUEVO CAMPO: Para saber qué diseño pintar
 }
 
 interface ShippingLabelProps {
