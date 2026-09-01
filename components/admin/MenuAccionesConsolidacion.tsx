@@ -84,30 +84,38 @@ export default function MenuAccionesConsolidacion({ shipment }: Props) {
       router.refresh(); 
   };
 
-  // --- LÓGICA DE IMPRESIÓN ---
-  const openPrintWindow = (type: '4x6' | 'mini') => {
-      const format = type === 'mini' ? '30334' : '4x6';
-      
-      const currentTracking = (dispatchSuccess && trackingNumber) 
-          ? trackingNumber 
-          : (shipment.finalTrackingNumber || shipment.gmcShipmentNumber || 'PENDING');
+// --- LÓGICA DE IMPRESIÓN ---
+const openPrintWindow = (type: '4x6' | 'mini') => {
+    const format = type === 'mini' ? '30334' : '4x6';
+    
+    const currentTracking = (dispatchSuccess && trackingNumber) 
+        ? trackingNumber 
+        : (shipment.finalTrackingNumber || shipment.gmcShipmentNumber || 'PENDING');
 
-      const params = new URLSearchParams({
-          tracking: currentTracking,
-          clientName: shipment.user?.name || 'Cliente',
-          suite: shipment.user?.suiteNo || 'N/A',
-          weight: (shipment.weightLbs || 0).toString(),
-          countryCode: shipment.user?.countryCode || 'US',
-          date: new Date().toLocaleDateString(),
-         description: `${shipment.serviceType || 'Consolidación'} — ${shipment.packages?.length || 0} pkgs`,
-courier: shipment.selectedCourier || 'Gasp Maker Cargo',
-shipmentNumber: shipment.gmcShipmentNumber || '',
-format: format
-      });
+    const svc = shipment.serviceType || '';
+    const pkgs = shipment.packages?.length || 0;
+    const dest = shipment.destinationCountryCode || '';
+    let description = `${svc} — ${pkgs} pkgs`;
+    if (svc === 'LOCAL_DELIVERY') description = `Local Delivery (Aura) — ${pkgs} pkgs`;
+    else if (svc === 'OCEAN_CONSOLIDATION') description = `${dest} Maritime — ${pkgs} pkgs`;
+    else if (svc === 'CONSOLIDATION' || svc === 'SHIPPING_INTL') description = `${dest} Direct (Air) — ${pkgs} pkgs`;
 
-      const url = `/print/label?${params.toString()}`;
-      window.open(url, '_blank');
-  };
+    const params = new URLSearchParams({
+        tracking: currentTracking,
+        clientName: shipment.user?.name || 'Cliente',
+        suite: shipment.user?.suiteNo || 'N/A',
+        weight: (shipment.weightLbs || 0).toString(),
+        countryCode: shipment.user?.countryCode || 'US',
+        date: new Date().toLocaleDateString(),
+        description,
+        courier: shipment.selectedCourier || 'Gasp Maker Cargo',
+        shipmentNumber: shipment.gmcShipmentNumber || '',
+        format: format
+    });
+
+    const url = `/print/label?${params.toString()}`;
+    window.open(url, '_blank');
+};
 
   const PrintButtons = () => (
       <div className="flex gap-3 mt-4 animate-in fade-in zoom-in-95">
