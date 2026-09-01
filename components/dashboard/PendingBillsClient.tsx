@@ -325,10 +325,10 @@ const isConsolidated = !isStorePickupVisual && (
 
               if (isConsolidated && !isLocalAura && !isOcean && !isLocal) { 
                   if (!bill.packages || bill.packages.length === 0) {
-                      const billDate = new Date(bill.createdAt || Date.now());
-                      const dayOfMonth = billDate.getDate();
-                      
-                      if (isVip && dayOfMonth >= 22 && dayOfMonth <= 28) {
+                     const today = new Date();
+                     const dayOfMonth = today.getDate();
+
+                   if (isVip && dayOfMonth >= 22 && dayOfMonth <= 28) {
                           billHandlingFee = 0; 
                       } else {
                          billHandlingFee = noFee ? 0 : 1 * defaultHandlingRate;
@@ -716,10 +716,10 @@ const isConsolidated = !isStorePickupVisual && (
                                     // 🔥 PROTEGEMOS EL HANDLING FEE (Para que no se cobre por paquete en Marítimo/Local)
                                     if (isConsolidated && !isVisualLocalAura && !isOceanVisual && !isLocalVisual) { 
                                         if (!bill.packages || bill.packages.length === 0) {
-                                            const billDate = new Date(bill.createdAt || Date.now());
-                                            const dayOfMonth = billDate.getDate();
-                                            
-                                            if (isVipVisual && dayOfMonth >= 22 && dayOfMonth <= 28) {
+                                            const today = new Date();
+                                            const dayOfMonth = today.getDate();
+
+                                        if (isVipVisual && dayOfMonth >= 22 && dayOfMonth <= 28) {
                                                 effectiveHandling = 0;
                                             } else {
                                                 effectiveHandling = 1 * defaultHandlingVisual;
@@ -734,9 +734,10 @@ const isConsolidated = !isStorePickupVisual && (
                                                 
                                                 if (!isDocument) {
                                                     if (isVipVisual) {
-                                                        const receiveDate = new Date(pkg.createdAt || Date.now());
-                                                        const dayOfMonth = receiveDate.getDate();
-                                                        if (dayOfMonth >= 22 && dayOfMonth <= 28) {
+                                                        const today = new Date();
+                                                        const dayOfMonth = today.getDate();
+
+                                                      if (dayOfMonth >= 22 && dayOfMonth <= 28) {
                                                         } else {
                                                             chargeableCount++;
                                                         }
