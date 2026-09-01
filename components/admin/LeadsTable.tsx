@@ -22,6 +22,25 @@ export default function LeadsTable({ leads, locale }: { leads: any[]; locale: st
   const [editingNote, setEditingNote] = useState<string | null>(null);
   const [noteValue, setNoteValue]     = useState('');
 
+  const exportCSV = () => {
+    const headers = ['Name', 'Email', 'Phone', 'Status', 'Date', 'Notes'];
+    const rows = filtered.map(lead => [
+        lead.full_name || '',
+        lead.email || '',
+        lead.phone_number || '',
+        lead.status || '',
+        lead.created_time ? new Date(lead.created_time).toLocaleDateString() : '',
+        (lead.notes || '').replace(/,/g, ';')
+    ]);
+    const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `gmc-leads-${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
   // Filtrado local
   const filtered = data.filter((lead) => {
     const matchStatus = filter === 'all' || lead.status === filter;
@@ -100,21 +119,29 @@ export default function LeadsTable({ leads, locale }: { leads: any[]; locale: st
           })}
         </div>
 
-        {/* Búsqueda */}
-        <div className="relative w-full md:w-64">
-          <Search size={14} className="absolute left-3 top-2.5 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search name, email, phone..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-8 pr-8 py-2 text-xs border border-gray-200 rounded-full focus:outline-none focus:border-gray-400 bg-white"
-          />
-          {search && (
-            <button onClick={() => setSearch('')} className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600">
-              <X size={14} />
-            </button>
-          )}
+              {/* Búsqueda + Export */}
+        <div className="flex items-center gap-2">
+          <div className="relative w-full md:w-64">
+            <Search size={14} className="absolute left-3 top-2.5 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search name, email, phone..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full pl-8 pr-8 py-2 text-xs border border-gray-200 rounded-full focus:outline-none focus:border-gray-400 bg-white"
+            />
+            {search && (
+              <button onClick={() => setSearch('')} className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600">
+                <X size={14} />
+              </button>
+            )}
+          </div>
+          <button
+            onClick={exportCSV}
+            className="flex items-center gap-2 px-4 py-2 text-xs font-bold bg-gray-800 text-white rounded-full hover:bg-black transition-colors whitespace-nowrap"
+          >
+            📥 Export CSV
+          </button>
         </div>
       </div>
 
