@@ -54,12 +54,13 @@ export default async function GestionClientesPage({
                 createdAt: 'desc',
             },
             select: {
-                id: true,
-                name: true,
-                email: true,
-                role: true,
-                createdAt: true,
-                suiteNo: true,
+    id: true,
+    name: true,
+    email: true,
+    role: true,
+    createdAt: true,
+    lastLoginAt: true,
+    suiteNo: true,
                 // 🔥 AQUÍ AGREGAMOS EL CONTADOR DE FACTURAS SIN PROCESAR
                 _count: {
                     select: {
@@ -87,7 +88,8 @@ export default async function GestionClientesPage({
         role: user.role,
         createdAt: user.createdAt,
         suiteNo: user.suiteNo,
-        pendingInvoicesCount: user._count?.packages || 0 // Extraemos el contador mágico
+        pendingInvoicesCount: user._count?.packages || 0,
+lastLoginAt: user.lastLoginAt,// Extraemos el contador mágico
     }));
 
     // Serialización simple para evitar errores de fechas al pasar data al componente cliente

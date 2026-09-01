@@ -9,6 +9,7 @@ interface Client {
   email: string;
   role: string;
   createdAt: Date;
+  lastLoginAt?: Date | null;
   suiteNo: string | null;
   pendingInvoicesCount?: number; // 2. Nueva propiedad opcional
 }
@@ -30,6 +31,7 @@ export default function ClientListTable({ clients, locale }: ClientListTableProp
              <th className="p-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Name</th>
              <th className="p-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Email</th>
              <th className="p-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Registration Date</th>
+             <th className="p-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Last Login</th>
              <th className="p-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Role</th>
              <th className="p-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-center">Actions</th>
             </tr>
@@ -76,12 +78,26 @@ export default function ClientListTable({ clients, locale }: ClientListTableProp
                     {client.email}
                   </td>
 
-                  {/* Fecha */}
-                  <td className="p-4 text-sm text-gray-500">
-                    {new Date(client.createdAt).toLocaleDateString()}
-                  </td>
+                {/* Fecha */}
+<td className="p-4 text-sm text-gray-500">
+    {new Date(client.createdAt).toLocaleDateString()}
+</td>
 
-                  {/* Rol */}
+{/* Last Login */}
+<td className="p-4 text-sm">
+    {client.lastLoginAt ? (
+        <div className="flex flex-col">
+            <span className="text-[10px] font-bold text-green-600">✅ Active</span>
+            <span className="text-[10px] text-gray-400">
+                {new Date(client.lastLoginAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+            </span>
+        </div>
+    ) : (
+        <span className="text-[10px] text-gray-400">Never</span>
+    )}
+</td>
+
+{/* Rol */}
                   <td className="p-4">
                   <span className={`text-xs font-bold px-3 py-1 rounded-full ${
                  client.role === 'ADMIN' ? 'bg-gray-900 text-white' :
