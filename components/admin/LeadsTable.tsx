@@ -150,14 +150,18 @@ export default function LeadsTable({ leads, locale }: { leads: any[]; locale: st
                         <a href={`mailto:${lead.email}`} className="flex items-center gap-1 text-blue-600 hover:underline text-xs">
                           <Mail size={12} />
                           {lead.email}
-                        </a>
-                        <a href={`tel:${lead.phone_number}`} className="flex items-center gap-1 text-green-600 hover:underline text-xs">
-                          <Phone size={12} />
-                          {lead.phone_number}
-                        </a>
-                      </div>
-                    </td>
-
+                 </a>
+<a href={`tel:${lead.phone_number}`} className="flex items-center gap-1 text-green-600 hover:underline text-xs">
+    <Phone size={12} />
+    {lead.phone_number}
+</a>
+{lead.phone_number && (
+    <a href={`https://wa.me/${lead.phone_number.replace(/\D/g, '')}?text=${encodeURIComponent('Hi ' + lead.full_name + ', this is Gasp Maker Cargo! Your account is ready at gaspmakercargo.com')}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-emerald-600 text-xs font-bold bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-200">
+        💬 WhatsApp
+    </a>
+)}
+</div>
+</td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-1 text-gray-500 text-xs">
                         <Calendar size={12} />
