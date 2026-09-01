@@ -158,10 +158,12 @@ export default function PackageActions({ pkg, locale, onDeliverStore }: PackageA
         }];
         calculatedDeclaredValue += parseFloat(pkg.declaredValue || 0);
     }
+if (calculatedDeclaredValue === 0 && pkg.declaredValue) {
+    calculatedDeclaredValue = parseFloat(pkg.declaredValue as any) || 0;
+}
 
-    const declaredValueStr = calculatedDeclaredValue.toFixed(2);
-    const totalInvoice = (calculatedDeclaredValue + parseFloat(shippingCost)).toFixed(2);
-
+const declaredValueStr = calculatedDeclaredValue.toFixed(2);
+const totalInvoice = (calculatedDeclaredValue + parseFloat(shippingCost)).toFixed(2);
     let totalQty = allItems.reduce((acc: number, item: any) => acc + (parseInt(item.qty) || 1), 0);
     const weightPerUnit = totalQty > 0 ? (totalWeightNum / totalQty) : 0;
 
