@@ -258,14 +258,17 @@ export default function PackageDetailClient({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          weight: pkg.weightLbs || 1,
-          dimensions: {
-            length: pkg.lengthIn,
-            width: pkg.widthIn,
-            height: pkg.heightIn,
-          },
-          destination: currentDestination,
-        }),
+  weight: pkg.weightLbs || 1,
+  dimensions: {
+    length: pkg.lengthIn,
+    width: pkg.widthIn,
+    height: pkg.heightIn,
+  },
+  destination: currentDestination,
+  isDocument: pkg.courier === 'Buzón Virtual' || 
+    (pkg.carrierTrackingNumber || '').startsWith('DOC-') || 
+    (pkg.gmcTrackingNumber || '').startsWith('GMC-DOC-'),
+}),
       });
       const data = await res.json();
 

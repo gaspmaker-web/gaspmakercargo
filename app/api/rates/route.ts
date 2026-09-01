@@ -116,7 +116,7 @@ function getDeliveryDaysByCarrier(carrier: string, service: string): string {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { weight, weightLbs, dimensions, destination, distanceMiles, auraDetails, serviceType } = body;
+    const { weight, weightLbs, dimensions, destination, distanceMiles, auraDetails, serviceType, isDocument } = body;
 
     // 🏢 TENANT RATES — Motor dinámico
     const { getTenantId } = await import('@/lib/tenant-cache');
@@ -410,17 +410,37 @@ const auraResult = calculateAuraLocalDelivery(auraBoxes, safeDistanceMiles, aura
                 phone: '555-555-5555'
             });
             
-            const parcelData: any = { weight: finalWeightLbs * 16 };
-            if (len) parcelData.length = len;
-            if (wid) parcelData.width = wid;
-            if (hgt) parcelData.height = hgt;
+const parcelData: any = { weight: finalWeightLbs * 16 };
+if (len) parcelData.length = len;
+if (wid) parcelData.width = wid;
+if (hgt) parcelData.height = hgt;
 
-            const parcel = await easypost.Parcel.create(parcelData);
-            
-          const shipment = await easypost.Shipment.create({
+const parcel = await easypost.Parcel.create(parcelData);
+
+const shipment = await easypost.Shipment.create({
     to_address: toAddress, from_address: fromAddress, parcel: parcel,
     options: { label_format: 'PDF', label_size: '4X6' }
-    });
+});
+
+// 🔥 ENTERPRISE: Para documentos ligeros, segunda llamada con Letter para USPS First Class
+let letterShipmentRates: any[] = [];
+if (finalWeightLbs <= 0.5) {
+    try {
+        const letterParcel = await easypost.Parcel.create({ 
+            weight: finalWeightLbs * 16,
+            predefined_package: 'Letter'
+        });
+        const letterShipment = await easypost.Shipment.create({
+            to_address: toAddress, from_address: fromAddress, parcel: letterParcel,
+            options: { label_format: 'PDF', label_size: '4X6' }
+        });
+        letterShipmentRates = letterShipment.rates?.filter((r: any) => 
+            r.carrier?.toUpperCase().includes('USPS')
+        ).map((r: any) => ({ ...r, shipmentId: letterShipment.id })) || [];
+    } catch (e) {
+        console.warn('Letter shipment failed:', e);
+    }
+}
 
    if (shipment.rates) {
     // 🔥 Si todos los carriers devuelven el mismo día → EasyPost no tiene datos reales
@@ -457,7 +477,23 @@ const auraResult = calculateAuraLocalDelivery(auraBoxes, safeDistanceMiles, aura
     shipmentId: shipment.id,  // 🔥 NUEVO
 };
     });
-    rawRates.push(...easyPostRates);
+    // Agregar tarifas de letter (USPS First Class) si existen
+const letterRatesMapped = letterShipmentRates.map((epRate: any) => ({
+    id: epRate.id,
+    carrier: epRate.carrier,
+    service: epRate.service,
+    price: parseFloat((parseFloat(epRate.rate) * rate('easypost_markup', undefined, 1.30) + (isDocument ? 2.28 : 0)).toFixed(2)),
+    currency: epRate.currency,
+    days: epRate.delivery_days ? `${epRate.delivery_days} days` : getDeliveryDaysByCarrier(epRate.carrier, epRate.service),
+    logo: '/usps-logo.svg',
+    shipmentId: epRate.shipmentId,
+}));
+
+// Combinar — evitar duplicados por servicio
+const existingServices = new Set(easyPostRates.map((r: any) => `${r.carrier}-${r.service}`));
+const uniqueLetterRates = letterRatesMapped.filter(r => !existingServices.has(`${r.carrier}-${r.service}`));
+
+rawRates.push(...easyPostRates, ...uniqueLetterRates);
 }
 } catch (e: any) { 
     console.warn(`EasyPost Warning: ${e.message}`); 
@@ -587,23 +623,36 @@ if (showOcean && oceanCountries.includes(targetCountryCode)) {
     }
 }
 
- // ==========================================
-    // 8. FILTRO Y LIMPIEZA FINAL
-    // ==========================================
-    rawRates = rawRates.filter(r => {
-        if (!r.price || r.price < 1) return false;
-        if (r.service && (r.service.toUpperCase().includes('TRINIDAD DIRECT') || r.service.toUpperCase().includes('AIR FREIGHT')) && !r.id.startsWith('GMC')) { 
-            return false;
-        }
-        return true;
-    });
+// ==========================================
+// 8. FILTRO Y LIMPIEZA FINAL
+// ==========================================
+rawRates = rawRates.filter(r => {
+    if (!r.price || r.price < 1) return false;
+    if (r.service && (r.service.toUpperCase().includes('TRINIDAD DIRECT') || r.service.toUpperCase().includes('AIR FREIGHT')) && !r.id.startsWith('GMC')) { 
+        return false;
+    }
+    return true;
+});
 
-    rawRates.sort((a, b) => a.price - b.price);
-    
-    return NextResponse.json({ success: true, rates: rawRates, chargeableWeight });
+// 🔥 Para documentos ligeros, priorizar First Class sobre Ground Advantage
+if (chargeableWeight <= 0.5) {
+    const hasFirstClass = rawRates.some(r => 
+        r.service?.toUpperCase().includes('FIRST') || 
+        r.service?.toUpperCase().includes('FIRST CLASS')
+    );
+    if (hasFirstClass) {
+        rawRates = rawRates.filter(r => 
+            !r.service?.toUpperCase().includes('GROUND ADVANTAGE')
+        );
+    }
+}
 
-  } catch (error: any) {
+rawRates.sort((a, b) => a.price - b.price);
+
+return NextResponse.json({ success: true, rates: rawRates, chargeableWeight });
+
+} catch (error: any) {
     console.error("API Error:", error.message);
     return NextResponse.json({ error: error.message }, { status: 500 });
-  }
+}
 }
