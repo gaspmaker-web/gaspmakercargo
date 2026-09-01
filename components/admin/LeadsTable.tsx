@@ -160,6 +160,7 @@ export default function LeadsTable({ leads, locale }: { leads: any[]; locale: st
                   <th className="text-left px-6 py-4 font-bold text-gray-500 text-xs uppercase">Contact</th>
                   <th className="text-left px-6 py-4 font-bold text-gray-500 text-xs uppercase">Date</th>
                   <th className="text-left px-6 py-4 font-bold text-gray-500 text-xs uppercase">Status</th>
+                  <th className="text-left px-6 py-4 font-bold text-gray-500 text-xs uppercase">Login</th>
                   <th className="text-left px-6 py-4 font-bold text-gray-500 text-xs uppercase">Notes</th>
                 </tr>
               </thead>
@@ -219,6 +220,18 @@ export default function LeadsTable({ leads, locale }: { leads: any[]; locale: st
                       </div>
                     </td>
 
+<td className="px-6 py-4">
+    {lead.user?.lastLoginAt ? (
+        <div className="flex flex-col gap-0.5">
+            <span className="text-[10px] font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full w-fit">✅ Converted</span>
+            <span className="text-[10px] text-gray-400">
+                {new Date(lead.user.lastLoginAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+            </span>
+        </div>
+    ) : (
+        <span className="text-[10px] text-gray-400">No login yet</span>
+    )}
+</td>
                     <td className="px-6 py-4 min-w-[200px]">
                       {editingNote === lead.id ? (
                         <div className="flex flex-col gap-1">

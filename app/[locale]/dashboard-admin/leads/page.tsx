@@ -47,7 +47,20 @@ export default async function LeadsPage({
     leads = [];
    }
 
-  const serializedLeads = JSON.parse(JSON.stringify(leads));
+  // 🔥 Cruzar leads con usuarios para saber si ya hicieron login
+const leadEmails = leads.map((l: any) => l.email).filter(Boolean);
+const convertedUsers = await prisma.user.findMany({
+    where: { email: { in: leadEmails } },
+    select: { email: true, lastLoginAt: true, createdAt: true }
+});
+const userMap = Object.fromEntries(convertedUsers.map(u => [u.email, u]));
+
+const leadsWithLogin = leads.map((lead: any) => ({
+    ...lead,
+    user: userMap[lead.email] || null
+}));
+
+const serializedLeads = JSON.parse(JSON.stringify(leadsWithLogin));
 
   const stats = {
     total: leads.length,
