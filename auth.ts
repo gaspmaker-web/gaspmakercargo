@@ -56,22 +56,28 @@ export const { handlers, signIn, signOut, auth } = (NextAuth as any)({
           isPasswordValid = await bcrypt.compare(inputPassword, user.password!);
         }
 
-        if (isPasswordValid) {
-          return {
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            image: user.image, 
-            role: user.role, 
-            suiteNo: user.suiteNo,
-            phone: user.phone,
-            countryCode: user.countryCode,
-            dateOfBirth: user.dateOfBirth,
-            address: user.address,
-            cityZip: user.cityZip,
-            country: user.country
-          };
-        }
+       if (isPasswordValid) {
+    // 🔥 Actualizar lastLoginAt
+    await prisma.user.update({
+        where: { id: user.id },
+        data: { lastLoginAt: new Date() }
+    });
+
+    return {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        image: user.image, 
+        role: user.role, 
+        suiteNo: user.suiteNo,
+        phone: user.phone,
+        countryCode: user.countryCode,
+        dateOfBirth: user.dateOfBirth,
+        address: user.address,
+        cityZip: user.cityZip,
+        country: user.country
+    };
+}
 
         return null; 
       },

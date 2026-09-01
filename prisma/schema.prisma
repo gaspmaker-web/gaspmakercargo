@@ -37,6 +37,7 @@ model User {
   // 🔥 EXENCIÓN DE FEE DE CONSOLIDACIÓN (CLIENTES VIP ESPECIALES)
   noConsolidationFee    Boolean               @default(false)
   createdAt             DateTime              @default(now())
+  lastLoginAt           DateTime?
 
   // Campos de Perfil
   countryCode           String?
