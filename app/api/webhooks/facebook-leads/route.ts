@@ -144,10 +144,17 @@ await (prisma as any).lead.upsert({
               Login to My Account
             </a>
           </div>
+
+          <div style="text-align: center; margin-top: 20px; padding: 20px; background-color: #f9fafb; border-radius: 8px;">
+            <p style="margin: 0 0 10px 0; font-size: 14px; color: #666;">Follow us for tips, deals & updates:</p>
+            <a href="https://www.instagram.com/gaspmakercargo" target="_blank"
+               style="display: inline-block; background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 14px;">
+                📸 Follow @gaspmakercargo
+            </a>
+          </div>
         </div>
       `,
     });
-
     console.log(`✅ Lead registered: ${email} | Suite: ${suiteNo} | Country: ${countryCode}`);
     return NextResponse.json({ status: 'success', email, suiteNo, countryCode });
 
