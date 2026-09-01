@@ -101,7 +101,8 @@ const CONTAINER_OPTIONS = [
   const isPickup = request.serviceType === 'PICKUP' || request.gmcShipmentNumber?.startsWith('PICKUP');
   
   // 🔥 LA LLAVE MAESTRA: Activamos las filas dinámicas si es Camión o Barco
-  const isDynamicPalletMode = isLocalDelivery || isOcean;
+  const isDynamicPalletMode = true;
+const isAir = !isLocalDelivery && !isOcean && !isPickup;
 
   const handleCashPayment = async () => {
     if (!confirm(`Mark ${request.gmcShipmentNumber} as paid with cash?`)) return;
@@ -332,7 +333,7 @@ const CONTAINER_OPTIONS = [
                     <h3 className={`text-lg font-bold flex items-center gap-2 ${
                         isLocalDelivery ? 'text-black' : isOcean ? 'text-blue-900' : 'text-indigo-900'
                     }`}>
-                        {isDynamicPalletMode ? <><Box size={20}/> Pallet Data</> : 'Final Data'}
+                        {isAir ? <><Box size={20}/> Box Data</> : isDynamicPalletMode ? <><Box size={20}/> Pallet Data</> : 'Final Data'}
                     </h3>
                     <button onClick={() => setShowModal(false)}><X size={20} className="text-gray-400 hover:text-red-500"/></button>
                 </div>
@@ -375,7 +376,7 @@ const CONTAINER_OPTIONS = [
                             <div key={index} className={`p-3 rounded-xl border relative shadow-sm ${isOcean ? 'bg-blue-50/10 border-blue-200' : 'bg-white border-gray-300'}`}>
                                 <div className="flex justify-between items-center mb-3">
                                     <span className={`text-xs font-bold uppercase px-2 py-1 rounded ${isOcean ? 'text-blue-800 bg-blue-100' : 'text-gray-800 bg-gray-100'}`}>
-                                        Pallet / Bundle {index + 1}
+                                        {isAir ? 'Box' : 'Pallet / Bundle'} {index + 1}
                                     </span>
                                     {index > 0 && (
                                         <button onClick={() => handleRemovePiece(index)} className="text-red-400 hover:text-red-600 transition-colors">
@@ -416,7 +417,7 @@ const CONTAINER_OPTIONS = [
                                 : 'border-gray-300 text-gray-500 hover:border-black hover:text-black'
                             }`}
                         >
-                            <Plus size={16} /> Add Additional Pallet / Bundle
+                            <Plus size={16} /> {isAir ? 'Add Additional Box' : 'Add Additional Pallet / Bundle'}
                         </button>
                     </div>
                 ) : (
