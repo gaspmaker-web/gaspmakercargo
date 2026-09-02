@@ -1,4 +1,5 @@
 import { auth } from '@/auth'; 
+import MapToggle from '@/components/driver/MapToggle';
 import prisma from '@/lib/prisma';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
@@ -124,7 +125,7 @@ export default async function DriverDashboardPage(props: any) {
   // 2️⃣ Reglas para CONSOLIDADOS
   const consolidationOrConditions: any[] = [
       ...packageOrConditions,
-      { destinationCountryCode: driverZone }
+      { destinationCountryCode: { equals: driverZone, mode: 'insensitive' } }
   ];
 
   // 3. BUSCAR CONSOLIDACIONES
@@ -207,7 +208,7 @@ export default async function DriverDashboardPage(props: any) {
   }
 
   const totalActiveTasks = myPickupTasks.length + processedDeliveries.length;
-
+const mapDeliveries = processedDeliveries
   return (
     <div className="min-h-screen bg-gray-50 pb-24 font-sans">
       <div className="bg-[#222b3c] text-white p-6 rounded-b-[30px] shadow-xl mb-6 relative overflow-hidden">
@@ -231,6 +232,7 @@ export default async function DriverDashboardPage(props: any) {
             </div>
         </div>
       </div>
+
 
       <div className="px-4 space-y-8">
         {isMiamiDriver && availableTasks.length > 0 && (
@@ -408,6 +410,8 @@ export default async function DriverDashboardPage(props: any) {
                 )}
             </div>
         </div>
+
+        <MapToggle deliveries={processedDeliveries} pickupTasks={myPickupTasks} driverId={driverId} />
       </div>
     </div>
   );

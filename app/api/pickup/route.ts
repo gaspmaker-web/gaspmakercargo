@@ -107,6 +107,32 @@ export async function POST(request: Request) {
         totalPaid     = parseFloat(body.totalPaid) || 0;
     }
  // ==========================================
+
+    // ── Geocoding server-side ──────────────────────────────────────────────
+    let lat: number | null = null
+    let lng: number | null = null
+    let latDest: number | null = null
+    let lngDest: number | null = null
+
+    const geocodeAddress = async (address: string) => {
+      const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY}`
+      const res = await fetch(url)
+      const data = await res.json()
+      if (data.status === 'OK' && data.results[0]) {
+        return data.results[0].geometry.location as { lat: number; lng: number }
+      }
+      return null
+    }
+
+    if (body.originAddress) {
+      const coords = await geocodeAddress(body.originAddress)
+      if (coords) { lat = coords.lat; lng = coords.lng }
+    }
+    if (body.dropOffAddress) {
+      const coords = await geocodeAddress(body.dropOffAddress)
+      if (coords) { latDest = coords.lat; lngDest = coords.lng }
+    }
+    // ───────────────────────────────────────────────────────────────────────
     // ✅ Guardar en BD con precios del SERVIDOR
     // ==========================================
     const newRequest = await prisma.pickupRequest.create({
@@ -128,6 +154,10 @@ export async function POST(request: Request) {
         distanceMiles: body.distanceMiles || null,
         isPalletMode: body.isPalletMode || false,
         extraStops: body.extraStops || null,
+        lat,
+        lng,
+        latDest,
+        lngDest,
         status: body.status || 'PENDIENTE',
         totalPaid,
         subtotal,

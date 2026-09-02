@@ -272,6 +272,10 @@ model PickupRequest {
   distanceMiles    Float?
   isPalletMode     Boolean  @default(false)
   extraStops       Json?
+  lat              Float?
+  lng              Float?
+  latDest          Float?
+  lngDest          Float?
   photoPickupUrl   String?  
   photoDeliveryUrl String?
   
