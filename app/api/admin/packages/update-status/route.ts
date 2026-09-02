@@ -36,6 +36,34 @@ export async function POST(req: Request) {
             data: { status: newStatus, updatedAt: new Date() }
         });
         
+                // 🗺️ GEOCODING AUTOMÁTICO
+        const DELIVERY_STATUSES = ['EN_REPARTO', 'OUT_FOR_DELIVERY', 'EN_CAMINO', 'EN_RUTA']
+        if (DELIVERY_STATUSES.includes(newStatus)) {
+          try {
+            const cons = await prisma.consolidatedShipment.findUnique({
+              where: { id: packageId },
+              select: { lat: true, lng: true, shippingAddress: true, destinationCountryCode: true, user: { select: { address: true, countryCode: true } } }
+            })
+            if (cons && !cons.lat && !cons.lng) {
+              const address = cons.shippingAddress || cons.user?.address
+              const countryCode = cons.destinationCountryCode || cons.user?.countryCode
+              if (address) {
+                const { geocodeAddress } = await import('@/lib/maps/geocoder')
+                const coords = await geocodeAddress(address, countryCode || undefined)
+                if (coords) {
+                  await prisma.consolidatedShipment.update({
+                    where: { id: packageId },
+                    data: { lat: coords.lat, lng: coords.lng }
+                  })
+                  console.log(`📍 Geocoded: ${packageId}: ${coords.lat}, ${coords.lng}`)
+                }
+              }
+            }
+          } catch (geoErr) {
+            console.error('Geocoding failed:', geoErr)
+          }
+        }
+        
         return NextResponse.json({ success: true, message: "Consolidación y paquetes hijos actualizados" });
     }
 
