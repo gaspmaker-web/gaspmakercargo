@@ -237,6 +237,9 @@ model ConsolidatedShipment {
   easypostTrackerId    String?  // 🔥 Para webhooks de tracking
 
   // ==========================================
+  lat              Float?
+  lng              Float?
+
   // 🚀 ÍNDICES DE RENDIMIENTO (ENTERPRISE)
   // ==========================================
   @@index([gmcShipmentNumber])

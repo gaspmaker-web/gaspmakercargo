@@ -18,6 +18,9 @@ export interface ProcessedDelivery {
   count: number
   weightLbs: number
   childTrackings: string[]
+  countryCode?: string | null
+  lat?: number | null
+  lng?: number | null
 }
 
 interface MapViewProps {
@@ -100,7 +103,21 @@ export default function MapView({ deliveries, pickupTasks, driverId }: MapViewPr
     const geocoder = new google.maps.Geocoder()
 
     const deliveryPromises = deliveries.map(
-      (d) => new Promise<DeliveryPin>((resolve) => {
+      (d) => new Promise<DeliveryPin>(async (resolve) => {
+        if (d.lat && d.lng) {
+          resolve({ id: d.id, orderId: d.tracking, recipientName: d.userName, address: d.address, lat: d.lat, lng: d.lng, status: 'pending' })
+          return
+        }
+        if (d.countryCode && d.countryCode.toUpperCase() !== 'US') {
+          try {
+            const res = await fetch(`/api/maps/geocode?address=${encodeURIComponent(d.address)}&countryCode=${d.countryCode}`)
+            const data = await res.json()
+            if (data.lat && data.lng) {
+              resolve({ id: d.id, orderId: d.tracking, recipientName: d.userName, address: d.address, lat: data.lat, lng: data.lng, status: 'pending' })
+              return
+            }
+          } catch {}
+        }
         geocoder.geocode({ address: d.address }, (results, status) => {
           const loc = status === 'OK' && results?.[0]?.geometry?.location
             ? { lat: results[0].geometry.location.lat(), lng: results[0].geometry.location.lng() }

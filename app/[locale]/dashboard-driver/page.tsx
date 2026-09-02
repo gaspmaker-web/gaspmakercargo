@@ -188,7 +188,10 @@ export default async function DriverDashboardPage(props: any) {
           address: cons.shippingAddress || cons.user?.address || 'Address not specified',
           count: cons.packages.length,
           weightLbs: cons.weightLbs || 0, 
-          childTrackings: cons.packages.map((p: any) => p.gmcTrackingNumber).filter((t: any) => t) 
+          childTrackings: cons.packages.map((p: any) => p.gmcTrackingNumber).filter((t: any) => t),
+          countryCode: cons.destinationCountryCode || cons.user?.countryCode || null,
+          lat: cons.lat || null,
+          lng: cons.lng || null
       });
   }
 
