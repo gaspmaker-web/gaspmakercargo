@@ -1,7 +1,7 @@
 import type { DeliveryPin, DriverLocation, OptimizedRoute } from '@/types/maps'
 
 function isCaribbean(lat: number, lng: number): boolean {
-  console.log(`[isCaribbean] lat=${lat} lng=${lng} result=${lat < 25 && lat > 9 && lng < -59 && lng > -90}`)
+
   return lat < 25 && lat > 9 && lng < -59 && lng > -90
 }
 
