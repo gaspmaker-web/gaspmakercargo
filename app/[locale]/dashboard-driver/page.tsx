@@ -1,5 +1,6 @@
 import { auth } from '@/auth'; 
 import MapToggle from '@/components/driver/MapToggle';
+import StripeConnectButton from '@/components/driver/StripeConnectButton';
 import prisma from '@/lib/prisma';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
@@ -37,7 +38,7 @@ export default async function DriverDashboardPage(props: any) {
 
   const driver = await prisma.user.findUnique({
     where: { id: driverId },
-    select: { countryCode: true, country: true, name: true }
+    select: { countryCode: true, country: true, name: true, stripeAccountId: true }
   });
 
   const driverZone = driver?.countryCode; 
@@ -414,6 +415,7 @@ const mapDeliveries = processedDeliveries
             </div>
         </div>
 
+        <StripeConnectButton hasAccount={!!driver?.stripeAccountId} />
         <MapToggle deliveries={processedDeliveries} pickupTasks={myPickupTasks} driverId={driverId} />
       </div>
     </div>

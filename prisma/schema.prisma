@@ -57,6 +57,7 @@ model User {
 
   // --- STRIPE ---
   stripeCustomerId      String?               @unique 
+  stripeAccountId       String?               @unique  // Stripe Connect Express ID
 
 // 🏢 MULTI-TENANT
   tenant_id             String?
