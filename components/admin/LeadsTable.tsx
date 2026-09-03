@@ -184,9 +184,9 @@ export default function LeadsTable({ leads, locale }: { leads: any[]; locale: st
     {lead.phone_number}
 </a>
 {lead.phone_number && (
-    <a href={`https://wa.me/${lead.phone_number.replace(/\D/g, '')}?text=${encodeURIComponent(`Hi ${lead.full_name}! 👋 This is Gasp Maker Cargo 📦\n\nYour FREE locker in Miami is ready! 🇺🇸\n\n✅ Check your email for login details\n🔗 Login: https://www.gaspmakercargo.com/en/login-cliente\n\nShop from Amazon, Walmart, eBay & more — we'll ship directly to you! 🌍\n\nQuestions? Reply here anytime! 😊`)}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-emerald-600 text-xs font-bold bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-200">
-        💬 WhatsApp
-    </a>
+   <a href={`https://wa.me/${lead.phone_number.replace(/\D/g, '')}?text=${encodeURIComponent(`Hi ${lead.full_name}! This is Gasp Maker Cargo - Your FREE locker in Miami is ready!\n\nCheck your email for login details\nLogin: https://www.gaspmakercargo.com/en/login-cliente\n\nCan't find our email? Check your spam/junk folder or set your password here:\nhttps://www.gaspmakercargo.com/en/recuperar-contrasena\n\nShop from Amazon, Walmart, eBay & more - we will ship directly to you!\n\nQuestions? Reply here anytime!`)}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-emerald-600 text-xs font-bold bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-200">
+    💬 WhatsApp
+</a>
 )}
 </div>
 </td>
