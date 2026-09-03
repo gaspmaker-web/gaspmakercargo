@@ -145,6 +145,14 @@ await (prisma as any).lead.upsert({
             </a>
           </div>
 
+          <div style="text-align: center; margin-top: 20px; padding: 15px; background-color: #fef9c3; border-radius: 8px; border: 1px solid #fde68a;">
+    <p style="margin: 0 0 8px 0; font-size: 13px; color: #92400e;">📧 Can't find our email? Check your <strong>spam/junk folder</strong> or set your password here:</p>
+    <a href="https://www.gaspmakercargo.com/en/recuperar-contrasena"
+       style="display: inline-block; background-color: #374151; color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 13px;">
+        🔗 Set My Password
+    </a>
+</div>
+
           <div style="text-align: center; margin-top: 20px; padding: 20px; background-color: #f9fafb; border-radius: 8px;">
             <p style="margin: 0 0 10px 0; font-size: 14px; color: #666;">Follow us for tips, deals & updates:</p>
             <a href="https://www.instagram.com/gaspmakercargo" target="_blank"
