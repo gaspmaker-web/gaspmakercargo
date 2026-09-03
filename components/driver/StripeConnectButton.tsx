@@ -15,7 +15,9 @@ export default function StripeConnectButton({ hasAccount }: StripeConnectButtonP
     try {
       const res = await fetch('/api/stripe/connect/onboard', { method: 'POST' })
       const data = await res.json()
-      if (data.url) window.location.href = data.url
+      if (data.url) {
+        window.location.assign(data.url)
+      }
     } catch {
       alert('Error connecting Stripe. Try again.')
     } finally {
@@ -28,7 +30,9 @@ export default function StripeConnectButton({ hasAccount }: StripeConnectButtonP
     try {
       const res = await fetch('/api/stripe/connect/dashboard')
       const data = await res.json()
-      if (data.url) window.open(data.url, '_blank')
+      if (data.url) {
+        window.location.assign(data.url)
+      }
     } catch {
       alert('Error opening dashboard. Try again.')
     } finally {
