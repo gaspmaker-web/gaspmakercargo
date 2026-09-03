@@ -21,8 +21,21 @@ export async function GET() {
       return NextResponse.json({ error: 'No Stripe account connected' }, { status: 400 })
     }
 
-    const loginLink = await stripe.accounts.createLoginLink(user.stripeAccountId)
+    // Check if account is fully onboarded
+    const account = await stripe.accounts.retrieve(user.stripeAccountId)
 
+    if (!account.details_submitted) {
+      // Account not fully onboarded — send back to onboarding
+      const accountLink = await stripe.accountLinks.create({
+        account: user.stripeAccountId,
+        refresh_url: `${process.env.NEXT_PUBLIC_BASE_URL}/en/dashboard-driver?connect=refresh`,
+        return_url: `${process.env.NEXT_PUBLIC_BASE_URL}/en/dashboard-driver?connect=success`,
+        type: 'account_onboarding',
+      })
+      return NextResponse.json({ url: accountLink.url, needsOnboarding: true })
+    }
+
+    const loginLink = await stripe.accounts.createLoginLink(user.stripeAccountId)
     return NextResponse.json({ url: loginLink.url })
   } catch (err) {
     console.error('[stripe/connect/dashboard]', err)
