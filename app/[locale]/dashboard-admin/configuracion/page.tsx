@@ -227,7 +227,7 @@ export default function ConfiguracionPage() {
   const [saving, setSaving] = useState(false);
   const [expandedCountry, setExpandedCountry] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
-  const [activeTab, setActiveTab] = useState<'international' | 'global' | 'local' | 'apis'>('international');
+  const [activeTab, setActiveTab] = useState<'international' | 'global' | 'local' | 'driver' | 'apis'>('international');
   const [newCountry, setNewCountry] = useState('');
   const [mailboxPriceIds, setMailboxPriceIds] = useState({
     stripe_mailbox_basic_price_id: '',
@@ -372,6 +372,7 @@ const internationalCountries = Array.from(new Set(
             { id: 'international', label: 'International', icon: Globe },
             { id: 'global', label: 'Variables ✅', icon: Package },
             { id: 'local', label: 'Local Delivery', icon: Truck },
+            { id: 'driver', label: 'Driver Pay 🚗', icon: Truck },
             { id: 'apis', label: 'API Keys', icon: Key },
           ].map(({ id, label, icon: Icon }) => (
             <button
@@ -896,6 +897,40 @@ const internationalCountries = Array.from(new Set(
     </div>
   </div>
 )}
+
+        {/* TAB: DRIVER PAY */}
+        {activeTab === 'driver' && (
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+            <h2 className="font-bold text-gray-900 mb-1">Driver Commission</h2>
+            <p className="text-sm text-gray-500 mb-5">Percentage of the total paid that the driver receives automatically via Stripe.</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {[
+                { concept: 'driver_commission_pickup', label: 'Local Delivery / Pickup (%)' },
+                { concept: 'driver_commission_consolidation', label: 'Consolidation (%)' },
+                { concept: 'driver_commission_package_per_lb', label: 'Package — per lb ($)' },
+              ].map(({ concept, label }) => (
+                <div key={concept}>
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 block">{label}</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={getRate(concept)}
+                      onChange={e => setRate(concept, null, parseFloat(e.target.value) || 0)}
+                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
+                    />
+                    <span className="text-gray-400 text-sm">
+                      {concept.includes('per_lb') ? '$/lb' : '%'}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="mt-4 p-3 bg-blue-50 rounded-xl text-xs text-blue-600">
+              💡 Example: 70% on a $100 delivery = driver receives $70 automatically via Stripe Connect.
+            </div>
+          </div>
+        )}
 
         {/* TAB: API KEYS */}
         {activeTab === 'apis' && (

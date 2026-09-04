@@ -89,8 +89,10 @@ export async function POST(req: Request) {
             // 🛑 SOLO SI ES 'DELIVERY' LOCAL Y NO VA A LA BODEGA
             console.log("🚚 Delivery Local finalizado. No entra en inventario.");
         }
-// Pagar al driver — ajusta el monto según tu lógica de negocio
-await transferToDriver(session.user.id, updatedPickup.totalPaid * 0.7, `Delivery #${packageId.slice(0,6)}`)
+
+        const pickupRate = await prisma.tenantRate.findFirst({ where: { concept: 'driver_commission_pickup' } })
+        const pickupPct = Number(pickupRate?.value ?? 70) / 100
+        await transferToDriver(session.user.id, updatedPickup.totalPaid * pickupPct, `Delivery #${packageId.slice(0,6)}`)
 
         // ✅ Notificamos éxito
         await notifyClient(resultUser.id, type, packageId);
@@ -131,7 +133,9 @@ await transferToDriver(session.user.id, updatedPickup.totalPaid * 0.7, `Delivery
         });
         resultUser = updatedShipment.user;
         type = "Consolidación";
-        await transferToDriver(session.user.id, (updatedShipment.totalAmount ?? 0) * 0.7, `Consolidation #${packageId.slice(0,6)}`)
+    const consRate = await prisma.tenantRate.findFirst({ where: { concept: 'driver_commission_consolidation' } })
+const consPct = ((consRate?.value ?? 70) as number) / 100
+await transferToDriver(session.user.id, (updatedShipment.totalAmount ?? 0) * consPct, `Consolidation #${packageId.slice(0,6)}`)
         await notifyClient(resultUser.id, type, updatedShipment.gmcShipmentNumber);
         return NextResponse.json({ success: true, data: updatedShipment });
 
@@ -160,7 +164,9 @@ await transferToDriver(session.user.id, updatedPickup.totalPaid * 0.7, `Delivery
 
            resultUser = updatedPackage.user;
         type = "Paquete";
-        await transferToDriver(session.user.id, (updatedPackage.weightLbs ?? 0) * 2, `Package #${packageId.slice(0,6)}`)
+       const pkgRate = await prisma.tenantRate.findFirst({ where: { concept: 'driver_commission_package_per_lb' } })
+const pkgPerLb = Number(pkgRate?.value ?? 2)
+await transferToDriver(session.user.id, (updatedPackage.weightLbs ?? 0) * pkgPerLb, `Package #${packageId.slice(0,6)}`)
         await notifyClient(resultUser.id, type, updatedPackage.gmcTrackingNumber);
         return NextResponse.json({ success: true, data: updatedPackage });
 
