@@ -89,6 +89,8 @@ export async function POST(req: Request) {
             // 🛑 SOLO SI ES 'DELIVERY' LOCAL Y NO VA A LA BODEGA
             console.log("🚚 Delivery Local finalizado. No entra en inventario.");
         }
+// Pagar al driver — ajusta el monto según tu lógica de negocio
+await transferToDriver(session.user.id, updatedPickup.totalPaid * 0.7, `Delivery #${packageId.slice(0,6)}`)
 
         // ✅ Notificamos éxito
         await notifyClient(resultUser.id, type, packageId);
@@ -114,6 +116,7 @@ export async function POST(req: Request) {
             },
             include: { user: true }
         });
+        
 
         // 2. 🔥 MAGIA: Actualizamos TODOS los paquetes hijos a ENTREGADO 🔥
         // También les pegamos la foto y firma para que quede registro individual
@@ -126,10 +129,9 @@ export async function POST(req: Request) {
                 updatedAt: new Date()
             }
         });
-
         resultUser = updatedShipment.user;
         type = "Consolidación";
-
+        await transferToDriver(session.user.id, (updatedShipment.totalAmount ?? 0) * 0.7, `Consolidation #${packageId.slice(0,6)}`)
         await notifyClient(resultUser.id, type, updatedShipment.gmcShipmentNumber);
         return NextResponse.json({ success: true, data: updatedShipment });
 
@@ -156,9 +158,9 @@ export async function POST(req: Request) {
             include: { user: true }
         });
 
-        resultUser = updatedPackage.user;
+           resultUser = updatedPackage.user;
         type = "Paquete";
-
+        await transferToDriver(session.user.id, (updatedPackage.weightLbs ?? 0) * 2, `Package #${packageId.slice(0,6)}`)
         await notifyClient(resultUser.id, type, updatedPackage.gmcTrackingNumber);
         return NextResponse.json({ success: true, data: updatedPackage });
 
@@ -187,4 +189,33 @@ async function notifyClient(userId: string, type: string, refId: string) {
     href: "/dashboard-cliente/historial-solicitudes",
     type: "SUCCESS"
 });
+}
+// Helper para transferir pago al driver via Stripe Connect
+async function transferToDriver(driverId: string, amount: number, description: string) {
+  try {
+    const prisma = (await import("@/lib/prisma")).default
+    const driver = await prisma.user.findUnique({
+      where: { id: driverId },
+      select: { stripeAccountId: true, name: true }
+    })
+
+    if (!driver?.stripeAccountId) {
+      console.log(`⚠️ Driver ${driverId} has no Stripe account — skipping transfer`)
+      return
+    }
+
+    const Stripe = (await import('stripe')).default
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2025-11-17.clover' })
+
+    const transfer = await stripe.transfers.create({
+      amount: Math.round(amount * 100), // cents
+      currency: 'usd',
+      destination: driver.stripeAccountId,
+      description,
+    })
+
+    console.log(`💸 Transfer to ${driver.name}: $${amount} — ${transfer.id}`)
+  } catch (err) {
+    console.error('Transfer failed (non-critical):', err)
+  }
 }
