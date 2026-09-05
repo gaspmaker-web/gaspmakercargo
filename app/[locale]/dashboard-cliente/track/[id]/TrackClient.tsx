@@ -109,13 +109,13 @@ export default function TrackClient({ requestId, driverId, driverName, origin, d
       </div>
 
       {/* Map */}
-      <div className="flex-1 relative">
+      <div className="flex-1 relative" style={{ minHeight: "400px" }}>
         {!mapsReady ? (
           <div className="w-full h-full flex items-center justify-center">
             <div className="w-8 h-8 border-2 border-yellow-400 border-t-transparent rounded-full animate-spin" />
           </div>
         ) : (
-          <div ref={mapRef} className="w-full h-full" />
+          <div ref={mapRef} style={{ width: "100%", height: "100%" }} />
         )}
       </div>
 
