@@ -884,6 +884,7 @@
     }
   },
   "HistoryPage": {
+    "trackDriver": "Rastrear Conductor — En Vivo",
     "title": "Historial de Operaciones",
     "subtitle": "Registro completo de tus movimientos locales e internacionales.",
     "loading": "Cargando tu historial...",

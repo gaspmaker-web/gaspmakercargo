@@ -317,7 +317,7 @@ if (upperTitle.includes('ENVÍO MARÍTIMO') || upperTitle.includes('ENVIO MARITI
         href={`/en/dashboard-cliente/track/${req.id}`}
         className="w-full py-2 text-xs font-bold text-white bg-[#222b3c] hover:bg-black rounded-lg transition-all flex items-center justify-center gap-1 mb-2"
     >
-        <MapPin size={12} className="text-yellow-400" /> Track Driver — Live
+        <MapPin size={12} className="text-yellow-400" /> {t("trackDriver")}
     </a>
 )}
 

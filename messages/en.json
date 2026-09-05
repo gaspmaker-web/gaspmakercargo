@@ -843,6 +843,7 @@
     }
   },
   "HistoryPage": {
+    "trackDriver": "Track Driver — Live",
     "title": "Operations History",
     "subtitle": "Complete record of your local and international movements.",
     "loading": "Loading...",

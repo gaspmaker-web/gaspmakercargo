@@ -865,6 +865,7 @@
     }
   },
   "HistoryPage": {
+    "trackDriver": "Suivre le Chauffeur — En Direct",
     "title": "Historique des Opérations",
     "subtitle": "Registre complet de vos mouvements locaux et internationaux.",
     "loading": "Chargement...",

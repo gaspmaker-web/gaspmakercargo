@@ -865,6 +865,7 @@
     }
   },
   "HistoryPage": {
+    "trackDriver": "Rastrear Motorista — Ao Vivo",
     "title": "Histórico de Operações",
     "subtitle": "Registro completo de seus movimentos locais e internacionais.",
     "loading": "Carregando...",
