@@ -5,12 +5,11 @@ import prisma from '@/lib/prisma'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2025-11-17.clover' })
 
-// Países soportados por Stripe Connect Express
 const STRIPE_SUPPORTED_COUNTRIES = [
   'US', 'GB', 'CA', 'AU', 'AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE',
   'FI', 'FR', 'DE', 'GH', 'GR', 'HU', 'IE', 'IT', 'LV', 'LI', 'LT', 'LU',
   'MT', 'NL', 'NZ', 'NO', 'PL', 'PT', 'RO', 'SK', 'SI', 'ES', 'SE', 'CH',
-  'TT', 'BB', 'JM', 'SG', 'HK', 'JP', 'MX', 'BR', 'IN', 'MY', 'PH', 'TH',
+  'TT', 'SG', 'HK', 'JP', 'MX', 'BR', 'IN', 'MY', 'PH', 'TH',
 ]
 
 export async function POST() {
