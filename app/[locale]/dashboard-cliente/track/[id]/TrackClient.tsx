@@ -51,6 +51,38 @@ export default function TrackClient({ requestId, driverId, driverName, origin, d
     })
   }, [mapsReady])
 
+    // ── Pins de pickup y dropoff ──────────────────────────────────────────────
+  useEffect(() => {
+    if (!mapsReady || !mapInstanceRef.current) return
+    const geocoder = new google.maps.Geocoder()
+    const map = mapInstanceRef.current
+
+    const addPin = (address: string, color: string, label: string) => {
+      geocoder.geocode({ address }, (results, status) => {
+        if (status === 'OK' && results?.[0]) {
+          const pos = results[0].geometry.location
+          const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="40" viewBox="0 0 32 40">
+            <path d="M16 0C7.163 0 0 7.163 0 16c0 10 16 24 16 24s16-14 16-24C32 7.163 24.837 0 16 0z" fill="${color}" stroke="white" stroke-width="1.5"/>
+            <text x="16" y="20" text-anchor="middle" dominant-baseline="middle" font-family="system-ui" font-size="13" font-weight="700" fill="white">${label}</text>
+          </svg>`
+          new google.maps.Marker({
+            map,
+            position: pos,
+            icon: {
+              url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`,
+              scaledSize: new google.maps.Size(32, 40),
+              anchor: new google.maps.Point(16, 40),
+            },
+            title: address,
+          })
+        }
+      })
+    }
+
+    if (origin) addPin(origin, '#F59E0B', 'P')
+    if (destination) addPin(destination, '#10B981', 'D')
+  }, [mapsReady, origin, destination])
+
   useEffect(() => {
     const supabase = createClient()
     const channel = supabase.channel(`driver-location:${driverId}`)
