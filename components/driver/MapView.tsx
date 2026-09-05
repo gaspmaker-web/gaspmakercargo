@@ -319,6 +319,6 @@ function buildPinIcon(color: string, label: string): google.maps.Icon {
 function buildPickupInfoWindow(pin: DeliveryPin): string {
   const isOrigin = pin.id.endsWith('-origin')
   const color = isOrigin ? '#F59E0B' : '#10B981'
-  const label = isOrigin ? 'Punto de Pickup' : 'Punto de Delivery'
+  const label = isOrigin ? 'Pickup Point' : 'Delivery Point'
   return `<div style="font-family:system-ui;padding:4px 2px;min-width:180px"><div style="display:flex;align-items:center;gap:6px;margin-bottom:6px"><span style="background:${color};color:white;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;">${label}</span></div><p style="font-size:12px;color:#6b7280;margin:0">${pin.address}</p></div>`
 }
