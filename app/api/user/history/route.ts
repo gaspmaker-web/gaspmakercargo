@@ -103,7 +103,8 @@ const shopperOrders = await prisma.shopperOrder.findMany({
         photoPickupUrl: req.photoPickupUrl,
         photoDeliveryUrl: req.photoDeliveryUrl,
         signatureUrl: req.signatureUrl, 
-        tookanLink: req.tookanLink      
+        tookanLink: req.tookanLink,
+        driverId: req.driverId
     }));
 
     const normalizedIntl = internationalShipments.map(ship => {
