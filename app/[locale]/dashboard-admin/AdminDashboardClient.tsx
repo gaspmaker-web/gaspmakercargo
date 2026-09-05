@@ -7,6 +7,8 @@ import {
   Package, Users, Truck, MapPin, PlusCircle, Layers, 
   Activity, DollarSign, ClipboardList, Car, Loader2, TrendingUp, Container, Store, ShieldAlert, Mailbox, FileSearch, Archive, ShoppingBag, Gift, ShoppingCart, ChevronDown, UserPlus
 } from 'lucide-react';
+import dynamic from 'next/dynamic'
+const LiveDriversMap = dynamic(() => import('@/components/admin/LiveDriversMap'), { ssr: false })
 
 export default function AdminDashboardClient({ locale }: { locale: string }) {
   const [activities, setActivities] = useState<any[]>([]);
@@ -471,35 +473,9 @@ useEffect(() => {
               <div className="absolute top-4 left-4 z-10 bg-white/90 backdrop-blur-sm px-3 py-1 rounded shadow-sm border text-[10px] font-bold text-gmc-gris-oscuro uppercase tracking-widest">
                 ● Live View
               </div>
-              <div className="w-full h-full bg-blue-50 rounded-lg flex flex-col items-center justify-center text-blue-300 relative">
-                 <div className="absolute inset-0 opacity-10" style={{backgroundImage: 'radial-gradient(#3b82f6 1px, transparent 1px)', backgroundSize: '20px 20px'}}></div>
-                 <MapPin size={48} className="mb-2 text-blue-500 animate-bounce" />
-                 <p className="text-gray-500 font-bold text-sm">Loading...</p>
-                 <p className="text-xs text-gray-400 mt-1 text-center px-6 font-medium">
-                   Connecting geolocation...
-                 </p>
+              <div className="w-full h-full rounded-lg overflow-hidden">
+                <LiveDriversMap />
               </div>
-              <div className="p-4 border-t border-gray-100">
-                <button className="w-full bg-gmc-gris-oscuro text-white py-3 rounded-lg text-xs font-bold hover:bg-black transition-colors flex items-center justify-center gap-2 uppercase tracking-wide">
-                  <TrendingUp size={14} /> View Today's Routes
-                </button>
-              </div>
-            </div>
-
-            <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
-                <div className="flex justify-between items-center mb-3">
-                   <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Active Drivers</span>
-                   <span className="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-bold uppercase">Online</span>
-                </div>
-                <div className="space-y-2">
-                   <div className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors border border-transparent hover:border-gray-100">
-                      <div className="w-8 h-8 rounded-full bg-gmc-gris-oscuro text-gmc-dorado-principal flex items-center justify-center text-xs font-bold shadow-sm">CP</div>
-                      <div>
-                        <p className="text-sm font-bold text-gmc-gris-oscuro">Main Driver</p>
-                        <p className="text-xs text-gray-500 font-medium">On route: Miami Gardens</p>
-                      </div>
-                   </div>
-                </div>
             </div>
           </div>
         </div>
