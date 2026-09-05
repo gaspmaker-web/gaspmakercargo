@@ -310,6 +310,17 @@ if (upperTitle.includes('ENVÍO MARÍTIMO') || upperTitle.includes('ENVIO MARITI
             <span className="text-sm text-gray-400 mr-0.5">$</span>{(req.totalPaid || req.totalAmount || req.amountNet || 0).toFixed(2)}
         </span>
     </div>
+
+   {['ACEPTADO', 'EN_CAMINO', 'EN_REPARTO', 'EN_RUTA'].includes(req.status?.toUpperCase()) && req.driverId && (
+    <a
+    
+        href={`/en/dashboard-cliente/track/${req.id}`}
+        className="w-full py-2 text-xs font-bold text-white bg-[#222b3c] hover:bg-black rounded-lg transition-all flex items-center justify-center gap-1 mb-2"
+    >
+        <MapPin size={12} className="text-yellow-400" /> Track Driver — Live
+    </a>
+)}
+
 {(req.totalPaid || req.totalAmount) > 0 && (
         <button
             onClick={() => handleGenerateInvoice(req)}
