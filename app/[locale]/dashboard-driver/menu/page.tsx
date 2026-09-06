@@ -58,8 +58,8 @@ export default async function MenuPage(props: any) {
         <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden divide-y divide-gray-100">
           <p className="text-xs font-bold text-gray-400 uppercase tracking-wider px-4 pt-4 pb-2">Account</p>
           {[
-            { icon: User, label: 'Profile', href: '#' },
-            { icon: Shield, label: 'Privacy & Security', href: '#' },
+            { icon: User, label: 'Profile', href: `/${locale}/dashboard-driver/profile` },
+            { icon: Shield, label: 'Privacy & Security', href: `https://www.gaspmakercargo.com/privacy` },
             { icon: CreditCard, label: 'Earnings History', href: `/${locale}/dashboard-driver/earnings` },
           ].map(({ icon: Icon, label, href }) => (
             <Link key={label} href={href} className="flex items-center justify-between px-4 py-3.5 hover:bg-gray-50 transition-colors">
