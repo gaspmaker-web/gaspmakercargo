@@ -73,6 +73,8 @@ model User {
   // Tareas asignadas como Chofer
   assignedTasks         PickupRequest[]       @relation("DriverAssignments")
 
+  driverSession         DriverSession?        @relation("DriverSession")
+
   // Notificaciones
   notifications         Notification[]
 
@@ -631,4 +633,22 @@ model Lead {
   created_at   DateTime  @default(now())
 
   @@map("Lead")
+}
+
+model DriverSession {
+  id        String   @id @default(uuid())
+  driverId  String   @unique
+  driver    User     @relation("DriverSession", fields: [driverId], references: [id], onDelete: Cascade)
+  isOnline  Boolean  @default(false)
+  lastSeen  DateTime @default(now())
+  lat       Float?
+  lng       Float?
+  heading   Float?
+  speed     Float?
+  deviceId  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isOnline])
+  @@map("driver_sessions")
 }

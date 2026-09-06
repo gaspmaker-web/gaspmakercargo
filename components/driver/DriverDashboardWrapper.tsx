@@ -85,15 +85,38 @@ export default function DriverDashboardWrapper({
     })
   }, [mapsReady])
 
-  const goOnline = useCallback(() => {
+  const goOnline = useCallback(async () => {
     setIsOnline(true)
     startTracking()
+    await fetch('/api/driver/session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ isOnline: true, deviceId: navigator.userAgent })
+    })
   }, [startTracking])
 
-  const goOffline = useCallback(() => {
+  const goOffline = useCallback(async () => {
     setIsOnline(false)
     stopTracking()
+    await fetch('/api/driver/session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ isOnline: false })
+    })
   }, [stopTracking])
+
+  // Restaurar estado online al cargar
+  useEffect(() => {
+    fetch('/api/driver/session')
+      .then(r => r.json())
+      .then(data => {
+        if (data.session?.isOnline) {
+          setIsOnline(true)
+          startTracking()
+        }
+      })
+      .catch(() => {})
+  }, [])
 
   const initials = driverName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()
 
