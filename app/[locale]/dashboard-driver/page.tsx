@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 
 import AcceptTaskButton from '@/components/driver/AcceptTaskButton'; 
+import DriverDashboardWrapper from '@/components/driver/DriverDashboardWrapper';
 import DriverLogoutButton from '@/components/DriverLogoutButton'; 
 
 export const dynamic = 'force-dynamic';
