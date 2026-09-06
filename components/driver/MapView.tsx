@@ -2,8 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { loadGoogleMaps } from '@/lib/maps/loader'
-import { useDriverTracking } from '@/hooks/useDriverTracking'
-import { broadcastLocation } from '@/lib/maps/realtimeChannel'
+import { useDriverContext } from '@/lib/maps/driverContext'
 import { fetchOptimizedRoute } from '@/lib/maps/directions'
 import type { DeliveryPin, OptimizedRoute } from '@/types/maps'
 import { MapPin, Navigation, RotateCcw } from 'lucide-react'
@@ -65,15 +64,7 @@ export default function MapView({ deliveries, pickupTasks, driverId }: MapViewPr
   const [loadingRoute, setLoadingRoute] = useState(false)
   const [pins,         setPins]         = useState<DeliveryPin[]>([])
 
-  const handleLocationUpdate = useCallback(
-    (loc: Parameters<typeof broadcastLocation>[1]) => broadcastLocation(driverId, loc),
-    [driverId]
-  )
-
-  const { location, isTracking, error, startTracking, stopTracking } = useDriverTracking({
-    onLocationUpdate: handleLocationUpdate,
-    pushInterval: 5000,
-  })
+   const { location, isTracking, error, goOnline: startTracking, goOffline: stopTracking } = useDriverContext()
 
   useEffect(() => { loadGoogleMaps().then(() => setMapsReady(true)) }, [])
 
