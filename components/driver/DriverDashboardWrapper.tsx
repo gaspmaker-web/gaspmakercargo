@@ -38,6 +38,20 @@ export default function DriverDashboardWrapper({
   const handleLocationUpdate = useCallback(
     (loc: Parameters<typeof broadcastLocation>[1]) => {
       broadcastLocation(driverId, loc)
+
+      // Persist location to DB
+      fetch('/api/driver/session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          isOnline: true,
+          lat: loc.lat,
+          lng: loc.lng,
+          heading: loc.heading,
+          speed: loc.speed,
+        })
+      }).catch(() => {})
+
       if (mapInstanceRef.current && !isOnline) {
         const pos = { lat: loc.lat, lng: loc.lng }
         if (!driverMarkerRef.current) {
