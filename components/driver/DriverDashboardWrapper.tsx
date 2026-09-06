@@ -217,10 +217,10 @@ export default function DriverDashboardWrapper({
     <Bell size={22} className="text-gray-400" />
     <span className="text-[10px] font-medium text-gray-400">Inbox</span>
   </a>
-  <button onClick={goOffline} className="flex flex-col items-center gap-1">
+  <a href={`/${locale}/dashboard-driver/menu`} className="flex flex-col items-center gap-1">
     <Menu size={22} className="text-gray-400" />
     <span className="text-[10px] font-medium text-gray-400">Menu</span>
-  </button>
+</a>
 </div>
         </div>
       </DriverContext.Provider>
