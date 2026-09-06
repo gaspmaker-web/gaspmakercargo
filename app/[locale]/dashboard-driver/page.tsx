@@ -1,6 +1,4 @@
 import { auth } from '@/auth'; 
-import MapToggle from '@/components/driver/MapToggle';
-import StripeConnectButton from '@/components/driver/StripeConnectButton';
 import prisma from '@/lib/prisma';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
@@ -11,8 +9,9 @@ import {
 } from 'lucide-react';
 
 import AcceptTaskButton from '@/components/driver/AcceptTaskButton'; 
-import DriverDashboardWrapper from '@/components/driver/DriverDashboardWrapper';
 import DriverLogoutButton from '@/components/DriverLogoutButton'; 
+import MapToggle from '@/components/driver/MapToggle';
+import DriverDashboardWrapper from '@/components/driver/DriverDashboardWrapper'
 
 export const dynamic = 'force-dynamic';
 
@@ -39,7 +38,7 @@ export default async function DriverDashboardPage(props: any) {
 
   const driver = await prisma.user.findUnique({
     where: { id: driverId },
-    select: { countryCode: true, country: true, name: true, stripeAccountId: true }
+    select: { countryCode: true, country: true, name: true }
   });
 
   const driverZone = driver?.countryCode; 
@@ -127,7 +126,7 @@ export default async function DriverDashboardPage(props: any) {
   // 2️⃣ Reglas para CONSOLIDADOS
   const consolidationOrConditions: any[] = [
       ...packageOrConditions,
-      { destinationCountryCode: { equals: driverZone, mode: 'insensitive' } }
+      { destinationCountryCode: driverZone }
   ];
 
   // 3. BUSCAR CONSOLIDACIONES
@@ -190,10 +189,7 @@ export default async function DriverDashboardPage(props: any) {
           address: cons.shippingAddress || cons.user?.address || 'Address not specified',
           count: cons.packages.length,
           weightLbs: cons.weightLbs || 0, 
-          childTrackings: cons.packages.map((p: any) => p.gmcTrackingNumber).filter((t: any) => t),
-          countryCode: cons.destinationCountryCode || cons.user?.countryCode || null,
-          lat: cons.lat || null,
-          lng: cons.lng || null
+          childTrackings: cons.packages.map((p: any) => p.gmcTrackingNumber).filter((t: any) => t) 
       });
   }
 
@@ -215,6 +211,12 @@ export default async function DriverDashboardPage(props: any) {
   const totalActiveTasks = myPickupTasks.length + processedDeliveries.length;
 const mapDeliveries = processedDeliveries
   return (
+  <DriverDashboardWrapper
+    driverId={driverId}
+    driverName={driver?.name || 'Driver'}
+    driverZone={driverZone}
+    locale={locale}
+  >
     <div className="min-h-screen bg-gray-50 pb-24 font-sans">
       <div className="bg-[#222b3c] text-white p-6 rounded-b-[30px] shadow-xl mb-6 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-10 -mt-10 blur-2xl"></div>
@@ -415,10 +417,8 @@ const mapDeliveries = processedDeliveries
                 )}
             </div>
         </div>
-
-        <StripeConnectButton hasAccount={!!driver?.stripeAccountId} />
-        <MapToggle deliveries={processedDeliveries} pickupTasks={myPickupTasks} driverId={driverId} />
       </div>
     </div>
+  </DriverDashboardWrapper>
   );
 }
