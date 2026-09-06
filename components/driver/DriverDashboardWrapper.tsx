@@ -14,6 +14,8 @@ interface Props {
   driverZone: string
   locale: string
   children: React.ReactNode
+  vehicleStatus: string | null
+  vehicleInfo: string | null
 }
 
 const MAP_STYLES: google.maps.MapTypeStyle[] = [
@@ -27,7 +29,7 @@ const MAP_STYLES: google.maps.MapTypeStyle[] = [
 ]
 
 export default function DriverDashboardWrapper({
-  driverId, driverName, driverZone, locale, children,
+  driverId, driverName, driverZone, locale, children, vehicleStatus, vehicleInfo,
 }: Props) {
   const [isOnline, setIsOnline] = useState(false)
   const [mapsReady, setMapsReady] = useState(false)
@@ -135,6 +137,103 @@ export default function DriverDashboardWrapper({
   const initials = driverName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()
 
   const contextValue = { location, isTracking, isOnline, error, goOnline, goOffline }
+
+  // ── SIN VEHÍCULO REGISTRADO ──────────────────────────────────────────────
+if (!vehicleStatus) {
+  return (
+    <div className="min-h-screen bg-white flex flex-col font-sans">
+      <div className="bg-[#222b3c] text-white px-5 pt-10 pb-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold">Hi, {driverName.split(' ')[0]} 👋</h1>
+            <p className="text-gray-400 text-sm mt-1">Complete your profile to start driving</p>
+          </div>
+          <DriverLogoutButton locale={locale} />
+        </div>
+      </div>
+
+      <div className="flex-1 flex flex-col items-center justify-center px-6 text-center">
+        <div className="w-20 h-20 rounded-full bg-yellow-50 flex items-center justify-center mb-4">
+          <Truck size={36} style={{ color: '#F4DBA7' }} />
+        </div>
+        <h2 className="text-xl font-bold text-gray-900 mb-2">Register your vehicle</h2>
+        <p className="text-gray-500 text-sm mb-8">You need to register your vehicle before you can go online and receive delivery opportunities.</p>
+        
+                  
+        <a
+          href={`/${locale}/dashboard-driver/vehicle/register`}
+          className="w-full py-4 text-white text-base font-bold rounded-2xl flex items-center justify-center gap-2"
+          style={{ backgroundColor: '#222b3c' }}
+        >
+          <Truck size={20} style={{ color: '#F4DBA7' }} />
+          Register Vehicle
+        </a>
+      </div>
+    </div>
+  )
+}
+
+// ── VEHÍCULO PENDIENTE DE APROBACIÓN ─────────────────────────────────────
+if (vehicleStatus === 'PENDING') {
+  return (
+    <div className="min-h-screen bg-white flex flex-col font-sans">
+      <div className="bg-[#222b3c] text-white px-5 pt-10 pb-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold">Hi, {driverName.split(' ')[0]} 👋</h1>
+            <p className="text-gray-400 text-sm mt-1">Vehicle under review</p>
+          </div>
+          <DriverLogoutButton locale={locale} />
+        </div>
+      </div>
+
+      <div className="flex-1 flex flex-col items-center justify-center px-6 text-center">
+        <div className="w-20 h-20 rounded-full bg-yellow-50 flex items-center justify-center mb-4">
+          <span className="text-4xl">⏳</span>
+        </div>
+        <h2 className="text-xl font-bold text-gray-900 mb-2">Under Review</h2>
+        <p className="text-gray-500 text-sm mb-4">Your vehicle <strong>{vehicleInfo}</strong> is being reviewed by our team. This usually takes less than 24 hours.</p>
+        <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-4 w-full text-left">
+          <p className="text-xs font-bold text-yellow-700 uppercase mb-1">What happens next?</p>
+          <p className="text-sm text-yellow-600">You will receive a notification when your vehicle is approved and you can start driving.</p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── VEHÍCULO RECHAZADO ────────────────────────────────────────────────────
+if (vehicleStatus === 'REJECTED') {
+  return (
+    <div className="min-h-screen bg-white flex flex-col font-sans">
+      <div className="bg-[#222b3c] text-white px-5 pt-10 pb-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold">Hi, {driverName.split(' ')[0]} 👋</h1>
+            <p className="text-gray-400 text-sm mt-1">Vehicle registration rejected</p>
+          </div>
+          <DriverLogoutButton locale={locale} />
+        </div>
+      </div>
+
+      <div className="flex-1 flex flex-col items-center justify-center px-6 text-center">
+        <div className="w-20 h-20 rounded-full bg-red-50 flex items-center justify-center mb-4">
+          <span className="text-4xl">❌</span>
+        </div>
+        <h2 className="text-xl font-bold text-gray-900 mb-2">Registration Rejected</h2>
+        <p className="text-gray-500 text-sm mb-6">Your vehicle registration was rejected. Please re-register with correct information and documents.</p>
+        
+        <a
+          href={`/${locale}/dashboard-driver/vehicle/register`}
+          className="w-full py-4 text-white text-base font-bold rounded-2xl flex items-center justify-center gap-2"
+          style={{ backgroundColor: '#222b3c' }}
+        >
+          Try Again
+        </a>
+      </div>
+    </div>
+  )
+}
 
   // ── OFFLINE SCREEN ──────────────────────────────────────────────────────
   if (!isOnline) {

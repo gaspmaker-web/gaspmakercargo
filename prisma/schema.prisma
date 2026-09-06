@@ -75,6 +75,8 @@ model User {
 
   driverSession         DriverSession?        @relation("DriverSession")
 
+  driverVehicle         DriverVehicle?        @relation("DriverVehicle")
+
   // Notificaciones
   notifications         Notification[]
 
@@ -651,4 +653,34 @@ model DriverSession {
 
   @@index([isOnline])
   @@map("driver_sessions")
+}
+
+model DriverVehicle {
+  id           String   @id @default(uuid())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  driverId     String   @unique
+  driver       User     @relation("DriverVehicle", fields: [driverId], references: [id], onDelete: Cascade)
+
+  // Vehicle Info
+  type         String   // CAR_SUV | MINIVAN | CARGO_VAN | BOX_TRUCK
+  make         String   // Toyota, Ford, etc.
+  model        String   // Camry, Transit, etc.
+  year         Int
+  color        String
+  licensePlate String
+
+  // Documents
+  vehiclePhotoUrl  String?  // Foto del vehículo
+  insuranceUrl     String?  // Seguro del vehículo
+  driverLicenseUrl String?  // Driver license
+
+  // Verification
+  isVerified       Boolean  @default(false)
+  verifiedAt       DateTime?
+  rejectionReason  String?
+  status           String   @default("PENDING") // PENDING | APPROVED | REJECTED
+
+  @@map("driver_vehicles")
 }

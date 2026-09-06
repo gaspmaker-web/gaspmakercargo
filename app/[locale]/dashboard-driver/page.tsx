@@ -38,7 +38,12 @@ export default async function DriverDashboardPage(props: any) {
 
   const driver = await prisma.user.findUnique({
     where: { id: driverId },
-    select: { countryCode: true, country: true, name: true }
+    select: { countryCode: true, country: true, name: true, stripeAccountId: true }
+  });
+
+  const driverVehicle = await prisma.driverVehicle.findUnique({
+    where: { driverId },
+    select: { status: true, type: true, make: true, model: true, isVerified: true }
   });
 
   const driverZone = driver?.countryCode; 
@@ -210,12 +215,16 @@ export default async function DriverDashboardPage(props: any) {
 
   const totalActiveTasks = myPickupTasks.length + processedDeliveries.length;
 const mapDeliveries = processedDeliveries
+  const vehicleInfo = driverVehicle ? driverVehicle.make + ' ' + driverVehicle.model : null
+
   return (
   <DriverDashboardWrapper
     driverId={driverId}
     driverName={driver?.name || 'Driver'}
     driverZone={driverZone}
     locale={locale}
+    vehicleStatus={driverVehicle?.status || null}
+     vehicleInfo={driverVehicle ? driverVehicle.make + ' ' + driverVehicle.model : null}
   >
     <div className="min-h-screen bg-gray-50 pb-24 font-sans">
       <div className="bg-[#222b3c] text-white p-6 rounded-b-[30px] shadow-xl mb-6 relative overflow-hidden">
