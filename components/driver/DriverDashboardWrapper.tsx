@@ -164,9 +164,9 @@ export default function DriverDashboardWrapper({
           </div>
 
           {/* Map */}
-          <div className="mx-4 rounded-3xl overflow-hidden h-64 relative">
+          <div className="mx-4 rounded-3xl overflow-hidden relative" style={{ height: '260px' }}>
             {mapsReady ? (
-              <div ref={mapRef} className="w-full h-full" />
+              <div ref={mapRef} style={{ width: '100%', height: '100%', minHeight: '260px' }} />
             ) : (
               <div className="w-full h-full bg-gray-100 flex items-center justify-center">
                 <div className="w-6 h-6 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
@@ -204,19 +204,24 @@ export default function DriverDashboardWrapper({
           </div>
 
           {/* Bottom nav */}
-          <div className="flex items-center justify-around px-4 py-4 border-t border-gray-100">
-            {[
-              { icon: Home, label: 'Home', active: true },
-              { icon: DollarSign, label: 'Earnings' },
-              { icon: Bell, label: 'Inbox' },
-              { icon: Menu, label: 'Menu' },
-            ].map(({ icon: Icon, label, active }) => (
-              <button key={label} className="flex flex-col items-center gap-1">
-                <Icon size={22} className={active ? '' : 'text-gray-400'} style={active ? { color: '#222b3c' } : {}} />
-                <span className={`text-[10px] font-medium ${active ? '' : 'text-gray-400'}`} style={active ? { color: '#222b3c' } : {}}>{label}</span>
-              </button>
-            ))}
-          </div>
+<div className="flex items-center justify-around px-4 py-4 border-t border-gray-100">
+  <button onClick={() => {}} className="flex flex-col items-center gap-1">
+    <Home size={22} style={{ color: '#222b3c' }} />
+    <span className="text-[10px] font-medium" style={{ color: '#222b3c' }}>Home</span>
+  </button>
+  <a href={`/${locale}/dashboard-driver/earnings`} className="flex flex-col items-center gap-1">
+    <DollarSign size={22} className="text-gray-400" />
+    <span className="text-[10px] font-medium text-gray-400">Earnings</span>
+  </a>
+  <a href={`/${locale}/dashboard-driver/notifications`} className="flex flex-col items-center gap-1">
+    <Bell size={22} className="text-gray-400" />
+    <span className="text-[10px] font-medium text-gray-400">Inbox</span>
+  </a>
+  <button onClick={goOffline} className="flex flex-col items-center gap-1">
+    <Menu size={22} className="text-gray-400" />
+    <span className="text-[10px] font-medium text-gray-400">Menu</span>
+  </button>
+</div>
         </div>
       </DriverContext.Provider>
     )
