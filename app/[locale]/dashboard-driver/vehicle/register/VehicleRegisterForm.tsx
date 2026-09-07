@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Car, Upload, Loader2, CheckCircle } from 'lucide-react'
+import { Car, Loader2, CheckCircle } from 'lucide-react'
 
 interface Props {
   locale: string
@@ -20,6 +20,7 @@ export default function VehicleRegisterForm({ locale, driverId }: Props) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
+  const [uploading, setUploading] = useState(false)
   const [form, setForm] = useState({
     type: '',
     make: '',
@@ -28,6 +29,32 @@ export default function VehicleRegisterForm({ locale, driverId }: Props) {
     color: '',
     licensePlate: '',
   })
+  const [docs, setDocs] = useState<Record<string, string>>({
+    vehiclePhotoUrl: '',
+    driverLicenseUrl: '',
+    insuranceUrl: '',
+  })
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, key: string) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploading(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('upload_preset', process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET!)
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`, {
+        method: 'POST',
+        body: formData,
+      })
+      const data = await res.json()
+      setDocs(d => ({ ...d, [key]: data.secure_url }))
+    } catch {
+      alert('Upload failed. Try again.')
+    } finally {
+      setUploading(false)
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -40,7 +67,7 @@ export default function VehicleRegisterForm({ locale, driverId }: Props) {
       const res = await fetch('/api/driver/vehicle', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, year: parseInt(form.year) }),
+        body: JSON.stringify({ ...form, year: parseInt(form.year), ...docs }),
       })
       if (res.ok) {
         setSuccess(true)
@@ -60,7 +87,7 @@ export default function VehicleRegisterForm({ locale, driverId }: Props) {
       <div className="flex flex-col items-center justify-center min-h-[60vh] px-6 text-center">
         <CheckCircle size={48} className="text-green-500 mb-4" />
         <h2 className="text-xl font-bold text-gray-900 mb-2">Vehicle Submitted!</h2>
-        <p className="text-gray-500 text-sm">Our team will review your information within 24 hours. You will receive a notification when approved.</p>
+        <p className="text-gray-500 text-sm">Our team will review your information within 24 hours.</p>
       </div>
     )
   }
@@ -77,9 +104,7 @@ export default function VehicleRegisterForm({ locale, driverId }: Props) {
               type="button"
               onClick={() => setForm(f => ({ ...f, type: v.value }))}
               className={`p-3 rounded-2xl border-2 text-left transition-all ${
-                form.type === v.value
-                  ? 'border-[#222b3c] bg-[#222b3c]/5'
-                  : 'border-gray-200 bg-white'
+                form.type === v.value ? 'border-[#222b3c] bg-[#222b3c]/5' : 'border-gray-200 bg-white'
               }`}
             >
               <p className="text-sm font-bold text-gray-800">{v.label}</p>
@@ -112,17 +137,38 @@ export default function VehicleRegisterForm({ locale, driverId }: Props) {
         ))}
       </div>
 
-      {/* Documents note */}
-      <div className="bg-blue-50 rounded-2xl p-4 border border-blue-100">
-        <p className="text-xs font-bold text-blue-700 mb-1 flex items-center gap-1">
-          <Upload size={12} /> Documents (optional for now)
-        </p>
-        <p className="text-xs text-blue-600">After submitting, our team may request your driver license and insurance documents via email.</p>
+      {/* Documents */}
+      <div className="bg-white rounded-2xl border border-gray-100 p-4 space-y-4">
+        <p className="text-sm font-bold text-gray-700">Required Documents</p>
+        {[
+          { key: 'vehiclePhotoUrl', label: 'Vehicle Photo', desc: 'Take a photo of your vehicle' },
+          { key: 'driverLicenseUrl', label: 'Driver License', desc: 'Front of your driver license' },
+          { key: 'insuranceUrl', label: 'Insurance Card', desc: 'Current auto insurance card' },
+        ].map(({ key, label, desc }) => (
+          <div key={key}>
+            <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">{label} *</label>
+            <p className="text-xs text-gray-400 mb-2">{desc}</p>
+            <input
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={e => handleFileUpload(e, key)}
+              className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm"
+            />
+            {docs[key] && <p className="text-xs text-green-600 mt-1">✅ Uploaded</p>}
+          </div>
+        ))}
       </div>
+
+      {uploading && (
+        <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
+          <Loader2 size={16} className="animate-spin" /> Uploading document...
+        </div>
+      )}
 
       <button
         type="submit"
-        disabled={loading}
+        disabled={loading || uploading}
         className="w-full py-4 text-white text-base font-bold rounded-2xl flex items-center justify-center gap-2 transition-colors"
         style={{ backgroundColor: '#222b3c' }}
       >
