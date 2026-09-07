@@ -1,7 +1,6 @@
 'use client'
-
-import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useState, useRef } from 'react'
 import { Car, Loader2, CheckCircle } from 'lucide-react'
 
 interface Props {
@@ -35,6 +34,12 @@ export default function VehicleRegisterForm({ locale, driverId }: Props) {
     insuranceUrl: '',
   })
 
+  const docsRef = useRef<Record<string, string>>({
+  vehiclePhotoUrl: '',
+  driverLicenseUrl: '',
+  insuranceUrl: '',
+})
+
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, key: string) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -52,7 +57,8 @@ if (!data.secure_url) {
   alert('Cloudinary error: ' + JSON.stringify(data))
   return
 }
-setDocs(d => ({ ...d, [key]: data.secure_url }))
+docsRef.current[key] = data.secure_url
+setDocs({ ...docsRef.current })
         } catch (err: any) {
       alert('Upload error: ' + JSON.stringify(err))
     } finally {
@@ -72,7 +78,7 @@ const handleSubmit = async (e: React.FormEvent) => {
       const res = await fetch('/api/driver/vehicle', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, year: parseInt(form.year), ...docs }),
+        body: JSON.stringify({ ...form, year: parseInt(form.year), ...docsRef.current }),
       })
       if (res.ok) {
         setSuccess(true)
