@@ -60,12 +60,13 @@ setDocs(d => ({ ...d, [key]: data.secure_url }))
     }
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!form.type || !form.make || !form.model || !form.year || !form.color || !form.licensePlate) {
-      alert('Please fill all fields')
-      return
-    }
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault()
+  alert('Docs: ' + JSON.stringify(docs))  // ← agrega aquí
+  if (!form.type || !form.make || !form.model || !form.year || !form.color || !form.licensePlate) {
+    alert('Please fill all fields')
+    return
+  }
     setLoading(true)
     try {
       const res = await fetch('/api/driver/vehicle', {
