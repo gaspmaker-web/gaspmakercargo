@@ -98,6 +98,7 @@ const menuItems = [
     { name: "Amazon Catalog", href: `/${currentLocale}/dashboard-admin/catalogo`, icon: ShoppingBag, roles: ["ADMIN"] },
     { name: "Clients", href: `/${currentLocale}/dashboard-admin/clientes`, icon: Users, roles: ["ADMIN", "CONSOLIDATION"], badgeCount: pendingInvoicesCount, badgeColor: "bg-red-500" },
     { name: "Facebook Leads", href: `/${currentLocale}/dashboard-admin/leads`, icon: UserPlus, roles: ["ADMIN"] },
+    { name: "Drivers", href: `/${currentLocale}/dashboard-admin/drivers`, icon: Truck, roles: ["ADMIN"] },
     { name: "Finances", href: `/${currentLocale}/dashboard-admin/finanzas`, icon: DollarSign, roles: ["ADMIN"] },
     { name: "Settings", href: `/${currentLocale}/dashboard-admin/configuracion`, icon: Settings, roles: ["ADMIN"] }
   ];

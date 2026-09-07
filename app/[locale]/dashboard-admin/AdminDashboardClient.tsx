@@ -421,6 +421,19 @@ useEffect(() => {
                     <Truck size={20} strokeWidth={2} />
                   </div>
                 </div>
+                         </Link>
+
+              <Link href={`/${locale}/dashboard-admin/drivers`} 
+                className="group bg-white p-5 rounded-xl border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all cursor-pointer block">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h3 className="text-base font-bold text-gmc-gris-oscuro group-hover:text-blue-600 transition-colors">Drivers</h3>
+                    <p className="text-xs text-gray-500 mt-1 font-medium">Vehicle approvals & management.</p>
+                  </div>
+                  <div className="bg-blue-50 p-2 rounded-lg text-blue-600 group-hover:bg-blue-100 transition-colors border border-blue-100">
+                    <Truck size={20} strokeWidth={2} />
+                  </div>
+                </div>
               </Link>
             </div>
 
