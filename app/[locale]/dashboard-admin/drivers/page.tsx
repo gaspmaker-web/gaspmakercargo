@@ -101,6 +101,30 @@ export default async function DriversAdminPage(props: any) {
                     ))}
                   </div>
 
+                  {/* Documents */}
+{(v.vehiclePhotoUrl || v.driverLicenseUrl || v.insuranceUrl) && (
+  <div className="flex gap-3 mb-4">
+    {v.vehiclePhotoUrl && (
+      <a href={v.vehiclePhotoUrl} target="_blank" className="flex-1">
+        <img src={v.vehiclePhotoUrl} alt="Vehicle" className="w-full h-24 object-cover rounded-xl border border-gray-100" />
+        <p className="text-[10px] text-gray-400 text-center mt-1">Vehicle</p>
+      </a>
+    )}
+    {v.driverLicenseUrl && (
+      <a href={v.driverLicenseUrl} target="_blank" className="flex-1">
+        <img src={v.driverLicenseUrl} alt="License" className="w-full h-24 object-cover rounded-xl border border-gray-100" />
+        <p className="text-[10px] text-gray-400 text-center mt-1">License</p>
+      </a>
+    )}
+    {v.insuranceUrl && (
+      <a href={v.insuranceUrl} target="_blank" className="flex-1">
+        <img src={v.insuranceUrl} alt="Insurance" className="w-full h-24 object-cover rounded-xl border border-gray-100" />
+        <p className="text-[10px] text-gray-400 text-center mt-1">Insurance</p>
+      </a>
+    )}
+  </div>
+)}
+
                   {/* Actions */}
                   {v.status === 'PENDING' && (
                     <VehicleActionButtons vehicleId={v.id} driverId={v.driverId} driverName={v.driver.name || ''} />
