@@ -47,10 +47,14 @@ const res = await fetch(`https://api.cloudinary.com/v1_1/dcu36bfyt/image/upload`
         method: 'POST',
         body: formData,
       })
-      const data = await res.json()
-      setDocs(d => ({ ...d, [key]: data.secure_url }))
-    } catch {
-      alert('Upload failed. Try again.')
+     const data = await res.json()
+if (!data.secure_url) {
+  alert('Cloudinary error: ' + JSON.stringify(data))
+  return
+}
+setDocs(d => ({ ...d, [key]: data.secure_url }))
+        } catch (err: any) {
+      alert('Upload error: ' + JSON.stringify(err))
     } finally {
       setUploading(false)
     }
