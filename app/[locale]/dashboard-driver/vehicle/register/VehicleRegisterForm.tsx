@@ -20,13 +20,18 @@ export default function VehicleRegisterForm({ locale, driverId }: Props) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
-  const [uploading, setUploading] = useState(false)
   const [form, setForm] = useState({
     type: '', make: '', model: '', year: '', color: '', licensePlate: '',
   })
-  const [vehiclePhotoUrl, setVehiclePhotoUrl] = useState('')
-  const [driverLicenseUrl, setDriverLicenseUrl] = useState('')
-  const [insuranceUrl, setInsuranceUrl] = useState('')
+  const [files, setFiles] = useState<Record<string, File | null>>({
+    vehicle: null, license: null, insurance: null,
+  })
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, field: 'vehicle' | 'license' | 'insurance') => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setFiles(f => ({ ...f, [field]: file }))
+  }
 
   const uploadFile = async (file: File): Promise<string | null> => {
     const formData = new FormData()
@@ -41,23 +46,6 @@ export default function VehicleRegisterForm({ locale, driverId }: Props) {
     return data.secure_url || null
   }
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, field: 'vehicle' | 'license' | 'insurance') => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    setUploading(true)
-    try {
-      const url = await uploadFile(file)
-      if (!url) { alert('Upload failed. Try again.'); return }
-      if (field === 'vehicle') setVehiclePhotoUrl(url)
-      if (field === 'license') setDriverLicenseUrl(url)
-      if (field === 'insurance') setInsuranceUrl(url)
-    } catch (err: any) {
-      alert('Error: ' + err.message)
-    } finally {
-      setUploading(false)
-    }
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!form.type || !form.make || !form.model || !form.year || !form.color || !form.licensePlate) {
@@ -66,6 +54,10 @@ export default function VehicleRegisterForm({ locale, driverId }: Props) {
     }
     setLoading(true)
     try {
+      const vehiclePhotoUrl = files.vehicle ? await uploadFile(files.vehicle) : null
+      const driverLicenseUrl = files.license ? await uploadFile(files.license) : null
+      const insuranceUrl = files.insurance ? await uploadFile(files.insurance) : null
+
       const res = await fetch('/api/driver/vehicle', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -142,47 +134,30 @@ export default function VehicleRegisterForm({ locale, driverId }: Props) {
       {/* Documents */}
       <div className="bg-white rounded-2xl border border-gray-100 p-4 space-y-4">
         <p className="text-sm font-bold text-gray-700">Required Documents</p>
-        <div>
-          <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Vehicle Photo *</label>
-          <p className="text-xs text-gray-400 mb-2">Take a photo of your vehicle</p>
-          <input type="file" accept="image/*" capture="environment"
-            onChange={e => handleFileUpload(e, 'vehicle')}
-            className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm"
-          />
-          {vehiclePhotoUrl && <p className="text-xs text-green-600 mt-1">✅ Uploaded</p>}
-        </div>
-        <div>
-          <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Driver License *</label>
-          <p className="text-xs text-gray-400 mb-2">Front of your driver license</p>
-          <input type="file" accept="image/*" capture="environment"
-            onChange={e => handleFileUpload(e, 'license')}
-            className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm"
-          />
-          {driverLicenseUrl && <p className="text-xs text-green-600 mt-1">✅ Uploaded</p>}
-        </div>
-        <div>
-          <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Insurance Card *</label>
-          <p className="text-xs text-gray-400 mb-2">Current auto insurance card</p>
-          <input type="file" accept="image/*" capture="environment"
-            onChange={e => handleFileUpload(e, 'insurance')}
-            className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm"
-          />
-          {insuranceUrl && <p className="text-xs text-green-600 mt-1">✅ Uploaded</p>}
-        </div>
+        <p className="text-xs text-gray-400">Select your photos — they will upload when you tap Submit.</p>
+        {[
+          { field: 'vehicle' as const, label: 'Vehicle Photo', desc: 'Photo of your vehicle' },
+          { field: 'license' as const, label: 'Driver License', desc: 'Front of your driver license' },
+          { field: 'insurance' as const, label: 'Insurance Card', desc: 'Current auto insurance card' },
+        ].map(({ field, label, desc }) => (
+          <div key={field}>
+            <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">{label} *</label>
+            <p className="text-xs text-gray-400 mb-2">{desc}</p>
+            <input type="file" accept="image/*" capture="environment"
+              onChange={e => handleFileChange(e, field)}
+              className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm"
+            />
+            {files[field] && <p className="text-xs text-green-600 mt-1">✅ {files[field]?.name}</p>}
+          </div>
+        ))}
       </div>
 
-      {uploading && (
-        <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
-          <Loader2 size={16} className="animate-spin" /> Uploading...
-        </div>
-      )}
-
-      <button type="submit" disabled={loading || uploading}
+      <button type="submit" disabled={loading}
         className="w-full py-4 text-white text-base font-bold rounded-2xl flex items-center justify-center gap-2 transition-colors"
         style={{ backgroundColor: '#222b3c' }}
       >
         {loading ? <Loader2 size={20} className="animate-spin" /> : <Car size={20} style={{ color: '#F4DBA7' }} />}
-        {loading ? 'Submitting...' : 'Submit for Review'}
+        {loading ? 'Uploading & Submitting...' : 'Submit for Review'}
       </button>
     </form>
   )
