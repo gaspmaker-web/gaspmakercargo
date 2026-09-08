@@ -40,57 +40,40 @@ export default function VehicleRegisterForm({ locale, driverId }: Props) {
   insuranceUrl: '',
 })
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, key: string) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    setUploading(true)
-    try {
-      const formData = new FormData()
-      formData.append('file', file)
-      formData.append('upload_preset', 'ml_default')
-const res = await fetch(`https://api.cloudinary.com/v1_1/dcu36bfyt/image/upload`, {
-        method: 'POST',
-        body: formData,
-      })
-     const data = await res.json()
-if (!data.secure_url) {
-  alert('Cloudinary error: ' + JSON.stringify(data))
-  return
-}
-docsRef.current[key] = data.secure_url
-setDocs({ ...docsRef.current })
-        } catch (err: any) {
-      alert('Upload error: ' + JSON.stringify(err))
-    } finally {
-      setUploading(false)
-    }
-  }
+const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, key: string) => {
+  const file = e.target.files?.[0]
+  if (!file) return
+  setUploading(true)
+  try {
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('upload_preset', 'ml_default')
 
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault()
-  if (!form.type || !form.make || !form.model || !form.year || !form.color || !form.licensePlate) {
-    alert('Please fill all fields')
-    return
-  }
-    setLoading(true)
-    try {
-      const res = await fetch('/api/driver/vehicle', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, year: parseInt(form.year), ...docsRef.current }),
-      })
-      if (res.ok) {
-        setSuccess(true)
-        setTimeout(() => router.push(`/${locale}/dashboard-driver`), 2000)
-      } else {
-        alert('Error registering vehicle. Try again.')
-      }
-    } catch {
-      alert('Connection error.')
-    } finally {
-      setLoading(false)
+    const uploadRes = await fetch('https://api.cloudinary.com/v1_1/dcu36bfyt/image/upload', {
+      method: 'POST',
+      body: formData,
+    })
+
+    if (!uploadRes.ok) {
+      const errText = await uploadRes.text()
+      alert('Upload error: ' + errText)
+      return
     }
+
+    const data = await uploadRes.json()
+    if (!data.secure_url) {
+      alert('No URL returned: ' + JSON.stringify(data))
+      return
+    }
+
+    docsRef.current[key] = data.secure_url
+    setDocs({ ...docsRef.current })
+  } catch (err: any) {
+    alert('Upload failed: ' + err.message)
+  } finally {
+    setUploading(false)
   }
+}
 
   if (success) {
     return (
@@ -101,6 +84,32 @@ const handleSubmit = async (e: React.FormEvent) => {
       </div>
     )
   }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault()
+  if (!form.type || !form.make || !form.model || !form.year || !form.color || !form.licensePlate) {
+    alert('Please fill all fields')
+    return
+  }
+  setLoading(true)
+  try {
+    const res = await fetch('/api/driver/vehicle', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...form, year: parseInt(form.year), ...docsRef.current }),
+    })
+    if (res.ok) {
+      setSuccess(true)
+      setTimeout(() => router.push(`/${locale}/dashboard-driver`), 2000)
+    } else {
+      alert('Error registering vehicle. Try again.')
+    }
+  } catch {
+    alert('Connection error.')
+  } finally {
+    setLoading(false)
+  }
+}
 
   return (
     <form onSubmit={handleSubmit} className="px-4 py-6 space-y-6">
