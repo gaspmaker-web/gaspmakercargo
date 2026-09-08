@@ -1,6 +1,7 @@
 'use client'
-import { useRouter } from 'next/navigation'
+
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Car, Loader2, CheckCircle } from 'lucide-react'
 
 interface Props {
@@ -21,54 +22,73 @@ export default function VehicleRegisterForm({ locale, driverId }: Props) {
   const [success, setSuccess] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [form, setForm] = useState({
-    type: '',
-    make: '',
-    model: '',
-    year: '',
-    color: '',
-    licensePlate: '',
+    type: '', make: '', model: '', year: '', color: '', licensePlate: '',
   })
-  const [docs, setDocs] = useState<Record<string, string>>({
-    vehiclePhotoUrl: '',
-    driverLicenseUrl: '',
-    insuranceUrl: '',
-  })
+  const [vehiclePhotoUrl, setVehiclePhotoUrl] = useState('')
+  const [driverLicenseUrl, setDriverLicenseUrl] = useState('')
+  const [insuranceUrl, setInsuranceUrl] = useState('')
 
-
-
-const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, key: string) => {
-  const file = e.target.files?.[0]
-  if (!file) return
-  setUploading(true)
-  try {
+  const uploadFile = async (file: File): Promise<string | null> => {
     const formData = new FormData()
     formData.append('file', file)
     formData.append('upload_preset', 'ml_default')
-
-    const uploadRes = await fetch('https://api.cloudinary.com/v1_1/dcu36bfyt/image/upload', {
+    const res = await fetch('https://api.cloudinary.com/v1_1/dcu36bfyt/image/upload', {
       method: 'POST',
       body: formData,
     })
-
-    if (!uploadRes.ok) {
-      const errText = await uploadRes.text()
-      alert('Upload error: ' + errText)
-      return
-    }
-
-    const data = await uploadRes.json()
-    if (!data.secure_url) {
-      alert('No URL returned: ' + JSON.stringify(data))
-      return
-    }
-
-   setDocs(d => ({ ...d, [key]: data.secure_url }))
-  } catch (err: any) {
-    alert('Upload failed: ' + err.message)
-  } finally {
-    setUploading(false)
+    if (!res.ok) return null
+    const data = await res.json()
+    return data.secure_url || null
   }
-}
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, field: 'vehicle' | 'license' | 'insurance') => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploading(true)
+    try {
+      const url = await uploadFile(file)
+      if (!url) { alert('Upload failed. Try again.'); return }
+      if (field === 'vehicle') setVehiclePhotoUrl(url)
+      if (field === 'license') setDriverLicenseUrl(url)
+      if (field === 'insurance') setInsuranceUrl(url)
+    } catch (err: any) {
+      alert('Error: ' + err.message)
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!form.type || !form.make || !form.model || !form.year || !form.color || !form.licensePlate) {
+      alert('Please fill all fields')
+      return
+    }
+    setLoading(true)
+    try {
+      const res = await fetch('/api/driver/vehicle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...form,
+          year: parseInt(form.year),
+          vehiclePhotoUrl,
+          driverLicenseUrl,
+          insuranceUrl,
+        }),
+      })
+      if (res.ok) {
+        setSuccess(true)
+        setTimeout(() => router.push(`/${locale}/dashboard-driver`), 2000)
+      } else {
+        alert('Error registering vehicle. Try again.')
+      }
+    } catch {
+      alert('Connection error.')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   if (success) {
     return (
@@ -80,32 +100,6 @@ const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, key: str
     )
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault()
-  if (!form.type || !form.make || !form.model || !form.year || !form.color || !form.licensePlate) {
-    alert('Please fill all fields')
-    return
-  }
-  setLoading(true)
-  try {
-    const res = await fetch('/api/driver/vehicle', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...form, year: parseInt(form.year), ...docs }),
-    })
-    if (res.ok) {
-      setSuccess(true)
-      setTimeout(() => router.push(`/${locale}/dashboard-driver`), 2000)
-    } else {
-      alert('Error registering vehicle. Try again.')
-    }
-  } catch {
-    alert('Connection error.')
-  } finally {
-    setLoading(false)
-  }
-}
-
   return (
     <form onSubmit={handleSubmit} className="px-4 py-6 space-y-6">
       {/* Vehicle Type */}
@@ -113,13 +107,9 @@ const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, key: str
         <p className="text-sm font-bold text-gray-700 mb-3">Vehicle Type *</p>
         <div className="grid grid-cols-2 gap-3">
           {VEHICLE_TYPES.map(v => (
-            <button
-              key={v.value}
-              type="button"
+            <button key={v.value} type="button"
               onClick={() => setForm(f => ({ ...f, type: v.value }))}
-              className={`p-3 rounded-2xl border-2 text-left transition-all ${
-                form.type === v.value ? 'border-[#222b3c] bg-[#222b3c]/5' : 'border-gray-200 bg-white'
-              }`}
+              className={`p-3 rounded-2xl border-2 text-left transition-all ${form.type === v.value ? 'border-[#222b3c] bg-[#222b3c]/5' : 'border-gray-200 bg-white'}`}
             >
               <p className="text-sm font-bold text-gray-800">{v.label}</p>
               <p className="text-[10px] text-gray-500 mt-0.5">{v.desc}</p>
@@ -140,9 +130,7 @@ const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, key: str
         ].map(({ key, label, placeholder, type }) => (
           <div key={key}>
             <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">{label} *</label>
-            <input
-              type={type || 'text'}
-              placeholder={placeholder}
+            <input type={type || 'text'} placeholder={placeholder}
               value={form[key as keyof typeof form]}
               onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
               className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-gray-400"
@@ -154,35 +142,42 @@ const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, key: str
       {/* Documents */}
       <div className="bg-white rounded-2xl border border-gray-100 p-4 space-y-4">
         <p className="text-sm font-bold text-gray-700">Required Documents</p>
-        {[
-          { key: 'vehiclePhotoUrl', label: 'Vehicle Photo', desc: 'Take a photo of your vehicle' },
-          { key: 'driverLicenseUrl', label: 'Driver License', desc: 'Front of your driver license' },
-          { key: 'insuranceUrl', label: 'Insurance Card', desc: 'Current auto insurance card' },
-        ].map(({ key, label, desc }) => (
-          <div key={key}>
-            <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">{label} *</label>
-            <p className="text-xs text-gray-400 mb-2">{desc}</p>
-            <input
-              type="file"
-              accept="image/*"
-              capture="environment"
-              onChange={e => handleFileUpload(e, key)}
-              className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm"
-            />
-            {docs[key] && <p className="text-xs text-green-600 mt-1">✅ Uploaded</p>}
-          </div>
-        ))}
+        <div>
+          <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Vehicle Photo *</label>
+          <p className="text-xs text-gray-400 mb-2">Take a photo of your vehicle</p>
+          <input type="file" accept="image/*" capture="environment"
+            onChange={e => handleFileUpload(e, 'vehicle')}
+            className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm"
+          />
+          {vehiclePhotoUrl && <p className="text-xs text-green-600 mt-1">✅ Uploaded</p>}
+        </div>
+        <div>
+          <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Driver License *</label>
+          <p className="text-xs text-gray-400 mb-2">Front of your driver license</p>
+          <input type="file" accept="image/*" capture="environment"
+            onChange={e => handleFileUpload(e, 'license')}
+            className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm"
+          />
+          {driverLicenseUrl && <p className="text-xs text-green-600 mt-1">✅ Uploaded</p>}
+        </div>
+        <div>
+          <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Insurance Card *</label>
+          <p className="text-xs text-gray-400 mb-2">Current auto insurance card</p>
+          <input type="file" accept="image/*" capture="environment"
+            onChange={e => handleFileUpload(e, 'insurance')}
+            className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm"
+          />
+          {insuranceUrl && <p className="text-xs text-green-600 mt-1">✅ Uploaded</p>}
+        </div>
       </div>
 
       {uploading && (
         <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
-          <Loader2 size={16} className="animate-spin" /> Uploading document...
+          <Loader2 size={16} className="animate-spin" /> Uploading...
         </div>
       )}
 
-      <button
-        type="submit"
-        disabled={loading || uploading}
+      <button type="submit" disabled={loading || uploading}
         className="w-full py-4 text-white text-base font-bold rounded-2xl flex items-center justify-center gap-2 transition-colors"
         style={{ backgroundColor: '#222b3c' }}
       >
