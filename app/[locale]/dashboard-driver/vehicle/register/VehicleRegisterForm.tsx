@@ -33,18 +33,28 @@ export default function VehicleRegisterForm({ locale, driverId }: Props) {
     setFiles(f => ({ ...f, [field]: file }))
   }
 
-  const uploadFile = async (file: File): Promise<string | null> => {
-    const formData = new FormData()
-    formData.append('file', file)
-    formData.append('upload_preset', 'ml_default')
-    const res = await fetch('https://api.cloudinary.com/v1_1/dcu36bfyt/image/upload', {
-      method: 'POST',
-      body: formData,
-    })
-    if (!res.ok) return null
-    const data = await res.json()
-    return data.secure_url || null
-  }
+const uploadFile = async (file: File): Promise<string | null> => {
+  return new Promise((resolve) => {
+    const reader = new FileReader()
+    reader.onloadend = async () => {
+      try {
+        const base64 = reader.result as string
+        const formData = new FormData()
+        formData.append('file', base64)
+        formData.append('upload_preset', 'ml_default')
+        const res = await fetch('https://api.cloudinary.com/v1_1/dcu36bfyt/image/upload', {
+          method: 'POST',
+          body: formData,
+        })
+        const data = await res.json()
+        resolve(data.secure_url || null)
+      } catch {
+        resolve(null)
+      }
+    }
+    reader.readAsDataURL(file)
+  })
+}
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
