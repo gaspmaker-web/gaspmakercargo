@@ -68,7 +68,6 @@ setDocs({ ...docsRef.current })
 
 const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault()
-  alert('Docs: ' + JSON.stringify(docs))  // ← agrega aquí
   if (!form.type || !form.make || !form.model || !form.year || !form.color || !form.licensePlate) {
     alert('Please fill all fields')
     return
