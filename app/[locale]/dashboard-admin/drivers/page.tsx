@@ -102,7 +102,7 @@ export default async function DriversAdminPage(props: any) {
                   </div>
 
                   {/* Documents */}
-{(v.vehiclePhotoUrl || v.driverLicenseUrl || v.insuranceUrl) && (
+{(v.vehiclePhotoUrl || v.driverLicenseUrl || v.driverLicenseBackUrl || v.insuranceUrl) && (
   <div className="flex gap-3 mb-4">
     {v.vehiclePhotoUrl && (
       <a href={v.vehiclePhotoUrl} target="_blank" className="flex-1">
@@ -110,6 +110,13 @@ export default async function DriversAdminPage(props: any) {
         <p className="text-[10px] text-gray-400 text-center mt-1">Vehicle</p>
       </a>
     )}
+
+    {v.driverLicenseBackUrl && (
+  <a href={v.driverLicenseBackUrl} target="_blank" className="flex-1">
+    <img src={v.driverLicenseBackUrl} alt="License Back" className="w-full h-24 object-cover rounded-xl border border-gray-100" />
+    <p className="text-[10px] text-gray-400 text-center mt-1">License Back</p>
+  </a>
+)}
     {v.driverLicenseUrl && (
       <a href={v.driverLicenseUrl} target="_blank" className="flex-1">
         <img src={v.driverLicenseUrl} alt="License" className="w-full h-24 object-cover rounded-xl border border-gray-100" />
