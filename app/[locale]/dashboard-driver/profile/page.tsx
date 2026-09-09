@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import prisma from '@/lib/prisma'
 import { ArrowLeft, User, Phone, Mail, MapPin } from 'lucide-react'
 import Link from 'next/link'
+import ProfilePhotoUpload from './ProfilePhotoUpload'
 
 export const dynamic = 'force-dynamic'
 
@@ -15,7 +16,7 @@ export default async function DriverProfilePage(props: any) {
 
   const driver = await prisma.user.findUnique({
     where: { id: session.user.id },
-    select: { name: true, email: true, phone: true, countryCode: true, country: true, createdAt: true }
+    select: { name: true, email: true, phone: true, countryCode: true, country: true, createdAt: true, image: true }
   })
 
   return (
@@ -28,9 +29,7 @@ export default async function DriverProfilePage(props: any) {
           <h1 className="text-xl font-bold">Profile</h1>
         </div>
         <div className="flex items-center gap-4">
-          <div className="w-16 h-16 rounded-full flex items-center justify-center text-xl font-bold" style={{ backgroundColor: '#F4DBA7', color: '#222b3c' }}>
-            {driver?.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
-          </div>
+          <ProfilePhotoUpload currentImage={driver?.image || null} driverName={driver?.name || 'Driver'} />
           <div>
             <p className="font-bold text-lg">{driver?.name}</p>
             <p className="text-xs text-gray-400">Driver since {new Date(driver?.createdAt || '').getFullYear()}</p>
