@@ -675,6 +675,7 @@ model DriverVehicle {
   vehiclePhotoUrl  String?  // Foto del vehículo
   insuranceUrl     String?  // Seguro del vehículo
   driverLicenseUrl String?  // Driver license
+  driverLicenseBackUrl String?
 
   // Verification
   isVerified       Boolean  @default(false)

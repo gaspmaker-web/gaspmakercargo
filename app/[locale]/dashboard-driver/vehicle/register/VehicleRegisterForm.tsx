@@ -23,11 +23,11 @@ export default function VehicleRegisterForm({ locale, driverId }: Props) {
   const [form, setForm] = useState({
     type: '', make: '', model: '', year: '', color: '', licensePlate: '',
   })
-  const [files, setFiles] = useState<Record<string, File | null>>({
-    vehicle: null, license: null, insurance: null,
-  })
+ const [files, setFiles] = useState<Record<string, File | null>>({
+  vehicle: null, license: null, licenseBack: null, insurance: null,
+})
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, field: 'vehicle' | 'license' | 'insurance') => {
+ const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, field: 'vehicle' | 'license' | 'licenseBack' | 'insurance') => {
     const file = e.target.files?.[0]
     if (!file) return
     setFiles(f => ({ ...f, [field]: file }))
@@ -66,18 +66,20 @@ const uploadFile = async (file: File): Promise<string | null> => {
     try {
       const vehiclePhotoUrl = files.vehicle ? await uploadFile(files.vehicle) : null
       const driverLicenseUrl = files.license ? await uploadFile(files.license) : null
+      const driverLicenseBackUrl = files.licenseBack ? await uploadFile(files.licenseBack) : null
       const insuranceUrl = files.insurance ? await uploadFile(files.insurance) : null
 
       const res = await fetch('/api/driver/vehicle', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ...form,
-          year: parseInt(form.year),
-          vehiclePhotoUrl,
-          driverLicenseUrl,
-          insuranceUrl,
-        }),
+  ...form,
+  year: parseInt(form.year),
+  vehiclePhotoUrl,
+  driverLicenseUrl,
+  driverLicenseBackUrl,
+  insuranceUrl,
+}),
       })
       if (res.ok) {
         setSuccess(true)
@@ -147,7 +149,8 @@ const uploadFile = async (file: File): Promise<string | null> => {
         <p className="text-xs text-gray-400">Select your photos — they will upload when you tap Submit.</p>
         {[
           { field: 'vehicle' as const, label: 'Vehicle Photo', desc: 'Photo of your vehicle' },
-          { field: 'license' as const, label: 'Driver License', desc: 'Front of your driver license' },
+          { field: 'license' as const, label: 'Driver License (Front)', desc: 'Front of your driver license' },
+          { field: 'licenseBack' as const, label: 'Driver License (Back)', desc: 'Back of your driver license' },  
           { field: 'insurance' as const, label: 'Insurance Card', desc: 'Current auto insurance card' },
         ].map(({ field, label, desc }) => (
           <div key={field}>

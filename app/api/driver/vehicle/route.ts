@@ -7,7 +7,7 @@ export async function POST(req: Request) {
     const session = await auth()
     if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const { type, make, model, year, color, licensePlate, vehiclePhotoUrl, driverLicenseUrl, insuranceUrl } = await req.json()
+    const { type, make, model, year, color, licensePlate, vehiclePhotoUrl, driverLicenseUrl, driverLicenseBackUrl, insuranceUrl } = await req.json()
 
     const vehicle = await prisma.driverVehicle.upsert({
       where: { driverId: session.user.id },
@@ -16,6 +16,7 @@ export async function POST(req: Request) {
         type, make, model, year, color, licensePlate,
         vehiclePhotoUrl: vehiclePhotoUrl || null,
         driverLicenseUrl: driverLicenseUrl || null,
+        driverLicenseBackUrl: driverLicenseBackUrl || null,
         insuranceUrl: insuranceUrl || null,
         status: 'PENDING',
       },
@@ -23,6 +24,7 @@ export async function POST(req: Request) {
         type, make, model, year, color, licensePlate,
         vehiclePhotoUrl: vehiclePhotoUrl || null,
         driverLicenseUrl: driverLicenseUrl || null,
+        driverLicenseBackUrl: driverLicenseBackUrl || null,
         insuranceUrl: insuranceUrl || null,
         status: 'PENDING',
         isVerified: false,
