@@ -2,7 +2,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'com.gaspmakercargo.app',
-  appName: 'Gasp Maker Cargo',
+  appName: 'Gasp Maker',
   webDir: 'out',
   server: {
     url: 'https://www.gaspmakercargo.com',

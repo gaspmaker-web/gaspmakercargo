@@ -176,7 +176,7 @@ export default function DeliveredPackagesCarousel({ consolidations, loosePackage
     📍 {tDelivered.has('trackPackage') ? tDelivered('trackPackage') : "Track Package"}
 </Link>
 
-{shipment.finalTrackingNumber && (
+{shipment.finalTrackingNumber && !shipment.finalTrackingNumber.startsWith('GMC-') && shipment.selectedCourier && !shipment.selectedCourier.toLowerCase().includes('gasp') && (
     <a href={getTrackingUrl(shipment.selectedCourier || '', shipment.finalTrackingNumber)} target="_blank" rel="noopener noreferrer" className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold py-2.5 px-4 rounded-xl transition-all shadow-sm">
         <ExternalLink size={14}/> Track on Carrier
     </a>
