@@ -74,7 +74,18 @@ export default function DispatchClient({ drivers, activeDeliveries, activeConsol
 
       <div className="flex h-[calc(100vh-65px)]">
         <div className="flex-1 relative">
-          <LiveDriversMap />
+          <LiveDriversMap deliveries={[
+  ...activeDeliveries.map(d => ({
+    id: d.id,
+    address: d.originAddress,
+    type: 'PICKUP' as const,
+  })),
+  ...activeDeliveries.filter(d => d.dropOffAddress).map(d => ({
+    id: d.id + '-drop',
+    address: d.dropOffAddress!,
+    type: 'DELIVERY' as const,
+  })),
+]} />
         </div>
 
         <div className="w-80 bg-gray-900 border-l border-gray-800 flex flex-col overflow-hidden">

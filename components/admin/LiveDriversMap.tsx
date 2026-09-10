@@ -13,6 +13,17 @@ interface DriverLocation {
   speed?: number
   timestamp: number
 }
+interface DeliveryPin {
+  id: string
+  address: string
+  type: 'PICKUP' | 'DELIVERY'
+  lat?: number
+  lng?: number
+}
+
+interface Props {
+  deliveries?: DeliveryPin[]
+}
 
 const MAP_STYLES: google.maps.MapTypeStyle[] = [
   { elementType: 'geometry', stylers: [{ color: '#1a2035' }] },
@@ -24,7 +35,7 @@ const MAP_STYLES: google.maps.MapTypeStyle[] = [
   { featureType: 'poi', elementType: 'labels', stylers: [{ visibility: 'off' }] },
 ]
 
-export default function LiveDriversMap() {
+export default function LiveDriversMap({ deliveries = [] }: Props) {
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<google.maps.Map | null>(null)
   const markersRef = useRef<Map<string, google.maps.Marker>>(new Map())
@@ -46,6 +57,35 @@ export default function LiveDriversMap() {
       styles: MAP_STYLES,
     })
   }, [mapsReady])
+
+  useEffect(() => {
+  if (!mapsReady || !mapInstanceRef.current || deliveries.length === 0) return
+  const geocoder = new google.maps.Geocoder()
+  
+  deliveries.forEach(d => {
+    if (!d.address) return
+    geocoder.geocode({ address: d.address }, (results, status) => {
+      if (status !== 'OK' || !results?.[0]) return
+      const pos = results[0].geometry.location
+      const color = d.type === 'PICKUP' ? '#F59E0B' : '#10B981'
+      const label = d.type === 'PICKUP' ? 'P' : 'D'
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="40" viewBox="0 0 32 40">
+        <path d="M16 0C7.163 0 0 7.163 0 16c0 10 16 24 16 24s16-14 16-24C32 7.163 24.837 0 16 0z" fill="${color}" stroke="white" stroke-width="1.5"/>
+        <text x="16" y="20" text-anchor="middle" dominant-baseline="middle" font-family="system-ui" font-size="13" font-weight="700" fill="white">${label}</text>
+      </svg>`
+      new google.maps.Marker({
+        map: mapInstanceRef.current!,
+        position: pos,
+        icon: {
+          url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`,
+          scaledSize: new google.maps.Size(32, 40),
+          anchor: new google.maps.Point(16, 40),
+        },
+        title: d.address,
+      })
+    })
+  })
+}, [mapsReady, deliveries])
 
   // Subscribe to all driver location channels via Supabase Realtime
   useEffect(() => {
