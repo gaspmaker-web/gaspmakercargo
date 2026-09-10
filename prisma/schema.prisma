@@ -216,6 +216,7 @@ model ConsolidatedShipment {
 
  // 🚨 NUEVO: Para guardar Cargos Especiales de toda la consolidación
   extraCharges           Json?
+  chargeConsolidationFee Boolean @default(false)
 
   // 🚀 NUEVO: Aquí se guardará el arreglo con Pallet 1, Pallet 2, etc.
   auraDetails            Json?    

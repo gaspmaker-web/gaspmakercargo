@@ -323,7 +323,7 @@ const isConsolidated = !isStorePickupVisual && (
                   specialChargesMap[tPackage("eeiCustomsFee")] = (specialChargesMap[tPackage("eeiCustomsFee")] || 0) + 40.00;
               }
 
-              if (isConsolidated && !isLocalAura && !isOcean && !isLocal) { 
+              if (isConsolidated && !isLocalAura && !isOcean && (!isLocal || bill.chargeConsolidationFee)) {
                   if (!bill.packages || bill.packages.length === 0) {
                      const today = new Date();
                      const dayOfMonth = today.getDate();
