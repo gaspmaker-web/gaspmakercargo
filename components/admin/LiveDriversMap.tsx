@@ -116,6 +116,7 @@ export default function LiveDriversMap() {
     } else {
       const initials = loc.driverName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
 
+
       let iconUrl: string
       if (loc.driverImage) {
         iconUrl = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 44 44"><defs><clipPath id="c${loc.driverId}"><circle cx="22" cy="22" r="20"/></clipPath></defs><circle cx="22" cy="22" r="21" fill="#FBBF24" stroke="#222b3c" stroke-width="2"/><image href="${loc.driverImage}" x="2" y="2" width="40" height="40" clip-path="url(#c${loc.driverId})" preserveAspectRatio="xMidYMid slice"/></svg>`)}`
@@ -135,8 +136,8 @@ export default function LiveDriversMap() {
         zIndex: 999,
       })
 
-      const infoWindow = new google.maps.InfoWindow({
-        content: `<div style="font-family:system-ui;padding:4px"><p style="font-weight:700;margin:0">${loc.driverName}</p><p style="font-size:11px;color:#6b7280;margin:2px 0 0">Active</p></div>`
+         const infoWindow = new google.maps.InfoWindow({
+        content: `<div style="font-family:system-ui;padding:8px;text-align:center">${loc.driverImage ? `<img src="${loc.driverImage}" style="width:48px;height:48px;border-radius:50%;object-fit:cover;margin:0 auto 6px;display:block;border:2px solid #FBBF24"/>` : ''}<p style="font-weight:700;margin:0">${loc.driverName}</p><p style="font-size:11px;color:#6b7280;margin:2px 0 0">Active</p></div>`
       })
       marker.addListener('click', () => infoWindow.open(mapInstanceRef.current, marker))
       markersRef.current.set(loc.driverId, marker)
