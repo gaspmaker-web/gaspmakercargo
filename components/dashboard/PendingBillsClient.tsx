@@ -714,7 +714,7 @@ const isConsolidated = !isStorePickupVisual && (
                                     let effectiveHandling = 0;
                                     
                                     // 🔥 PROTEGEMOS EL HANDLING FEE (Para que no se cobre por paquete en Marítimo/Local)
-                                    if (isConsolidated && !isVisualLocalAura && !isOceanVisual && !isLocalVisual) { 
+                                    if (isConsolidated && !isVisualLocalAura && !isOceanVisual && (!isLocalVisual || bill.chargeConsolidationFee)) {
                                         if (!bill.packages || bill.packages.length === 0) {
                                             const today = new Date();
                                             const dayOfMonth = today.getDate();
