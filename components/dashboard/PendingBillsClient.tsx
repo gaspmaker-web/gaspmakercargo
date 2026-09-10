@@ -282,7 +282,7 @@ const handleSelectRate = (billId: string, rate: Rate) => {
 
       selectedBillIds.forEach(id => {
           const bill = bills.find(b => b.id === id);
-          if (bill) {
+          if (bill) { console.log('BILL DEBUG:', bill.id, bill.serviceType, bill.chargeConsolidationFee);
               const isStorePickupVisual = bill.serviceType === 'PICKUP' || 
 bill.gmcShipmentNumber?.toUpperCase().startsWith('PICKUP');
 
@@ -324,7 +324,14 @@ const isConsolidated = !isStorePickupVisual && (
                   specialChargesMap[tPackage("eeiCustomsFee")] = (specialChargesMap[tPackage("eeiCustomsFee")] || 0) + 40.00;
               }
 
-              if (isConsolidated && !isLocalAura && !isOcean && (!isLocal || bill.chargeConsolidationFee)) {
+              console.log('SIERAC DEBUG:', { isLocal, isConsolidated, chargeConsolidationFee: bill.chargeConsolidationFee, serviceType: bill.serviceType });
+              
+              const shouldChargeHandling = isConsolidated && !isOcean && (
+    (!isLocal && !isLocalAura) || 
+    bill.chargeConsolidationFee === true
+);
+
+if (shouldChargeHandling) {
                   if (!bill.packages || bill.packages.length === 0) {
                      const today = new Date();
                      const dayOfMonth = today.getDate();
@@ -446,7 +453,7 @@ const isConsolidated = !isStorePickupVisual && (
           count 
       };
   };
-
+console.log('selectedBillIds:', selectedBillIds);
   const totals = calculateTotals();
 
   const activeCardDetails = cards.find(c => c.id === selectedCardId);

@@ -33,14 +33,15 @@ export default async function PagarFacturasPage({ params: { locale } }: { params
   const defaultAddress = userAddresses.length > 0 ? userAddresses[0] : null;
 
   // 2. BUSCAR CONSOLIDACIONES PENDIENTES
-  const pendingShipments = await prisma.consolidatedShipment.findMany({
+const pendingShipments = await prisma.consolidatedShipment.findMany({
     where: {
       userId: session.user.id,
       status: { in: ['PENDIENTE_PAGO', 'PENDIENTE', 'CREATED', 'EN_ALMACEN'] }, 
     },
     include: {
-      packages: true 
+      packages: true,
     },
+    // Prisma incluye todos los campos por defecto con include
     orderBy: { updatedAt: 'desc' }
   });
 
