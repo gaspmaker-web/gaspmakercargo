@@ -171,7 +171,8 @@ if (s.totalAmount && s.totalAmount > 0) {
       serviceType: s.serviceType,
       auraDetails: s.auraDetails, 
       
-      extraCharges: s.extraCharges,
+     extraCharges: s.extraCharges,
+chargeConsolidationFee: (s as any).chargeConsolidationFee || false,
 
       packages: s.packages,
       selectedCourier: s.selectedCourier,
