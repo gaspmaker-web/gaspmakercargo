@@ -7,6 +7,7 @@ import { loadGoogleMaps } from '@/lib/maps/loader'
 interface DriverLocation {
   driverId: string
   driverName: string
+  driverImage?: string | null
   lat: number
   lng: number
   speed?: number
@@ -55,26 +56,27 @@ export default function LiveDriversMap() {
       const res = await fetch('/api/admin/drivers/active')
       const data = await res.json()
       if (data.drivers) {
-        data.drivers.forEach((d: any) => {
-          subscribeToDriver(d.id, d.name, supabase)
-        })
+    data.drivers.forEach((d: any) => {
+  subscribeToDriver(d.id, d.name, d.image || null, supabase)
+})
       }
     }
 
     fetchDrivers()
   }, [])
 
-  const subscribeToDriver = (driverId: string, driverName: string, supabase: any) => {
+  const subscribeToDriver = (driverId: string, driverName: string, driverImage: string | null, supabase: any) => {
     const channel = supabase.channel(`driver-location:${driverId}`)
     channel.on('broadcast', { event: 'location' }, ({ payload }: any) => {
-      const loc: DriverLocation = {
-        driverId,
-        driverName,
-        lat: payload.lat,
-        lng: payload.lng,
-        speed: payload.speed,
-        timestamp: payload.timestamp,
-      }
+    const loc: DriverLocation = {
+  driverId,
+  driverName,
+  driverImage: driverImage,
+  lat: payload.lat,
+  lng: payload.lng,
+  speed: payload.speed,
+  timestamp: payload.timestamp,
+}
       setDrivers(prev => {
         const existing = prev.findIndex(d => d.driverId === driverId)
         if (existing >= 0) {
@@ -97,18 +99,21 @@ export default function LiveDriversMap() {
       existing.setPosition(pos)
     } else {
       const initials = loc.driverName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
-      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
-        <circle cx="20" cy="20" r="18" fill="#222b3c" stroke="#FBBF24" stroke-width="2"/>
-        <text x="20" y="25" text-anchor="middle" font-family="system-ui" font-size="13" font-weight="700" fill="#FBBF24">${initials}</text>
-      </svg>`
+
+      let iconUrl: string
+      if (loc.driverImage) {
+        iconUrl = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 44 44"><defs><clipPath id="c${loc.driverId}"><circle cx="22" cy="22" r="20"/></clipPath></defs><circle cx="22" cy="22" r="21" fill="#FBBF24" stroke="#222b3c" stroke-width="2"/><image href="${loc.driverImage}" x="2" y="2" width="40" height="40" clip-path="url(#c${loc.driverId})" preserveAspectRatio="xMidYMid slice"/></svg>`)}`
+      } else {
+        iconUrl = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="#222b3c" stroke="#FBBF24" stroke-width="2"/><text x="20" y="25" text-anchor="middle" font-family="system-ui" font-size="13" font-weight="700" fill="#FBBF24">${initials}</text></svg>`)}`
+      }
 
       const marker = new google.maps.Marker({
         map: mapInstanceRef.current,
         position: pos,
         icon: {
-          url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`,
-          scaledSize: new google.maps.Size(40, 40),
-          anchor: new google.maps.Point(20, 20),
+          url: iconUrl,
+          scaledSize: new google.maps.Size(44, 44),
+          anchor: new google.maps.Point(22, 22),
         },
         title: loc.driverName,
         zIndex: 999,

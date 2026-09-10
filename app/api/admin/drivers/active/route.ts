@@ -17,7 +17,7 @@ export async function GET() {
       },
       include: {
         driver: {
-          select: { id: true, name: true, countryCode: true, country: true }
+          select: { id: true, name: true, countryCode: true, country: true, image: true }
         }
       },
       orderBy: { lastSeen: 'desc' }
@@ -26,6 +26,7 @@ export async function GET() {
     const drivers = activeSessions.map(s => ({
       id: s.driver.id,
       name: s.driver.name,
+      image: s.driver.image,
       countryCode: s.driver.countryCode,
       country: s.driver.country,
       lat: s.lat,
