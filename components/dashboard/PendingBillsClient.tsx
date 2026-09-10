@@ -289,6 +289,7 @@ bill.gmcShipmentNumber?.toUpperCase().startsWith('PICKUP');
 const isConsolidated = !isStorePickupVisual && (
   bill.serviceType === 'CONSOLIDATION' || 
   bill.serviceType === 'OCEAN_CONSOLIDATION' ||
+  bill.serviceType === 'LOCAL_DELIVERY' ||
   bill.description?.toLowerCase().includes('consolid') ||
   (bill.packages && bill.packages.length > 1)
 );
