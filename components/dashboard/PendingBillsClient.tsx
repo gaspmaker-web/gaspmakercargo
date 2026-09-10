@@ -282,7 +282,8 @@ const handleSelectRate = (billId: string, rate: Rate) => {
 
       selectedBillIds.forEach(id => {
           const bill = bills.find(b => b.id === id);
-              const isStorePickupVisual = bill.serviceType === 'PICKUP' || 
+          if (bill) {
+              const isStorePickupVisual = bill.serviceType === 'PICKUP' ||
 bill.gmcShipmentNumber?.toUpperCase().startsWith('PICKUP');
 
 const isConsolidated = !isStorePickupVisual && (
