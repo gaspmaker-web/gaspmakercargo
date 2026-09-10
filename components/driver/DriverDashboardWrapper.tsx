@@ -11,6 +11,7 @@ import { MapPin, Truck, Home, DollarSign, Bell, Menu } from 'lucide-react'
 interface Props {
   driverId: string
   driverName: string
+  driverImage: string | null
   driverZone: string
   locale: string
   children: React.ReactNode
@@ -29,7 +30,7 @@ const MAP_STYLES: google.maps.MapTypeStyle[] = [
 ]
 
 export default function DriverDashboardWrapper({
-  driverId, driverName, driverZone, locale, children, vehicleStatus, vehicleInfo,
+  driverId, driverName, driverImage, driverZone, locale, children, vehicleStatus, vehicleInfo,
 }: Props) {
   const [isOnline, setIsOnline] = useState(false)
   const [mapsReady, setMapsReady] = useState(false)
@@ -247,9 +248,13 @@ if (vehicleStatus === 'REJECTED') {
               <p className="text-gray-400 mt-1 text-sm">Ready to go?</p>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-10 h-10 rounded-full bg-[#222b3c] flex items-center justify-center text-sm font-bold" style={{ color: '#F4DBA7' }}>
-                {initials}
-              </div>
+             {driverImage ? (
+  <img src={driverImage} alt="Profile" className="w-10 h-10 rounded-full object-cover border-2 border-white/20" />
+) : (
+  <div className="w-10 h-10 rounded-full bg-[#222b3c] flex items-center justify-center text-sm font-bold" style={{ color: '#F4DBA7' }}>
+    {initials}
+  </div>
+)}
               <DriverLogoutButton locale={locale} />
             </div>
           </div>
