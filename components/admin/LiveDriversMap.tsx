@@ -56,9 +56,25 @@ export default function LiveDriversMap() {
       const res = await fetch('/api/admin/drivers/active')
       const data = await res.json()
       if (data.drivers) {
-    data.drivers.forEach((d: any) => {
-  subscribeToDriver(d.id, d.name, d.image || null, supabase)
-})
+        data.drivers.forEach((d: any) => {
+          if (d.lat && d.lng) {
+            const loc: DriverLocation = {
+              driverId: d.id,
+              driverName: d.name,
+              driverImage: d.image || null,
+              lat: d.lat,
+              lng: d.lng,
+              timestamp: Date.now(),
+            }
+            setDrivers(prev => {
+              const existing = prev.findIndex(x => x.driverId === d.id)
+              if (existing >= 0) { const u = [...prev]; u[existing] = loc; return u }
+              return [...prev, loc]
+            })
+            updateMarker(loc)
+          }
+          subscribeToDriver(d.id, d.name, d.image || null, supabase)
+        })
       }
     }
 
