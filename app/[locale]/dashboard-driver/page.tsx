@@ -138,7 +138,7 @@ export default async function DriverDashboardPage(props: any) {
   const activeConsolidations = await prisma.consolidatedShipment.findMany({
       where: {
           status: { in: ['EN_REPARTO', 'OUT_FOR_DELIVERY', 'EN_CAMINO', 'EN_RUTA'] },
-          serviceType: { in: ['CONSOLIDATION', 'LOCAL_DELIVERY', 'SHIPPING_INTL'] },
+          serviceType: { in: ['CONSOLIDATION', 'LOCAL_DELIVERY', 'SHIPPING_INTL', 'OCEAN_CONSOLIDATION'] },
           OR: consolidationOrConditions, 
           NOT: {
               OR: [
