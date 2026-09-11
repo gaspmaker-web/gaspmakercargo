@@ -7,12 +7,22 @@ export const metadata = {
   description: 'How we collect, use, and protect your personal data.',
 };
 
-export default function PrivacyPolicyPage() {
-  const t = useTranslations('PrivacyPolicy');
+export default function PrivacyPolicyPage({ searchParams }: { searchParams: { from?: string } }) {
+  const t = useTranslations('PrivacyPolicy')
+  const fromDriver = searchParams?.from === 'driver'
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans">
       
+      {fromDriver && (
+        <div className="bg-[#222b3c] text-white px-5 py-4 flex items-center gap-3">
+          <a href="/en/dashboard-driver/menu" className="p-2 rounded-full bg-white/10 text-lg">
+            ←
+          </a>
+          <span className="text-sm font-bold">Privacy Policy</span>
+        </div>
+      )}
+
       {/* HERO SECTION */}
       <div className="bg-gmc-gris-oscuro text-white py-16 px-4">
         <div className="max-w-4xl mx-auto text-center">
