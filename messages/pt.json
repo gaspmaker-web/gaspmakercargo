@@ -1026,6 +1026,7 @@
   },
   "MobileMenu": {
     "memberSince": "Membro desde",
+    "privacyPolicy": "Política de Privacidade",
     "myDashboard": "Meu Painel",
     "settings": "Configurações",
     "invite": "Convidar amigos",

@@ -1045,6 +1045,7 @@
   },
   "MobileMenu": {
     "memberSince": "Miembro desde",
+    "privacyPolicy": "Política de Privacidad",
     "myDashboard": "Mi Dashboard",
     "settings": "Configuración",
     "invite": "Invitar amigos",
