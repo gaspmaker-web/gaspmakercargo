@@ -17,7 +17,7 @@ export default async function MenuPage(props: any) {
 
   const driver = await prisma.user.findUnique({
     where: { id: session.user.id },
-    select: { name: true, email: true, countryCode: true, stripeAccountId: true }
+    select: { name: true, email: true, countryCode: true, stripeAccountId: true, image: true }
   })
 
   return (
@@ -32,9 +32,13 @@ export default async function MenuPage(props: any) {
 
         {/* Driver profile */}
         <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-full flex items-center justify-center text-lg font-bold" style={{ backgroundColor: '#F4DBA7', color: '#222b3c' }}>
-            {driver?.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
-          </div>
+         {driver?.image ? (
+  <img src={driver.image} alt="Profile" className="w-14 h-14 rounded-full object-cover border-2 border-white/20" />
+) : (
+  <div className="w-14 h-14 rounded-full flex items-center justify-center text-xl font-bold" style={{ backgroundColor: '#F4DBA7', color: '#222b3c' }}>
+    {driver?.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+  </div>
+)}
           <div>
             <p className="font-bold text-lg">{driver?.name}</p>
             <p className="text-xs text-gray-400">{driver?.email}</p>
