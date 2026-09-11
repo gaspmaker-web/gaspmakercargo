@@ -14,14 +14,7 @@ export default function PrivacyPolicyPage({ searchParams }: { searchParams: { fr
   return (
     <div className="min-h-screen bg-gray-50 font-sans">
       
-      {fromDriver && (
-        <div className="bg-[#222b3c] text-white px-5 py-4 flex items-center gap-3">
-          <a href="/en/dashboard-driver/menu" className="p-2 rounded-full bg-white/10 text-lg">
-            ←
-          </a>
-          <span className="text-sm font-bold">Privacy Policy</span>
-        </div>
-      )}
+  {fromDriver && <div className="h-14" />}
 
       {/* HERO SECTION */}
       <div className="bg-gmc-gris-oscuro text-white py-16 px-4">
