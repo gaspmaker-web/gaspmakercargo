@@ -209,7 +209,7 @@ export default function MenuPerfilClient() {
             <div className="flex justify-center gap-4 text-gray-400">
                 <Link href={getLink('/terms-of-service')} className="hover:text-white transition-colors">{t('privacy')}</Link>
                 <span>•</span>
-                <Link href={getLink('/terms-of-service')} className="hover:text-white transition-colors">{t('privacy')}</Link>
+                <Link href={getLink('/privacy-policy')} className="hover:text-white transition-colors">Privacy Policy</Link>
             </div>
             <p className="mt-4 opacity-50">v1.0.5</p>
         </div>

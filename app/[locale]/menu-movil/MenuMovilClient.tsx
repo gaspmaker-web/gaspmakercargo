@@ -118,11 +118,15 @@ export default function MenuMovilClient() {
               href="/terms-of-service#mailbox-policies" 
               label={currentLocale === 'en' ? 'Mailbox Policies' : currentLocale === 'pt' ? 'Políticas da Caixa' : currentLocale === 'fr' ? 'Politiques de Boîte' : 'Políticas Buzón'} 
             />
-            <NavItem 
-              href="/terms-of-service" 
-              label={currentLocale === 'en' ? 'Terms of Service' : currentLocale === 'es' ? 'Términos de Servicio' : currentLocale === 'pt' ? 'Termos de Serviço' : 'Conditions de Service'} 
-              isLast 
-            />
+           <NavItem 
+  href="/privacy-policy" 
+  label={currentLocale === 'en' ? 'Privacy Policy' : currentLocale === 'es' ? 'Política de Privacidad' : currentLocale === 'pt' ? 'Política de Privacidade' : 'Politique de Confidentialité'} 
+/>
+<NavItem 
+  href="/terms-of-service" 
+  label={currentLocale === 'en' ? 'Terms of Service' : currentLocale === 'es' ? 'Términos de Servicio' : currentLocale === 'pt' ? 'Termos de Serviço' : 'Conditions de Service'} 
+  isLast 
+/>
           </div>
         </div>
 

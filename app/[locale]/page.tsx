@@ -244,9 +244,10 @@ if (tenantSlug === 'cargoos') {
                 <span className="hidden md:block h-4 w-[1px] bg-gray-300"></span>
                 
                 {/* 🔥 AQUÍ ESTÁ LA MAGIA MULTILINGÜE */}
-                <Link href={`/${locale}/terms-of-service`} className="hover:text-gmc-dorado-principal transition-colors">
-                  {tNav('termsOfService')}
-                </Link>
+                <Link href={`/${locale}/privacy-policy`} className="hover:text-gmc-dorado-principal transition-colors">
+                Privacy Policy
+               </Link>
+               <span className="hidden md:block h-4 w-[1px] bg-gray-300"></span>
             </div>
         </div>
       </section>

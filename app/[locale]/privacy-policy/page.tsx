@@ -105,8 +105,8 @@ export default function PrivacyPolicyPage() {
             >
                 <p>{t('s5_text')}</p>
                 <div className="mt-4 bg-gray-50 p-4 rounded-lg">
-                    <a href="mailto:privacy@gaspmakercargo.com" className="text-blue-600 hover:underline font-bold">
-                        privacy@gaspmakercargo.com
+                    <a href="mailto:support@gaspmakercargo.com" className="text-blue-600 hover:underline font-bold">
+                        support@gaspmakercargo.com
                     </a>
                     <p className="text-xs text-gray-500 mt-1">GaspMakerCargo LLC, Miami, FL.</p>
                 </div>
