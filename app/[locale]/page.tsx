@@ -245,8 +245,8 @@ if (tenantSlug === 'cargoos') {
                 
                 {/* 🔥 AQUÍ ESTÁ LA MAGIA MULTILINGÜE */}
                 <Link href={`/${locale}/privacy-policy`} className="hover:text-gmc-dorado-principal transition-colors">
-                Privacy Policy
-               </Link>
+               {tNav('privacyPolicy')}
+                </Link>
                <span className="hidden md:block h-4 w-[1px] bg-gray-300"></span>
             </div>
         </div>
