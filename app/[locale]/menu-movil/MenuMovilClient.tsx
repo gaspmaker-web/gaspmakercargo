@@ -123,6 +123,10 @@ export default function MenuMovilClient() {
   label={currentLocale === 'en' ? 'Privacy Policy' : currentLocale === 'es' ? 'Política de Privacidad' : currentLocale === 'pt' ? 'Política de Privacidade' : 'Politique de Confidentialité'} 
 />
 <NavItem 
+  href={`/${currentLocale}/become-a-driver`}
+  label={currentLocale === 'en' ? 'Drive With Us' : currentLocale === 'es' ? 'Conduce Con Nosotros' : currentLocale === 'pt' ? 'Dirija Conosco' : 'Conduisez Avec Nous'}
+/>
+<NavItem 
   href="/terms-of-service" 
   label={currentLocale === 'en' ? 'Terms of Service' : currentLocale === 'es' ? 'Términos de Servicio' : currentLocale === 'pt' ? 'Termos de Serviço' : 'Conditions de Service'} 
   isLast 
