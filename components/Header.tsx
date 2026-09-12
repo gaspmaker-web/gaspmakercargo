@@ -207,6 +207,7 @@ const handleLanguageChange = (code: string) => {
                 <Link href={getLink('/servicios')} className="whitespace-nowrap text-[11px] xl:text-[13px] font-bold hover:text-gmc-dorado-principal transition-all uppercase tracking-[2px] opacity-90">{t('services')}</Link>
                 <Link href={getLink('/calculadora-costos')} className="whitespace-nowrap text-[11px] xl:text-[13px] font-bold hover:text-gmc-dorado-principal transition-all uppercase tracking-[2px] opacity-90">{t('calculator')}</Link>
                 <Link href={getLink('/faq')} className="whitespace-nowrap text-[11px] xl:text-[13px] font-bold hover:text-gmc-dorado-principal transition-all uppercase tracking-[2px] opacity-90">{t('faq')}</Link>
+                <Link href={getLink('/become-a-driver')} className="whitespace-nowrap text-[11px] xl:text-[13px] font-bold transition-all uppercase tracking-[2px]" style={{ color: '#F4DBA7' }}>{t('driveWithUs')}</Link>
             </div>
         )}
 
