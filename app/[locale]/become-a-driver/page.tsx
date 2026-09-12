@@ -52,7 +52,7 @@ export default async function BecomeDriverPage(props: any) {
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 py-16">
+      <div className="max-w-4xl mx-auto px-4 py-16 flex flex-col">
         {/* Benefits */}
         <h2 className="text-2xl font-bold text-gray-900 text-center mb-10 font-garamond">{t('benefits_title')}</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-16">
@@ -100,8 +100,8 @@ export default async function BecomeDriverPage(props: any) {
           </div>
         </div>
 
-        {/* Application Form */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
+       {/* Application Form */}
+       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 order-first md:order-last">
           <h2 className="text-2xl font-bold text-gray-900 mb-2 font-garamond">{t('form_title')}</h2>
           <p className="text-sm text-gray-500 mb-8">{t('form_desc')}</p>
           <BecomeDriverForm locale={params.locale} />
