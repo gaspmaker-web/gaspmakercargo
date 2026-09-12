@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import prisma from '@/lib/prisma'
 import { Bell, ArrowLeft, Package, DollarSign, Truck } from 'lucide-react'
 import Link from 'next/link'
+import ClearNotificationsButton from './ClearNotificationsButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -38,7 +39,10 @@ export default async function NotificationsPage(props: any) {
           <Link href={`/${locale}/dashboard-driver`} className="p-2 rounded-full bg-white/10">
             <ArrowLeft size={18} />
           </Link>
-          <h1 className="text-xl font-bold">Inbox</h1>
+          <div className="flex items-center justify-between flex-1">
+  <h1 className="text-xl font-bold">Inbox</h1>
+  <ClearNotificationsButton />
+</div>
         </div>
       </div>
 
