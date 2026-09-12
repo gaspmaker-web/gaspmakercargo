@@ -419,25 +419,37 @@ useEffect(() => {
                   </div>
                   <div className="bg-green-50 p-2 rounded-lg text-green-600 group-hover:bg-green-100 transition-colors border border-green-100">
                     <Truck size={20} strokeWidth={2} />
-                  </div>
-                </div>
-                         </Link>
-
-              <Link href={`/${locale}/dashboard-admin/drivers`} 
-                className="group bg-white p-5 rounded-xl border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all cursor-pointer block">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <h3 className="text-base font-bold text-gmc-gris-oscuro group-hover:text-blue-600 transition-colors">Drivers</h3>
-                    <p className="text-xs text-gray-500 mt-1 font-medium">Vehicle approvals & management.</p>
-                  </div>
-                  <div className="bg-blue-50 p-2 rounded-lg text-blue-600 group-hover:bg-blue-100 transition-colors border border-blue-100">
-                    <Truck size={20} strokeWidth={2} />
-                  </div>
+                                </div>
                 </div>
               </Link>
-            </div>
 
-           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mt-6">
+              <Link href={`/${locale}/dashboard-admin/drivers`}
+  className="group bg-white p-5 rounded-xl border border-gray-200 hover:border-blue-500 hover:shadow-md transition-all cursor-pointer block">
+  <div className="flex items-start justify-between">
+    <div>
+      <h3 className="text-base font-bold text-gmc-gris-oscuro group-hover:text-blue-600 transition-colors">Drivers</h3>
+      <p className="text-xs text-gray-500 mt-1 font-medium">Vehicle approvals & management.</p>
+    </div>
+    <div className="bg-blue-50 p-2 rounded-lg text-blue-600 group-hover:bg-blue-100 transition-colors border border-blue-100">
+      <Truck size={20} strokeWidth={2} />
+    </div>
+  </div>
+</Link>
+
+<Link href={`/${locale}/dashboard-admin/driver-applications`} 
+  className="group bg-white p-5 rounded-xl border border-gray-200 hover:border-purple-500 hover:shadow-md transition-all cursor-pointer block">
+  <div className="flex items-start justify-between">
+    <div>
+      <h3 className="text-base font-bold text-gmc-gris-oscuro group-hover:text-purple-600 transition-colors">Driver Applications</h3>
+      <p className="text-xs text-gray-500 mt-1 font-medium">Review and approve driver applications.</p>
+    </div>
+    <div className="bg-purple-50 p-2 rounded-lg text-purple-600 group-hover:bg-purple-100 transition-colors border border-purple-100">
+      <Truck size={20} strokeWidth={2} />
+    </div>
+  </div>
+</Link>
+
+
 <h3 
     className="font-bold text-gmc-gris-oscuro mb-4 uppercase text-xs tracking-wider flex items-center justify-between gap-2 cursor-pointer md:cursor-default"
     onClick={() => setActivityExpanded(!activityExpanded)}
