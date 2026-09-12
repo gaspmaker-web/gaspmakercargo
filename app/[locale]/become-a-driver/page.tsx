@@ -37,8 +37,8 @@ export default async function BecomeDriverPage(props: any) {
             <Truck size={16} />
             {t('hero_badge')}
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold font-garamond mb-4">
-            {t('hero_title')}
+          <h1 className="text-3xl md:text-5xl font-bold font-garamond mb-4">
+           {t('hero_title')}
           </h1>
           <p className="text-lg text-gray-300 max-w-2xl mx-auto">
             {t('hero_desc')}

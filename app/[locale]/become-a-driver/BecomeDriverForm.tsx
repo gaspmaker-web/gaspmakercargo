@@ -6,9 +6,6 @@ import { useTranslations } from 'next-intl'
 
 const ZONES = [
   { value: 'US', label: '🇺🇸 Miami, Florida' },
-  { value: 'BB', label: '🇧🇧 Barbados' },
-  { value: 'TT', label: '🇹🇹 Trinidad & Tobago' },
-  { value: 'JM', label: '🇯🇲 Jamaica' },
 ]
 
 const VEHICLE_TYPES = [
@@ -59,7 +56,7 @@ export default function BecomeDriverForm({ locale }: { locale: string }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
+    <form onSubmit={handleSubmit} className="space-y-5 overflow-x-hidden">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
         <div>
           <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">{t('form_name')} *</label>
