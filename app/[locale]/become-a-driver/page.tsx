@@ -52,25 +52,35 @@ export default async function BecomeDriverPage(props: any) {
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 py-16 flex flex-col">
+         <div className="max-w-4xl mx-auto px-4 py-16 flex flex-col gap-16">
+
+        {/* Application Form — FIRST */}
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-2 font-garamond">{t('form_title')}</h2>
+          <p className="text-sm text-gray-500 mb-8">{t('form_desc')}</p>
+          <BecomeDriverForm locale={params.locale} />
+        </div>
+
         {/* Benefits */}
-        <h2 className="text-2xl font-bold text-gray-900 text-center mb-10 font-garamond">{t('benefits_title')}</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-16">
-          {BENEFITS.map(({ icon: Icon, title, desc }) => (
-            <div key={title} className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm flex gap-4">
-              <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: '#F4DBA7' }}>
-                <Icon size={22} style={{ color: '#222b3c' }} />
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900 text-center mb-10 font-garamond">{t('benefits_title')}</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            {BENEFITS.map(({ icon: Icon, title, desc }) => (
+              <div key={title} className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm flex gap-4">
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: '#F4DBA7' }}>
+                  <Icon size={22} style={{ color: '#222b3c' }} />
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-900 mb-1">{title}</h3>
+                  <p className="text-sm text-gray-500">{desc}</p>
+                </div>
               </div>
-              <div>
-                <h3 className="font-bold text-gray-900 mb-1">{title}</h3>
-                <p className="text-sm text-gray-500">{desc}</p>
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
 
         {/* Requirements */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 mb-16">
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
           <h2 className="text-xl font-bold text-gray-900 mb-6 font-garamond">{t('requirements_title')}</h2>
           <div className="space-y-3">
             {REQUIREMENTS.map(req => (
@@ -85,7 +95,7 @@ export default async function BecomeDriverPage(props: any) {
         </div>
 
         {/* How it works */}
-        <div className="mb-16">
+        <div>
           <h2 className="text-2xl font-bold text-gray-900 text-center mb-10 font-garamond">{t('how_title')}</h2>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
             {STEPS.map(({ step, title, desc }) => (
@@ -100,12 +110,6 @@ export default async function BecomeDriverPage(props: any) {
           </div>
         </div>
 
-       {/* Application Form */}
-       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 order-first md:order-last">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2 font-garamond">{t('form_title')}</h2>
-          <p className="text-sm text-gray-500 mb-8">{t('form_desc')}</p>
-          <BecomeDriverForm locale={params.locale} />
-        </div>
       </div>
     </div>
   )
