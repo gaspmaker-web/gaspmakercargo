@@ -29,7 +29,7 @@ export default async function BecomeDriverPage(props: any) {
   ]
 
   return (
-    <div className="min-h-screen bg-gray-50 font-sans">
+    <div className="min-h-screen bg-gray-50 font-sans overflow-x-hidden">
       {/* Hero */}
       <div className="bg-[#222b3c] text-white py-20 px-4">
         <div className="max-w-4xl mx-auto text-center">
@@ -81,7 +81,7 @@ export default async function BecomeDriverPage(props: any) {
         {/* How it works */}
         <div className="mb-16">
           <h2 className="text-2xl font-bold text-gray-900 text-center mb-10 font-garamond">{t('how_title')}</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
             {STEPS.map(({ step, title, desc }) => (
               <div key={step} className="text-center">
                 <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3 text-lg font-bold" style={{ backgroundColor: '#222b3c', color: '#F4DBA7' }}>
