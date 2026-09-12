@@ -2,6 +2,12 @@ import { Truck, DollarSign, Clock, MapPin, Shield, Star } from 'lucide-react'
 import { getTranslations } from 'next-intl/server'
 import BecomeDriverForm from './BecomeDriverForm'
 
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  interactiveWidget: 'resizes-content',
+}
+
 export default async function BecomeDriverPage(props: any) {
   const params = await props.params
   const t = await getTranslations({ locale: params.locale, namespace: 'BecomeDriver' })
