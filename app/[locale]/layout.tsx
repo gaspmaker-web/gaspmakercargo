@@ -107,7 +107,7 @@ const tenantSlug = tenant?.slug || process.env.TENANT_SLUG || 'gaspmaker';
       {children}
     </main>
 
-    <Footer tenantSlug={tenantSlug} />
+    {session?.user?.role !== 'DRIVER' && session?.user?.role !== 'WAREHOUSE' && <Footer tenantSlug={tenantSlug} />}
 
     {tenantSlug !== 'cargoos' && <CookieBanner />}
     <TawkLoader />
