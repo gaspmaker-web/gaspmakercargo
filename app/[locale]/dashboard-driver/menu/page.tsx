@@ -43,14 +43,20 @@ export default async function MenuPage(props: any) {
       </div>
 
       <div className="px-4 py-6 space-y-4">
-        {/* Payment */}
-        <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-          <p className="text-xs font-bold text-gray-400 uppercase tracking-wider px-4 pt-4 pb-2">Payments</p>
-          <div className="px-4 pb-4">
-            <StripeConnectButton hasAccount={!!driver?.stripeAccountId} />
-          </div>
-        </div>
-
+      {/* Payments & Earnings */}
+<div className="bg-white rounded-2xl border border-gray-100 overflow-hidden divide-y divide-gray-100">
+  <p className="text-xs font-bold text-gray-400 uppercase tracking-wider px-4 pt-4 pb-2">Payments & Earnings</p>
+  <div className="px-4 py-3">
+    <StripeConnectButton hasAccount={!!driver?.stripeAccountId} />
+  </div>
+  <Link href={`/${locale}/dashboard-driver/earnings`} className="flex items-center justify-between px-4 py-3.5 hover:bg-gray-50 transition-colors">
+    <div className="flex items-center gap-3">
+      <CreditCard size={18} className="text-gray-500" />
+      <span className="text-sm font-medium text-gray-700">Earnings History</span>
+    </div>
+    <ChevronRight size={16} className="text-gray-300" />
+  </Link>
+</div>
         {/* Vehicle & Documents */}
 <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
   <p className="text-xs font-bold text-gray-400 uppercase tracking-wider px-4 pt-4 pb-2">Vehicle & Documents</p>
