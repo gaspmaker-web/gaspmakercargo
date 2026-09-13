@@ -1,7 +1,7 @@
 import { auth } from '@/auth'
 import { redirect } from 'next/navigation'
 import prisma from '@/lib/prisma'
-import { ArrowLeft, User, CreditCard, MapPin, ChevronRight, Shield } from 'lucide-react'
+import { ArrowLeft, User, CreditCard, ChevronRight, Shield } from 'lucide-react'
 import Link from 'next/link'
 import DriverLogoutButton from '@/components/DriverLogoutButton'
 import StripeConnectButton from '@/components/driver/StripeConnectButton'
@@ -39,25 +39,7 @@ export default async function MenuPage(props: any) {
             <ArrowLeft size={18} />
           </Link>
           <h1 className="text-xl font-bold">Menu</h1>
-        </div>
-
-        {/* Driver profile */}
-        <div className="flex items-center gap-4">
-          {driver?.image ? (
-            <img src={driver.image} alt="Profile" className="w-16 h-16 rounded-full object-cover border-2 border-white/20 flex-shrink-0" />
-          ) : (
-            <div className="w-16 h-16 rounded-full flex items-center justify-center text-xl font-bold flex-shrink-0" style={{ backgroundColor: '#F4DBA7', color: '#222b3c' }}>
-              {driver?.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
-            </div>
-          )}
-          <div className="min-w-0">
-            <p className="font-bold text-lg truncate">{driver?.name}</p>
-            <p className="text-xs text-gray-400 truncate">{driver?.email}</p>
-            <p className="text-xs text-gray-400 flex items-center gap-1 mt-0.5">
-              <MapPin size={10} /> Zone: {driver?.countryCode || 'US'}
-            </p>
           </div>
-        </div>
       </div>
 
       <div className="px-4 py-6 space-y-4">
