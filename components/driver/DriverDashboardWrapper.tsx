@@ -288,10 +288,10 @@ if (vehicleStatus === 'REJECTED') {
               <h2 className="font-bold text-gray-800 text-lg">Opportunities</h2>
               <span className="text-xs text-gray-400">Go online to see</span>
             </div>
-            <div className="bg-gray-50 rounded-2xl p-8 text-center border-2 border-dashed border-gray-200">
-              <Truck size={32} className="mx-auto text-gray-300 mb-2" />
-              <p className="text-sm text-gray-400">Go online to receive delivery opportunities</p>
-            </div>
+            <div className="bg-gray-50 rounded-2xl p-4 text-center border-2 border-dashed border-gray-200">
+           <Truck size={24} className="mx-auto text-gray-300 mb-1" />
+           <p className="text-xs text-gray-400">Go online to receive delivery opportunities</p>
+           </div>
           </div>
 
           {/* Go Online button */}
