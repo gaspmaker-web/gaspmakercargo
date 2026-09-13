@@ -40,8 +40,8 @@ export default function DeliveryClient({
     try {
         const data = new FormData();
         data.append('file', file);
-        data.append('upload_preset', process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || 'ml_default');
-        const res = await fetch(`https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`, { method: 'POST', body: data });
+        data.append('upload_preset', 'ml_default');
+        const res = await fetch(`https://api.cloudinary.com/v1_1/dcu36bfyt/image/upload`, { method: 'POST', body: data });
         const json = await res.json();
         if (json.secure_url) setPhotoUrl(json.secure_url);
     } catch (error) { alert("Error subiendo foto"); } finally { setUploading(false); }
