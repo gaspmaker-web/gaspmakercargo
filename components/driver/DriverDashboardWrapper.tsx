@@ -55,7 +55,7 @@ export default function DriverDashboardWrapper({
         })
       }).catch(() => {})
 
-      if (mapInstanceRef.current && !isOnline) {
+      if (mapInstanceRef.current) {
         const pos = { lat: loc.lat, lng: loc.lng }
         if (!driverMarkerRef.current) {
           driverMarkerRef.current = new google.maps.Marker({
