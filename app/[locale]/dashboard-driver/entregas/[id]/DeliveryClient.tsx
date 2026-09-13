@@ -33,19 +33,34 @@ export default function DeliveryClient({
   };
   const themeClasses = getCountryTheme(countryCode);
 
-  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setUploading(true);
-    try {
+const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+  setUploading(true);
+  try {
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      try {
+        const base64 = reader.result as string;
         const data = new FormData();
-        data.append('file', file);
+        data.append('file', base64);
         data.append('upload_preset', 'ml_default');
-        const res = await fetch(`https://api.cloudinary.com/v1_1/dcu36bfyt/image/upload`, { method: 'POST', body: data });
+        const res = await fetch('https://api.cloudinary.com/v1_1/dcu36bfyt/image/upload', { method: 'POST', body: data });
         const json = await res.json();
         if (json.secure_url) setPhotoUrl(json.secure_url);
-    } catch (error) { alert("Error subiendo foto"); } finally { setUploading(false); }
-  };
+        else alert('Upload failed: ' + JSON.stringify(json));
+      } catch (err) {
+        alert('Upload error');
+      } finally {
+        setUploading(false);
+      }
+    };
+    reader.readAsDataURL(file);
+  } catch (error) {
+    alert("Error subiendo foto");
+    setUploading(false);
+  }
+};
 
   const handleCompleteDelivery = async () => {
     if (!photoUrl) return alert("📸 La foto es obligatoria.");
