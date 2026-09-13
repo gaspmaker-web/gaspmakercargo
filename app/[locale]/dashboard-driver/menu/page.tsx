@@ -103,7 +103,6 @@ export default async function MenuPage(props: any) {
           {[
             { icon: User, label: 'Profile', href: `/${locale}/dashboard-driver/profile` },
             { icon: Shield, label: 'Privacy & Security', href: `/${locale}/dashboard-driver/privacy` },
-            { icon: CreditCard, label: 'Earnings History', href: `/${locale}/dashboard-driver/earnings` },
           ].map(({ icon: Icon, label, href }) => (
             <Link key={label} href={href} className="flex items-center justify-between px-4 py-3.5 hover:bg-gray-50 transition-colors">
               <div className="flex items-center gap-3">
