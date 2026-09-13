@@ -15,6 +15,8 @@
     "access": "Acceso",
     "termsOfService": "Términos de Servicio",
     "privacyPolicy": "Política de Privacidad",
+    "deleteAccount": "Eliminar Cuenta",
+    "deleteAccount": "Eliminar Cuenta",
     "languageLabel": "Idioma",
     "navigationLabel": "Navegación"
   },
@@ -1047,6 +1049,8 @@
   "MobileMenu": {
     "memberSince": "Miembro desde",
     "privacyPolicy": "Política de Privacidad",
+    "deleteAccount": "Eliminar Cuenta",
+    "deleteAccount": "Eliminar Cuenta",
     "myDashboard": "Mi Dashboard",
     "settings": "Configuración",
     "invite": "Invitar amigos",

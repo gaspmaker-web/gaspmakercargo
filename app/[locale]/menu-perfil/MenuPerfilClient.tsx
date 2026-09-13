@@ -208,6 +208,8 @@ export default function MenuPerfilClient() {
             <p className="mb-3 font-bold text-gmc-dorado-principal/50">Gasp Maker Cargo App</p>
             <div className="flex justify-center gap-4 text-gray-400">
               <Link href={getLink('/privacy-policy')} className="hover:text-white transition-colors">{t('privacyPolicy')}</Link>
+              <span>•</span>
+              <Link href={getLink('/delete-account')} className="hover:text-white transition-colors">{t('deleteAccount')}</Link>
             </div>
             <p className="mt-4 opacity-50">v1.0.5</p>
         </div>
