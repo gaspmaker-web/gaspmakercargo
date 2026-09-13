@@ -34,7 +34,7 @@ export default async function MenuPage(props: any) {
   return (
     <div className="min-h-screen bg-gray-50 font-sans">
       <div className="bg-[#222b3c] text-white px-5 pt-10 pb-6">
-        <div className="flex items-center gap-3 mb-4">
+        <div className="flex items-center gap-3 mb-6">
           <Link href={`/${locale}/dashboard-driver`} className="p-2 rounded-full bg-white/10">
             <ArrowLeft size={18} />
           </Link>
@@ -43,16 +43,16 @@ export default async function MenuPage(props: any) {
 
         {/* Driver profile */}
         <div className="flex items-center gap-4">
-         {driver?.image ? (
-  <img src={driver.image} alt="Profile" className="w-14 h-14 rounded-full object-cover border-2 border-white/20" />
-) : (
-  <div className="w-14 h-14 rounded-full flex items-center justify-center text-xl font-bold" style={{ backgroundColor: '#F4DBA7', color: '#222b3c' }}>
-    {driver?.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
-  </div>
-)}
-          <div>
-            <p className="font-bold text-lg">{driver?.name}</p>
-            <p className="text-xs text-gray-400">{driver?.email}</p>
+          {driver?.image ? (
+            <img src={driver.image} alt="Profile" className="w-16 h-16 rounded-full object-cover border-2 border-white/20 flex-shrink-0" />
+          ) : (
+            <div className="w-16 h-16 rounded-full flex items-center justify-center text-xl font-bold flex-shrink-0" style={{ backgroundColor: '#F4DBA7', color: '#222b3c' }}>
+              {driver?.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+            </div>
+          )}
+          <div className="min-w-0">
+            <p className="font-bold text-lg truncate">{driver?.name}</p>
+            <p className="text-xs text-gray-400 truncate">{driver?.email}</p>
             <p className="text-xs text-gray-400 flex items-center gap-1 mt-0.5">
               <MapPin size={10} /> Zone: {driver?.countryCode || 'US'}
             </p>
