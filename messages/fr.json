@@ -1603,5 +1603,30 @@
   "form_required": "Veuillez remplir tous les champs obligatoires",
   "success_title": "Candidature Soumise!",
   "success_desc": "Merci pour votre intérêt. Nous vous contacterons sous 24-48 heures."
+},
+"DeleteAccount": {
+  "title": "Supprimer Votre Compte",
+  "desc": "Vous pouvez demander la suppression de votre compte Gasp Maker et de toutes les données associées à tout moment.",
+  "how_title": "Comment Demander la Suppression de Compte",
+  "step1_title": "Envoyez un email à notre équipe de support",
+  "step1_desc": "Envoyez-nous un email à support@gaspmakercargo.com avec l'objet Demande de Suppression de Compte",
+  "step2_title": "Incluez les informations de votre compte",
+  "step2_desc": "Fournissez votre adresse email enregistrée et votre numéro de Suite pour que nous puissions identifier votre compte.",
+  "step3_title": "Nous traiterons votre demande",
+  "step3_desc": "Notre équipe confirmera et traitera votre demande de suppression dans un délai de 30 jours.",
+  "send_btn": "Envoyer la Demande de Suppression",
+  "deleted_title": "Ce qui est supprimé",
+  "deleted_1": "Vos informations de profil (nom, email, téléphone)",
+  "deleted_2": "Votre adresse de livraison et numéro de Suite",
+  "deleted_3": "Votre historique de colis et d'expéditions",
+  "deleted_4": "Vos méthodes de paiement",
+  "deleted_5": "Vos notifications et messages",
+  "deleted_6": "Vos documents de conducteur et informations sur le véhicule (le cas échéant)",
+  "retained_title": "Données que nous pouvons conserver",
+  "retained_1": "Registres de transactions requis par la loi fiscale (jusqu'à 7 ans)",
+  "retained_2": "Journaux de prévention des fraudes et de sécurité",
+  "retained_3": "Données requises par les réglementations d'expédition applicables",
+  "privacy_note": "Pour plus d'informations sur la façon dont nous gérons vos données, lisez notre",
+  "privacy_link": "Politique de Confidentialité"
 }
 }

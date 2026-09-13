@@ -1582,5 +1582,30 @@
   "form_required": "Please fill all required fields",
   "success_title": "Application Submitted!",
   "success_desc": "Thank you for your interest in driving with Gasp Maker. Our team will review your application and contact you within 24-48 hours."
+},
+"DeleteAccount": {
+  "title": "Delete Your Account",
+  "desc": "You can request the deletion of your Gasp Maker account and all associated data at any time.",
+  "how_title": "How to Request Account Deletion",
+  "step1_title": "Send an email to our support team",
+  "step1_desc": "Email us at support@gaspmakercargo.com with the subject line Account Deletion Request",
+  "step2_title": "Include your account information",
+  "step2_desc": "Provide your registered email address and Suite number so we can identify your account.",
+  "step3_title": "We will process your request",
+  "step3_desc": "Our team will confirm and process your deletion request within 30 days.",
+  "send_btn": "Send Deletion Request",
+  "deleted_title": "What gets deleted",
+  "deleted_1": "Your profile information (name, email, phone)",
+  "deleted_2": "Your shipping address and Suite number",
+  "deleted_3": "Your package and shipment history",
+  "deleted_4": "Your payment methods",
+  "deleted_5": "Your notifications and messages",
+  "deleted_6": "Your driver documents and vehicle information (if applicable)",
+  "retained_title": "Data we may retain",
+  "retained_1": "Transaction records required by tax law (up to 7 years)",
+  "retained_2": "Fraud prevention and security logs",
+  "retained_3": "Data required by applicable shipping regulations",
+  "privacy_note": "For more information about how we handle your data, read our",
+  "privacy_link": "Privacy Policy"
 }
 }

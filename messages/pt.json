@@ -1604,5 +1604,30 @@
   "form_required": "Por favor preencha todos os campos obrigatórios",
   "success_title": "Candidatura Enviada!",
   "success_desc": "Obrigado pelo seu interesse. Entraremos em contato em 24-48 horas."
+},
+"DeleteAccount": {
+  "title": "Excluir Sua Conta",
+  "desc": "Você pode solicitar a exclusão da sua conta Gasp Maker e todos os dados associados a qualquer momento.",
+  "how_title": "Como Solicitar a Exclusão de Conta",
+  "step1_title": "Envie um email para nossa equipe de suporte",
+  "step1_desc": "Envie-nos um email para support@gaspmakercargo.com com o assunto Solicitação de Exclusão de Conta",
+  "step2_title": "Inclua as informações da sua conta",
+  "step2_desc": "Forneça seu endereço de email registrado e número de Suite para que possamos identificar sua conta.",
+  "step3_title": "Processaremos sua solicitação",
+  "step3_desc": "Nossa equipe confirmará e processará sua solicitação de exclusão em até 30 dias.",
+  "send_btn": "Enviar Solicitação de Exclusão",
+  "deleted_title": "O que é excluído",
+  "deleted_1": "Suas informações de perfil (nome, email, telefone)",
+  "deleted_2": "Seu endereço de entrega e número de Suite",
+  "deleted_3": "Seu histórico de pacotes e envios",
+  "deleted_4": "Seus métodos de pagamento",
+  "deleted_5": "Suas notificações e mensagens",
+  "deleted_6": "Seus documentos de motorista e informações do veículo (se aplicável)",
+  "retained_title": "Dados que podemos reter",
+  "retained_1": "Registros de transações exigidos por lei fiscal (até 7 anos)",
+  "retained_2": "Registros de prevenção de fraudes e segurança",
+  "retained_3": "Dados exigidos por regulamentações de envio aplicáveis",
+  "privacy_note": "Para mais informações sobre como tratamos seus dados, leia nossa",
+  "privacy_link": "Política de Privacidade"
 }
 }
