@@ -48,9 +48,6 @@ export default async function BuzonesKycAdminPage({ params: { locale } }: Props)
         {/* ENCABEZADO Y KPIS */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
            <div className="flex items-center gap-4">
-               <Link href={`/${locale}/dashboard-admin`} className="p-2 bg-white rounded-full border border-gray-200 hover:bg-gray-100 transition-colors shadow-sm">
-                 <ArrowLeft size={20} className="text-gray-600" />
-               </Link>
                <div>
                  <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight flex items-center gap-3">
                    <ShieldAlert className="text-red-500" size={32} /> Legal Vault & KYC

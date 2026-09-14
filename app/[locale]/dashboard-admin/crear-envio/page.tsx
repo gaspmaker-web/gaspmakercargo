@@ -23,17 +23,6 @@ export default async function CreateShipmentPage(props: any) {
     // 'p-2' en móvil para ganar espacio
     <div className="min-h-screen bg-gray-50 p-2 sm:p-6 lg:p-8 font-montserrat">
       <div className="max-w-3xl mx-auto">
-        
-        {/* Botón Volver */}
-        <div className="mb-4 sm:mb-6 px-1">
-            <Link 
-                href={`/${locale}/dashboard-admin`}
-                className="inline-flex items-center text-sm font-bold text-gray-500 hover:text-gmc-dorado-principal transition-colors active:scale-95 p-2 -ml-2"
-            >
-                <ArrowLeft size={20} className="mr-2" />
-                Back
-            </Link>
-        </div>
 
         {/* Título Header */}
         <div className="mb-6 px-1">

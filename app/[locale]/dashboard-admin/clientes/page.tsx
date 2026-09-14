@@ -101,13 +101,6 @@ lastLoginAt: user.lastLoginAt,// Extraemos el contador mágico
                 
                 {/* Botón Volver */}
                 <div className="mb-6">
-                    <Link 
-                        href={`/${params.locale}/dashboard-admin`}
-                        className="inline-flex items-center text-sm font-bold text-gray-500 hover:text-gmc-dorado-principal transition-colors"
-                    >
-                        <ArrowLeft size={20} className="mr-2" />
-                        Back to Panel
-                    </Link>
                 </div>
 
                 {/* Encabezado + Buscador */}

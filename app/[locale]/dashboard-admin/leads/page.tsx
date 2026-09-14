@@ -75,17 +75,6 @@ const serializedLeads = JSON.parse(JSON.stringify(leadsWithLogin));
     <div className="bg-gray-100 min-h-screen p-4 sm:p-6 lg:p-8 font-montserrat">
       <div className="max-w-7xl mx-auto">
 
-        {/* Botón Volver */}
-        <div className="mb-6">
-          <Link
-            href={`/${params.locale}/dashboard-admin`}
-            className="inline-flex items-center text-sm font-bold text-gray-500 hover:text-gmc-dorado-principal transition-colors"
-          >
-            <ArrowLeft size={20} className="mr-2" />
-            Back to Panel
-          </Link>
-        </div>
-
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-end gap-4 mb-6">
           <div>

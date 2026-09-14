@@ -105,13 +105,6 @@ const listosParaDespachar = consolidaciones.filter(c => {
         {/* HEADER */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
             <div>
-                <Link 
-                    href="/dashboard-admin" 
-                    className="inline-flex items-center text-gray-500 hover:text-blue-600 transition-colors font-medium text-sm mb-2"
-                >
-                    <ArrowLeft size={18} className="mr-2" />
-                    Back to Panel
-                </Link>
                 <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
                     <PackageOpen className="text-blue-600" />
                     Consolidation Management
