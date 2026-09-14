@@ -509,6 +509,121 @@ extraCharges: {
                     <input type="number" placeholder="H" {...register("height")} className="w-full p-2 border border-gray-300 rounded-lg text-center text-base h-11"/>
                 </div>
             </details>
+            {/* 🔥 GRID PARA FOTOS 🔥 */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 w-full">
+                {/* 1. FOTO EVIDENCIA */}
+                <div className="w-full">
+                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">
+                        4. Package Photo
+                    </label>
+                    
+                    <div className="relative w-full">
+                        <label className={`
+                            relative w-full h-32 rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-2 transition-all cursor-pointer active:scale-[0.99] overflow-hidden
+                            ${photoUrl ? 'border-green-500 bg-green-50' : 'border-gray-300 bg-gray-50 hover:bg-gray-100'}
+                        `}>
+                            {photoUrl ? (
+                                <>
+                                    <Image src={photoUrl} alt="Preview" fill className="object-cover opacity-60" />
+                                    <div className="z-10 bg-white/90 px-4 py-2 rounded-full flex items-center gap-2 shadow-sm">
+                                        <CheckCircle size={18} className="text-green-600" />
+                                        <span className="text-xs font-bold text-green-800">FOTO LISTA</span>
+                                    </div>
+                                </>
+                            ) : (
+                                <>
+                                    {isUploading ? (
+                                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                                    ) : (
+                                        <Camera size={32} className="text-gray-400" />
+                                    )}
+                                    <span className="text-xs font-bold text-gray-500 text-center px-2">
+                                        {isUploading ? 'UPLOADING...' : 'TAKE PHOTO'}
+                                    </span>
+                                </>
+                            )}
+                            
+                            <input 
+                                type="file" 
+                                accept="image/*" 
+                                capture="environment" 
+                                className="hidden" 
+                                onChange={handlePhotoUpload} 
+                                disabled={isUploading}
+                            />
+                        </label>
+
+                        {photoUrl && (
+                            <button 
+                                type="button"
+                                onClick={(e) => { e.preventDefault(); setPhotoUrl(null); }}
+                                className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full shadow-md z-20"
+                            >
+                                <X size={16} />
+                            </button>
+                        )}
+                    </div>
+                </div>
+
+                {/* 2. FOTO INVOICE */}
+                <div className="w-full">
+                    <label className="text-xs font-bold text-blue-600 uppercase tracking-wider mb-2 block flex items-center gap-1">
+                        <FileText size={14}/> 5. Invoice <span className="text-gray-400 normal-case font-medium">(Opcional)</span>
+                    </label>
+                    
+                    <div className="relative w-full">
+                        <label className={`
+                            relative w-full h-32 rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-2 transition-all cursor-pointer active:scale-[0.99] overflow-hidden
+                            ${invoiceUrl ? 'border-blue-500 bg-blue-50' : 'border-blue-200 bg-blue-50/50 hover:bg-blue-50'}
+                        `}>
+                            {invoiceUrl ? (
+                                <>
+                                    {invoiceUrl.endsWith('.pdf') ? (
+                                        <div className="flex items-center justify-center bg-blue-100 w-full h-full">
+                                            <FileText size={40} className="text-blue-500" />
+                                        </div>
+                                    ) : (
+                                        <Image src={invoiceUrl} alt="Invoice Preview" fill className="object-cover opacity-60" />
+                                    )}
+                                    <div className="z-10 bg-white/90 px-4 py-2 rounded-full flex items-center gap-2 shadow-sm">
+                                        <CheckCircle size={18} className="text-blue-600" />
+                                        <span className="text-xs font-bold text-blue-800">INVOICE LISTO</span>
+                                    </div>
+                                </>
+                            ) : (
+                                <>
+                                    {isUploadingInvoice ? (
+                                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                                    ) : (
+                                        <FileText size={32} className="text-blue-400" />
+                                    )}
+                                    <span className="text-xs font-bold text-blue-600 text-center px-2">
+                                        {isUploadingInvoice ? 'SUBIENDO...' : 'UPLOAD INVOICE / PHOTO'}
+                                    </span>
+                                </>
+                            )}
+                            
+                            <input 
+                                type="file" 
+                                accept="image/*,application/pdf" 
+                                className="hidden" 
+                                onChange={handleInvoiceUpload} 
+                                disabled={isUploadingInvoice}
+                            />
+                        </label>
+
+                        {invoiceUrl && (
+                            <button 
+                                type="button"
+                                onClick={(e) => { e.preventDefault(); setInvoiceUrl(null); }}
+                                className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full shadow-md z-20"
+                            >
+                                <X size={16} />
+                            </button>
+                        )}
+                    </div>
+                </div>
+            </div>
 
             {/* 🔥 TABLA DE ADUANAS BLINDADA CONTRA ZOOM IOS 🔥 */}
             <div className="bg-slate-50 p-3 md:p-4 rounded-xl border border-slate-200 w-full overflow-hidden">
@@ -629,121 +744,6 @@ extraCharges: {
                         </div>
                     </label>
 
-                </div>
-            </div>
-            {/* 🔥 GRID PARA FOTOS 🔥 */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 w-full">
-                {/* 1. FOTO EVIDENCIA */}
-                <div className="w-full">
-                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">
-                        4. Package Photo
-                    </label>
-                    
-                    <div className="relative w-full">
-                        <label className={`
-                            relative w-full h-32 rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-2 transition-all cursor-pointer active:scale-[0.99] overflow-hidden
-                            ${photoUrl ? 'border-green-500 bg-green-50' : 'border-gray-300 bg-gray-50 hover:bg-gray-100'}
-                        `}>
-                            {photoUrl ? (
-                                <>
-                                    <Image src={photoUrl} alt="Preview" fill className="object-cover opacity-60" />
-                                    <div className="z-10 bg-white/90 px-4 py-2 rounded-full flex items-center gap-2 shadow-sm">
-                                        <CheckCircle size={18} className="text-green-600" />
-                                        <span className="text-xs font-bold text-green-800">FOTO LISTA</span>
-                                    </div>
-                                </>
-                            ) : (
-                                <>
-                                    {isUploading ? (
-                                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                                    ) : (
-                                        <Camera size={32} className="text-gray-400" />
-                                    )}
-                                    <span className="text-xs font-bold text-gray-500 text-center px-2">
-                                        {isUploading ? 'UPLOADING...' : 'TAKE PHOTO'}
-                                    </span>
-                                </>
-                            )}
-                            
-                            <input 
-                                type="file" 
-                                accept="image/*" 
-                                capture="environment" 
-                                className="hidden" 
-                                onChange={handlePhotoUpload} 
-                                disabled={isUploading}
-                            />
-                        </label>
-
-                        {photoUrl && (
-                            <button 
-                                type="button"
-                                onClick={(e) => { e.preventDefault(); setPhotoUrl(null); }}
-                                className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full shadow-md z-20"
-                            >
-                                <X size={16} />
-                            </button>
-                        )}
-                    </div>
-                </div>
-
-                {/* 2. FOTO INVOICE */}
-                <div className="w-full">
-                    <label className="text-xs font-bold text-blue-600 uppercase tracking-wider mb-2 block flex items-center gap-1">
-                        <FileText size={14}/> 5. Invoice <span className="text-gray-400 normal-case font-medium">(Opcional)</span>
-                    </label>
-                    
-                    <div className="relative w-full">
-                        <label className={`
-                            relative w-full h-32 rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-2 transition-all cursor-pointer active:scale-[0.99] overflow-hidden
-                            ${invoiceUrl ? 'border-blue-500 bg-blue-50' : 'border-blue-200 bg-blue-50/50 hover:bg-blue-50'}
-                        `}>
-                            {invoiceUrl ? (
-                                <>
-                                    {invoiceUrl.endsWith('.pdf') ? (
-                                        <div className="flex items-center justify-center bg-blue-100 w-full h-full">
-                                            <FileText size={40} className="text-blue-500" />
-                                        </div>
-                                    ) : (
-                                        <Image src={invoiceUrl} alt="Invoice Preview" fill className="object-cover opacity-60" />
-                                    )}
-                                    <div className="z-10 bg-white/90 px-4 py-2 rounded-full flex items-center gap-2 shadow-sm">
-                                        <CheckCircle size={18} className="text-blue-600" />
-                                        <span className="text-xs font-bold text-blue-800">INVOICE LISTO</span>
-                                    </div>
-                                </>
-                            ) : (
-                                <>
-                                    {isUploadingInvoice ? (
-                                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                                    ) : (
-                                        <FileText size={32} className="text-blue-400" />
-                                    )}
-                                    <span className="text-xs font-bold text-blue-600 text-center px-2">
-                                        {isUploadingInvoice ? 'SUBIENDO...' : 'UPLOAD INVOICE / PHOTO'}
-                                    </span>
-                                </>
-                            )}
-                            
-                            <input 
-                                type="file" 
-                                accept="image/*,application/pdf" 
-                                className="hidden" 
-                                onChange={handleInvoiceUpload} 
-                                disabled={isUploadingInvoice}
-                            />
-                        </label>
-
-                        {invoiceUrl && (
-                            <button 
-                                type="button"
-                                onClick={(e) => { e.preventDefault(); setInvoiceUrl(null); }}
-                                className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full shadow-md z-20"
-                            >
-                                <X size={16} />
-                            </button>
-                        )}
-                    </div>
                 </div>
             </div>
 
