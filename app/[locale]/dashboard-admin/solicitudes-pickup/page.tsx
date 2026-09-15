@@ -97,7 +97,16 @@ export default async function PickupRequestsPage({ params, searchParams }: { par
           );
       }
 
-      // 4. DEFECTO / PENDIENTE (AMARILLO)
+          // 4. PROCESADO (NARANJA)
+      if (s === 'PROCESADO') {
+          return (
+            <span className="bg-orange-100 text-orange-700 px-2 py-1 rounded text-xs font-bold flex items-center justify-center gap-1 border border-orange-200">
+                <Truck size={12}/> IN PROCESS
+            </span>
+          );
+      }
+
+      // 5. DEFECTO / PENDIENTE (AMARILLO)
       return (
         <span className="bg-yellow-50 text-yellow-700 px-2 py-1 rounded text-xs font-bold flex items-center justify-center gap-1 border border-yellow-200">
             <Clock size={12}/> PENDING
