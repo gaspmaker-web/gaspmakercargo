@@ -28,6 +28,18 @@ export async function POST(req: Request) {
         description
     } = body;
 
+    // Verificar que el tracking number no existe ya
+if (carrierTrackingNumber) {
+  const existing = await prisma.package.findFirst({
+    where: { carrierTrackingNumber }
+  });
+  if (existing) {
+    return NextResponse.json({ 
+      error: `Tracking number ${carrierTrackingNumber} already exists. Package: ${existing.gmcTrackingNumber}` 
+    }, { status: 400 });
+  }
+}
+
     // Calculamos valores finales asegurando números
     const finalWeight = parseFloat(weightLbs || weight || 0);
     const finalLength = parseFloat(lengthIn || length || 0);
