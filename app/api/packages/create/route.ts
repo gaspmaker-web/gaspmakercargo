@@ -46,6 +46,16 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "Faltan datos obligatorios (Tracking o Peso)" }, { status: 400 });
     }
 
+    // Verificar duplicado
+const duplicate = await prisma.package.findFirst({
+  where: { carrierTrackingNumber, status: { not: 'PRE_ALERTA' } }
+});
+if (duplicate) {
+  return NextResponse.json({ 
+    message: `Este tracking number ya está registrado: ${duplicate.gmcTrackingNumber}` 
+  }, { status: 400 });
+}
+
     // --- LÓGICA DE CONEXIÓN CON PRE-ALERTA ---
     
     const existingPackage = await prisma.package.findFirst({
