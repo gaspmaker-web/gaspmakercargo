@@ -52,7 +52,7 @@ const duplicate = await prisma.package.findFirst({
 });
 if (duplicate) {
   return NextResponse.json({ 
-    message: `Este tracking number ya está registrado: ${duplicate.gmcTrackingNumber}` 
+    message: `This tracking number is already registered: ${duplicate.gmcTrackingNumber}` 
   }, { status: 400 });
 }
 
