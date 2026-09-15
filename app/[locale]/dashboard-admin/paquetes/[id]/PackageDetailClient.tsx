@@ -15,9 +15,7 @@ export default function PackageDetailClient({ pkg, locale }: { pkg: any, locale:
       <div className="max-w-5xl mx-auto">
         
         <div className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <Link href={`/${locale}/dashboard-admin/paquetes`} className="text-gray-500 hover:text-black flex items-center gap-2 transition-colors">
-               <ArrowLeft size={20} /> Back to List
-            </Link>
+
             
             {!isPreAlert && (
                 <Link 
