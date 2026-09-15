@@ -54,6 +54,22 @@ if (!webhookSecret) {
               updatedAt: new Date() 
             }
           });
+          // Guardar transacción en MailboxTransaction
+const subscription = await prisma.mailboxSubscription.findFirst({
+  where: { stripeSubscriptionId: subscriptionId },
+  select: { userId: true, planType: true }
+});
+if (subscription) {
+  await prisma.mailboxTransaction.create({
+    data: {
+      userId: subscription.userId,
+      amount: invoice.amount_paid / 100,
+      description: subscription.planType?.includes('799') ? 'SUSCRIPCIÓN BUZÓN BÁSICO' : 'SUSCRIPCIÓN BUZÓN PREMIUM',
+      status: 'COMPLETADO',
+      stripePaymentId: invoice.payment_intent as string,
+    }
+  })
+}
           console.log(`✅ Renovación automática exitosa: ${subscriptionId}`);
         } catch (dbError) {
           console.error('❌ Error actualizando suscripción:', dbError);
