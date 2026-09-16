@@ -99,6 +99,7 @@ export default function PendingBillsClient({ bills: initialBills, locale, userPr
 const [selectedBillIds, setSelectedBillIds] = useState<string[]>([]);
 const [ratesMap, setRatesMap] = useState<Record<string, Rate[]>>({}); 
 const [selectedRateMap, setSelectedRateMap] = useState<Record<string, Rate>>({});
+const [showZelleModal, setShowZelleModal] = useState(false)
 const [rateErrorMap, setRateErrorMap] = useState<Record<string, string>>({}); // 🔥 NUEVO
 
   // UX
@@ -1167,6 +1168,22 @@ if (shouldChargeHandling) {
                )}
                 </div>
 
+                {/* Zelle button - only for Gasp Maker Cargo */}
+{selectedBillIds.length > 0 && (() => {
+  const primaryRate = selectedRateMap[selectedBillIds[0]];
+  const isGaspMaker = !primaryRate || primaryRate.carrier === 'Gasp Maker Cargo';
+  if (!isGaspMaker) return null;
+  const zelleAmount = (totals.total - totals.fee).toFixed(2);
+  return (
+    <button
+      onClick={() => setShowZelleModal(true)}
+      className="w-full py-3 bg-[#6D1ED4] text-white font-bold rounded-xl flex justify-center items-center gap-2 hover:bg-[#5a19b0] transition-colors mb-2"
+    >
+      <span className="text-lg">💜</span> Pay with Zelle — ${zelleAmount}
+    </button>
+  );
+})()}
+
                                 <button onClick={handlePay} disabled={isProcessing} className="w-full py-3 bg-gmc-dorado-principal text-gmc-gris-oscuro font-bold rounded-xl flex justify-center items-center gap-2 hover:bg-white transition-colors disabled:opacity-50">
                                     {isProcessing ? <Loader2 className="animate-spin"/> : <DollarSign size={18}/>} {t('payNowBtn')}
                                 </button>
@@ -1351,6 +1368,45 @@ if (shouldChargeHandling) {
                     </div>
                 )}
             </div>
+        )}
+
+        {/* Zelle Modal */}
+        {showZelleModal && (
+          <div className="fixed inset-0 bg-black/60 z-[9999] flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl p-6 max-w-sm w-full">
+              <h2 className="text-xl font-bold text-gray-900 mb-2">Pay with Zelle 💜</h2>
+              <p className="text-sm text-gray-500 mb-4">Send the exact amount to our Zelle number:</p>
+              <div className="bg-purple-50 rounded-xl p-4 mb-4 text-center">
+                <p className="text-2xl font-bold text-purple-700">${(totals.total - totals.fee).toFixed(2)}</p>
+                <p className="text-sm text-gray-500 mt-1">to</p>
+                <p className="text-xl font-bold text-gray-900">+1 786 282 0763</p>
+                <p className="text-xs text-gray-400 mt-2">Memo: {userProfile?.suiteNo || 'Your Suite Number'}</p>
+              </div>
+              <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-3 mb-4">
+                <p className="text-xs text-yellow-700 font-medium">⚠️ After sending, tap "I sent the Zelle" below. Your shipment will be confirmed once we verify the payment.</p>
+              </div>
+              <button
+                onClick={async () => {
+                  await fetch('/api/payments/zelle-pending', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      billIds: selectedBillIds,
+                      amount: totals.total - totals.fee,
+                    })
+                  });
+                  setShowZelleModal(false);
+                  alert('✅ We received your notification. We will confirm your Zelle payment shortly.');
+                }}
+                className="w-full py-3 bg-[#6D1ED4] text-white font-bold rounded-xl mb-2"
+              >
+                I sent the Zelle ✓
+              </button>
+              <button onClick={() => setShowZelleModal(false)} className="w-full py-3 text-gray-500 text-sm">
+                Cancel
+              </button>
+            </div>
+          </div>
         )}
     </div>
   );
