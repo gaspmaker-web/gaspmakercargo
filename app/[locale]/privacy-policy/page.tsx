@@ -119,17 +119,17 @@ export default function PrivacyPolicyPage({ searchParams }: { searchParams: { fr
     <p>{t('s6_text')}</p>
 </Section>
 
-             {/* CONTACT */}
+                  {/* CONTACT */}
              <Section 
-                icon={<Mail size={24} className="text-gray-600"/>}
-                title={t('s5_title')}
+                icon={<Mail size={24} className="text-teal-600"/>}
+                title={t('s7_title')}
             >
-                <p>{t('s5_text')}</p>
-                <div className="mt-4 bg-gray-50 p-4 rounded-lg">
-                    <a href="mailto:support@gaspmakercargo.com" className="text-blue-600 hover:underline font-bold">
-                        support@gaspmakercargo.com
-                    </a>
-                    <p className="text-xs text-gray-500 mt-1">Gasp Maker LLC, Miami, FL.</p>
+                <p>{t('s7_intro')}</p>
+                <div className="mt-4 bg-gray-50 p-4 rounded-lg flex flex-col gap-2">
+                    <p className="text-sm font-bold text-gray-800">GaspMakerLLC</p>
+                    <p className="text-sm text-gray-600">1861 NW 22nd St, Miami, FL 33142</p>
+                    <a href="mailto:support@gaspmakercargo.com" className="text-sm text-blue-600 hover:underline">support@gaspmakercargo.com</a>
+                    <a href="tel:+17862820763" className="text-sm text-blue-600 hover:underline">+1 786 282 0763</a>
                 </div>
             </Section>
 
