@@ -180,8 +180,9 @@ export default function TermsOfServicePage() {
                 <p>{t('s7_intro')}</p>
                 <div className="mt-4 bg-gray-50 p-4 rounded-lg flex flex-col gap-2">
                     <p className="text-sm font-bold text-gray-800">GaspMakerLLC</p>
-                    <p className="text-sm text-gray-600">Miami, Florida, USA</p>
-                    <EmailButton email="support@gaspmakercargo.com" />
+                    <p className="text-sm text-gray-600">1861 NW 22nd St, Miami, FL 33142</p>
+                  <EmailButton email="support@gaspmakercargo.com" />
+                  <a href="tel:+17862820763" className="text-sm text-blue-600 hover:underline">+1 786 282 0763</a>
                 </div>
             </Section>
 
