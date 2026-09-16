@@ -1,6 +1,7 @@
 import React from 'react';
-import { Lock, Eye, Database, Globe, Shield, Mail, FileText } from 'lucide-react';
+import { Lock, Eye, Database, Globe, Shield, Mail, FileText, MessageSquare } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+
 
 export const metadata = {
   title: 'Privacy Policy | GaspMakerCargo',
@@ -109,6 +110,14 @@ export default function PrivacyPolicyPage({ searchParams }: { searchParams: { fr
                     <li><strong>{t('s4_li3_label')}</strong> {t('s4_li3_text')}</li>
                 </ul>
             </Section>
+
+            {/* 6. SMS & WHATSAPP */}
+<Section 
+    icon={<MessageSquare size={24} className="text-green-600"/>}
+    title={t('s6_title')}
+>
+    <p>{t('s6_text')}</p>
+</Section>
 
              {/* CONTACT */}
              <Section 
