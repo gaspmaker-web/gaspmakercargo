@@ -459,7 +459,14 @@
 "serviceTypePickup": "Retirada no Armazém",
 "serviceTypeStorage": "Taxa de Armazenagem",
 "serviceTypeLocal": "Entrega Local (Aura)",
-"serviceTypeOcean": "Consolidação Marítima"
+"serviceTypeOcean": "Consolidação Marítima",
+"zelleTitle": "Pagar com Zelle 💜",
+"zelleDesc": "Envie o valor exato para nosso número Zelle:",
+"zelleMemo": "Memo: Seu número de Suite",
+"zelleWarning": "Após o envio, toque em \"Enviei o Zelle\" abaixo. Seu envio será confirmado após verificarmos o pagamento.",
+"zelleSent": "Enviei o Zelle ✓",
+"zelleCancel": "Cancelar",
+"zelleBtn": "Pagar com Zelle"
   },
   "PreAlertPage": {
     "title": "Pré-Alertar Pacote",

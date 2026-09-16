@@ -456,7 +456,14 @@
 "serviceTypePickup": "Solicitud de Retiro",
 "serviceTypeStorage": "Cargo por Almacenaje",
 "serviceTypeLocal": "Consolidación Local (Aura)",
-"serviceTypeOcean": "Consolidación Marítima"
+"serviceTypeOcean": "Consolidación Marítima",
+"zelleTitle": "Pagar con Zelle 💜",
+"zelleDesc": "Envía el monto exacto a nuestro número de Zelle:",
+"zelleMemo": "Memo: Tu número de Suite",
+"zelleWarning": "Después de enviar, toca \"Ya envié el Zelle\" abajo. Tu envío será confirmado una vez que verifiquemos el pago.",
+"zelleSent": "Ya envié el Zelle ✓",
+"zelleCancel": "Cancelar",
+"zelleBtn": "Pagar con Zelle"
   },
   "PreAlertPage": {
     "title": "Pre-Alertar Paquete",

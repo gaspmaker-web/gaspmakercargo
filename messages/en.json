@@ -461,7 +461,14 @@
 "serviceTypePickup": "Warehouse Pickup",
 "serviceTypeStorage": "Storage Fee",
 "serviceTypeLocal": "Local Delivery (Aura)",
-"serviceTypeOcean": "Maritime Consolidation"
+"serviceTypeOcean": "Maritime Consolidation",
+"zelleTitle": "Pay with Zelle 💜",
+"zelleDesc": "Send the exact amount to our Zelle number:",
+"zelleMemo": "Memo: Your Suite Number",
+"zelleWarning": "After sending, tap \"I sent the Zelle\" below. Your shipment will be confirmed once we verify the payment.",
+"zelleSent": "I sent the Zelle ✓",
+"zelleCancel": "Cancel",
+"zelleBtn": "Pay with Zelle"
   },
   "PreAlertPage": {
     "title": "Pre-Alert Package",

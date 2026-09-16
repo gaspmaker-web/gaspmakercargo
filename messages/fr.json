@@ -459,7 +459,14 @@
 "serviceTypePickup": "Retrait en Entrepôt",
 "serviceTypeStorage": "Frais de Stockage",
 "serviceTypeLocal": "Livraison Locale (Aura)",
-"serviceTypeOcean": "Consolidation Maritime"
+"serviceTypeOcean": "Consolidation Maritime",
+"zelleTitle": "Payer avec Zelle 💜",
+"zelleDesc": "Envoyez le montant exact à notre numéro Zelle:",
+"zelleMemo": "Mémo: Votre numéro de Suite",
+"zelleWarning": "Après l'envoi, appuyez sur \"J'ai envoyé le Zelle\" ci-dessous. Votre envoi sera confirmé une fois que nous aurons vérifié le paiement.",
+"zelleSent": "J'ai envoyé le Zelle ✓",
+"zelleCancel": "Annuler",
+"zelleBtn": "Payer avec Zelle"
   },
   "PreAlertPage": {
     "title": "Pré-Alerter un Colis",
