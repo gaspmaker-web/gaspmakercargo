@@ -129,7 +129,7 @@ export default function PrivacyPolicyPage({ searchParams }: { searchParams: { fr
                     <a href="mailto:support@gaspmakercargo.com" className="text-blue-600 hover:underline font-bold">
                         support@gaspmakercargo.com
                     </a>
-                    <p className="text-xs text-gray-500 mt-1">GaspMakerCargo LLC, Miami, FL.</p>
+                    <p className="text-xs text-gray-500 mt-1">Gasp Maker LLC, Miami, FL.</p>
                 </div>
             </Section>
 
