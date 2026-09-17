@@ -8,7 +8,8 @@ import Footer from '@/components/Footer';
 import Providers from '@/components/Providers';
 import HeaderWrapper from '@/components/HeaderWrapper'; 
 import CookieBanner from '@/components/ui/CookieBanner';
-import TawkLoader from '@/components/TawkLoader'; 
+import WhatsAppButton from '@/components/WhatsAppButton';
+ 
 import { getTenant, getTenantCSSVars } from '@/lib/tenant';
 import Script from 'next/script';
 
@@ -110,7 +111,7 @@ const tenantSlug = tenant?.slug || process.env.TENANT_SLUG || 'gaspmaker';
     {session?.user?.role !== 'DRIVER' && session?.user?.role !== 'WAREHOUSE' && <Footer tenantSlug={tenantSlug} />}
 
     {tenantSlug !== 'cargoos' && <CookieBanner />}
-    <TawkLoader />
+    <WhatsAppButton />
 
   </Providers>
 </NextIntlClientProvider>
