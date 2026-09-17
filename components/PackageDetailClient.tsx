@@ -107,6 +107,7 @@ export default function PackageDetailClient({
 
   const [isPaying, setIsPaying] = useState(false);
   const [showMobileDetails, setShowMobileDetails] = useState(false);
+  const [showZelleModal, setShowZelleModal] = useState(false)
 
   const isPayingRef = useRef(false);
 
@@ -863,6 +864,16 @@ export default function PackageDetailClient({
     </button>
   )}
 </div>
+
+{selectedRate?.carrier === 'Gasp Maker Cargo' && (
+  <button
+    onClick={() => setShowZelleModal(true)}
+    className="w-full py-4 rounded-xl text-lg font-bold shadow-lg transition-all flex justify-center items-center gap-2 text-white mb-2"
+    style={{ backgroundColor: "#6D1ED4" }}
+  >
+    <span>💜</span> {tBills('zelleBtn')} — ${(finalTotalAmount - processingFee).toFixed(2)}
+  </button>
+)}
                   <button onClick={handlePay} disabled={isPaying || !selectedCardId} className="w-full py-4 rounded-xl text-lg font-bold shadow-lg hover:brightness-110 transition-all flex justify-center items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-[#222b3c]" style={{ backgroundColor: "#EAD8B1" }}>
                     {isPaying ? <Loader2 className="animate-spin" /> : <DollarSign size={20} />} {tBills("payNowBtn")}
                   </button>
@@ -1024,7 +1035,46 @@ export default function PackageDetailClient({
             </div>
           </div>
         )}
+       </div>
+
+    {/* Zelle Modal */}
+    {showZelleModal && (
+      <div className="fixed inset-0 bg-black/60 z-[9999] flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl p-6 max-w-sm w-full">
+          <h2 className="text-xl font-bold text-gray-900 mb-2">{tBills('zelleTitle')}</h2>
+          <p className="text-sm text-gray-500 mb-4">{tBills('zelleDesc')}</p>
+          <div className="bg-purple-50 rounded-xl p-4 mb-4 text-center">
+            <p className="text-2xl font-bold text-purple-700">${(finalTotalAmount - processingFee).toFixed(2)}</p>
+            <p className="text-sm text-gray-500 mt-1">to</p>
+            <p className="text-xl font-bold text-gray-900">+1 786 282 0763</p>
+            <p className="text-xs text-gray-400 mt-2">{tBills('zelleMemo')}</p>
+          </div>
+          <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-3 mb-4">
+            <p className="text-xs text-yellow-700 font-medium">⚠️ {tBills('zelleWarning')}</p>
+          </div>
+          <button
+            onClick={async () => {
+              await fetch('/api/payments/zelle-pending', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  billIds: [pkg.id],
+                  amount: finalTotalAmount - processingFee,
+                })
+              });
+              setShowZelleModal(false);
+              alert('✅ ' + tBills('zelleSent'));
+            }}
+            className="w-full py-3 bg-[#6D1ED4] text-white font-bold rounded-xl mb-2"
+          >
+            {tBills('zelleSent')}
+          </button>
+          <button onClick={() => setShowZelleModal(false)} className="w-full py-3 text-gray-500 text-sm">
+            {tBills('zelleCancel')}
+          </button>
+        </div>
       </div>
+    )}
     </div>
   );
 }
