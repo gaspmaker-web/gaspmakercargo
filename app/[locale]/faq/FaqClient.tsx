@@ -16,16 +16,8 @@ interface FAQItem {
 export default function FaqClient() { 
     const t = useTranslations('FAQPage');
     const [openIndex, setOpenIndex] = useState<number | null>(null);
-
-    // 🔥 FUNCIÓN ACTUALIZADA: Abre el chat de Tawk.to al hacer clic
-    // Esta lógica es necesaria porque el widget está oculto por defecto (Secret Agent Mode)
     const handleOpenChat = () => {
-        if (typeof window !== 'undefined' && (window as any).Tawk_API) {
-            (window as any).Tawk_API.showWidget(); // 1. Muestra la burbuja (estaba oculta)
-            (window as any).Tawk_API.maximize();   // 2. Abre la ventana de chat inmediatamente
-        } else {
-            console.warn("Tawk.to aún no ha cargado completamente.");
-        }
+        window.open("https://wa.me/17868346173", "_blank");
     };
 
     const faqs: FAQItem[] = [
