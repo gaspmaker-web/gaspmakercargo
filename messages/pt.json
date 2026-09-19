@@ -856,6 +856,8 @@
     "termsText": "Ao me registrar, aceito os",
     "termsLink": "termos de serviço",
     "subscribeText": "Inscrever-me para descontos e atualizações",
+    "smsConsentText": "Concordo em receber notificações SMS sobre meus envios da Gasp Maker LLC. Tarifas podem ser aplicadas. Responda STOP para cancelar.",
+    "smsConsentLink": "Política de Privacidade",
     "btnRegister": "Registrar",
     "btnRegistering": "Registrando...",
     "alreadyAccount": "Já tem uma conta?",

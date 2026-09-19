@@ -282,7 +282,13 @@ const displayDialCode = (selectedCountry?.dial_code || '+1').replace(/-/g, '');
                     <div className="flex items-center mb-2">
                         <input type="checkbox" id="terms" name="terms" required className="h-4 w-4 text-gasp-maker-gold border-gray-300 rounded" disabled={isLoading} />
                         <label htmlFor="terms" className="ml-2 text-sm text-gray-600">
-                            {t('termsText')} <Link href="/terms-of-service" className="text-gasp-maker-gold hover:underline">{t('termsLink')}</Link>
+                            {t('termsText')} <Link href={`/${locale}/terms-of-service`} className="text-gasp-maker-gold hover:underline">{t('termsLink')}</Link>
+                        </label>
+                    </div>
+                    <div className="flex items-start mb-4">
+                        <input type="checkbox" id="sms-consent" name="sms-consent" className="h-4 w-4 mt-0.5 text-gasp-maker-gold border-gray-300 rounded" disabled={isLoading} />
+                        <label htmlFor="sms-consent" className="ml-2 text-xs text-gray-600">
+                            {t("smsConsentText")} <Link href={`/${locale}/privacy-policy`} className="text-gasp-maker-gold hover:underline">{t("smsConsentLink")}</Link>
                         </label>
                     </div>
                     <div className="flex items-center mb-6">
