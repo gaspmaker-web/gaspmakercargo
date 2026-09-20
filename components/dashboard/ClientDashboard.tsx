@@ -152,7 +152,7 @@ useEffect(() => {
  // =========================================================================
   // 🚚 ACCIÓN 1: CONSOLIDAR / LOCAL DELIVERY / OCEAN
   // =========================================================================
-  const handleConsolidateClick = (type: 'AERIAL' | 'LOCAL' | 'OCEAN') => {
+  const handleConsolidateClick = async (type: 'AERIAL' | 'LOCAL' | 'OCEAN') => {
       if (selectedPkgs.length === 0) return;
 
       if (selectedPkgs.length === 1) {
