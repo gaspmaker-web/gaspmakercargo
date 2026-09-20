@@ -54,19 +54,15 @@ export default function ContentStudioClient() {
   const handleGenerate = async () => {
     setIsGenerating(true);
     setGenerated(null);
-
     const topicLabel = TOPICS.find(t => t.id === topic)?.label || topic;
     const typeLabel = CONTENT_TYPES.find(t => t.id === contentType)?.label || contentType;
-
     const systemPrompt = `You are an expert social media content creator for Gasp Maker Cargo, a Caribbean shipping and logistics company based in Miami, FL.
-
 BRAND INFO:
 - Company: Gasp Maker Cargo (Gasp Maker LLC)
 - Colors: Dark navy and Gold
 - Tone: Professional, trustworthy, aspirational, Caribbean-focused
 - Website: gaspmakercargo.com
 - Instagram: @gaspmakercargo
-
 SERVICES:
 - Free Miami locker address for online shopping
 - Air shipping to Caribbean 3-5 days: Jamaica $2.35/lb, Barbados $3/lb, Trinidad $3/lb, Grenada $3.50/lb
@@ -76,17 +72,14 @@ SERVICES:
 - Referral program $25 credit for both parties
 - Calculator: gaspmakercargo.com/en/calculadora-costos
 - Register free: gaspmakercargo.com/en/registro-cliente
-
 ALWAYS respond in JSON only, no markdown, no backticks:
 {"caption":"...","hashtags":"...","hook":"...","videoDescription":"...","slides":["..."],"cta":"..."}`;
-
     const userPrompt = `Create ${typeLabel} content in ${language === 'es' ? 'Spanish' : language === 'en' ? 'English' : language === 'pt' ? 'Portuguese' : 'French'} about: ${topicLabel}.${customPrompt ? ` Additional: ${customPrompt}` : ''}`;
-
     try {
       const response = await fetch('/api/content-studio', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ systemPrompt, userPrompt }),
+        body: JSON.stringify({ systemPrompt, userPrompt }),
       });
       const data = await response.json();
       const text = data?.content?.[0]?.text || '{}';
@@ -98,6 +91,21 @@ ALWAYS respond in JSON only, no markdown, no backticks:
     } finally {
       setIsGenerating(false);
     }
+  };
+
+  const handleCopyForCanva = () => {
+    if (!generated) return;
+    const parts: string[] = [];
+    if (generated.hook) parts.push('HOOK:\n' + generated.hook);
+    if (generated.slides && generated.slides.length > 0) {
+      parts.push('SLIDES:\n' + generated.slides.map((s, i) => 'Frame ' + (i + 1) + ': ' + s).join('\n'));
+    }
+    if (generated.caption) parts.push('CAPTION:\n' + generated.caption);
+    if (generated.cta) parts.push('CTA:\n' + generated.cta);
+    if (generated.hashtags) parts.push('HASHTAGS:\n' + generated.hashtags);
+    navigator.clipboard.writeText(parts.join('\n\n'));
+    setCopiedField('canva');
+    setTimeout(() => setCopiedField(null), 3000);
   };
 
   const copyToClipboard = (text: string, field: string) => {
@@ -264,6 +272,11 @@ ALWAYS respond in JSON only, no markdown, no backticks:
                 </div>
               )}
 
+              <button onClick={handleCopyForCanva}
+                className="w-full py-3 border-2 border-green-400 text-green-600 font-bold rounded-2xl hover:bg-green-50 transition-all flex items-center justify-center gap-2">
+                {copiedField === 'canva' ? <><Check size={16} className="text-green-500" /> Copied for Canva!</> : <>🎨 Copy All for Canva</>}
+              </button>
+
               <button onClick={handleGenerate}
                 className="w-full py-3 border-2 border-yellow-400 text-yellow-600 font-bold rounded-2xl hover:bg-yellow-50 transition-all flex items-center justify-center gap-2">
                 <RefreshCw size={16} />Regenerate
@@ -275,3 +288,4 @@ ALWAYS respond in JSON only, no markdown, no backticks:
     </div>
   );
 }
+
