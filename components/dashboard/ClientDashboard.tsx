@@ -92,7 +92,7 @@ export default function ClientDashboard({
 
   const [isPickupModalOpen, setIsPickupModalOpen] = useState(false);
   const [isConsolidateModalOpen, setIsConsolidateModalOpen] = useState(false);
-  const [consolidationEstimate, setConsolidationEstimate] = useState<{air?: number; ocean?: number; local?: number; handlingFee?: number} | null>(null);
+  const [consolidationEstimate, setConsolidationEstimate] = useState<{air?: number; ocean?: number; local?: number; handlingFee?: number; processingFeePct?: number; airProcessing?: number; oceanProcessing?: number; airTotal?: number; oceanTotal?: number} | null>(null);
   const [isLoadingEstimate, setIsLoadingEstimate] = useState(false); 
   
   const [pickupDate, setPickupDate] = useState("");
@@ -180,7 +180,7 @@ useEffect(() => {
               return;
           }
       }
-      // 🔥 VALIDACIÓN DE FACTURAS CORREGIDA PARA OMITIR SOBRES
+            // 🔥 VALIDACIÓN DE FACTURAS CORREGIDA PARA OMITIR SOBRES
       const packagesWithoutInvoice = selectedPackagesData.filter(p => {
           const isDocument = p.courier === 'Buzón Virtual' || (p.carrierTrackingNumber || '').startsWith('DOC-') || (p.gmcTrackingNumber || '').startsWith('GMC-DOC-');
           return !p.invoiceUrl && !isDocument; 
@@ -199,23 +199,33 @@ useEffect(() => {
       const fetchEstimate = async () => {
         setIsLoadingEstimate(true);
         const countryCode = ((user as any)?.countryCode || (user as any)?.country || 'JM').toUpperCase();
-        console.log('DEBUG GMC countryCode:', countryCode, 'user.countryCode:', (user as any)?.countryCode);
-console.log('DEBUG countryCode:', countryCode, 'user:', (user as any)?.countryCode);
         const handlingFee = selectedPkgs.length * 0.60;
         try {
-          const [airRes, oceanRes] = await Promise.all([
+          const [airRes, oceanRes, ratesRes] = await Promise.all([
             fetch('/api/rates', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ weightLbs: totalSelectedWeight, serviceType: 'SHIPPING_INTL', destination: { countryCode, country: countryCode } }) }),
-           fetch('/api/rates', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ weightLbs: totalSelectedWeight, serviceType: 'OCEAN_CONSOLIDATION', auraPieces: [{ length: 48, width: 40, height: Math.ceil(totalSelectedVolume * 1728 / (48 * 40)), weight: totalSelectedWeight }], destination: { countryCode, country: countryCode } }) })
+            fetch('/api/rates', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ weightLbs: totalSelectedWeight, serviceType: 'OCEAN_CONSOLIDATION', auraPieces: [{ length: 48, width: 40, height: Math.ceil(totalSelectedVolume * 1728 / (48 * 40)), weight: totalSelectedWeight }], destination: { countryCode, country: countryCode } }) }),
+            fetch('/api/tenant/rates-public')
           ]);
           const airData = await airRes.json();
           const oceanData = await oceanRes.json();
-         const airRate = airData?.rates?.find((r: any) => r.carrier === 'Gasp Maker Cargo' && !r.service?.toLowerCase().includes('maritime'));
-const oceanRate = oceanData?.rates?.find((r: any) => r.carrier === 'Gasp Maker Cargo' && r.service?.toLowerCase().includes('maritime'));
+          const publicRates = await ratesRes.json();
+          const processingFeePct = publicRates?.processing_fee_pct || 0.044;
+          const airRate = airData?.rates?.find((r: any) => r.carrier === 'Gasp Maker Cargo' && !r.service?.toLowerCase().includes('maritime'));
+          const oceanRate = oceanData?.rates?.find((r: any) => r.carrier === 'Gasp Maker Cargo' && r.service?.toLowerCase().includes('maritime'));
+          const airFreight = airRate?.price || 0;
+          const oceanFreight = oceanRate?.price || 0;
+          const airProcessing = (airFreight + handlingFee) * processingFeePct;
+          const oceanProcessing = (oceanFreight + handlingFee) * processingFeePct;
           setConsolidationEstimate({
-            air: airRate?.price,
-            ocean: oceanRate?.price,
+            air: airFreight,
+            ocean: oceanFreight,
             local: totalSelectedWeight <= 40 ? 95 : totalSelectedWeight <= 150 ? 125 : 195,
-            handlingFee
+            handlingFee,
+            processingFeePct,
+            airProcessing,
+            oceanProcessing,
+            airTotal: airFreight + handlingFee + airProcessing,
+            oceanTotal: oceanFreight + handlingFee + oceanProcessing
           });
         } catch(e) { console.error(e); } finally { setIsLoadingEstimate(false); }
       };
@@ -840,22 +850,55 @@ const oceanRate = oceanData?.rates?.find((r: any) => r.carrier === 'Gasp Maker C
 {consolidationEstimate && !isLoadingEstimate && (
   <div className="mt-3 p-3 bg-blue-50 rounded-xl border border-blue-100 text-left space-y-2">
     <p className="text-xs font-bold text-blue-700 uppercase tracking-wider mb-2">💡 {t('estimatedCostsTitle')}</p>
-    {consolidationEstimate.air && (
-      <div className="flex justify-between text-xs">
-        <span className="text-gray-600">{t('airServiceLabel')}</span>
-        <span className="font-bold text-gray-800">${consolidationEstimate.air.toFixed(2)} + ${consolidationEstimate.handlingFee?.toFixed(2)} {t('consolidationFeeLabel')}</span>
+    {consolidationEstimate.air > 0 && (
+      <div className="space-y-1 pb-2 border-b border-blue-100">
+        <p className="text-xs font-bold text-gray-700">{t('airServiceLabel')}</p>
+        <div className="flex justify-between text-xs text-gray-500">
+          <span>{t('freightLabel')}</span>
+          <span>${consolidationEstimate.air.toFixed(2)}</span>
+        </div>
+        <div className="flex justify-between text-xs text-gray-500">
+          <span>{t('consolidationFeeDetail', { count: selectedPkgs.length })}</span>
+          <span>${consolidationEstimate.handlingFee?.toFixed(2)}</span>
+        </div>
+        <div className="flex justify-between text-xs text-gray-500">
+          <span>{t('processingFeeLabel')}</span>
+          <span>${consolidationEstimate.airProcessing?.toFixed(2)}</span>
+        </div>
+        <div className="flex justify-between text-xs font-bold text-gray-800">
+          <span>{t('estimatedTotal')}</span>
+          <span>${consolidationEstimate.airTotal?.toFixed(2)}</span>
+        </div>
       </div>
     )}
-    {consolidationEstimate.ocean && (
-      <div className="flex justify-between text-xs">
-        <span className="text-gray-600">{t('oceanServiceLabel')}</span>
-        <span className="font-bold text-gray-800">${consolidationEstimate.ocean.toFixed(2)}</span>
+    {consolidationEstimate.ocean > 0 && (
+      <div className="space-y-1 pt-1">
+        <p className="text-xs font-bold text-gray-700">{t('oceanServiceLabel')}</p>
+        <div className="flex justify-between text-xs text-gray-500">
+          <span>{t('freightLabel')}</span>
+          <span>${consolidationEstimate.ocean.toFixed(2)}</span>
+        </div>
+        <div className="flex justify-between text-xs text-gray-500">
+          <span>{t('consolidationFeeDetail', { count: selectedPkgs.length })}</span>
+          <span>${consolidationEstimate.handlingFee?.toFixed(2)}</span>
+        </div>
+        <div className="flex justify-between text-xs text-gray-500">
+          <span>{t('processingFeeLabel')}</span>
+          <span>${consolidationEstimate.oceanProcessing?.toFixed(2)}</span>
+        </div>
+        <div className="flex justify-between text-xs font-bold text-gray-800">
+          <span>{t('estimatedTotal')}</span>
+          <span>${consolidationEstimate.oceanTotal?.toFixed(2)}</span>
+        </div>
       </div>
     )}
-    {(user as any)?.countryCode === 'US' && consolidationEstimate.local && (
-      <div className="flex justify-between text-xs">
-        <span className="text-gray-600">{t('localServiceLabel')}</span>
-        <span className="font-bold text-gray-800">${consolidationEstimate.local?.toFixed(2)}</span>
+    {((user as any)?.countryCode || '').toUpperCase() === 'US' && consolidationEstimate.local && (
+      <div className="space-y-1 pt-1 border-t border-blue-100">
+        <p className="text-xs font-bold text-gray-700">{t('localServiceLabel')}</p>
+        <div className="flex justify-between text-xs font-bold text-gray-800">
+          <span>{t('estimatedTotal')}</span>
+          <span>${consolidationEstimate.local?.toFixed(2)}</span>
+        </div>
       </div>
     )}
     <p className="text-[10px] text-gray-400 mt-1">{t('estimatedCostsNote')}</p>
