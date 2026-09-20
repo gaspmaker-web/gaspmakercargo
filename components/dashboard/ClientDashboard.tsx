@@ -800,18 +800,19 @@ useEffect(() => {
         {/* ===================================================================
            MODAL DE CONSOLIDACIÓN Y LOCAL DELIVERY
            =================================================================== */}
-        {isConsolidateModalOpen && (
+             {isConsolidateModalOpen && (
             <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in">
-                <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
+                <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200">
                     
+                    {/* HEADER */}
                     <div className="bg-gray-50 p-4 border-b border-gray-100 flex justify-between items-center">
                         <h3 className="font-bold text-gray-800 flex items-center gap-2">
                             {consolidationType === 'LOCAL' ? (
                                 <><Truck className="text-black" size={20}/> {t.has('requestLocalDelivery') ? t('requestLocalDelivery') : 'Request Local Delivery'}</>
                             ) : consolidationType === 'OCEAN' ? (
-                                <><Ship className="text-blue-600" size={20}/> {t.has('requestOcean') ? t('requestOcean') : 'Consolidación Marítima'}</>
+                                <><Ship className="text-blue-600" size={20}/> {t.has('requestOcean') ? t('requestOcean') : 'Ocean Consolidation'}</>
                             ) : (
-                                <><Plane className="text-gmc-dorado-principal" size={20}/> {t.has('requestAir') ? t('requestAir') : 'Consolidación Aérea'}</>
+                                <><Plane className="text-gmc-dorado-principal" size={20}/> {t.has('requestAir') ? t('requestAir') : 'Air Consolidation'}</>
                             )}
                         </h3>
                         <button onClick={() => setIsConsolidateModalOpen(false)} className="text-gray-400 hover:text-red-500">
@@ -819,52 +820,65 @@ useEffect(() => {
                         </button>
                     </div>
 
-                    <div className="p-6">
-                        <div className="text-center mb-6">
-                            <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 border ${consolidationType === 'LOCAL' ? 'bg-gray-100 border-gray-300' : consolidationType === 'OCEAN' ? 'bg-blue-50 border-blue-200' : 'bg-yellow-50 border-yellow-200'}`}>
-                                {consolidationType === 'LOCAL' 
-                                    ? <Truck size={32} className="text-black"/> 
-                                    : consolidationType === 'OCEAN'
-                                    ? <Ship size={32} className="text-blue-600"/>
-                                    : <Plane size={32} className="text-gmc-dorado-principal"/>
-                                }
+                    <div className="p-5 space-y-4">
+                        {/* SUMMARY ROW */}
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm font-bold text-gray-800">{t('confirmConsolidate', { count: selectedPkgs.length })}</p>
+                                <p className="text-xs text-blue-600 font-bold">{t('estimatedWeight', { weight: totalSelectedWeight.toFixed(2) })}</p>
+                                {totalSelectedVolume > 0 && <p className="text-xs text-gray-400">{totalSelectedVolume.toFixed(2)} ft³ — {t('volumeLabel')}</p>}
                             </div>
-                            <h3 className="text-lg font-bold text-gray-800 mb-2">
-                                {t('confirmConsolidate', { count: selectedPkgs.length })}
-                            </h3>
- <p className="text-sm font-bold text-blue-600 mb-2">
-    {t('estimatedWeight', { weight: totalSelectedWeight.toFixed(2) })}
-</p>
-{totalSelectedVolume > 0 && (
-    <p className="text-xs font-bold text-gray-400 mb-2">
-        {totalSelectedVolume.toFixed(2)} ft³ — {t('volumeLabel')}
-    </p>
-)}
-
-
-                            <p className="text-sm text-gray-500 leading-relaxed">
-                                {consolidationType === 'LOCAL' ? (
-                                    <>{t.rich('custom_text_local', {
-                                        strong: (chunks) => <strong className="text-gray-800">{chunks}</strong>
-                                    })}</>
-                                ) : consolidationType === 'OCEAN' ? (
-                                    <>{t.rich('custom_text_ocean', {
-                                        strong: (chunks) => <strong className="text-gray-800">{chunks}</strong>
-                                    })}</>
-                                ) : (
-                                    <>{t.rich('custom_text', {
-                                        strong: (chunks) => <strong className="text-gray-800">{chunks}</strong>
-                                    })}</>
-                                )}
-                            </p>
+                            <div className={`w-12 h-12 rounded-full flex items-center justify-center border ${consolidationType === 'LOCAL' ? 'bg-gray-100 border-gray-300' : consolidationType === 'OCEAN' ? 'bg-blue-50 border-blue-200' : 'bg-yellow-50 border-yellow-200'}`}>
+                                {consolidationType === 'LOCAL' ? <Truck size={24} className="text-black"/> : consolidationType === 'OCEAN' ? <Ship size={24} className="text-blue-600"/> : <Plane size={24} className="text-gmc-dorado-principal"/>}
+                            </div>
                         </div>
 
-                        <div className="bg-gray-50 rounded-xl p-3 border border-gray-100 max-h-40 overflow-y-auto mb-2">
-                         <p className="text-xs font-bold text-gray-400 uppercase mb-2 pl-1">{t.has('selectedPackagesList') ? t('selectedPackagesList') : 'Paquetes seleccionados:'}</p>
-                            <ul className="space-y-2">
+                        {/* ESTIMATED COSTS - 2 COLUMNS */}
+                        {isLoadingEstimate && (
+                            <div className="p-3 bg-gray-50 rounded-xl text-xs text-gray-400 text-center animate-pulse">
+                                {t('estimatedCostsLoading')}
+                            </div>
+                        )}
+                        {consolidationEstimate && !isLoadingEstimate && (
+                            <div className="bg-blue-50 rounded-xl border border-blue-100 p-3">
+                                <p className="text-xs font-bold text-blue-700 uppercase tracking-wider mb-3">💡 {t('estimatedCostsTitle')}</p>
+                                <div className="grid grid-cols-2 gap-3">
+                                    {consolidationEstimate.air > 0 && (
+                                        <div className="bg-white rounded-xl p-3 border border-yellow-100 space-y-1">
+                                            <p className="text-xs font-bold text-yellow-700">{t('airServiceLabel')}</p>
+                                            <div className="flex justify-between text-xs text-gray-500"><span>{t('freightLabel')}</span><span>${consolidationEstimate.air.toFixed(2)}</span></div>
+                                            <div className="flex justify-between text-xs text-gray-500"><span>Fee</span><span>${consolidationEstimate.handlingFee?.toFixed(2)}</span></div>
+                                            <div className="flex justify-between text-xs text-gray-500"><span>{t('processingFeeLabel')}</span><span>${consolidationEstimate.airProcessing?.toFixed(2)}</span></div>
+                                            <div className="border-t border-gray-100 pt-1 flex justify-between text-xs font-bold text-gray-800"><span>{t('estimatedTotal')}</span><span>${consolidationEstimate.airTotal?.toFixed(2)}</span></div>
+                                        </div>
+                                    )}
+                                    {consolidationEstimate.ocean > 0 && (
+                                        <div className="bg-white rounded-xl p-3 border border-blue-100 space-y-1">
+                                            <p className="text-xs font-bold text-blue-700">{t('oceanServiceLabel')}</p>
+                                            <div className="flex justify-between text-xs text-gray-500"><span>{t('freightLabel')}</span><span>${consolidationEstimate.ocean.toFixed(2)}</span></div>
+                                            <div className="flex justify-between text-xs text-gray-500"><span>Fee</span><span>${consolidationEstimate.handlingFee?.toFixed(2)}</span></div>
+                                            <div className="flex justify-between text-xs text-gray-500"><span>{t('processingFeeLabel')}</span><span>${consolidationEstimate.oceanProcessing?.toFixed(2)}</span></div>
+                                            <div className="border-t border-gray-100 pt-1 flex justify-between text-xs font-bold text-gray-800"><span>{t('estimatedTotal')}</span><span>${consolidationEstimate.oceanTotal?.toFixed(2)}</span></div>
+                                        </div>
+                                    )}
+                                    {((user as any)?.countryCode || '').toUpperCase() === 'US' && consolidationEstimate.local && (
+                                        <div className="bg-white rounded-xl p-3 border border-gray-100 space-y-1 col-span-2">
+                                            <p className="text-xs font-bold text-gray-700">{t('localServiceLabel')}</p>
+                                            <div className="flex justify-between text-xs font-bold text-gray-800"><span>{t('estimatedTotal')}</span><span>${consolidationEstimate.local?.toFixed(2)}</span></div>
+                                        </div>
+                                    )}
+                                </div>
+                                <p className="text-[10px] text-gray-400 mt-2">{t('estimatedCostsNote')}</p>
+                            </div>
+                        )}
+
+                        {/* PACKAGES LIST */}
+                        <div className="bg-gray-50 rounded-xl p-3 border border-gray-100 max-h-32 overflow-y-auto">
+                            <p className="text-xs font-bold text-gray-400 uppercase mb-2">{t.has('selectedPackagesList') ? t('selectedPackagesList') : 'Selected packages:'}</p>
+                            <ul className="space-y-1">
                                 {selectedPackagesData.map((pkg, idx) => (
                                     <li key={pkg.id} className="flex items-center gap-2 text-xs text-gray-700">
-                                        <span className="bg-white w-5 h-5 rounded flex items-center justify-center border text-blue-500 font-bold">{idx + 1}</span>
+                                        <span className="bg-white w-5 h-5 rounded flex items-center justify-center border text-blue-500 font-bold shrink-0">{idx + 1}</span>
                                         <span className="truncate flex-1">{pkg.description || 'Sin descripción'}</span>
                                         <span className="font-mono text-gray-400">{pkg.weightLbs}lb</span>
                                     </li>
@@ -872,66 +886,27 @@ useEffect(() => {
                             </ul>
                         </div>
 
-                        {/* ESTIMATED COST */}
-                        {isLoadingEstimate && (
-                          <div className="mt-3 p-3 bg-gray-50 rounded-xl text-xs text-gray-400 text-center animate-pulse">
-                            {t('estimatedCostsLoading')}
-                          </div>
-                        )}
-                        {consolidationEstimate && !isLoadingEstimate && (
-                          <div className="mt-3 p-3 bg-blue-50 rounded-xl border border-blue-100 text-left space-y-2">
-                            <p className="text-xs font-bold text-blue-700 uppercase tracking-wider mb-2">💡 {t('estimatedCostsTitle')}</p>
-                            {consolidationEstimate.air > 0 && (
-                              <div className="space-y-1 pb-2 border-b border-blue-100">
-                                <p className="text-xs font-bold text-gray-700">{t('airServiceLabel')}</p>
-                                <div className="flex justify-between text-xs text-gray-500"><span>{t('freightLabel')}</span><span>${consolidationEstimate.air.toFixed(2)}</span></div>
-                                <div className="flex justify-between text-xs text-gray-500"><span>{t('consolidationFeeDetail', { count: selectedPkgs.length })}</span><span>${consolidationEstimate.handlingFee?.toFixed(2)}</span></div>
-                                <div className="flex justify-between text-xs text-gray-500"><span>{t('processingFeeLabel')}</span><span>${consolidationEstimate.airProcessing?.toFixed(2)}</span></div>
-                                <div className="flex justify-between text-xs font-bold text-gray-800"><span>{t('estimatedTotal')}</span><span>${consolidationEstimate.airTotal?.toFixed(2)}</span></div>
-                              </div>
+                        {/* SERVICE DESCRIPTION */}
+                        <p className="text-xs text-gray-500 leading-relaxed text-center">
+                            {consolidationType === 'LOCAL' ? (
+                                <>{t.rich('custom_text_local', { strong: (chunks) => <strong className="text-gray-800">{chunks}</strong> })}</>
+                            ) : consolidationType === 'OCEAN' ? (
+                                <>{t.rich('custom_text_ocean', { strong: (chunks) => <strong className="text-gray-800">{chunks}</strong> })}</>
+                            ) : (
+                                <>{t.rich('custom_text', { strong: (chunks) => <strong className="text-gray-800">{chunks}</strong> })}</>
                             )}
-                            {consolidationEstimate.ocean > 0 && (
-                              <div className="space-y-1 pt-1">
-                                <p className="text-xs font-bold text-gray-700">{t('oceanServiceLabel')}</p>
-                                <div className="flex justify-between text-xs text-gray-500"><span>{t('freightLabel')}</span><span>${consolidationEstimate.ocean.toFixed(2)}</span></div>
-                                <div className="flex justify-between text-xs text-gray-500"><span>{t('consolidationFeeDetail', { count: selectedPkgs.length })}</span><span>${consolidationEstimate.handlingFee?.toFixed(2)}</span></div>
-                                <div className="flex justify-between text-xs text-gray-500"><span>{t('processingFeeLabel')}</span><span>${consolidationEstimate.oceanProcessing?.toFixed(2)}</span></div>
-                                <div className="flex justify-between text-xs font-bold text-gray-800"><span>{t('estimatedTotal')}</span><span>${consolidationEstimate.oceanTotal?.toFixed(2)}</span></div>
-                              </div>
-                            )}
-                            {((user as any)?.countryCode || '').toUpperCase() === 'US' && consolidationEstimate.local && (
-                              <div className="space-y-1 pt-1 border-t border-blue-100">
-                                <p className="text-xs font-bold text-gray-700">{t('localServiceLabel')}</p>
-                                <div className="flex justify-between text-xs font-bold text-gray-800"><span>{t('estimatedTotal')}</span><span>${consolidationEstimate.local?.toFixed(2)}</span></div>
-                              </div>
-                            )}
-                            <p className="text-[10px] text-gray-400 mt-1">{t('estimatedCostsNote')}</p>
-                          </div>
-                        )}
+                        </p>
                     </div>
 
+                    {/* FOOTER */}
                     <div className="p-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3">
-                        <button 
-                            onClick={() => setIsConsolidateModalOpen(false)}
-                            className="px-4 py-2 text-gray-600 font-bold text-sm hover:bg-gray-100 rounded-lg transition-colors"
-                        >
+                        <button onClick={() => setIsConsolidateModalOpen(false)} className="px-4 py-2 text-gray-600 font-bold text-sm hover:bg-gray-100 rounded-lg transition-colors">
                             {t('cancel')}
                         </button>
-                        
-                        <button 
-                            onClick={onConfirmConsolidation}
-                            disabled={isConsolidating}
-                            className={`${consolidationType === 'LOCAL' ? 'bg-black text-white hover:bg-gray-800' : consolidationType === 'OCEAN' ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-gmc-dorado-principal text-black hover:bg-yellow-500'} px-6 py-2 rounded-lg font-bold text-sm shadow-md flex items-center gap-2 disabled:opacity-70`}
-                        >
+                        <button onClick={onConfirmConsolidation} disabled={isConsolidating}
+                            className={`${consolidationType === 'LOCAL' ? 'bg-black text-white hover:bg-gray-800' : consolidationType === 'OCEAN' ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-gmc-dorado-principal text-black hover:bg-yellow-500'} px-6 py-2 rounded-lg font-bold text-sm shadow-md flex items-center gap-2 disabled:opacity-70`}>
                             {isConsolidating ? <Loader2 className="animate-spin" size={16}/> : <CheckCircle size={16}/>}
-                            {isConsolidating 
-                                ? t('sendingRequest') 
-                                : consolidationType === 'LOCAL'
-                                    ? (t.has('btnConfirmLocal') ? t('btnConfirmLocal') : 'Confirmar Entrega Local')
-                                    : consolidationType === 'OCEAN'
-                                        ? (t.has('btnConsolidateOcean') ? t('btnConsolidateOcean') : 'Agrupar en Pallet (Marítimo)')
-                                        : t('btnConsolidate')
-                            }
+                            {isConsolidating ? t('sendingRequest') : consolidationType === 'LOCAL' ? (t.has('btnConfirmLocal') ? t('btnConfirmLocal') : 'Confirm Local Delivery') : consolidationType === 'OCEAN' ? (t.has('btnConsolidateOcean') ? t('btnConsolidateOcean') : 'Group on Pallet (Ocean)') : t('btnConsolidate')}
                         </button>
                     </div>
                 </div>
