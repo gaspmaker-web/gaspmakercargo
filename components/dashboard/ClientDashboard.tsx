@@ -841,69 +841,7 @@ useEffect(() => {
     </p>
 )}
 
-{/* ESTIMATED COST */}
-{isLoadingEstimate && (
-  <div className="mt-3 p-3 bg-gray-50 rounded-xl text-xs text-gray-400 text-center animate-pulse">
-    {t('estimatedCostsLoading')}
-  </div>
-)}
-{consolidationEstimate && !isLoadingEstimate && (
-  <div className="mt-3 p-3 bg-blue-50 rounded-xl border border-blue-100 text-left space-y-2">
-    <p className="text-xs font-bold text-blue-700 uppercase tracking-wider mb-2">💡 {t('estimatedCostsTitle')}</p>
-    {consolidationEstimate.air > 0 && (
-      <div className="space-y-1 pb-2 border-b border-blue-100">
-        <p className="text-xs font-bold text-gray-700">{t('airServiceLabel')}</p>
-        <div className="flex justify-between text-xs text-gray-500">
-          <span>{t('freightLabel')}</span>
-          <span>${consolidationEstimate.air.toFixed(2)}</span>
-        </div>
-        <div className="flex justify-between text-xs text-gray-500">
-          <span>{t('consolidationFeeDetail', { count: selectedPkgs.length })}</span>
-          <span>${consolidationEstimate.handlingFee?.toFixed(2)}</span>
-        </div>
-        <div className="flex justify-between text-xs text-gray-500">
-          <span>{t('processingFeeLabel')}</span>
-          <span>${consolidationEstimate.airProcessing?.toFixed(2)}</span>
-        </div>
-        <div className="flex justify-between text-xs font-bold text-gray-800">
-          <span>{t('estimatedTotal')}</span>
-          <span>${consolidationEstimate.airTotal?.toFixed(2)}</span>
-        </div>
-      </div>
-    )}
-    {consolidationEstimate.ocean > 0 && (
-      <div className="space-y-1 pt-1">
-        <p className="text-xs font-bold text-gray-700">{t('oceanServiceLabel')}</p>
-        <div className="flex justify-between text-xs text-gray-500">
-          <span>{t('freightLabel')}</span>
-          <span>${consolidationEstimate.ocean.toFixed(2)}</span>
-        </div>
-        <div className="flex justify-between text-xs text-gray-500">
-          <span>{t('consolidationFeeDetail', { count: selectedPkgs.length })}</span>
-          <span>${consolidationEstimate.handlingFee?.toFixed(2)}</span>
-        </div>
-        <div className="flex justify-between text-xs text-gray-500">
-          <span>{t('processingFeeLabel')}</span>
-          <span>${consolidationEstimate.oceanProcessing?.toFixed(2)}</span>
-        </div>
-        <div className="flex justify-between text-xs font-bold text-gray-800">
-          <span>{t('estimatedTotal')}</span>
-          <span>${consolidationEstimate.oceanTotal?.toFixed(2)}</span>
-        </div>
-      </div>
-    )}
-    {((user as any)?.countryCode || '').toUpperCase() === 'US' && consolidationEstimate.local && (
-      <div className="space-y-1 pt-1 border-t border-blue-100">
-        <p className="text-xs font-bold text-gray-700">{t('localServiceLabel')}</p>
-        <div className="flex justify-between text-xs font-bold text-gray-800">
-          <span>{t('estimatedTotal')}</span>
-          <span>${consolidationEstimate.local?.toFixed(2)}</span>
-        </div>
-      </div>
-    )}
-    <p className="text-[10px] text-gray-400 mt-1">{t('estimatedCostsNote')}</p>
-  </div>
-)}
+
                             <p className="text-sm text-gray-500 leading-relaxed">
                                 {consolidationType === 'LOCAL' ? (
                                     <>{t.rich('custom_text_local', {
@@ -933,6 +871,43 @@ useEffect(() => {
                                 ))}
                             </ul>
                         </div>
+
+                        {/* ESTIMATED COST */}
+                        {isLoadingEstimate && (
+                          <div className="mt-3 p-3 bg-gray-50 rounded-xl text-xs text-gray-400 text-center animate-pulse">
+                            {t('estimatedCostsLoading')}
+                          </div>
+                        )}
+                        {consolidationEstimate && !isLoadingEstimate && (
+                          <div className="mt-3 p-3 bg-blue-50 rounded-xl border border-blue-100 text-left space-y-2">
+                            <p className="text-xs font-bold text-blue-700 uppercase tracking-wider mb-2">💡 {t('estimatedCostsTitle')}</p>
+                            {consolidationEstimate.air > 0 && (
+                              <div className="space-y-1 pb-2 border-b border-blue-100">
+                                <p className="text-xs font-bold text-gray-700">{t('airServiceLabel')}</p>
+                                <div className="flex justify-between text-xs text-gray-500"><span>{t('freightLabel')}</span><span>${consolidationEstimate.air.toFixed(2)}</span></div>
+                                <div className="flex justify-between text-xs text-gray-500"><span>{t('consolidationFeeDetail', { count: selectedPkgs.length })}</span><span>${consolidationEstimate.handlingFee?.toFixed(2)}</span></div>
+                                <div className="flex justify-between text-xs text-gray-500"><span>{t('processingFeeLabel')}</span><span>${consolidationEstimate.airProcessing?.toFixed(2)}</span></div>
+                                <div className="flex justify-between text-xs font-bold text-gray-800"><span>{t('estimatedTotal')}</span><span>${consolidationEstimate.airTotal?.toFixed(2)}</span></div>
+                              </div>
+                            )}
+                            {consolidationEstimate.ocean > 0 && (
+                              <div className="space-y-1 pt-1">
+                                <p className="text-xs font-bold text-gray-700">{t('oceanServiceLabel')}</p>
+                                <div className="flex justify-between text-xs text-gray-500"><span>{t('freightLabel')}</span><span>${consolidationEstimate.ocean.toFixed(2)}</span></div>
+                                <div className="flex justify-between text-xs text-gray-500"><span>{t('consolidationFeeDetail', { count: selectedPkgs.length })}</span><span>${consolidationEstimate.handlingFee?.toFixed(2)}</span></div>
+                                <div className="flex justify-between text-xs text-gray-500"><span>{t('processingFeeLabel')}</span><span>${consolidationEstimate.oceanProcessing?.toFixed(2)}</span></div>
+                                <div className="flex justify-between text-xs font-bold text-gray-800"><span>{t('estimatedTotal')}</span><span>${consolidationEstimate.oceanTotal?.toFixed(2)}</span></div>
+                              </div>
+                            )}
+                            {((user as any)?.countryCode || '').toUpperCase() === 'US' && consolidationEstimate.local && (
+                              <div className="space-y-1 pt-1 border-t border-blue-100">
+                                <p className="text-xs font-bold text-gray-700">{t('localServiceLabel')}</p>
+                                <div className="flex justify-between text-xs font-bold text-gray-800"><span>{t('estimatedTotal')}</span><span>${consolidationEstimate.local?.toFixed(2)}</span></div>
+                              </div>
+                            )}
+                            <p className="text-[10px] text-gray-400 mt-1">{t('estimatedCostsNote')}</p>
+                          </div>
+                        )}
                     </div>
 
                     <div className="p-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3">
