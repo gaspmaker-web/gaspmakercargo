@@ -34,7 +34,7 @@ const KpiCard = ({ value, label, isAlert }: { value: string | number, label: str
 );
 
 interface ClientDashboardProps {
-  user: User & { address?: string; suiteNo?: string; cityZip?: string; country?: string; phone?: string; };
+  user: User & { address?: string; suiteNo?: string; cityZip?: string; country?: string; phone?: string; countryCode?: string; };
   packages: PackageWithFees[]; 
   totalDebt: number; 
   pendingBillsCount?: number;
@@ -91,7 +91,9 @@ export default function ClientDashboard({
   const [consolidationType, setConsolidationType] = useState<'AERIAL' | 'LOCAL' | 'OCEAN'>('AERIAL');
 
   const [isPickupModalOpen, setIsPickupModalOpen] = useState(false);
-  const [isConsolidateModalOpen, setIsConsolidateModalOpen] = useState(false); 
+  const [isConsolidateModalOpen, setIsConsolidateModalOpen] = useState(false);
+  const [consolidationEstimate, setConsolidationEstimate] = useState<{air?: number; ocean?: number; local?: number; handlingFee?: number} | null>(null);
+  const [isLoadingEstimate, setIsLoadingEstimate] = useState(false); 
   
   const [pickupDate, setPickupDate] = useState("");
   const [pickupTime, setPickupTime] = useState("");
@@ -178,7 +180,6 @@ useEffect(() => {
               return;
           }
       }
-
       // 🔥 VALIDACIÓN DE FACTURAS CORREGIDA PARA OMITIR SOBRES
       const packagesWithoutInvoice = selectedPackagesData.filter(p => {
           const isDocument = p.courier === 'Buzón Virtual' || (p.carrierTrackingNumber || '').startsWith('DOC-') || (p.gmcTrackingNumber || '').startsWith('GMC-DOC-');
@@ -192,7 +193,31 @@ useEffect(() => {
       }
 
       setConsolidationType(type);
+      setConsolidationEstimate(null);
       setIsConsolidateModalOpen(true);
+
+      const fetchEstimate = async () => {
+        setIsLoadingEstimate(true);
+        const countryCode = (user as any)?.countryCode || 'JM';
+        const handlingFee = selectedPkgs.length * 0.60;
+        try {
+          const [airRes, oceanRes] = await Promise.all([
+            fetch('/api/rates', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ weightLbs: totalSelectedWeight, serviceType: 'SHIPPING_INTL', destination: { countryCode, country: countryCode } }) }),
+            fetch('/api/rates', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ weightLbs: totalSelectedWeight, serviceType: 'OCEAN_CONSOLIDATION', dimensions: { length: 20, width: 20, height: 20 }, destination: { countryCode, country: countryCode } }) })
+          ]);
+          const airData = await airRes.json();
+          const oceanData = await oceanRes.json();
+          const airRate = airData?.rates?.find((r: any) => r.carrier === 'Gasp Maker Cargo');
+          const oceanRate = oceanData?.rates?.find((r: any) => r.carrier === 'Gasp Maker Cargo');
+          setConsolidationEstimate({
+            air: airRate?.price,
+            ocean: oceanRate?.price,
+            local: totalSelectedWeight <= 40 ? 95 : totalSelectedWeight <= 150 ? 125 : 195,
+            handlingFee
+          });
+        } catch(e) { console.error(e); } finally { setIsLoadingEstimate(false); }
+      };
+      fetchEstimate();
   };
 
   // 🔥 LÓGICA REAL DE CONSOLIDACIÓN / ENVÍO
@@ -802,6 +827,35 @@ useEffect(() => {
     <p className="text-xs font-bold text-gray-400 mb-2">
         {totalSelectedVolume.toFixed(2)} ft³ — {t('volumeLabel')}
     </p>
+)}
+
+{/* ESTIMATED COST */}
+{isLoadingEstimate && (
+  <div className="mt-3 p-3 bg-gray-50 rounded-xl text-xs text-gray-400 text-center animate-pulse">
+    Calculating estimated cost...
+  </div>
+)}
+{consolidationEstimate && !isLoadingEstimate && (
+  <div className="mt-3 p-3 bg-blue-50 rounded-xl border border-blue-100 text-left space-y-2">
+    <p className="text-xs font-bold text-blue-700 uppercase tracking-wider mb-2">💡 Estimated Costs (approximate)</p>
+    {consolidationEstimate.air && (
+      <div className="flex justify-between text-xs">
+        <span className="text-gray-600">✈️ Air (3-5 days)</span>
+        <span className="font-bold text-gray-800">${consolidationEstimate.air.toFixed(2)} + ${consolidationEstimate.handlingFee?.toFixed(2)} fee</span>
+      </div>
+    )}
+    {consolidationEstimate.ocean && (
+      <div className="flex justify-between text-xs">
+        <span className="text-gray-600">🚢 Ocean (14-21 days)</span>
+        <span className="font-bold text-gray-800">${consolidationEstimate.ocean.toFixed(2)}</span>
+      </div>
+    )}
+    <div className="flex justify-between text-xs">
+      <span className="text-gray-600">🚚 Local Delivery</span>
+      <span className="font-bold text-gray-800">${consolidationEstimate.local?.toFixed(2)}</span>
+    </div>
+    <p className="text-[10px] text-gray-400 mt-1">* Final price may vary after weighing and measuring</p>
+  </div>
 )}
                             <p className="text-sm text-gray-500 leading-relaxed">
                                 {consolidationType === 'LOCAL' ? (
