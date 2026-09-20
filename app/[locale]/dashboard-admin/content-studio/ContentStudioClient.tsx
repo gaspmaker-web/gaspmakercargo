@@ -12,18 +12,18 @@ const CONTENT_TYPES = [
 ];
 
 const TOPICS = [
-  { id: 'miami_locker', label: '📦 Casillero Miami Gratis' },
-  { id: 'amazon_bundle', label: '🛒 Bundle Amazon' },
-  { id: 'consolidation', label: '📫 Consolidaciones' },
-  { id: 'calculator', label: '💰 Calculadora de Precios' },
-  { id: 'referral', label: '🎁 Programa Referidos $25' },
-  { id: 'testimonial', label: '⭐ Testimonio de Cliente' },
-  { id: 'mailbox', label: '✉️ Mailbox Virtual' },
-  { id: 'caribbean_shipping', label: '🌊 Envíos al Caribe' },
-  { id: 'air_shipping', label: '✈️ Envío Aéreo 3-5 días' },
-  { id: 'ocean_shipping', label: '🚢 Envío Marítimo' },
-  { id: 'how_it_works', label: '🔄 Cómo Funciona' },
-  { id: 'register', label: '🆓 Registro Gratis' },
+  { id: 'miami_locker', label: '📦 Free Miami Locker' },
+  { id: 'amazon_bundle', label: '🛒 Amazon Bundle' },
+  { id: 'consolidation', label: '📫 Package Consolidation' },
+  { id: 'calculator', label: '💰 Shipping Calculator' },
+  { id: 'referral', label: '🎁 Referral Program $25' },
+  { id: 'testimonial', label: '⭐ Customer Testimonial' },
+  { id: 'mailbox', label: '✉️ Virtual Mailbox' },
+  { id: 'caribbean_shipping', label: '🌊 Caribbean Shipping' },
+  { id: 'air_shipping', label: '✈️ Air Shipping 3-5 days' },
+  { id: 'ocean_shipping', label: '🚢 Ocean Shipping' },
+  { id: 'how_it_works', label: '🔄 How It Works' },
+  { id: 'register', label: '🆓 Free Registration' },
 ];
 
 const LANGUAGES = [
@@ -86,12 +86,7 @@ ALWAYS respond in JSON only, no markdown, no backticks:
       const response = await fetch('/api/content-studio', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-6',
-          max_tokens: 1000,
-          system: systemPrompt,
-          messages: [{ role: 'user', content: userPrompt }],
-        }),
+      body: JSON.stringify({ systemPrompt, userPrompt }),
       });
       const data = await response.json();
       const text = data?.content?.[0]?.text || '{}';
