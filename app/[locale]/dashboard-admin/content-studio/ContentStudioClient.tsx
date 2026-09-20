@@ -83,9 +83,9 @@ ALWAYS respond in JSON only, no markdown, no backticks:
     const userPrompt = `Create ${typeLabel} content in ${language === 'es' ? 'Spanish' : language === 'en' ? 'English' : language === 'pt' ? 'Portuguese' : 'French'} about: ${topicLabel}.${customPrompt ? ` Additional: ${customPrompt}` : ''}`;
 
     try {
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
+      const response = await fetch('/api/content-studio', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'anthropic-version': '2023-06-01' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           model: 'claude-sonnet-4-6',
           max_tokens: 1000,
