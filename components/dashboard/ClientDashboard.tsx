@@ -198,7 +198,9 @@ useEffect(() => {
 
       const fetchEstimate = async () => {
         setIsLoadingEstimate(true);
-        const countryCode = (user as any)?.countryCode || 'JM';
+        const countryCode = (user as any)?.countryCode || (user as any)?.country || 'JM';
+        console.log('DEBUG GMC countryCode:', countryCode, 'user.countryCode:', (user as any)?.countryCode);
+console.log('DEBUG countryCode:', countryCode, 'user:', (user as any)?.countryCode);
         const handlingFee = selectedPkgs.length * 0.60;
         try {
           const [airRes, oceanRes] = await Promise.all([
@@ -832,29 +834,31 @@ useEffect(() => {
 {/* ESTIMATED COST */}
 {isLoadingEstimate && (
   <div className="mt-3 p-3 bg-gray-50 rounded-xl text-xs text-gray-400 text-center animate-pulse">
-    Calculating estimated cost...
+    {t('estimatedCostsLoading')}
   </div>
 )}
 {consolidationEstimate && !isLoadingEstimate && (
   <div className="mt-3 p-3 bg-blue-50 rounded-xl border border-blue-100 text-left space-y-2">
-    <p className="text-xs font-bold text-blue-700 uppercase tracking-wider mb-2">💡 Estimated Costs (approximate)</p>
+    <p className="text-xs font-bold text-blue-700 uppercase tracking-wider mb-2">💡 {t('estimatedCostsTitle')}</p>
     {consolidationEstimate.air && (
       <div className="flex justify-between text-xs">
-        <span className="text-gray-600">✈️ Air (3-5 days)</span>
-        <span className="font-bold text-gray-800">${consolidationEstimate.air.toFixed(2)} + ${consolidationEstimate.handlingFee?.toFixed(2)} fee</span>
+        <span className="text-gray-600">{t('airServiceLabel')}</span>
+        <span className="font-bold text-gray-800">${consolidationEstimate.air.toFixed(2)} + ${consolidationEstimate.handlingFee?.toFixed(2)} {t('consolidationFeeLabel')}</span>
       </div>
     )}
     {consolidationEstimate.ocean && (
       <div className="flex justify-between text-xs">
-        <span className="text-gray-600">🚢 Ocean (14-21 days)</span>
+        <span className="text-gray-600">{t('oceanServiceLabel')}</span>
         <span className="font-bold text-gray-800">${consolidationEstimate.ocean.toFixed(2)}</span>
       </div>
     )}
-    <div className="flex justify-between text-xs">
-      <span className="text-gray-600">🚚 Local Delivery</span>
-      <span className="font-bold text-gray-800">${consolidationEstimate.local?.toFixed(2)}</span>
-    </div>
-    <p className="text-[10px] text-gray-400 mt-1">* Final price may vary after weighing and measuring</p>
+    {(user as any)?.countryCode === 'US' && consolidationEstimate.local && (
+      <div className="flex justify-between text-xs">
+        <span className="text-gray-600">{t('localServiceLabel')}</span>
+        <span className="font-bold text-gray-800">${consolidationEstimate.local?.toFixed(2)}</span>
+      </div>
+    )}
+    <p className="text-[10px] text-gray-400 mt-1">{t('estimatedCostsNote')}</p>
   </div>
 )}
                             <p className="text-sm text-gray-500 leading-relaxed">
