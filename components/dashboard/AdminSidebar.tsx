@@ -7,7 +7,7 @@ import { useSession } from 'next-auth/react';
 import { 
   Package, Truck, Layers, Users, DollarSign, Settings, LayoutDashboard,
   LogOut, Menu, X, Bell, Zap, AlertCircle, Mailbox, ChevronDown,
-  ShoppingBag, Gift, PanelLeftClose, PanelLeftOpen, ArrowLeft, UserPlus
+  ShoppingBag, Gift, PanelLeftClose, PanelLeftOpen, ArrowLeft, UserPlus, Sparkles
 } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 import { useSidebar } from '@/lib/admin-sidebar-context';
@@ -101,6 +101,7 @@ const menuItems = [
     { name: "Drivers", href: `/${currentLocale}/dashboard-admin/drivers`, icon: Truck, roles: ["ADMIN"] },
     { name: "Driver Applications", href: `/${currentLocale}/dashboard-admin/driver-applications`, icon: Truck, roles: ["ADMIN"] },
     { name: "Finances", href: `/${currentLocale}/dashboard-admin/finanzas`, icon: DollarSign, roles: ["ADMIN"] },
+    { name: "Content Studio", href: `/${currentLocale}/dashboard-admin/content-studio`, icon: Sparkles, roles: ["ADMIN"] },
     { name: "Settings", href: `/${currentLocale}/dashboard-admin/configuracion`, icon: Settings, roles: ["ADMIN"] }
   ];
 
