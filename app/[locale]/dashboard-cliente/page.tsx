@@ -98,6 +98,7 @@ export default async function DashboardPage({ params: { locale } }: Props) {
     where: { userId: session.user.id, isDefault: true }
   });
   const isUSClient = (defaultAddress?.countryCode || '').toUpperCase() === 'US';
+  console.log('DEBUG ADDRESS:', defaultAddress?.countryCode, defaultAddress?.country, 'isUSClient:', isUSClient);
 
   const userPlan = (dbUser as any)?.planType;
   const resolvedPlanType = userPlan === 'VIP_WHOLESALE' ? 'VIP_WHOLESALE' : planType;
