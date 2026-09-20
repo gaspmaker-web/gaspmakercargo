@@ -473,8 +473,8 @@ useEffect(() => {
                             {/* 🔥 BOTONES EXTRAS: SE MUESTRAN SI SUPERA LAS 150 LBS */}
                             {totalWeightInWarehouse > 150 && (
                                 <>
-                                    {/* BOTÓN 2: PALLET LOCAL */}
-                                    <button
+                                                                        {/* BOTÓN 2: PALLET LOCAL — solo US */}
+                                    {(user as any)?.isUSClient && <button
                                         onClick={() => {
                                             const clearPackages = displayPackages.filter(p => !p.isBlocked);
                                             setSelectedPkgs(clearPackages.map(p => p.id));
@@ -484,8 +484,8 @@ useEffect(() => {
                                         className="w-full sm:w-auto bg-black text-white hover:bg-gray-900 px-5 py-3 rounded-xl font-bold text-sm transition-all shadow-md flex items-center justify-center gap-2 transform hover:-translate-y-0.5"
                                     >
                                         <Truck size={18} />
-                                        {t.has('btnConsolidateLocalPallet') ? t('btnConsolidateLocalPallet') : 'Group on Pallet (delivery)'}
-                                    </button>
+                                                                            {t.has('btnConsolidateLocalPallet') ? t('btnConsolidateLocalPallet') : 'Group on Pallet (delivery)'}
+                                    </button>}
 
                                     {/* BOTÓN 3: OCEAN */}
                                     <button
@@ -768,13 +768,13 @@ useEffect(() => {
                        <MapPin size={14}/> {t('btnPickup')}
                     </button>
 
-                    <button 
+                                       {(user as any)?.isUSClient && <button 
                         onClick={() => handleConsolidateClick('LOCAL')}
                         disabled={isConsolidating}
                         className="snap-start shrink-0 bg-black hover:bg-gray-800 border border-gray-600 text-white px-3 sm:px-4 py-2 rounded-full text-[10px] sm:text-xs font-bold transition-colors flex items-center gap-1.5 whitespace-nowrap"
                     >
                         <Truck size={14}/> {t.has('btnLocalDelivery') ? t('btnLocalDelivery') : 'LOCAL DELIVERY'}
-                    </button>
+                    </button>}
 
                     <button 
                         onClick={() => handleConsolidateClick('AERIAL')}
