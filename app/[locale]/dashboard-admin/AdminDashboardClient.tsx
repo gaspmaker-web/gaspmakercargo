@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useSession } from 'next-auth/react'; 
 import { 
   Package, Users, Truck, MapPin, PlusCircle, Layers, 
-  Activity, DollarSign, ClipboardList, Car, Loader2, TrendingUp, Container, Store, ShieldAlert, Mailbox, FileSearch, Archive, ShoppingBag, Gift, ShoppingCart, ChevronDown, UserPlus
+  Activity, DollarSign, ClipboardList, Car, Loader2, TrendingUp, Container, Store, ShieldAlert, Mailbox, FileSearch, Archive, ShoppingBag, Gift, ShoppingCart, ChevronDown, UserPlus, Sparkles
 } from 'lucide-react';
 import dynamic from 'next/dynamic'
 const LiveDriversMap = dynamic(() => import('@/components/admin/LiveDriversMap'), { ssr: false })
@@ -200,6 +200,13 @@ export default function AdminDashboardClient({ locale }: { locale: string }) {
                 <div className="flex items-start justify-between">
                   <div><h3 className="text-base font-bold text-gmc-gris-oscuro group-hover:text-blue-600 transition-colors">Facebook Leads</h3><p className="text-xs text-gray-500 mt-1 font-medium">Manage ad campaign leads.</p></div>
                   <div className="bg-blue-50 p-2 rounded-lg text-blue-600 group-hover:bg-blue-100 transition-colors border border-blue-100"><UserPlus size={20} strokeWidth={2} /></div>
+                </div>
+              </Link>
+
+              <Link href={`/${locale}/dashboard-admin/content-studio`} className="group bg-white p-5 rounded-xl border border-gray-200 hover:border-yellow-500 hover:shadow-md transition-all cursor-pointer block">
+                <div className="flex items-start justify-between">
+                  <div><h3 className="text-base font-bold text-gmc-gris-oscuro group-hover:text-yellow-600 transition-colors">Content Studio</h3><p className="text-xs text-gray-500 mt-1 font-medium">Generate social media with AI.</p></div>
+                  <div className="bg-yellow-50 p-2 rounded-lg text-yellow-600 group-hover:bg-yellow-100 transition-colors border border-yellow-100"><Sparkles size={20} strokeWidth={2} /></div>
                 </div>
               </Link>
 
