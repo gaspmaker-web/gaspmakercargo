@@ -34,7 +34,7 @@ const KpiCard = ({ value, label, isAlert }: { value: string | number, label: str
 );
 
 interface ClientDashboardProps {
-  user: User & { address?: string; suiteNo?: string; cityZip?: string; country?: string; phone?: string; countryCode?: string; };
+  user: User & { address?: string; suiteNo?: string; cityZip?: string; country?: string; phone?: string; countryCode?: string; isUSClient?: boolean; };
   packages: PackageWithFees[]; 
   totalDebt: number; 
   pendingBillsCount?: number;
@@ -861,7 +861,7 @@ useEffect(() => {
                                             <div className="border-t border-gray-100 pt-1 flex justify-between text-xs font-bold text-gray-800"><span>{t('estimatedTotal')}</span><span>${consolidationEstimate.oceanTotal?.toFixed(2)}</span></div>
                                         </div>
                                     )}
-                                    {((user as any)?.countryCode || '').toUpperCase() === 'US' && consolidationEstimate.local && (
+                                    {(user as any)?.isUSClient && consolidationEstimate.local && (
                                         <div className="bg-white rounded-xl p-3 border border-gray-100 space-y-1 col-span-2">
                                             <p className="text-xs font-bold text-gray-700">{t('localServiceLabel')}</p>
                                             <div className="flex justify-between text-xs font-bold text-gray-800"><span>{t('estimatedTotal')}</span><span>${consolidationEstimate.local?.toFixed(2)}</span></div>

@@ -94,6 +94,10 @@ export default async function DashboardPage({ params: { locale } }: Props) {
   const dbUser = await prisma.user.findUnique({
     where: { id: session.user.id }
   });
+    const defaultAddress = await prisma.address.findFirst({
+    where: { userId: session.user.id, isDefault: true }
+  });
+  const isUSClient = (defaultAddress?.countryCode || '').toUpperCase() === 'US';
 
   const userPlan = (dbUser as any)?.planType;
   const resolvedPlanType = userPlan === 'VIP_WHOLESALE' ? 'VIP_WHOLESALE' : planType;
@@ -229,7 +233,7 @@ const normalizedPackages = allPackages.map(pkg => calculateFees(pkg, t));
         <OneSignalInit userId={session.user.id} />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <ClientDashboard
-                user={{...(session.user as any), countryCode: (dbUser as any)?.countryCode}}
+                user={{...(session.user as any), countryCode: (dbUser as any)?.countryCode, isUSClient}}
                 packages={activePackages}
                 totalDebt={totalDebt}
                 pendingBillsCount={pendingBills.length}
