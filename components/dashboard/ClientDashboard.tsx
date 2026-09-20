@@ -205,12 +205,12 @@ console.log('DEBUG countryCode:', countryCode, 'user:', (user as any)?.countryCo
         try {
           const [airRes, oceanRes] = await Promise.all([
             fetch('/api/rates', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ weightLbs: totalSelectedWeight, serviceType: 'SHIPPING_INTL', destination: { countryCode, country: countryCode } }) }),
-            fetch('/api/rates', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ weightLbs: totalSelectedWeight, serviceType: 'OCEAN_CONSOLIDATION', dimensions: { length: 20, width: 20, height: 20 }, destination: { countryCode, country: countryCode } }) })
+           fetch('/api/rates', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ weightLbs: totalSelectedWeight, serviceType: 'OCEAN_CONSOLIDATION', auraPieces: [{ length: 48, width: 40, height: Math.ceil(totalSelectedVolume * 1728 / (48 * 40)), weight: totalSelectedWeight }], destination: { countryCode, country: countryCode } }) })
           ]);
           const airData = await airRes.json();
           const oceanData = await oceanRes.json();
-          const airRate = airData?.rates?.find((r: any) => r.carrier === 'Gasp Maker Cargo');
-          const oceanRate = oceanData?.rates?.find((r: any) => r.carrier === 'Gasp Maker Cargo');
+         const airRate = airData?.rates?.find((r: any) => r.carrier === 'Gasp Maker Cargo' && !r.service?.toLowerCase().includes('maritime'));
+const oceanRate = oceanData?.rates?.find((r: any) => r.carrier === 'Gasp Maker Cargo' && r.service?.toLowerCase().includes('maritime'));
           setConsolidationEstimate({
             air: airRate?.price,
             ocean: oceanRate?.price,
