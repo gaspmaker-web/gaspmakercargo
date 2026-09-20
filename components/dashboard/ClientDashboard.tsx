@@ -198,7 +198,7 @@ useEffect(() => {
 
       const fetchEstimate = async () => {
         setIsLoadingEstimate(true);
-        const countryCode = (user as any)?.countryCode || (user as any)?.country || 'JM';
+        const countryCode = ((user as any)?.countryCode || (user as any)?.country || 'JM').toUpperCase();
         console.log('DEBUG GMC countryCode:', countryCode, 'user.countryCode:', (user as any)?.countryCode);
 console.log('DEBUG countryCode:', countryCode, 'user:', (user as any)?.countryCode);
         const handlingFee = selectedPkgs.length * 0.60;
