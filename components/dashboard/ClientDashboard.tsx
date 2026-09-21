@@ -219,7 +219,12 @@ useEffect(() => {
           setConsolidationEstimate({
             air: airFreight,
             ocean: oceanFreight,
-            local: totalSelectedWeight <= 40 ? 95 : totalSelectedWeight <= 150 ? 125 : 195,
+            local: (() => {
+  const flatRate = publicRates?.local_pre_built_pallet_flat || 163.95;
+  const palletVolume = 40 * 48 * 72 / 1728;
+  const palletsNeeded = Math.ceil(totalSelectedVolume / palletVolume);
+  return flatRate * palletsNeeded;
+})(),
             handlingFee,
             processingFeePct,
             airProcessing,
