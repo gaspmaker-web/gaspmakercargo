@@ -326,7 +326,7 @@ const isConsolidated = !isStorePickupVisual && (
               }
 
               
-              const shouldChargeHandling = isConsolidated && !isOcean && (
+             const shouldChargeHandling = isConsolidated && (
     (!isLocal && !isLocalAura) || 
     bill.chargeConsolidationFee === true
 );
