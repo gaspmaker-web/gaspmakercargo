@@ -444,62 +444,67 @@ useEffect(() => {
                             </div>
                         </div>
                         
-                        {/* BOTONES ABAJO CON SEPARADOR SUTIL */}
+                                           {/* BOTONES ABAJO CON SEPARADOR SUTIL */}
                         <div className="flex flex-col sm:flex-row flex-wrap gap-3 w-full border-t border-gray-100 pt-4">
-                            {/* BOTÓN 1: AÉREO */}
-                            <button
-                                onClick={() => {
-                                    const clearPackages = displayPackages.filter(p => !p.isBlocked);
-                                    let selectedIds: string[] = [];
-                                    let accumulatedWeight = 0;
-                                    const isVip = planType === 'VIP_WHOLESALE';
-                                    
-                                    for (let p of clearPackages) {
-                                        if (!isVip && (accumulatedWeight + (Number(p.weightLbs) || 0)) > 150) break; 
-                                        selectedIds.push(p.id);
-                                        accumulatedWeight += Number(p.weightLbs) || 0;
-                                    }
-                                    
-                                    setSelectedPkgs(selectedIds);
-                                    setConsolidationType('AERIAL');
-                                    setTimeout(() => handleConsolidateClick('AERIAL'), 50); 
-                                }}
-                                className="w-full sm:w-auto bg-gmc-dorado-principal text-black hover:bg-yellow-500 px-5 py-3 rounded-xl font-bold text-sm transition-all shadow-md flex items-center justify-center gap-2 transform hover:-translate-y-0.5"
-                            >
-                                <UploadCloud size={18} />
-                                {t.has('aerialReadyBtn') ? t('aerialReadyBtn') : 'Consolidate Air Shipment'}
-                            </button>
+                            
+                            {/* BOTÓN 1: AÉREO — solo para no-US */}
+                            {!(user as any)?.isUSClient && (
+                                <button
+                                    onClick={() => {
+                                        const clearPackages = displayPackages.filter(p => !p.isBlocked);
+                                        let selectedIds: string[] = [];
+                                        let accumulatedWeight = 0;
+                                        const isVip = planType === 'VIP_WHOLESALE';
+                                        for (let p of clearPackages) {
+                                            if (!isVip && (accumulatedWeight + (Number(p.weightLbs) || 0)) > 150) break; 
+                                            selectedIds.push(p.id);
+                                            accumulatedWeight += Number(p.weightLbs) || 0;
+                                        }
+                                        setSelectedPkgs(selectedIds);
+                                        setConsolidationType('AERIAL');
+                                        setTimeout(() => handleConsolidateClick('AERIAL'), 50); 
+                                    }}
+                                    className="w-full sm:w-auto bg-gmc-dorado-principal text-black hover:bg-yellow-500 px-5 py-3 rounded-xl font-bold text-sm transition-all shadow-md flex items-center justify-center gap-2 transform hover:-translate-y-0.5"
+                                >
+                                    <UploadCloud size={18} />
+                                    {t.has('aerialReadyBtn') ? t('aerialReadyBtn') : 'Consolidate Air Shipment'}
+                                </button>
+                            )}
 
                             {/* 🔥 BOTONES EXTRAS: SE MUESTRAN SI SUPERA LAS 150 LBS */}
                             {totalWeightInWarehouse > 150 && (
                                 <>
-                                                                        {/* BOTÓN 2: PALLET LOCAL — solo US */}
-                                    {(user as any)?.isUSClient && <button
-                                        onClick={() => {
-                                            const clearPackages = displayPackages.filter(p => !p.isBlocked);
-                                            setSelectedPkgs(clearPackages.map(p => p.id));
-                                            setConsolidationType('LOCAL');
-                                            setTimeout(() => handleConsolidateClick('LOCAL'), 50); 
-                                        }}
-                                        className="w-full sm:w-auto bg-black text-white hover:bg-gray-900 px-5 py-3 rounded-xl font-bold text-sm transition-all shadow-md flex items-center justify-center gap-2 transform hover:-translate-y-0.5"
-                                    >
-                                        <Truck size={18} />
-                                                                            {t.has('btnConsolidateLocalPallet') ? t('btnConsolidateLocalPallet') : 'Group on Pallet (delivery)'}
-                                    </button>}
+                                    {/* BOTÓN 2: PALLET LOCAL — solo US */}
+                                    {(user as any)?.isUSClient && (
+                                        <button
+                                            onClick={() => {
+                                                const clearPackages = displayPackages.filter(p => !p.isBlocked);
+                                                setSelectedPkgs(clearPackages.map(p => p.id));
+                                                setConsolidationType('LOCAL');
+                                                setTimeout(() => handleConsolidateClick('LOCAL'), 50); 
+                                            }}
+                                            className="w-full sm:w-auto bg-black text-white hover:bg-gray-900 px-5 py-3 rounded-xl font-bold text-sm transition-all shadow-md flex items-center justify-center gap-2 transform hover:-translate-y-0.5"
+                                        >
+                                            <Truck size={18} />
+                                            {t.has('btnConsolidateLocalPallet') ? t('btnConsolidateLocalPallet') : 'Group on Pallet (delivery)'}
+                                        </button>
+                                    )}
 
-                                    {/* BOTÓN 3: OCEAN */}
-                                    <button
-                                        onClick={() => {
-                                            const clearPackages = displayPackages.filter(p => !p.isBlocked);
-                                            setSelectedPkgs(clearPackages.map(p => p.id));
-                                            setConsolidationType('OCEAN');
-                                            setTimeout(() => handleConsolidateClick('OCEAN'), 50); 
-                                        }}
-                                        className="w-full sm:w-auto bg-blue-600 text-white hover:bg-blue-700 px-5 py-3 rounded-xl font-bold text-sm transition-all shadow-md flex items-center justify-center gap-2 transform hover:-translate-y-0.5"
-                                    >
-                                        <Ship size={18} />
-                                        {t.has('btnConsolidateOcean') ? t('btnConsolidateOcean') : 'Group on Pallet (Ocean)'}
-                                    </button>
+                                    {/* BOTÓN 3: OCEAN — solo para no-US */}
+                                    {!(user as any)?.isUSClient && (
+                                        <button
+                                            onClick={() => {
+                                                const clearPackages = displayPackages.filter(p => !p.isBlocked);
+                                                setSelectedPkgs(clearPackages.map(p => p.id));
+                                                setConsolidationType('OCEAN');
+                                                setTimeout(() => handleConsolidateClick('OCEAN'), 50); 
+                                            }}
+                                            className="w-full sm:w-auto bg-blue-600 text-white hover:bg-blue-700 px-5 py-3 rounded-xl font-bold text-sm transition-all shadow-md flex items-center justify-center gap-2 transform hover:-translate-y-0.5"
+                                        >
+                                            <Ship size={18} />
+                                            {t.has('btnConsolidateOcean') ? t('btnConsolidateOcean') : 'Group on Pallet (Ocean)'}
+                                        </button>
+                                    )}
                                 </>
                             )}
                         </div>
