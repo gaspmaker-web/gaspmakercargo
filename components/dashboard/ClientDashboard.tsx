@@ -781,23 +781,27 @@ useEffect(() => {
                         <Truck size={14}/> {t.has('btnLocalDelivery') ? t('btnLocalDelivery') : 'LOCAL DELIVERY'}
                     </button>}
 
-                    <button 
-                        onClick={() => handleConsolidateClick('AERIAL')}
-                        disabled={isConsolidating}
-                        className="snap-start shrink-0 bg-gmc-dorado-principal hover:bg-yellow-500 text-black px-3 sm:px-4 py-2 rounded-full text-[10px] sm:text-xs font-bold transition-colors flex items-center gap-1.5 disabled:opacity-70 disabled:cursor-not-allowed whitespace-nowrap shadow-md"
-                    >
-                        {isConsolidating ? <Loader2 className="animate-spin" size={14} /> : <Plane size={14} />}
-                        {isConsolidating ? '...' : (t.has('btnConsolidateAir') ? t('btnConsolidateAir') : 'CONSOLIDAR AÉREO')}
-                    </button>
+                                      {!(user as any)?.isUSClient && (
+                        <button 
+                            onClick={() => handleConsolidateClick('AERIAL')}
+                            disabled={isConsolidating}
+                            className="snap-start shrink-0 bg-gmc-dorado-principal hover:bg-yellow-500 text-black px-3 sm:px-4 py-2 rounded-full text-[10px] sm:text-xs font-bold transition-colors flex items-center gap-1.5 disabled:opacity-70 disabled:cursor-not-allowed whitespace-nowrap shadow-md"
+                        >
+                            {isConsolidating ? <Loader2 className="animate-spin" size={14} /> : <Plane size={14} />}
+                            {isConsolidating ? '...' : (t.has('btnConsolidateAir') ? t('btnConsolidateAir') : 'CONSOLIDATE AIR')}
+                        </button>
+                    )}
 
-                    <button 
-                        onClick={() => handleConsolidateClick('OCEAN')}
-                        disabled={isConsolidating}
-                        className="snap-start shrink-0 bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-4 py-2 rounded-full text-[10px] sm:text-xs font-bold transition-colors flex items-center gap-1.5 disabled:opacity-70 disabled:cursor-not-allowed whitespace-nowrap shadow-md"
-                    >
-                        {isConsolidating ? <Loader2 className="animate-spin" size={14} /> : <Ship size={14} />}
-                        {isConsolidating ? '...' : (t.has('btnConsolidateOcean') ? t('btnConsolidateOcean') : 'CONSOLIDAR MARÍTIMO')}
-                    </button>
+                    {!(user as any)?.isUSClient && (
+                        <button 
+                            onClick={() => handleConsolidateClick('OCEAN')}
+                            disabled={isConsolidating}
+                            className="snap-start shrink-0 bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-4 py-2 rounded-full text-[10px] sm:text-xs font-bold transition-colors flex items-center gap-1.5 disabled:opacity-70 disabled:cursor-not-allowed whitespace-nowrap shadow-md"
+                        >
+                            {isConsolidating ? <Loader2 className="animate-spin" size={14} /> : <Ship size={14} />}
+                            {isConsolidating ? '...' : (t.has('btnConsolidateOcean') ? t('btnConsolidateOcean') : 'Group on Pallet (Ocean)')}
+                        </button>
+                    )}
                 </div>
             </div>
         )}
