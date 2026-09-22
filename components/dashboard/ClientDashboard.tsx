@@ -162,23 +162,13 @@ useEffect(() => {
 
       const isVip = planType === 'VIP_WHOLESALE';
 
-      // 🔥 LÍMITES INTELIGENTES MULTILINGÜES
-      if (type === 'AERIAL') {
-          if (!isVip && totalSelectedWeight > 150) {
-              const msg = t.has('alertAerialLimit') 
-                ? t('alertAerialLimit', { weight: totalSelectedWeight.toFixed(2) })
-                : `⚠️ Límite aéreo excedido.\nEl máximo internacional es 150 lbs. Tienes ${totalSelectedWeight.toFixed(2)} lbs.\n💡 Si estás en Florida, usa el botón "Local Delivery".`;
-              alert(msg);
-              return;
-          }
-      } else if (type === 'LOCAL') {
-          if (totalSelectedWeight > 2000) {
-              const msg = t.has('alertLocalWeightLimit')
-                ? t('alertLocalWeightLimit', { weight: totalSelectedWeight.toFixed(2) })
-                : `⚠️ Límite de camión excedido.\nPara Local Delivery el máximo es 2,000 lbs. Tienes ${totalSelectedWeight.toFixed(2)} lbs.`;
-              alert(msg);
-              return;
-          }
+           // 🔥 LÍMITES INTELIGENTES
+      if (type === 'LOCAL' && totalSelectedWeight > 2000) {
+          const msg = t.has('alertLocalWeightLimit')
+            ? t('alertLocalWeightLimit', { weight: totalSelectedWeight.toFixed(2) })
+            : `⚠️ Límite de camión excedido.\nPara Local Delivery el máximo es 2,000 lbs. Tienes ${totalSelectedWeight.toFixed(2)} lbs.`;
+          alert(msg);
+          return;
       }
             // 🔥 VALIDACIÓN DE FACTURAS CORREGIDA PARA OMITIR SOBRES
       const packagesWithoutInvoice = selectedPackagesData.filter(p => {
@@ -438,11 +428,7 @@ useEffect(() => {
                                         })
                                     ) : (
                                         <>
-                                            You have <strong className="text-blue-600 font-mono font-bold text-base mx-1">{displayPackages.length} packages</strong> ({totalWeightInWarehouse.toFixed(1)} lbs) ready in the warehouse. 
-                                            Remember that the international limit for an air shipment is 150 lbs.
-                                            {totalWeightInWarehouse > 150 && (
-                                                <span className="block mt-1 font-medium text-gray-800">For larger loads, please select <strong>Group on Pallet (delivery)</strong> or <strong>Ocean</strong>.</span>
-                                            )}
+                                     You have <strong className="text-blue-600 font-mono font-bold text-base mx-1">{displayPackages.length} packages</strong> ({totalWeightInWarehouse.toFixed(1)} lbs) ready in the warehouse.
                                         </>
                                     )}
                                 </p>
