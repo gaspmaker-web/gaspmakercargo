@@ -189,7 +189,6 @@ useEffect(() => {
       const fetchEstimate = async () => {
         setIsLoadingEstimate(true);
         const countryCode = ((user as any)?.countryCode || '').toUpperCase();
-console.log('DEBUG fetchEstimate countryCode:', countryCode, 'raw:', (user as any)?.countryCode);
         const handlingFee = selectedPkgs.length * 0.60;
         try {
           const [airRes, oceanRes, ratesRes] = await Promise.all([
