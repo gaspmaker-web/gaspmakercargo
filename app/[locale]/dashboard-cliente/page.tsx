@@ -235,7 +235,7 @@ const normalizedPackages = allPackages.map(pkg => calculateFees(pkg, t));
         <OneSignalInit userId={session.user.id} />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <ClientDashboard
-                user={{...(session.user as any), countryCode: (dbUser as any)?.countryCode, isUSClient}}
+                user={{...(session.user as any), countryCode: (dbUser as any)?.countryCode || defaultAddress?.countryCode || defaultAddress?.country, isUSClient}}
                 packages={activePackages}
                 totalDebt={totalDebt}
                 pendingBillsCount={pendingBills.length}
