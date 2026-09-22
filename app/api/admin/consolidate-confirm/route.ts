@@ -111,6 +111,24 @@ export async function POST(req: Request) {
       data: updateData,
     });
 
+        // 🔥 SMS — Consolidación lista para pagar
+    try {
+      const { sendSMS, SMS_TEMPLATES } = await import('@/lib/sms');
+      const fullConsolidation = await prisma.consolidatedShipment.findUnique({
+        where: { id: consolidationId },
+        include: { user: true }
+      });
+      if (fullConsolidation?.user?.phone && fullConsolidation.user.smsConsent) {
+        const amount = updatedConsolidation.totalAmount?.toFixed(2) || '0.00';
+        await sendSMS(
+          fullConsolidation.user.phone,
+          SMS_TEMPLATES.consolidationReady(amount)
+        );
+      }
+    } catch (smsError) {
+      console.error('SMS error:', smsError);
+    }
+
     return NextResponse.json({ success: true, data: updatedConsolidation });
 
   } catch (error: any) {

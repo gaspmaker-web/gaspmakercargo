@@ -215,6 +215,23 @@ export async function POST(req: Request) {
         }
     });
 
+      // 🔥 SMS — Envío despachado
+    try {
+      const { sendSMS, SMS_TEMPLATES } = await import('@/lib/sms');
+      const fullConsolidation = await prisma.consolidatedShipment.findUnique({
+        where: { id: consolidationId },
+        include: { user: true }
+      });
+      if (fullConsolidation?.user?.phone && fullConsolidation.user.smsConsent) {
+        await sendSMS(
+          fullConsolidation.user.phone,
+          SMS_TEMPLATES.shipmentDispatched(allTrackings)
+        );
+      }
+    } catch (smsError) {
+      console.error('SMS error:', smsError);
+    }
+
     return NextResponse.json({
         success: true,
         boxes: boxes.length,
