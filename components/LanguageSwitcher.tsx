@@ -38,17 +38,25 @@ export default function LanguageSwitcher() {
       return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleSelect = (nextLocale: string) => {
-    // Si es el mismo idioma, solo cerramos
+  const handleSelect = async (nextLocale: string) => {
     if (nextLocale === locale) {
         setIsOpen(false);
         return;
     }
+    setIsOpen(false);
 
-    setIsOpen(false); // Cerramos el menú visualmente
+    // 🔥 Guardar preferredLocale en DB
+    try {
+      await fetch('/api/user/update-locale', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ locale: nextLocale })
+      });
+    } catch (e) {
+      console.error('Error saving locale:', e);
+    }
 
     startTransition(() => {
-      // 🚨 TU LÓGICA ORIGINAL: El router sabe poner el prefijo automáticamente
       router.replace(pathname, { locale: nextLocale });
     });
   };
