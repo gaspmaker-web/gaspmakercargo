@@ -72,6 +72,26 @@ if (carrierTrackingNumber) {
     revalidatePath('/dashboard-admin/paquetes');
     revalidatePath('/dashboard-cliente/paquetes');
 
+        // 🔥 SMS NOTIFICATION
+    try {
+      const { sendSMS, SMS_TEMPLATES } = await import('@/lib/sms');
+      const fullPkg = await prisma.package.findUnique({
+        where: { id: packageId },
+        include: { user: true }
+      });
+      if (fullPkg?.user?.phone && fullPkg.user.smsConsent) {
+        await sendSMS(
+          fullPkg.user.phone,
+          SMS_TEMPLATES.packageReceived(
+            fullPkg.gmcTrackingNumber,
+            finalWeight.toString()
+          )
+        );
+      }
+    } catch (smsError) {
+      console.error('SMS error:', smsError);
+    }
+
     return NextResponse.json({ success: true, package: updatedPackage });
 
   } catch (error) {

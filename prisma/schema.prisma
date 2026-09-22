@@ -47,6 +47,7 @@ model User {
   cityZip               String?
   country               String?
   phone                 String?
+  smsConsent            Boolean               @default(false)
  
   // 💰 BILLETERA & REFERIDOS
   referralCode          String?               @unique 
