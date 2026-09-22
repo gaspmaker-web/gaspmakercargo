@@ -10,22 +10,18 @@ export async function POST(req: Request) {
     const easypost = await getTenantEasyPost(process.env.TENANT_SLUG || 'gaspmaker');
 
     const session = await auth();
-    // Validar Admin o Warehouse (Respetado)
     if (!session?.user || (session.user.role !== 'ADMIN' && session.user.role !== 'WAREHOUSE')) {
         return NextResponse.json({ message: "No autorizado." }, { status: 401 });
     }
 
     const { consolidationId } = await req.json();
 
-    // 1. Buscar Consolidación
     const consolidation = await prisma.consolidatedShipment.findUnique({
       where: { id: consolidationId },
       include: { user: true }
     });
 
     if (!consolidation) return NextResponse.json({ error: "Consolidación no encontrada" }, { status: 404 });
-    
-    // Validar Courier
     if (!consolidation.selectedCourier) return NextResponse.json({ error: "Falta asignar Courier" }, { status: 400 });
 
     const courierName = consolidation.selectedCourier.toLowerCase();
@@ -33,56 +29,37 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "Usa despacho manual." }, { status: 400 });
     }
 
-    // =========================================================================
-    // 🔥 2. Lógica de Dirección (MODO ESTRICTO: Leyendo de la consolidación)
-    // =========================================================================
+    // 🔥 DIRECCIÓN DESTINO
     let toAddress: any = {};
-
     if (consolidation.shippingAddress) {
-        // Ejemplo: "kevermay | whetley shopping center, st. thomas, AL 00802, VI | Tel: 333"
         const parts = consolidation.shippingAddress.split('|');
         const name = parts[0]?.trim() || consolidation.user.name;
         const addressBlock = parts[1]?.trim() || '';
         const phoneBlock = parts[2]?.trim() || '';
-
-        // Extraer teléfono
         let phone = phoneBlock.replace(/[^0-9]/g, '');
         if (phone.length < 10) phone = '7862820763';
-
-        // Partir el bloque de dirección
-        const addrChunks = addressBlock.split(',').map(c => c.trim());
-        const countryRaw = addrChunks.pop() || 'US'; 
+        const addrChunks = addressBlock.split(',').map((c: string) => c.trim());
+        const countryRaw = addrChunks.pop() || 'US';
         let destinationCountry = countryRaw.length > 2 ? (countryRaw.toUpperCase().includes('TRINIDAD') ? 'TT' : 'US') : countryRaw.toUpperCase();
-
         const cityZipChunk = addrChunks.pop() || '';
         const streetChunk = addrChunks.join(', ') || 'N/A';
-
         const zip = cityZipChunk.match(/\d{4,}/)?.[0] || '00000';
         const stateMatch = cityZipChunk.match(/\b[A-Z]{2}\b/);
         const state = stateMatch ? stateMatch[0] : (destinationCountry === 'US' ? 'FL' : undefined);
         const city = cityZipChunk.replace(zip, '').replace(state || '', '').replace(/[^a-zA-Z\s]/g, '').trim() || 'City';
-
-        toAddress = {
-            name: name,
-            street1: streetChunk,
-            city: city,
-            state: state,
-            zip: zip,
-            country: destinationCountry,
-            phone: phone
-        };
+        toAddress = { name, street1: streetChunk, city, state, zip, country: destinationCountry, phone };
     } else {
-        return NextResponse.json({ error: "⚠️ MODO ESTRICTO: Esta consolidación no tiene una dirección válida asignada. Asegúrese de que el cliente haya pagado con una dirección seleccionada." }, { status: 400 });
+        return NextResponse.json({ error: "⚠️ Sin dirección válida asignada." }, { status: 400 });
     }
 
-    // 3. Aduanas
-    const customsItem = {
-        description: 'Consolidated Personal Effects', 
-        quantity: 1,
-        value: parseFloat(consolidation.declaredValue as any) || 10.0, 
-        weight: (parseFloat(consolidation.weightLbs as any) || 1) * 16,
-        origin_country: 'US', 
-        hs_tariff_number: '650500'
+    const fromAddress = {
+        company: 'GaspMaker Cargo',
+        street1: '1861 NW 22nd St',
+        city: 'Miami',
+        state: 'FL',
+        zip: '33142',
+        country: 'US',
+        phone: '7862820763'
     };
 
     const customsInfo = {
@@ -92,81 +69,159 @@ export async function POST(req: Request) {
         contents_type: 'merchandise',
         restriction_type: 'none',
         non_delivery_option: 'return',
-        customs_items: [customsItem]
+        customs_items: [{
+            description: 'Consolidated Personal Effects',
+            quantity: 1,
+            value: parseFloat(consolidation.declaredValue as any) || 10.0,
+            weight: (parseFloat(consolidation.weightLbs as any) || 1) * 16,
+            origin_country: 'US',
+            hs_tariff_number: '650500'
+        }]
     };
 
-  // 4. Crear Envío
-    const shipment = await easypost.Shipment.create({
-      to_address: toAddress,
-      from_address: {
-        company: 'GaspMaker Cargo',
-        street1: '1861 NW 22nd St',
-        city: 'Miami',
-        state: 'FL',
-        zip: '33142',
-        country: 'US',
-        phone: '7862820763'
-      },
-      parcel: {
-        length: parseFloat(consolidation.lengthIn as any) || 10,
-        width: parseFloat(consolidation.widthIn as any) || 10,
-        height: parseFloat(consolidation.heightIn as any) || 10,
-        weight: (parseFloat(consolidation.weightLbs as any) || 1) * 16
-      },
-      customs_info: customsInfo,
-      options: { label_format: 'PDF', label_size: '4X6' }  // 🔥 Zebra 4x6
-    });
+    // 🔥 CAJAS — usa auraDetails si existe, sino usa dimensiones generales
+    const auraDetails = typeof consolidation.auraDetails === 'string'
+        ? JSON.parse(consolidation.auraDetails)
+        : consolidation.auraDetails;
 
-    if (!shipment.rates || shipment.rates.length === 0) {
-        throw new Error("EasyPost no devolvió tarifas.");
-    }
+    const boxes = Array.isArray(auraDetails) && auraDetails.length > 0
+        ? auraDetails
+        : [{
+            length: parseFloat(consolidation.lengthIn as any) || 10,
+            width: parseFloat(consolidation.widthIn as any) || 10,
+            height: parseFloat(consolidation.heightIn as any) || 10,
+            weight: parseFloat(consolidation.weightLbs as any) || 1
+          }];
 
-    // 5. Selección Tarifa
-    let selectedRate;
-    const carrierRates = shipment.rates.filter((r: any) => 
-        r.carrier.toLowerCase().includes(courierName)
-    );
+    let allTrackings = '';
+    let allLabels: string[] = [];
+    let primaryLabel = '';
+    let carrierUsed = '';
+    let serviceUsed = '';
+    let updatedAuraDetails: any[] = [];
 
-    if (carrierRates.length > 0) {
-        if (consolidation.courierService) {
-            selectedRate = carrierRates.find((r: any) => r.service === consolidation.courierService);
+    if (boxes.length === 1) {
+        // 🔥 1 CAJA — shipment normal
+        const shipment = await easypost.Shipment.create({
+            to_address: toAddress,
+            from_address: fromAddress,
+            parcel: {
+                length: parseFloat(boxes[0].length) || 10,
+                width: parseFloat(boxes[0].width) || 10,
+                height: parseFloat(boxes[0].height) || 10,
+                weight: (parseFloat(boxes[0].weight) || 1) * 16
+            },
+            customs_info: customsInfo,
+            options: { label_format: 'PDF', label_size: '4X6' }
+        });
+
+        if (!shipment.rates || shipment.rates.length === 0) throw new Error("EasyPost no devolvió tarifas.");
+
+        let selectedRate;
+        const carrierRates = shipment.rates.filter((r: any) => r.carrier.toLowerCase().includes(courierName));
+        if (carrierRates.length > 0) {
+            selectedRate = consolidation.courierService
+                ? carrierRates.find((r: any) => r.service === consolidation.courierService) || carrierRates.sort((a: any, b: any) => parseFloat(a.rate) - parseFloat(b.rate))[0]
+                : carrierRates.sort((a: any, b: any) => parseFloat(a.rate) - parseFloat(b.rate))[0];
+        } else {
+            selectedRate = shipment.rates.sort((a: any, b: any) => parseFloat(a.rate) - parseFloat(b.rate))[0];
         }
-        if (!selectedRate) {
-            selectedRate = carrierRates.sort((a: any, b: any) => parseFloat(a.rate) - parseFloat(b.rate))[0];
-        }
+
+        if (!selectedRate) throw new Error("No hay tarifa disponible.");
+
+        const bought = await easypost.Shipment.buy(shipment.id, selectedRate.id);
+        allTrackings = bought.tracker.tracking_code;
+        primaryLabel = bought.postage_label.label_url;
+        allLabels = [primaryLabel];
+        carrierUsed = bought.selected_rate.carrier;
+        serviceUsed = bought.selected_rate.service;
+        updatedAuraDetails = [{ ...boxes[0], boxNumber: 1, tracking: allTrackings, labelUrl: primaryLabel }];
+
     } else {
-        selectedRate = shipment.rates.sort((a: any, b: any) => parseFloat(a.rate) - parseFloat(b.rate))[0];
+        // 🔥 MÚLTIPLES CAJAS — EasyPost Order (multi-piece)
+        const orderShipments = boxes.map((box: any) => ({
+            parcel: {
+                length: parseFloat(box.length) || 10,
+                width: parseFloat(box.width) || 10,
+                height: parseFloat(box.height) || 10,
+                weight: (parseFloat(box.weight) || 1) * 16
+            },
+            customs_info: customsInfo,
+            options: { label_format: 'PDF', label_size: '4X6' }
+        }));
+
+        const order = await easypost.Order.create({
+            to_address: toAddress,
+            from_address: fromAddress,
+            shipments: orderShipments
+        });
+
+        if (!order.rates || order.rates.length === 0) throw new Error("EasyPost Order no devolvió tarifas.");
+
+        // Seleccionar carrier
+        const carrierRates = order.rates.filter((r: any) => r.carrier.toLowerCase().includes(courierName));
+        let selectedCarrier = courierName;
+        let selectedService = consolidation.courierService || '';
+
+        if (carrierRates.length > 0) {
+            const best = consolidation.courierService
+                ? carrierRates.find((r: any) => r.service === consolidation.courierService) || carrierRates.sort((a: any, b: any) => parseFloat(a.rate) - parseFloat(b.rate))[0]
+                : carrierRates.sort((a: any, b: any) => parseFloat(a.rate) - parseFloat(b.rate))[0];
+            selectedCarrier = best.carrier;
+            selectedService = best.service;
+        } else {
+            const best = order.rates.sort((a: any, b: any) => parseFloat(a.rate) - parseFloat(b.rate))[0];
+            selectedCarrier = best.carrier;
+            selectedService = best.service;
+        }
+
+        // 🔥 Comprar todos los labels de una vez
+        const boughtOrder = await easypost.Order.buy(order.id, selectedCarrier, selectedService);
+
+        carrierUsed = selectedCarrier;
+        serviceUsed = selectedService;
+
+        // Extraer trackings y labels de cada shipment
+        const shipments = boughtOrder.shipments || [];
+        allLabels = shipments.map((s: any) => s.postage_label?.label_url).filter(Boolean);
+        allTrackings = shipments.map((s: any) => s.tracker?.tracking_code).filter(Boolean).join(' | ');
+        primaryLabel = allLabels[0];
+
+        updatedAuraDetails = boxes.map((box: any, i: number) => ({
+            ...box,
+            boxNumber: i + 1,
+            tracking: shipments[i]?.tracker?.tracking_code || '',
+            labelUrl: shipments[i]?.postage_label?.label_url || ''
+        }));
     }
 
-    if (!selectedRate) return NextResponse.json({ error: "No hay tarifa disponible." }, { status: 400 });
-
-    // 6. Comprar
-    const boughtShipment = await easypost.Shipment.buy(shipment.id, selectedRate.id);
-
-    // 7. Guardar
+    // 🔥 GUARDAR EN DB
     await prisma.consolidatedShipment.update({
         where: { id: consolidationId },
         data: {
             status: 'ENVIADO',
-            finalTrackingNumber: boughtShipment.tracker.tracking_code,
-            shippingLabelUrl: boughtShipment.postage_label.label_url,
-            courierService: `${boughtShipment.selected_rate.carrier} - ${boughtShipment.selected_rate.service}`
+            finalTrackingNumber: allTrackings,
+            shippingLabelUrl: primaryLabel,
+            courierService: `${carrierUsed} - ${serviceUsed}`,
+            auraDetails: updatedAuraDetails as any
         }
     });
 
-    // 8. Actualizar paquetes hijos (Para que el cliente vea el tracking en sus cajitas individuales)
     await prisma.package.updateMany({
         where: { consolidatedShipmentId: consolidationId },
         data: {
             status: 'ENVIADO',
-            finalTrackingNumber: boughtShipment.tracker.tracking_code
+            finalTrackingNumber: allTrackings
         }
     });
 
-    return NextResponse.json({ 
-        success: true, 
-        tracking: boughtShipment.tracker.tracking_code,
-        label: boughtShipment.postage_label.label_url 
+    return NextResponse.json({
+        success: true,
+        boxes: boxes.length,
+        tracking: allTrackings,
+        label: primaryLabel,
+        allLabels,
+        shipments: updatedAuraDetails
     });
 
   } catch (error: any) {

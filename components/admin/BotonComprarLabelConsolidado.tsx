@@ -26,8 +26,8 @@ export default function BotonComprarLabelConsolidado({ consolidationId }: Props)
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
 
-      alert(`✅ Label Generado: ${data.tracking}`);
-      window.open(data.label, '_blank');
+      alert(`✅ ${data.boxes} label(s) generados:\n${data.tracking}`);
+data.allLabels.forEach((label: string) => window.open(label, '_blank'));
       router.refresh();
 
     } catch (error: any) {
