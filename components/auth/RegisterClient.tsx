@@ -289,7 +289,7 @@ const displayDialCode = (selectedCountry?.dial_code || '+1').replace(/-/g, '');
                         </label>
                     </div>
                     <div className="flex items-start mb-4">
-                        <input type="checkbox" id="sms-consent" name="sms-consent" className="h-4 w-4 mt-0.5 text-gasp-maker-gold border-gray-300 rounded" disabled={isLoading} />
+                        <input type="checkbox" id="sms-consent" name="sms-consent" checked={smsConsent} onChange={(e) => setSmsConsent(e.target.checked)} className="h-4 w-4 mt-0.5 text-gasp-maker-gold border-gray-300 rounded" disabled={isLoading} />
                         <label htmlFor="sms-consent" className="ml-2 text-xs text-gray-600">
                             {t("smsConsentText")} <Link href={`/${locale}/privacy-policy`} className="text-gasp-maker-gold hover:underline">{t("smsConsentLink")}</Link>
                         </label>
