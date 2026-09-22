@@ -122,7 +122,7 @@ export async function POST(req: Request) {
         const amount = updatedConsolidation.totalAmount?.toFixed(2) || '0.00';
         await sendSMS(
           fullConsolidation.user.phone,
-          SMS_TEMPLATES.consolidationReady(amount)
+          SMS_TEMPLATES.consolidationReady(amount, fullConsolidation.user.preferredLocale || 'en')
         );
       }
     } catch (smsError) {

@@ -225,7 +225,7 @@ export async function POST(req: Request) {
       if (fullConsolidation?.user?.phone && fullConsolidation.user.smsConsent) {
         await sendSMS(
           fullConsolidation.user.phone,
-          SMS_TEMPLATES.shipmentDispatched(allTrackings)
+          SMS_TEMPLATES.shipmentDispatched(allTrackings, fullConsolidation.user.preferredLocale || 'en')
         );
       }
     } catch (smsError) {

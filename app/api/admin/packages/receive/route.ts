@@ -83,9 +83,10 @@ if (carrierTrackingNumber) {
         await sendSMS(
           fullPkg.user.phone,
           SMS_TEMPLATES.packageReceived(
-            fullPkg.gmcTrackingNumber,
-            finalWeight.toString()
-          )
+    fullPkg.gmcTrackingNumber,
+    finalWeight.toString(),
+    fullPkg.user.preferredLocale || 'en'
+)
         );
       }
     } catch (smsError) {

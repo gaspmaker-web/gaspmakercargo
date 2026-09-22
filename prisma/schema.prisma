@@ -48,6 +48,7 @@ model User {
   country               String?
   phone                 String?
   smsConsent            Boolean               @default(false)
+  preferredLocale       String                @default("en")
  
   // 💰 BILLETERA & REFERIDOS
   referralCode          String?               @unique 
