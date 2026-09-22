@@ -50,6 +50,7 @@ export default function RegisterClient({ initialReferralCode }: RegisterClientPr
     const [turnstileToken, setTurnstileToken] = useState<string>('');
     const turnstileRef = useRef<TurnstileInstance>(null);
     const [successModal, setSuccessModal] = useState(false);
+    const [smsConsent, setSmsConsent] = useState(false);
     const [successMessage, setSuccessMessage] = useState('');
 
     const sortedCountries = useMemo(() => {
@@ -132,6 +133,8 @@ const displayDialCode = (selectedCountry?.dial_code || '+1').replace(/-/g, '');
             if (initialReferralCode) {
                 formData.append('referredBy', initialReferralCode);
             }
+
+            formData.append('smsConsent', smsConsent ? 'true' : 'false');
 
             // Llamada directa y segura a la Server Action en lugar del fetch
             const resultado = await registrarUsuario(formData);

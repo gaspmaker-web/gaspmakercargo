@@ -72,6 +72,7 @@ export async function registrarUsuario(formData: FormData) {
   const name = formData.get("name") as string;
   const countryCode = formData.get("countryCode") as string;
   const phone = formData.get("phone") as string;
+  const smsConsent = formData.get("smsConsent") === 'true';
   const dateOfBirth = formData.get("dateOfBirth") as string;
   const referredBy = formData.get("referredBy") as string;
   const turnstileToken = formData.get("turnstileToken") as string;
@@ -125,7 +126,8 @@ prisma.user.create({
     role: "CLIENTE", countryCode: country, phone,
     dateOfBirth: finalDate, referredBy: referredBy || null,
     emailVerified: null,
-    tenant_id: tenantId, // ← AGREGAR
+    tenant_id: tenantId,
+    smsConsent,
   },
 }),
   prisma.verificationToken.create({
