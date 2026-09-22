@@ -21,11 +21,21 @@ export default function MenuMovilClient() {
     { code: 'pt', name: 'Português', flag: 'https://flagcdn.com/w20/br.png' },
   ];
 
-  const handleLanguageChange = (newLocale: string) => {
+  const handleLanguageChange = async (newLocale: string) => {
     if (newLocale === currentLocale) return;
 
-    // ✅ Guardar preferencia en cookie — igual que Header.tsx
     document.cookie = `NEXT_LOCALE=${newLocale}; path=/; max-age=31536000`;
+
+    // 🔥 Guardar preferredLocale en DB
+    try {
+      await fetch('/api/user/update-locale', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ locale: newLocale })
+      });
+    } catch (e) {
+      console.error('Error saving locale:', e);
+    }
 
     const segments = pathname.split('/');
     const isLocalePresent = languages.some(l => l.code === segments[1]);
@@ -37,7 +47,6 @@ export default function MenuMovilClient() {
     }
 
     const newPath = segments.join('/') || `/${newLocale}`;
-    // ✅ Recarga completa — garantiza que next-intl cargue las traducciones
     window.location.href = newPath;
   };
 

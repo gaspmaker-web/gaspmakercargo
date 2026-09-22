@@ -76,14 +76,24 @@ if (effectiveSlug === 'cargoos') return null;
   
 const currentLang = languages.find(l => l.code === locale) || languages[0];
 
-const handleLanguageChange = (code: string) => {
+const handleLanguageChange = async (code: string) => {
   if (code === locale) {
     setIsLangMenuOpen(false);
     return;
   }
-  // Guardar preferencia en cookie para que persista
   document.cookie = `NEXT_LOCALE=${code}; path=/; max-age=31536000`;
-  
+
+  // 🔥 Guardar preferredLocale en DB
+  try {
+    await fetch('/api/user/update-locale', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ locale: code })
+    });
+  } catch (e) {
+    console.error('Error saving locale:', e);
+  }
+
   const segments = pathname.split('/');
   if (languages.some(l => l.code === segments[1])) {
     segments[1] = code;
