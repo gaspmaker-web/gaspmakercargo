@@ -99,6 +99,7 @@ export default async function DashboardPage({ params: { locale } }: Props) {
   }) || await prisma.address.findFirst({
     where: { userId: session.user.id }
   });
+  console.log("DEBUG defaultAddress:", JSON.stringify(defaultAddress));
   const isUSClient = 
     (defaultAddress?.countryCode || '').toUpperCase() === 'US' ||
     (defaultAddress?.country || '').toUpperCase() === 'US' ||
