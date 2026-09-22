@@ -94,8 +94,10 @@ export default async function DashboardPage({ params: { locale } }: Props) {
   const dbUser = await prisma.user.findUnique({
     where: { id: session.user.id }
   });
-    const defaultAddress = await prisma.address.findFirst({
+  const defaultAddress = await prisma.address.findFirst({
     where: { userId: session.user.id, isDefault: true }
+  }) || await prisma.address.findFirst({
+    where: { userId: session.user.id }
   });
   const isUSClient = 
     (defaultAddress?.countryCode || '').toUpperCase() === 'US' ||
