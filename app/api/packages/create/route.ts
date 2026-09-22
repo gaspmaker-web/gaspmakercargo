@@ -168,6 +168,27 @@ if (duplicate) {
           });
       }
 
+            // 🔥 SMS — Paquete llegó al almacén
+      try {
+        const { sendSMS, SMS_TEMPLATES } = await import('@/lib/sms');
+        const fullPkg = await prisma.package.findUnique({
+          where: { id: newPackage.id },
+          include: { user: true }
+        });
+        if (fullPkg?.user?.phone && fullPkg.user.smsConsent) {
+          await sendSMS(
+            fullPkg.user.phone,
+            SMS_TEMPLATES.packageReceived(
+              fullPkg.gmcTrackingNumber,
+              (fullPkg.weightLbs || 0).toString(),
+              fullPkg.user.preferredLocale || 'en'
+            )
+          );
+        }
+      } catch (smsError) {
+        console.error('SMS error:', smsError);
+      }
+
       return NextResponse.json(newPackage, { status: 201 });
     }
 
