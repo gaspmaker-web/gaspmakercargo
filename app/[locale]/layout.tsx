@@ -1,7 +1,8 @@
 import React from 'react';
 import type { Metadata, Viewport } from 'next'; 
 import { NextIntlClientProvider } from 'next-intl';
-import { Inter, Montserrat, Cormorant_Garamond } from 'next/font/google';
+import { Inter, Montserrat } from 'next/font/google';
+import localFont from 'next/font/local';
 import '../globals.css';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer'; 
@@ -19,10 +20,14 @@ import { auth } from "@/auth";
 // Configuración de fuentes
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const montserrat = Montserrat({ subsets: ['latin'], variable: '--font-montserrat' });
-const garamond = Cormorant_Garamond({ 
-  subsets: ['latin'], 
-  weight: ['400', '600', '700'],
-  variable: '--font-garamond' 
+const garamond = localFont({
+  src: [
+    { path: '../../node_modules/@fontsource/cormorant-garamond/files/cormorant-garamond-latin-400-normal.woff2', weight: '400' },
+    { path: '../../node_modules/@fontsource/cormorant-garamond/files/cormorant-garamond-latin-600-normal.woff2', weight: '600' },
+    { path: '../../node_modules/@fontsource/cormorant-garamond/files/cormorant-garamond-latin-700-normal.woff2', weight: '700' },
+  ],
+  variable: '--font-garamond',
+  display: 'swap'
 });
 
 export const viewport: Viewport = {
