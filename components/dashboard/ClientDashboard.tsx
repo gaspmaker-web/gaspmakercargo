@@ -445,9 +445,7 @@ useEffect(() => {
                                         const clearPackages = displayPackages.filter(p => !p.isBlocked);
                                         let selectedIds: string[] = [];
                                         let accumulatedWeight = 0;
-                                        const isVip = planType === 'VIP_WHOLESALE';
-                                        for (let p of clearPackages) {
-                                            if (!isVip && (accumulatedWeight + (Number(p.weightLbs) || 0)) > 150) break; 
+                                                                                for (let p of clearPackages) {
                                             selectedIds.push(p.id);
                                             accumulatedWeight += Number(p.weightLbs) || 0;
                                         }
