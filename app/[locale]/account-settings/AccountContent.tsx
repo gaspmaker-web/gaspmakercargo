@@ -16,7 +16,11 @@ import EditCountryModal from '@/components/modals/EditCountryModal';
 import EditAddressModal from '@/components/modals/EditAddressModal';
 import PaymentMethods from '@/components/account/PaymentMethods';
 
-export default function AccountContent() {
+interface AccountContentProps {
+  smsConsent?: boolean;
+}
+
+export default function AccountContent({ smsConsent: initialSmsConsent = false }: AccountContentProps) {
     const t = useTranslations('ProfilePage');
     const router = useRouter(); 
     const { data: session, status, update } = useSession({
@@ -26,7 +30,7 @@ export default function AccountContent() {
         },
     });
 
-    const [smsToggle, setSmsToggle] = useState(false); 
+    const [smsToggle, setSmsToggle] = useState(initialSmsConsent); 
     
     // Estados para los Modales
     const [isEditNameModalOpen, setIsEditNameModalOpen] = useState(false);
@@ -223,7 +227,15 @@ dobFormatted = utcDate.toLocaleDateString(undefined, { year: 'numeric', month: '
                     <div className="space-y-5">
                         <div><label className="block text-sm font-medium text-gray-500">{t('email')}</label><p className="text-lg text-gmc-gris-oscuro">{userData.email}</p></div>
                         <div className="flex justify-between items-center"><div><label className="block text-sm font-medium text-gray-500">{t('mobileNumber')}</label><p className="text-lg text-gmc-gris-oscuro">{userData.phone}</p></div><button onClick={() => setIsEditMobileModalOpen(true)}><Edit size={18} className="text-gray-400 hover:text-gmc-dorado-principal" /></button></div>
-                        <div className="flex justify-between items-center"><label className="text-sm font-medium text-gray-700 pr-4">{t('sendSms')}</label><div className="relative inline-block w-10 mr-2 align-middle select-none"><input type="checkbox" className="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer" checked={smsToggle} onChange={() => setSmsToggle(!smsToggle)}/><label className="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"></label></div></div>
+                        <div className="flex justify-between items-center"><label className="text-sm font-medium text-gray-700 pr-4">{t('sendSms')}</label><div className="relative inline-block w-10 mr-2 align-middle select-none"><input type="checkbox" className="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer" checked={smsToggle} onChange={async () => {
+  const newValue = !smsToggle;
+  setSmsToggle(newValue);
+  await fetch('/api/user/update-sms-consent', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ smsConsent: newValue })
+  });
+}}/><label className="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"></label></div></div>
                         <div className="flex justify-between items-center"><div><label className="block text-sm font-medium text-gray-500">{t('password')}</label><p className="text-lg text-gmc-gris-oscuro">••••••••</p></div><button onClick={() => setIsPasswordModalOpen(true)} className="text-sm font-medium text-gmc-dorado-principal hover:underline">{t('changePassword')}</button></div>
                         <div className="flex justify-between items-center"><div><label className="block text-sm font-medium text-gray-500">{t('dob')}</label><p className="text-lg text-gmc-gris-oscuro capitalize">{userData.dob}</p></div><button onClick={() => alert('Fecha no editable')}><Edit size={18} className="text-gray-300 cursor-not-allowed" /></button></div>
                     </div>
