@@ -11,6 +11,30 @@ export const { handlers, signIn, signOut, auth } = (NextAuth as any)({
   
   session: { strategy: "jwt" },
 
+    callbacks: {
+    ...authConfig.callbacks,
+    async jwt({ token, user, trigger, session }: any) {
+      // Llamar el jwt original de authConfig
+      const updatedToken = await (authConfig.callbacks as any).jwt({ token, user, trigger, session });
+      
+      // 🔥 ENTERPRISE: Verificar que el usuario sigue existiendo en la DB
+      if (!user && updatedToken?.id) {
+        try {
+          const dbUser = await prisma.user.findUnique({
+            where: { id: updatedToken.id as string },
+            select: { id: true }
+          });
+          if (!dbUser) {
+            return null as any;
+          }
+        } catch (e) {
+          console.error('JWT user check error:', e);
+        }
+      }
+      return updatedToken;
+    }
+  },
+
   providers: [
     Credentials({
       name: "Credentials",
