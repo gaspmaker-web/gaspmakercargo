@@ -181,9 +181,30 @@ if (s === 'PENDIENTE_ZELLE') return false;
         <p className="text-lg font-bold text-gray-800">${envio.totalAmount?.toFixed(2)}</p>
         <p className="text-[10px] text-gray-400 uppercase">Outstanding</p>
     </div>
-    {isPickup && (
-        <CashPaymentButton shipmentId={envio.id} shipmentNumber={envio.gmcShipmentNumber || ''} />
-    )}
+   {isPickup && (
+    <CashPaymentButton shipmentId={envio.id} shipmentNumber={envio.gmcShipmentNumber || ''} />
+)}
+{envio.status === 'PENDIENTE_ZELLE' && (
+    <button
+        onClick={async () => {
+            if (!confirm(`Confirm Zelle payment for ${envio.user?.name}?`)) return;
+            const res = await fetch('/api/admin/confirm-zelle', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ consolidationId: envio.id })
+            });
+            if (res.ok) {
+                alert('✅ Zelle payment confirmed');
+                window.location.reload();
+            } else {
+                alert('❌ Error confirming payment');
+            }
+        }}
+        className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg text-sm flex items-center justify-center gap-2"
+    >
+        💜 Confirm Zelle Payment
+    </button>
+)}
 </div>
                                 </div>
                              )
