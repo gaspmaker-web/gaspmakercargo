@@ -19,6 +19,7 @@ import MenuAccionesConsolidacion from '@/components/admin/MenuAccionesConsolidac
 import ConsolidationCard from '@/components/admin/ConsolidationCard'; 
 import SearchConsolidations from '@/components/admin/SearchConsolidations';
 import CashPaymentButton from '@/components/admin/CashPaymentButton';
+import BotonConfirmarZelle from '@/components/admin/BotonConfirmarZelle';
 
 // 👇 1. IMPORTAR EL COMPONENTE NUEVO
 import BotonComprarLabelConsolidado from '@/components/admin/BotonComprarLabelConsolidado';
@@ -185,25 +186,7 @@ if (s === 'PENDIENTE_ZELLE') return false;
     <CashPaymentButton shipmentId={envio.id} shipmentNumber={envio.gmcShipmentNumber || ''} />
 )}
 {envio.status === 'PENDIENTE_ZELLE' && (
-    <button
-        onClick={async () => {
-            if (!confirm(`Confirm Zelle payment for ${envio.user?.name}?`)) return;
-            const res = await fetch('/api/admin/confirm-zelle', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ consolidationId: envio.id })
-            });
-            if (res.ok) {
-                alert('✅ Zelle payment confirmed');
-                window.location.reload();
-            } else {
-                alert('❌ Error confirming payment');
-            }
-        }}
-        className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg text-sm flex items-center justify-center gap-2"
-    >
-        💜 Confirm Zelle Payment
-    </button>
+    <BotonConfirmarZelle consolidationId={envio.id} userName={envio.user?.name || ''} />
 )}
 </div>
                                 </div>
