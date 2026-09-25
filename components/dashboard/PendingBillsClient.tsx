@@ -1390,10 +1390,12 @@ if (shouldChargeHandling) {
           await fetch('/api/payments/zelle-pending', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              billIds: selectedBillIds,
-              amount: totals.total - totals.fee,
-            })
+           body: JSON.stringify({
+  billIds: selectedBillIds,
+  amount: totals.total - totals.fee,
+  selectedCourier: selectedRateMap[selectedBillIds[0]]?.carrier || null,
+  courierService: selectedRateMap[selectedBillIds[0]]?.service || null,
+})
           });
           setShowZelleModal(false);
           alert('✅ ' + t('zelleSent'));
