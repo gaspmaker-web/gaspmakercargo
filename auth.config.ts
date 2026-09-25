@@ -79,6 +79,23 @@ export const authConfig = {
     async jwt({ token, user, trigger, session }: any) { // Agregamos :any para evitar quejas
       // 1. Al iniciar sesión (primer carga)
       if (user) {
+
+              // 🔥 ENTERPRISE: Verificar que el usuario sigue existiendo en la DB
+      if (!user && token.id) {
+        try {
+          const { default: prisma } = await import('@/lib/prisma');
+          const dbUser = await prisma.user.findUnique({
+            where: { id: token.id as string },
+            select: { id: true }
+          });
+          if (!dbUser) {
+            // Usuario eliminado — invalidar token
+            return null as any;
+          }
+        } catch (e) {
+          console.error('JWT user check error:', e);
+        }
+      }
        
 
         token.id = user.id;
