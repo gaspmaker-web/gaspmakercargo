@@ -89,7 +89,8 @@ const listosParaDespachar = consolidaciones.filter(c => {
     const isPaidState = s === 'PAGADO' || s === 'POR_ENVIAR' || s === 'PAID' || s === 'LISTO_PARA_ENVIO' || s === 'LISTO PARA ENVIO';
     const isZeroMoney = (c.totalAmount || 0) === 0;
 
-    if (s === 'PENDIENTE_PAGO') return false;
+   if (s === 'PENDIENTE_PAGO') return false;
+if (s === 'PENDIENTE_ZELLE') return false;
     if (isPaidState && !isZeroMoney) return false; 
     
     if (s === 'ENVIADO' || s === 'ENTREGADO' || s === 'CANCELADO' || s === 'EN_REPARTO' || s === 'EN_ALMACEN_DESTINO' || s === 'EN_RUTA' || s === 'EN_TRANSITO') return false;
