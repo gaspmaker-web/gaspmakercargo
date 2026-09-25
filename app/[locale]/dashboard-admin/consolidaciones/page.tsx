@@ -72,7 +72,7 @@ const listosParaDespachar = consolidaciones.filter(c => {
     return isPaidState && hasMoney && !isPickup;
 });
 
-  const esperandoPago = consolidaciones.filter(c => c.status === 'PENDIENTE_PAGO');
+  const esperandoPago = consolidaciones.filter(c => c.status === 'PENDIENTE_PAGO' || c.status === 'PENDIENTE_ZELLE');
   const pickupsListosParaRecoger = consolidaciones.filter(c => {
     const isPickup = c.serviceType === 'PICKUP' || 
         c.serviceType === 'STORE_PICKUP' ||
