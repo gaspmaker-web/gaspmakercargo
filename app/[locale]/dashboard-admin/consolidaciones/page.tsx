@@ -302,8 +302,8 @@ if (s === 'PENDIENTE_ZELLE') return false;
                                             <p className="font-bold text-green-700 text-xl">${envio.totalAmount?.toFixed(2)}</p>
                                         </div>
                                         
-                                        {!esGaspMaker && (
-                                            <BotonComprarLabelConsolidado consolidationId={envio.id} />
+                                       {!esGaspMaker && !isLocalDelivery && (
+                                       <BotonComprarLabelConsolidado consolidationId={envio.id} />
                                         )}
 
                                         <MenuAccionesConsolidacion shipment={envio} />
