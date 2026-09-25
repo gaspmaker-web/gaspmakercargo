@@ -7,13 +7,16 @@ export async function POST(req: Request) {
     const session = await auth()
     if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const { billIds, amount } = await req.json()
+   const { billIds, amount } = await req.json()
 
-    // Update consolidations to PENDIENTE_ZELLE
-    await prisma.consolidatedShipment.updateMany({
-      where: { id: { in: billIds } },
-      data: { status: 'PENDIENTE_ZELLE' }
-    })
+// Update consolidations to PENDIENTE_ZELLE
+await prisma.consolidatedShipment.updateMany({
+  where: { id: { in: billIds } },
+  data: { 
+    status: 'PENDIENTE_ZELLE',
+    totalAmount: parseFloat(amount) || 0
+  }
+})
 
     // Notify admin
     const adminUsers = await prisma.user.findMany({
