@@ -1,20 +1,20 @@
-import twilio from 'twilio';
+import { getTenantTwilio } from '@/lib/tenant-twilio';
 
-const client = twilio(
-  process.env.TWILIO_ACCOUNT_SID,
-  process.env.TWILIO_AUTH_TOKEN
-);
-
-export async function sendSMS(to: string, message: string): Promise<boolean> {
+export async function sendSMS(to: string, message: string, tenantSlug?: string): Promise<boolean> {
   try {
     if (!to || !message) return false;
+
     let phone = to.replace(/[^0-9+]/g, '');
     if (!phone.startsWith('+')) phone = '+1' + phone;
+
+    const { client, messagingServiceSid } = await getTenantTwilio(tenantSlug);
+
     await client.messages.create({
       body: message,
-      messagingServiceSid: process.env.TWILIO_MESSAGING_SERVICE_SID,
+      messagingServiceSid,
       to: phone
     });
+
     console.log(`✅ SMS sent to ${phone}`);
     return true;
   } catch (error: any) {

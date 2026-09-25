@@ -560,6 +560,10 @@ model Tenant {
   owner_email            String    @unique
   owner_phone            String?
   easypost_api_key       String?
+  twilio_account_sid     String?
+  twilio_auth_token      String?
+  twilio_messaging_service_sid String?
+  twilio_phone_number    String?
   stripe_publishable_key String?
   stripe_secret_key      String?
   stripe_mailbox_basic_price_id   String?
