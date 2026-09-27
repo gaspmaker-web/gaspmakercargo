@@ -5,27 +5,18 @@ import { useState, useCallback } from "react";
 import SplashScreen from "@/components/SplashScreen";
 
 export default function Providers({ children }: { children: React.ReactNode }) {
-  const [isLoading, setIsLoading] = useState(true);
-  const [isVisible, setIsVisible] = useState(false);
+  const [showSplash, setShowSplash] = useState(true);
 
   const handleSplashComplete = useCallback(() => {
-    setIsVisible(true);
-    setTimeout(() => setIsLoading(false), 400);
+    setShowSplash(false);
   }, []);
 
   return (
     <SessionProvider>
-      {isLoading && (
+      {showSplash && (
         <SplashScreen onComplete={handleSplashComplete} />
       )}
-      <div
-        style={{
-          opacity: isVisible ? 1 : 0,
-          transition: "opacity 0.5s ease-in",
-        }}
-      >
-        {children}
-      </div>
+      {children}
     </SessionProvider>
   );
 }
