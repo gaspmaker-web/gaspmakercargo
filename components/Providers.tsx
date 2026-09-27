@@ -6,9 +6,11 @@ import SplashScreen from "@/components/SplashScreen";
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
+  const [isVisible, setIsVisible] = useState(false);
 
   const handleSplashComplete = useCallback(() => {
-    setIsLoading(false);
+    setIsVisible(true);
+    setTimeout(() => setIsLoading(false), 400);
   }, []);
 
   return (
@@ -18,8 +20,8 @@ export default function Providers({ children }: { children: React.ReactNode }) {
       )}
       <div
         style={{
-          opacity: isLoading ? 0 : 1,
-          transition: "opacity 0.4s ease-in",
+          opacity: isVisible ? 1 : 0,
+          transition: "opacity 0.5s ease-in",
         }}
       >
         {children}

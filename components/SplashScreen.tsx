@@ -13,11 +13,11 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
 
   useEffect(() => {
     // Fase 1: el trazo se dibuja (1.8s)
-    const t1 = setTimeout(() => setPhase("fill"), 1800);
+    const t1 = setTimeout(() => setPhase("fill"), 2500);
     // Fase 2: el relleno dorado aparece (0.8s)
-    const t2 = setTimeout(() => setPhase("fadeout"), 2600);
+    const t2 = setTimeout(() => setPhase("fadeout"), 3800);
     // Fase 3: la splash desaparece (0.6s) → notifica al padre
-    const t3 = setTimeout(() => handleComplete(), 3200);
+    const t3 = setTimeout(() => handleComplete(), 4400);
     return () => {
       clearTimeout(t1);
       clearTimeout(t2);
