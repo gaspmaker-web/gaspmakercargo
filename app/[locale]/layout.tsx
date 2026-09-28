@@ -72,7 +72,6 @@ const tenantSlug = tenant?.slug || process.env.TENANT_SLUG || 'gaspmaker';
   } catch (error) {
     messages = {};
   }
-
   return (
     <html lang={locale} className="overflow-x-hidden">
      <body 
@@ -80,8 +79,9 @@ const tenantSlug = tenant?.slug || process.env.TENANT_SLUG || 'gaspmaker';
   suppressHydrationWarning={true}
   style={tenantStyles}
 >
-        
-        
+  {/* ← AGREGA AQUÍ */}
+  <script dangerouslySetInnerHTML={{ __html: `document.documentElement.style.background='#1a1f2e'` }} />
+
 {/* 🔥 META PIXEL 🔥 */}
 <Script
   id="facebook-pixel"
