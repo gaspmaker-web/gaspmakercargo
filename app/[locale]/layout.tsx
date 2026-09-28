@@ -61,10 +61,10 @@ export default async function RootLayout({
   params: { locale: string };
 }) {
   
- const session = await auth();
-const tenant = await getTenant();
-const tenantStyles = getTenantCSSVars(tenant);
-const tenantSlug = tenant?.slug || process.env.TENANT_SLUG || 'gaspmaker';
+  const session = await auth();
+  const tenant = await getTenant();
+  const tenantStyles = getTenantCSSVars(tenant);
+  const tenantSlug = tenant?.slug || process.env.TENANT_SLUG || 'gaspmaker';
 
   let messages;
   try {
@@ -72,54 +72,56 @@ const tenantSlug = tenant?.slug || process.env.TENANT_SLUG || 'gaspmaker';
   } catch (error) {
     messages = {};
   }
+
   return (
     <html lang={locale} className="overflow-x-hidden">
-     <body 
-  className={`${inter.variable} ${montserrat.variable} ${garamond.variable} font-sans bg-gray-50 flex flex-col min-h-screen overflow-x-hidden`}
-  suppressHydrationWarning={true}
-  style={tenantStyles}
->
-  {/* ← AGREGA AQUÍ */}
-  <script dangerouslySetInnerHTML={{ __html: `document.documentElement.style.background='#1a1f2e'` }} />
+      <body 
+        className={`${inter.variable} ${montserrat.variable} ${garamond.variable} font-sans flex flex-col min-h-screen overflow-x-hidden`}
+        suppressHydrationWarning={true}
+        style={tenantStyles}
+      >
+        {/* Fondo oscuro inmediato — evita flash blanco antes de la splash */}
+        <script dangerouslySetInnerHTML={{ __html: `document.documentElement.style.background='#1a1f2e';document.body.style.background='#1a1f2e'` }} />
 
-{/* 🔥 META PIXEL 🔥 */}
-<Script
-  id="facebook-pixel"
-  strategy="afterInteractive"
-  dangerouslySetInnerHTML={{
-    __html: `
-      !function(f,b,e,v,n,t,s)
-      {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-      n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-      if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-      n.queue=[];t=b.createElement(e);t.async=!0;
-      t.src=v;s=b.getElementsByTagName(e)[0];
-      s.parentNode.insertBefore(t,s)}(window, document,'script',
-      'https://connect.facebook.net/en_US/fbevents.js');
-      fbq('init', '1372892784992511');
-      fbq('track', 'PageView');
-    `,
-  }}
-/>
+        {/* 🔥 META PIXEL 🔥 */}
+        <Script
+          id="facebook-pixel"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              !function(f,b,e,v,n,t,s)
+              {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+              n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+              if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+              n.queue=[];t=b.createElement(e);t.async=!0;
+              t.src=v;s=b.getElementsByTagName(e)[0];
+              s.parentNode.insertBefore(t,s)}(window, document,'script',
+              'https://connect.facebook.net/en_US/fbevents.js');
+              fbq('init', '1372892784992511');
+              fbq('track', 'PageView');
+            `,
+          }}
+        />
 
-<NextIntlClientProvider locale={locale} messages={messages}>
-  <Providers>
-    
-  <HeaderWrapper tenantSlug={tenantSlug}>
-  <Header tenantSlug={tenantSlug} /> 
-</HeaderWrapper>
-    
-    <main className="flex-grow"> 
-      {children}
-    </main>
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          <Providers>
+            
+            <HeaderWrapper tenantSlug={tenantSlug}>
+              <Header tenantSlug={tenantSlug} /> 
+            </HeaderWrapper>
+            
+            {/* bg-gray-50 se mueve aquí para no competir con el fondo oscuro de la splash */}
+            <main className="flex-grow bg-gray-50"> 
+              {children}
+            </main>
 
-    {session?.user?.role !== 'DRIVER' && session?.user?.role !== 'WAREHOUSE' && <Footer tenantSlug={tenantSlug} />}
+            {session?.user?.role !== 'DRIVER' && session?.user?.role !== 'WAREHOUSE' && <Footer tenantSlug={tenantSlug} />}
 
-    {tenantSlug !== 'cargoos' && <CookieBanner />}
-    <WhatsAppButton />
+            {tenantSlug !== 'cargoos' && <CookieBanner />}
+            <WhatsAppButton />
 
-  </Providers>
-</NextIntlClientProvider>
+          </Providers>
+        </NextIntlClientProvider>
       </body>
     </html>
   );
