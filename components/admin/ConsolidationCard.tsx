@@ -80,7 +80,16 @@ useEffect(() => {
 }, []);
 
   // 🚢 ESTADO PARA CONTAINER MARÍTIMO
-const [containerType, setContainerType] = useState<string | null>(null);
+const [containerQuantities, setContainerQuantities] = useState<Record<string, number>>({
+  EH: 0, E: 0, D: 0, JUMBO_FIBER: 0, REGULAR: 0
+});
+
+const updateContainerQty = (id: string, delta: number) => {
+  setContainerQuantities(prev => ({
+    ...prev,
+    [id]: Math.max(0, (prev[id] || 0) + delta)
+  }));
+};
 
 const CONTAINER_OPTIONS = [
   { id: 'EH', label: 'EH Container', price: hazmatRates.container_eh },
@@ -159,10 +168,10 @@ const isAir = !isLocalDelivery && !isOcean && !isPickup;
                 return alert("⚠️ Por favor completa el Peso y las 3 Medidas en todas las filas.");
             }
 
-            if (isOcean) {
-    payload.containerType = containerType;
-    payload.containerFee = CONTAINER_OPTIONS.find(c => c.id === containerType)?.price || 0;
-}
+            payload.containerQuantities = containerQuantities;
+payload.containerFee = CONTAINER_OPTIONS.reduce(
+  (acc, c) => acc + (containerQuantities[c.id] || 0) * c.price, 0
+);
 
             // Mapeamos los pallets físicos armados
             payload.auraPieces = auraPieces.map(p => {
@@ -511,59 +520,69 @@ const isAir = !isLocalDelivery && !isOcean && !isPickup;
                     </div>
                 </div>
                {/* 📦 CONTAINER - Air y Ocean */}
+{/* 📦 CONTAINER - Air y Ocean */}
 {(isOcean || isAir) && (
-    <div className="bg-blue-50/50 p-3 rounded-xl border border-blue-200 mb-4 shadow-sm">
-        <div className="flex items-center gap-2 mb-3">
-            <Ship size={16} className="text-blue-600" />
-            <label className="text-xs font-bold text-blue-800 uppercase tracking-wider">
-                Container Used
-            </label>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {CONTAINER_OPTIONS.map((c) => (
-                <label 
-                    key={c.id}
-                    className={`flex items-center gap-2 p-2.5 rounded-lg border cursor-pointer transition-all ${
-                        containerType === c.id 
-                            ? 'bg-blue-100 border-blue-500' 
-                            : 'bg-white border-blue-100 hover:bg-blue-50'
-                    }`}
-                >
-                    <input 
-                        type="radio" 
-                        name="containerType"
-                        checked={containerType === c.id}
-                        onChange={() => setContainerType(c.id)}
-                        className="w-4 h-4 text-blue-600 shrink-0" 
-                    />
-                    <div>
-                        <p className="text-[10px] font-bold text-gray-800 uppercase leading-tight">{c.label}</p>
-                        <p className="text-[10px] text-blue-600 font-bold mt-0.5">+${c.price}.00</p>
-                    </div>
-                </label>
-            ))}
-        </div>
+  <div className="bg-blue-50/50 p-3 rounded-xl border border-blue-200 mb-4 shadow-sm">
+    <div className="flex items-center gap-2 mb-3">
+      <Ship size={16} className="text-blue-600" />
+      <label className="text-xs font-bold text-blue-800 uppercase tracking-wider">
+        Maritime Container (Optional)
+      </label>
     </div>
+    <div className="space-y-2">
+      {CONTAINER_OPTIONS.map((c) => {
+        const qty = containerQuantities[c.id] || 0;
+        return (
+          <div key={c.id} className="flex items-center justify-between bg-white border border-blue-100 rounded-lg px-3 py-2">
+            <div>
+              <p className="text-[11px] font-bold text-gray-800 uppercase">{c.label}</p>
+              <p className="text-[10px] text-blue-600 font-bold">+${c.price}.00 c/u</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => updateContainerQty(c.id, -1)}
+                className="w-7 h-7 rounded-full border border-gray-300 flex items-center justify-center text-gray-600 hover:bg-red-50 hover:border-red-300 font-bold text-sm"
+              >−</button>
+              <span className="w-6 text-center font-bold text-sm">{qty}</span>
+              <button
+                type="button"
+                onClick={() => updateContainerQty(c.id, 1)}
+                className="w-7 h-7 rounded-full border border-blue-300 flex items-center justify-center text-blue-600 hover:bg-blue-100 font-bold text-sm"
+              >+</button>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+    {Object.values(containerQuantities).some(q => q > 0) && (
+      <div className="mt-3 pt-2 border-t border-blue-200 flex justify-between items-center">
+        <span className="text-xs font-bold text-blue-800 uppercase">Container Total</span>
+        <span className="text-sm font-bold text-blue-700">
+          +${CONTAINER_OPTIONS.reduce((acc, c) => acc + (containerQuantities[c.id] || 0) * c.price, 0).toFixed(2)}
+        </span>
+      </div>
+    )}
+  </div>
 )}
 
-                <button 
-                    onClick={handleProcess} 
-                    disabled={isSaving}
-                    className={`w-full text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all mt-2 shadow-md ${
-                        isLocalDelivery 
-                            ? 'bg-black hover:bg-gray-800' 
-                            : isOcean
-                            ? 'bg-blue-600 hover:bg-blue-700'
-                            : 'bg-indigo-600 hover:bg-indigo-700'
-                    }`}
-                    
-                >
-                    {isSaving ? <Loader2 className="animate-spin"/> : (isDynamicPalletMode ? <Truck size={18}/> : <Plane size={18}/>)}
-                    Save and Enable Payment
-                </button>
-            </div>
+<button 
+  onClick={handleProcess} 
+  disabled={isSaving}
+  className={`w-full text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all mt-2 shadow-md ${
+    isLocalDelivery 
+      ? 'bg-black hover:bg-gray-800' 
+      : isOcean
+      ? 'bg-blue-600 hover:bg-blue-700'
+      : 'bg-indigo-600 hover:bg-indigo-700'
+  }`}
+>
+  {isSaving ? <Loader2 className="animate-spin"/> : (isDynamicPalletMode ? <Truck size={18}/> : <Plane size={18}/>)}
+  Save and Enable Payment
+</button>
         </div>
-      )}
-    </>
+      </div>
+    )}
+  </>
   );
 }
