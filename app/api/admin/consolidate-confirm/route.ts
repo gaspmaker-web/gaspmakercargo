@@ -89,14 +89,13 @@ export async function POST(req: Request) {
                 fleteBase,
                 totalCuft: parseFloat(totalCuft.toFixed(2))
             };
-        } else if (containerType && containerFee) {
-            updateData.subtotalAmount = parseFloat(containerFee) || 0;
-            updateData.extraCharges = {
-                ...(extraCharges || {}),
-                containerType,
-                containerFee: parseFloat(containerFee) || 0
-            };
-        }
+       } else if (containerType && containerFee) {
+         updateData.extraCharges = {
+        ...(extraCharges || {}),
+        containerType,
+        containerFee: parseFloat(containerFee) || 0
+       };
+    }
 
     } else {
         updateData.weightLbs = parseFloat(finalWeight);
