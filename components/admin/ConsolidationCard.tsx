@@ -168,10 +168,14 @@ const isAir = !isLocalDelivery && !isOcean && !isPickup;
                 return alert("⚠️ Por favor completa el Peso y las 3 Medidas en todas las filas.");
             }
 
-            payload.containerQuantities = containerQuantities;
+  payload.containerQuantities = containerQuantities;
 payload.containerFee = CONTAINER_OPTIONS.reduce(
   (acc, c) => acc + (containerQuantities[c.id] || 0) * c.price, 0
 );
+payload.containerType = CONTAINER_OPTIONS
+  .filter(c => (containerQuantities[c.id] || 0) > 0)
+  .map(c => c.id)
+  .join(',') || 'MIXED';
 
             // Mapeamos los pallets físicos armados
             payload.auraPieces = auraPieces.map(p => {
