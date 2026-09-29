@@ -469,6 +469,7 @@
     "oceanNotAvailableTitle": "Service not available",
     "oceanNotAvailableDesc": "Maritime service is not available for Florida addresses. Please select an international address.",
     "serviceTypeConsolidation": "Consolidation",
+    "containerFeeLabel": "Container Fee",
 "serviceTypePickup": "Warehouse Pickup",
 "serviceTypeStorage": "Storage Fee",
 "serviceTypeLocal": "Local Delivery (Aura)",

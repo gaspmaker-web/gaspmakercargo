@@ -467,6 +467,7 @@
     "oceanNotAvailableTitle": "Service indisponible",
     "oceanNotAvailableDesc": "Le service maritime n'est pas disponible pour les adresses en Floride. Veuillez sélectionner une adresse internationale.",
     "serviceTypeConsolidation": "Consolidation",
+    "containerFeeLabel": "Frais de Conteneur",
 "serviceTypePickup": "Retrait en Entrepôt",
 "serviceTypeStorage": "Frais de Stockage",
 "serviceTypeLocal": "Livraison Locale (Aura)",

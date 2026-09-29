@@ -273,7 +273,8 @@ const handleSelectRate = (billId: string, rate: Rate) => {
       let serviceSubtotal = 0;
       let handlingSubtotal = 0; 
       let insuranceSubtotal = 0; 
-      let specialChargesSubtotal = 0; 
+     let specialChargesSubtotal = 0; 
+     let containerFeeSubtotal = 0;  // ← AGREGAR
       let count = 0;
       
       const specialChargesMap: Record<string, number> = {};
@@ -406,17 +407,17 @@ if (shouldChargeHandling) {
               }
                                  // 🔥 Sumar containerFee al precio del servicio
               const billExtraCharges = typeof bill.extraCharges === 'string' 
-                  ? JSON.parse(bill.extraCharges) 
-                  : (bill.extraCharges || {});
-              itemServicePrice += parseFloat(billExtraCharges.containerFee) || 0;
-              console.log('DEBUG containerFee:', bill.id, billExtraCharges, itemServicePrice);
+    ? JSON.parse(bill.extraCharges) 
+    : (bill.extraCharges || {});
+// itemServicePrice += parseFloat(billExtraCharges.containerFee) || 0;  ← ELIMINAR
+containerFeeSubtotal += parseFloat(billExtraCharges.containerFee) || 0;  // ← AGREGAR
 
               serviceSubtotal += itemServicePrice;
               count++;
           }
       });
 
-      const taxableAmount = serviceSubtotal + handlingSubtotal + insuranceSubtotal + specialChargesSubtotal;
+      const taxableAmount = serviceSubtotal + handlingSubtotal + insuranceSubtotal + specialChargesSubtotal + containerFeeSubtotal;
       
       let isPayingAura = false;
       selectedBillIds.forEach(id => {
@@ -451,6 +452,7 @@ if (shouldChargeHandling) {
       return { 
           serviceSubtotal, 
           handlingSubtotal, 
+          containerFeeSubtotal,  // ← AGREGAR
           insuranceSubtotal, 
           specialChargesSubtotal, 
           allActiveSpecialCharges, 
@@ -1055,7 +1057,26 @@ if (shouldChargeHandling) {
                                             <span className="font-bold">+${totals.handlingSubtotal.toFixed(2)}</span>
                                         </div>
                                     )}
+{totals.handlingSubtotal > 0 && (
+    <div className="flex justify-between text-yellow-400">
+        <span>{t('consolidationFee')}</span>
+        <span className="font-bold">+${totals.handlingSubtotal.toFixed(2)}</span>
+    </div>
+)}
 
+{totals.containerFeeSubtotal > 0 && (
+    <div className="flex justify-between text-blue-300">
+        <span>{t('containerFeeLabel')}</span>
+        <span className="font-bold">+${totals.containerFeeSubtotal.toFixed(2)}</span>
+    </div>
+)}
+
+{totals.insuranceSubtotal > 0 && (
+    <div className="flex justify-between text-blue-300">
+        <span className="flex items-center gap-1"><ShieldCheck size={14}/> + Ins (3%)</span>
+        <span className="font-bold">+${totals.insuranceSubtotal.toFixed(2)}</span>
+    </div>
+)}
                                     {totals.insuranceSubtotal > 0 && (
                                         <div className="flex justify-between text-blue-300">
                                             <span className="flex items-center gap-1"><ShieldCheck size={14}/> + Ins (3%)</span>
@@ -1261,6 +1282,23 @@ if (shouldChargeHandling) {
                                         </div>
                                     )}
 
+{totals.handlingSubtotal > 0 && (
+    <div className="flex justify-between text-[#EAD8B1]">
+        <span>{t('consolidationFee')}</span>
+        <span>+${totals.handlingSubtotal.toFixed(2)}</span>
+    </div>
+)}
+
+{totals.containerFeeSubtotal > 0 && (
+    <div className="flex justify-between text-blue-300">
+        <span>{t('containerFeeLabel')}</span>
+        <span>+${totals.containerFeeSubtotal.toFixed(2)}</span>
+    </div>
+)}
+
+{totals.insuranceSubtotal > 0 && (
+    <div className="flex justify-between text-blue-300"><span>+ Insurance (3%)</span><span>+${totals.insuranceSubtotal.toFixed(2)}</span></div>
+)}
                                     {totals.insuranceSubtotal > 0 && (
                                         <div className="flex justify-between text-blue-300"><span>+ Insurance (3%)</span><span>+${totals.insuranceSubtotal.toFixed(2)}</span></div>
                                     )}

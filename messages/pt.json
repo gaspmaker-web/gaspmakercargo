@@ -467,6 +467,7 @@
     "oceanNotAvailableTitle": "Serviço indisponível",
     "oceanNotAvailableDesc": "O serviço marítimo não está disponível para endereços na Flórida. Selecione um endereço internacional.",
     "serviceTypeConsolidation": "Consolidação",
+    "containerFeeLabel": "Taxa de Contêiner",
 "serviceTypePickup": "Retirada no Armazém",
 "serviceTypeStorage": "Taxa de Armazenagem",
 "serviceTypeLocal": "Entrega Local (Aura)",
