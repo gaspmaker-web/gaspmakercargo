@@ -405,6 +405,12 @@ if (shouldChargeHandling) {
                   }
               }
               
+                           // 🔥 Sumar containerFee al precio del servicio
+              const billExtraCharges = typeof bill.extraCharges === 'string' 
+                  ? JSON.parse(bill.extraCharges) 
+                  : (bill.extraCharges || {});
+              itemServicePrice += parseFloat(billExtraCharges.containerFee) || 0;
+
               serviceSubtotal += itemServicePrice;
               count++;
           }
