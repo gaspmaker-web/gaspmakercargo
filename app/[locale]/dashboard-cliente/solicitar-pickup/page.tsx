@@ -47,6 +47,17 @@ const WEIGHT_OPTIONS = [
     { id: 'w_151_plus', label: '151+ Lbs (Pallet / Heavy)', estWeight: 0 },
 ];
 
+
+
+// Función para calcular handling fee por paquete según su peso
+function getHandlingFee(weightLbs: number | null | undefined, rates: any): number {
+  const w = weightLbs || 0;
+  if (w <= 10) return rates?.handling_mini_0_10lbs || 2.50;
+  if (w <= 50) return rates?.handling_standard_11_50lbs || 5.00;
+  if (w <= 150) return rates?.handling_heavy_51_150lbs || 12.50;
+  return rates?.handling_pallet_150plus || 30.00;
+}
+
 export default function SolicitarPickupPage() {
   const t = useTranslations('Pickup');
   const tBills = useTranslations('PendingBills');
@@ -660,7 +671,7 @@ const payload = {
                             ) : (
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     {inventory.map((pkg, idx) => {
-                                        const paidAmount = pkg.consolidatedShipment?.totalAmount || 0;
+                                        const paidAmount = getHandlingFee(pkg.weightLbs, tenantRates);
                                         return (
                                             <div key={idx} className="flex justify-between items-center p-4 bg-gray-50 rounded-xl border border-gray-100 text-sm shadow-sm hover:border-blue-300 transition-colors">
                                                 <div className="flex items-center gap-3">
