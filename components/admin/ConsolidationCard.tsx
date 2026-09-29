@@ -510,8 +510,8 @@ const isAir = !isLocalDelivery && !isOcean && !isPickup;
                         </label>
                     </div>
                 </div>
-                {/* 🚢 CONTAINER MARÍTIMO - Solo Ocean */}
-{isOcean && (
+               {/* 📦 CONTAINER - Air y Ocean */}
+{(isOcean || isAir) && (
     <div className="bg-blue-50/50 p-3 rounded-xl border border-blue-200 mb-4 shadow-sm">
         <div className="flex items-center gap-2 mb-3">
             <Ship size={16} className="text-blue-600" />
