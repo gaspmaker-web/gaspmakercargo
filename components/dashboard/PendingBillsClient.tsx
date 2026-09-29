@@ -1057,12 +1057,6 @@ containerFeeSubtotal += parseFloat(billExtraCharges.containerFee) || 0;  // ← 
                                             <span className="font-bold">+${totals.handlingSubtotal.toFixed(2)}</span>
                                         </div>
                                     )}
-{totals.handlingSubtotal > 0 && (
-    <div className="flex justify-between text-yellow-400">
-        <span>{t('consolidationFee')}</span>
-        <span className="font-bold">+${totals.handlingSubtotal.toFixed(2)}</span>
-    </div>
-)}
 
 {totals.containerFeeSubtotal > 0 && (
     <div className="flex justify-between text-blue-300">
@@ -1281,13 +1275,6 @@ containerFeeSubtotal += parseFloat(billExtraCharges.containerFee) || 0;  // ← 
                                             <span>+${totals.handlingSubtotal.toFixed(2)}</span>
                                         </div>
                                     )}
-
-{totals.handlingSubtotal > 0 && (
-    <div className="flex justify-between text-[#EAD8B1]">
-        <span>{t('consolidationFee')}</span>
-        <span>+${totals.handlingSubtotal.toFixed(2)}</span>
-    </div>
-)}
 
 {totals.containerFeeSubtotal > 0 && (
     <div className="flex justify-between text-blue-300">
