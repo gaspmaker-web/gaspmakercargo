@@ -224,7 +224,7 @@ const isOceanBillRate = bill.serviceType === 'OCEAN_CONSOLIDATION';
 const extraChargesObj = typeof bill.extraCharges === 'string' 
     ? JSON.parse(bill.extraCharges) 
     : (bill.extraCharges || {});
-// 🔥 Para Air Y Ocean: siempre leer containerFee si existe
+// 🔥 Air y Ocean: siempre leer containerFee si existe
 const containerFeeAmount = parseFloat(extraChargesObj.containerFee) || 0;
 
 const processed = data.rates.map((r: Rate) => {
@@ -232,9 +232,7 @@ const processed = data.rates.map((r: Rate) => {
     const isMaritimeRate = r.id?.includes('OCEAN') || 
                            r.service?.toLowerCase().includes('maritime') ||
                            r.service?.toLowerCase().includes('marítim');
-    // Para Ocean: solo a rates marítimas. Para Air: a todas las rates aéreas
-const isAirRate = !isOceanBillRate && (r.id?.includes('AERIAL') || r.id?.includes('AIR') || !isMaritimeRate);
-const extraFee = (isOceanBillRate && isMaritimeRate) || (!isOceanBillRate && isAirRate) ? containerFeeAmount : 0;
+ const extraFee = (isOceanBillRate && isMaritimeRate) || (!isOceanBillRate) ? containerFeeAmount : 0;
     return { 
         ...r, 
         price: r.price + extraFee,
