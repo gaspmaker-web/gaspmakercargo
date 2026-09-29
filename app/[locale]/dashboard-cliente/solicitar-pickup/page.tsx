@@ -674,7 +674,7 @@ const payload = {
                                                 </div>
                                                 <div className="text-right">
                                                      <div className="text-xs font-bold text-gray-500 mb-1">{t('paid')}: ${paidAmount.toFixed(2)}</div>
-                                                     <span className="text-[10px] font-bold bg-green-100 text-green-700 px-2 py-1 rounded border border-green-200 uppercase tracking-wide">LISTO</span>
+                                                    <span className="text-[10px] font-bold bg-green-100 text-green-700 px-2 py-1 rounded border border-green-200 uppercase tracking-wide">{t('statusReady')}</span>
                                                 </div>
                                             </div>
                                         );
@@ -685,10 +685,10 @@ const payload = {
                             <div className="mt-6 bg-yellow-50 p-4 rounded-lg border border-yellow-100 text-xs text-yellow-800">
                                 <p className="font-bold mb-2 flex items-center gap-2"><Info size={14}/> {t('handlingRatesTitle')}</p>
                                 <ul className="space-y-1 pl-1">
-                                   <li>• 0-10 lbs (Mini): <strong>${tenantRates.handling_mini_0_10lbs.toFixed(2)}</strong></li>
-                                   <li>• 11-50 lbs (Estándar): <strong>${tenantRates.handling_standard_11_50lbs.toFixed(2)}</strong></li>
-                                   <li>• 51-150 lbs (Pesado): <strong>${tenantRates.handling_heavy_51_150lbs.toFixed(2)}</strong></li>
-                                   <li>• +150 lbs (Carga/Pallet): <strong>${tenantRates.handling_pallet_150plus.toFixed(2)}</strong></li>
+                                   <li>• {t('handlingMini')}: <strong>${tenantRates.handling_mini_0_10lbs.toFixed(2)}</strong></li>
+                                   <li>• {t('handlingStandard')}: <strong>${tenantRates.handling_standard_11_50lbs.toFixed(2)}</strong></li>
+                                   <li>• {t('handlingHeavy')}: <strong>${tenantRates.handling_heavy_51_150lbs.toFixed(2)}</strong></li>
+                                   <li>• {t('handlingPallet')}: <strong>${tenantRates.handling_pallet_150plus.toFixed(2)}</strong></li>
                                 </ul>
                             </div>
                         </div>
