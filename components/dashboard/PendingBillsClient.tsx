@@ -232,7 +232,7 @@ const processed = data.rates.map((r: Rate) => {
     const isMaritimeRate = r.id?.includes('OCEAN') || 
                            r.service?.toLowerCase().includes('maritime') ||
                            r.service?.toLowerCase().includes('marítim');
- const extraFee = (isOceanBillRate && isMaritimeRate) || (!isOceanBillRate) ? containerFeeAmount : 0;
+ const extraFee = (isOceanBillRate && isMaritimeRate) ? containerFeeAmount : 0;
     return { 
         ...r, 
         price: r.price + extraFee,
