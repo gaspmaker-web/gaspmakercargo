@@ -367,7 +367,11 @@ if (shouldChargeHandling) {
                           }
                       });
                       
-                      billHandlingFee = noFee ? 0 : chargeablePackagesCount * defaultHandlingRate;
+                    if (isLocalAura) {
+  billHandlingFee = noFee ? 0 : (bill.packages?.length || 0) * defaultHandlingRate;
+} else {
+  billHandlingFee = noFee ? 0 : chargeablePackagesCount * defaultHandlingRate;
+}
                   }
               }
               
