@@ -53,3 +53,27 @@
     font-size: 16px !important;
   }
 }
+/* Fix iOS overscroll color */
+body::before {
+  content: '';
+  display: block;
+  position: fixed;
+  top: -100vh;
+  left: 0;
+  right: 0;
+  height: 100vh;
+  background-color: #222b3c;
+  z-index: -1;
+}
+
+body::after {
+  content: '';
+  display: block;
+  position: fixed;
+  bottom: -100vh;
+  left: 0;
+  right: 0;
+  height: 100vh;
+  background-color: #ffffff;
+  z-index: -1;
+}
