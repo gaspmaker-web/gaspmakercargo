@@ -111,10 +111,9 @@ export default async function RootLayout({
             </HeaderWrapper>
             
             {/* bg-gray-50 se mueve aquí para no competir con el fondo oscuro de la splash */}
-            <main className="flex-grow bg-gray-50"> 
-              {children}
+           <main className="flex-grow"> 
+           {children}
             </main>
-
             {session?.user?.role !== 'DRIVER' && session?.user?.role !== 'WAREHOUSE' && <Footer tenantSlug={tenantSlug} />}
 
             {tenantSlug !== 'cargoos' && <CookieBanner />}
