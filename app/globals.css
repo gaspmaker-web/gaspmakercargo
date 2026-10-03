@@ -17,13 +17,11 @@
     --gasp-maker-black: #000000;
   }
   
-  body {
+   body {
     font-family: var(--font-montserrat), sans-serif;
-    /* Aplicamos el fondo negro semi-transparente para la calculadora */
-    background-color: var(--gasp-maker-dark-gray); 
-    
-    /* 🔥 NUEVA REGLA: Números perfectamente alineados y proporcionales en toda la web */
+    background-color: #ffffff;
     font-variant-numeric: tabular-nums lining-nums;
+    overscroll-behavior: none;
   }
   
   h1, h2, h3, h4, h5, h6 {
