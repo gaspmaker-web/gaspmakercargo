@@ -17,9 +17,9 @@
     --gasp-maker-black: #000000;
   }
   
-   body {
+ body {
     font-family: var(--font-montserrat), sans-serif;
-    background-color: #ffffff;
+    background-color: #222b3c;
     font-variant-numeric: tabular-nums lining-nums;
     overscroll-behavior: none;
   }
