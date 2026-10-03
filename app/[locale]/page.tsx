@@ -212,6 +212,61 @@ if (tenantSlug === 'cargoos') {
       {/* --- 5. TIENDAS AFILIADAS --- */}
       <RecommendedStores />
 
+      {/* --- APP DOWNLOAD SECTION --- */}
+<section className="py-16 bg-[#222b3c]">
+  <div className="container mx-auto px-4">
+    <div className="flex flex-col md:flex-row items-center justify-between gap-10 max-w-4xl mx-auto">
+      
+      {/* QR Code - hidden on mobile */}
+      <div className="hidden md:flex flex-col items-center gap-3">
+        <img 
+          src={`https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=https://play.google.com/store/apps/details?id=com.gaspmakercargo.app`}
+          alt="QR Code Gasp Maker App"
+          className="rounded-xl border-4 border-white/20"
+          width={140}
+          height={140}
+        />
+        <p className="text-white/50 text-xs font-bold uppercase tracking-widest">Scan to download</p>
+      </div>
+
+      {/* Text */}
+      <div className="text-center md:text-left flex-1">
+        <p className="text-gmc-dorado-principal text-xs font-bold uppercase tracking-widest mb-2">Mobile App</p>
+        <h2 className="text-3xl md:text-4xl font-bold font-garamond text-white mb-3">
+          {t('app_download_title')}
+        </h2>
+        <p className="text-gray-300 text-sm mb-6">{t('app_download_desc')}</p>
+        
+        <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
+          {/* Google Play */}
+          <a 
+            href="https://play.google.com/store/apps/details?id=com.gaspmakercargo.app"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <img 
+              src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg"
+              alt="Get it on Google Play"
+              className="h-12"
+            />
+          </a>
+          
+          {/* App Store - coming soon */}
+          <div className="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-xl border border-white/20">
+            <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+            </svg>
+            <div>
+              <p className="text-white/50 text-[9px] uppercase tracking-wider">Coming soon</p>
+              <p className="text-white text-xs font-bold">App Store</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
      {/* --- 6. PRE-FOOTER / LEGALIDAD Y CONFIANZA --- */}
       <section className="py-20 bg-white border-t border-gray-100 text-center">
         <div className="container mx-auto px-4">
