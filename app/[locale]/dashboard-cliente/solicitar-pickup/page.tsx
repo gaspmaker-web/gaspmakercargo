@@ -1036,9 +1036,10 @@ const payload = {
                                     </div>
                                 ) : <Link href="/account-settings" className="block text-center text-xs p-2 bg-gray-700 rounded text-white">+ Agregar Tarjeta</Link>}
                             </div>
-                            <button onClick={handlePaymentAndSubmit} disabled={isLoading || quote.total === 0 || !isAddressValid || !isTimeValid} className="w-full py-3 bg-gmc-dorado-principal text-gmc-gris-oscuro font-bold rounded-xl flex justify-center items-center gap-2 hover:bg-white transition-colors disabled:opacity-50">
-                                {isLoading ? <Loader2 className="animate-spin"/> : <CreditCard size={18}/>} {t('btnPay')}
-                            </button>
+                           <button onClick={handlePaymentAndSubmit} disabled={isLoading || quote.total === 0 || !isAddressValid || !isTimeValid} className="w-full py-3 bg-gmc-dorado-principal text-gmc-gris-oscuro font-bold rounded-xl flex justify-center items-center gap-2 hover:bg-white transition-colors disabled:opacity-50">
+    {isLoading ? <Loader2 className="animate-spin"/> : <CreditCard size={18}/>} 
+    {isB2B ? 'Dispatch & Charge to Account' : t('btnPay')}
+</button>
                         </div>
                     </div>
                 )}
@@ -1062,8 +1063,8 @@ const payload = {
                             disabled={isLoading || quote.total === 0 || !isAddressValid || !isTimeValid}
                             className="bg-[#EAD8B1] text-[#222b3c] px-8 py-3.5 rounded-xl font-bold text-base shadow-lg active:scale-95 transition-transform flex items-center gap-2 disabled:opacity-50 disabled:shadow-none"
                         >
-                            {isLoading ? <Loader2 className="animate-spin" size={20}/> : <CreditCard size={20}/>}
-                            {t('btnPay')}
+                       {isLoading ? <Loader2 className="animate-spin" size={20}/> : <CreditCard size={20}/>}
+                            {isB2B ? 'Dispatch & Charge to Account' : t('btnPay')}
                         </button>
                     </div>
 
