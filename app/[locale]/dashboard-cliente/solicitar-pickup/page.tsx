@@ -964,10 +964,12 @@ const payload = {
                                         <span>+${quote.distanceSurcharge.toFixed(2)}</span>
                                     </div>
                                 )}
-                                <div className="flex justify-between text-gray-400 text-xs">
-                                    <span>Processing Fee</span>
-                                    <span>+${quote.processingFee.toFixed(2)}</span>
-                                </div>
+                               {!isB2B && (
+<div className="flex justify-between text-gray-400 text-xs">
+    <span>Processing Fee</span>
+    <span>+${quote.processingFee.toFixed(2)}</span>
+</div>
+)}
                             <div className="flex justify-between text-xl font-bold pt-2 border-t border-gray-600 text-gmc-dorado-principal">
     <span>{t('sumTotal')}</span>
     <span>${quote.total.toFixed(2)}</span>
@@ -1079,10 +1081,12 @@ const payload = {
                             {quote.distanceSurcharge > 0 && (
                                 <div className="flex justify-between text-blue-300"><span>Distance Surcharge</span><span>+${quote.distanceSurcharge.toFixed(2)}</span></div>
                             )}
-                            <div className="flex justify-between text-gray-400 text-xs">
-                                <span>Processing Fee</span>
-                                <span>+${quote.processingFee.toFixed(2)}</span>
-                            </div>
+                           {!isB2B && (
+<div className="flex justify-between text-gray-400 text-xs">
+    <span>Processing Fee</span>
+    <span>+${quote.processingFee.toFixed(2)}</span>
+</div>
+)}
 
                             <div className="flex items-center gap-2 pt-3 border-t border-gray-600">
                                 <div className="w-6 h-6 bg-gray-600 rounded flex items-center justify-center">{vehicleInfo.icon}</div>
