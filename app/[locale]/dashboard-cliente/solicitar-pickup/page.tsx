@@ -513,7 +513,7 @@ useEffect(() => {
         if (!formData.pickupDate || !isTimeValid) {
             alert("Completa los campos correctamente, respetando el horario."); return;
         }
-        if (!selectedCardId) {
+        if (!isB2B && !selectedCardId) {
             setShowMobileSummary(true);
             if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(50);
             return;
@@ -532,7 +532,20 @@ useEffect(() => {
             paymentId: 'PREPAID_PICKUP'
         };
 
-      if (serviceType !== 'PICKUP_WAREHOUSE' && quote.total > 0) {
+           if (isB2B && serviceType !== 'PICKUP_WAREHOUSE' && quote.total > 0) {
+        // B2B: charge to account, no Stripe
+        await fetch('/api/b2b/charge-account', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ amount: quote.total })
+        });
+        paymentData = {
+          subtotal: quote.subtotal,
+          fee: 0,
+          total: quote.total,
+          paymentId: 'B2B_ACCOUNT'
+        };
+      } else if (serviceType !== 'PICKUP_WAREHOUSE' && quote.total > 0) {
     const payRes = await fetch('/api/payments/charge', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
