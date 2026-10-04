@@ -1027,15 +1027,17 @@ const payload = {
                                 </div>
                             )}
 
-                            <div className="mb-4">
-                                <p className="text-xs font-bold text-gray-400 mb-2 uppercase">{t('paymentTitle')}</p>
-                                {cards.length > 0 ? (
-                                    <div className="bg-gray-700 p-3 rounded flex items-center justify-between border border-gray-600">
-                                        <div className="flex items-center gap-2"><CreditCard size={16}/><span className="text-xs">•••• {cards.find(c => c.id === selectedCardId)?.last4}</span></div>
-                                        <Link href="/account-settings" className="text-xs text-gmc-dorado-principal">{t('btnChange')}</Link>
-                                    </div>
-                                ) : <Link href="/account-settings" className="block text-center text-xs p-2 bg-gray-700 rounded text-white">+ Agregar Tarjeta</Link>}
-                            </div>
+                           {!isB2B && (
+<div className="mb-4">
+    <p className="text-xs font-bold text-gray-400 mb-2 uppercase">{t('paymentTitle')}</p>
+    {cards.length > 0 ? (
+        <div className="bg-gray-700 p-3 rounded flex items-center justify-between border border-gray-600">
+            <div className="flex items-center gap-2"><CreditCard size={16}/><span className="text-xs">•••• {cards.find(c => c.id === selectedCardId)?.last4}</span></div>
+            <Link href="/account-settings" className="text-xs text-gmc-dorado-principal">{t('btnChange')}</Link>
+        </div>
+    ) : <Link href="/account-settings" className="block text-center text-xs p-2 bg-gray-700 rounded text-white">+ Agregar Tarjeta</Link>}
+</div>
+)}
                            <button onClick={handlePaymentAndSubmit} disabled={isLoading || quote.total === 0 || !isAddressValid || !isTimeValid} className="w-full py-3 bg-gmc-dorado-principal text-gmc-gris-oscuro font-bold rounded-xl flex justify-center items-center gap-2 hover:bg-white transition-colors disabled:opacity-50">
     {isLoading ? <Loader2 className="animate-spin"/> : <CreditCard size={18}/>} 
     {isB2B ? 'Dispatch & Charge to Account' : t('btnPay')}
