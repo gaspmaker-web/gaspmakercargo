@@ -376,8 +376,8 @@ baseFare = (tenantRates[rateKey] as number) ?? boxTruckRates[formData.palletCoun
             baseFare,
             distanceSurcharge,
             subtotal,
-            processingFee: fee,
-            total: subtotal + fee,
+                       processingFee: fee,
+            total: isB2B ? subtotal : subtotal + fee,
             appliedStrategy: serviceType === 'PICKUP_WAREHOUSE' ? 'HANDLING_FEE' : 'AURA_ENGINE'
         }));
     };
