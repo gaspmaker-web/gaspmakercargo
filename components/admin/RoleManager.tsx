@@ -5,11 +5,12 @@ import { useRouter } from 'next/navigation';
 import { Shield, Loader2, Check } from 'lucide-react';
 
 const ROLES = [
-  { value: 'CLIENTE',   label: 'Client',   color: 'bg-blue-100 text-blue-800 border-blue-200' },
-  { value: 'DRIVER',    label: 'Driver',    color: 'bg-green-100 text-green-800 border-green-200' },
-  { value: 'WAREHOUSE', label: 'Warehouse', color: 'bg-orange-100 text-orange-800 border-orange-200' },
-  { value: 'CONSOLIDATION', label: 'Consolidation', color: 'bg-purple-100 text-purple-800 border-purple-200' },
-  { value: 'ADMIN',     label: 'Admin',     color: 'bg-red-100 text-red-800 border-red-200' },
+  { value: 'CLIENTE',      label: 'Client',      color: 'bg-blue-100 text-blue-800 border-blue-200' },
+  { value: 'DRIVER',       label: 'Driver',       color: 'bg-green-100 text-green-800 border-green-200' },
+  { value: 'WAREHOUSE',    label: 'Warehouse',    color: 'bg-orange-100 text-orange-800 border-orange-200' },
+  { value: 'CONSOLIDATION',label: 'Consolidation',color: 'bg-purple-100 text-purple-800 border-purple-200' },
+  { value: 'ADMIN',        label: 'Admin',        color: 'bg-red-100 text-red-800 border-red-200' },
+  { value: 'B2B_STORE',    label: 'B2B Store',    color: 'bg-teal-100 text-teal-800 border-teal-200' },
 ];
 
 const COUNTRIES = [

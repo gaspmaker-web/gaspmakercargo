@@ -85,7 +85,15 @@ requestHeaders.set('x-forwarded-host', req.headers.get('host') || '');
         if (role === 'CONSOLIDATION') {
             return NextResponse.redirect(new URL(`/${currentLocale}/dashboard-admin/consolidaciones`, req.url));
         }
+           
+        
+            if (role === 'B2B_STORE') {
+            return NextResponse.redirect(new URL(`/${currentLocale}/dashboard-b2b`, req.url));
+        }
         return NextResponse.redirect(new URL(`/${currentLocale}/dashboard-cliente`, req.url));
+    }
+        if (role === 'B2B_STORE' && !pathname.includes('/dashboard-b2b') && !pathname.includes('/solicitar-pickup') && isProtectedRoute) {
+        return NextResponse.redirect(new URL(`/${currentLocale}/dashboard-b2b`, req.url));
     }
 
     if ((role === 'ADMIN' || role === 'WAREHOUSE' || role === 'CONSOLIDATION') && (isClientArea || isDriverArea)) {

@@ -90,6 +90,7 @@ model User {
 
   // 🛒 PERSONAL SHOPPER (NUEVO - Relación)
   shopperOrders         ShopperOrder[]
+  b2bAccount            B2BAccount?
 }
 
 // -----------------------------------------------------------------------------------------
@@ -710,4 +711,30 @@ model DriverApplication {
   notes        String?
   
   @@map("driver_applications")
+}
+
+model B2BAccount {
+  id                String   @id @default(uuid())
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relación con el usuario
+  userId            String   @unique
+  user              User     @relation(fields: [userId], references: [id])
+
+  // Info del negocio
+  businessName      String
+  businessAddress   String
+  businessPhone     String?
+  contactName       String?
+
+  // Crédito
+  creditLimit       Float    @default(500)
+  creditUsed        Float    @default(0)
+  billingCycle      Int      @default(30) // días: 15 o 30
+  nextBillingDate   DateTime?
+  autoPayEnabled    Boolean  @default(false)
+
+  // Estado
+  status            String   @default("ACTIVE") // ACTIVE, SUSPENDED, PENDING
 }

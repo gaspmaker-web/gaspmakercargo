@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
     Truck, MapPin, Warehouse, CreditCard, Info, Loader2, Package, Check,
@@ -61,7 +61,10 @@ function getHandlingFee(weightLbs: number | null | undefined, rates: any): numbe
 export default function SolicitarPickupPage() {
   const t = useTranslations('Pickup');
   const tBills = useTranslations('PendingBills');
-  const router = useRouter();
+    const router = useRouter();
+  const searchParams = useSearchParams();
+  const b2bPickupAddress = searchParams.get('pickup');
+    const isB2B = searchParams.get('b2b') === 'true';
   const tenantRates = useTenantRates();
   const inventorySectionRef = useRef<HTMLDivElement>(null);
   const routeSectionRef = useRef<HTMLDivElement>(null);
@@ -104,7 +107,9 @@ export default function SolicitarPickupPage() {
   const [isLoading, setIsLoading] = useState(false);
   const isPayingRef = useRef(false);
 
-  const [serviceType, setServiceType] = useState<string | null>('PICKUP_WAREHOUSE');
+    const [serviceType, setServiceType] = useState<string | null>(
+    isB2B ? 'DELIVERY' : 'PICKUP_WAREHOUSE'
+  );
   const [inventory, setInventory] = useState<any[]>([]);
   const [inventoryLoading, setInventoryLoading] = useState(true);
   const [cards, setCards] = useState<any[]>([]);
@@ -144,10 +149,18 @@ export default function SolicitarPickupPage() {
     error: undefined,
   });
 
-  const [stops, setStops] = useState<Stop[]>(() => [
-    makeStop('PICKUP', 'pickup'),
+   const [stops, setStops] = useState<Stop[]>(() => [
+    { ...makeStop('PICKUP', 'pickup'), address: b2bPickupAddress || '' },
     makeStop('DROPOFF', 'dropoff'),
   ]);
+
+    useEffect(() => {
+    if (b2bPickupAddress) {
+      setStops(prev => prev.map((s, i) => 
+        i === 0 ? { ...s, address: b2bPickupAddress } : s
+      ));
+    }
+  }, [b2bPickupAddress]);
 
   // Refs estables para acceder al array actual en callbacks async
   const stopsRef = useRef<Stop[]>([]);
@@ -627,6 +640,7 @@ const payload = {
             <p className="text-xs md:text-sm text-gray-500 mt-1">{t('subtitle')}</p>
         </div>
 
+           {!isB2B && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-5">
             <button onClick={() => handleServiceSelect('PICKUP_WAREHOUSE')} className={`p-3.5 rounded-xl border transition-all flex flex-row sm:flex-col items-center sm:items-start gap-3 sm:gap-0 sm:justify-between ${serviceType === 'PICKUP_WAREHOUSE' ? 'border-gmc-dorado-principal bg-yellow-50' : 'border-gray-200 bg-white'}`}>
                 <Warehouse size={20} className={`shrink-0 ${serviceType === 'PICKUP_WAREHOUSE' ? 'text-gmc-dorado-principal' : 'text-gray-400'}`}/>
@@ -641,6 +655,7 @@ const payload = {
                 <div className="text-left"><h3 className="font-bold text-sm text-gray-800 leading-tight">{t('tabDelivery')}</h3><p className="text-[10px] text-gray-500 sm:block hidden">{t('descDelivery')}</p></div>
             </button>
         </div>
+        )}
 
         {(serviceType === 'PICKUP_WAREHOUSE') && (
             <div ref={inventorySectionRef} className="scroll-mt-4 bg-orange-50 border border-orange-200 p-4 rounded-xl mb-6 flex gap-3 text-sm animate-fadeIn">
