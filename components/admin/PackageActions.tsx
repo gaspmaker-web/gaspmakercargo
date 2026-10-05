@@ -324,7 +324,7 @@ export default function PackageActions({ pkg, locale, onDeliverStore }: PackageA
 
       {/* MODAL IMPRIMIR */}
       {showPrintModal && (
-        <div className="fixed inset-0 z-[99998] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div style={{ position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh", zIndex: 99998, display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "rgba(0,0,0,0.6)", padding: "16px" }}>
           <div className="bg-white rounded-xl shadow-2xl max-w-sm w-full p-6 animate-in zoom-in-95">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2"><Printer size={20}/> Print Label</h3>
@@ -341,7 +341,7 @@ export default function PackageActions({ pkg, locale, onDeliverStore }: PackageA
 
       {/* MODAL CONSOLIDACIÓN */}
       {showConsolidateModal && (
-        <div className="fixed inset-0 z-[99998] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div style={{ position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh", zIndex: 99998, display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "rgba(0,0,0,0.6)", padding: "16px" }}>
           <div className="bg-white rounded-xl shadow-2xl max-w-sm w-full p-6 animate-in zoom-in-95">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-bold text-indigo-900">{consolidateSuccess ? 'Consolidation Successful!' : 'Consolidation Data'}</h3>
@@ -375,7 +375,7 @@ export default function PackageActions({ pkg, locale, onDeliverStore }: PackageA
 
       {/* MODAL DESPACHO */}
       {showDispatchModal && (
-        <div className="fixed inset-0 z-[99998] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div style={{ position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh", zIndex: 99998, display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "rgba(0,0,0,0.6)", padding: "16px" }}>
           <div className="bg-white rounded-xl shadow-2xl max-w-sm w-full p-6 animate-in zoom-in-95">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-bold text-gray-800">{dispatchSuccess ? '¡Despacho Exitoso!' : (isGaspMaker ? "Despacho GMC" : "Tracking Manual")}</h3>
