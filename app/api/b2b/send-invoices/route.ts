@@ -38,8 +38,7 @@ function generateInvoicePDF(account: {
   const pageWidth = doc.internal.pageSize.getWidth()
   const margin = 20
 
-  // Header - Company brand
-  doc.setFillColor(26, 31, 46) // #1a1f2e dark
+  doc.setFillColor(26, 31, 46)
   doc.rect(0, 0, pageWidth, 45, 'F')
 
   doc.setTextColor(255, 255, 255)
@@ -52,7 +51,6 @@ function generateInvoicePDF(account: {
   doc.text('Servicio de Mensajería y Logística', margin, 28)
   doc.text('www.gaspmakercargo.com', margin, 35)
 
-  // Invoice label
   doc.setFontSize(18)
   doc.setFont('helvetica', 'bold')
   doc.text('FACTURA B2B', pageWidth - margin, 20, { align: 'right' })
@@ -68,10 +66,8 @@ function generateInvoicePDF(account: {
     { align: 'right' }
   )
 
-  // Reset text color
   doc.setTextColor(30, 30, 30)
 
-  // Billing info box
   let y = 58
   doc.setFillColor(245, 247, 250)
   doc.roundedRect(margin, y, pageWidth - margin * 2, 45, 3, 3, 'F')
@@ -93,7 +89,6 @@ function generateInvoicePDF(account: {
   doc.text(account.businessPhone, margin + 5, y + 35)
   doc.text(account.user.email || '', margin + 5, y + 41)
 
-  // Period info (right side)
   const rightCol = pageWidth / 2 + 10
   doc.setFont('helvetica', 'bold')
   doc.setTextColor(100, 100, 120)
@@ -119,7 +114,6 @@ function generateInvoicePDF(account: {
     y + 32
   )
 
-  // Deliveries table
   y += 55
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(11)
@@ -127,7 +121,6 @@ function generateInvoicePDF(account: {
   doc.text('DETALLE DE SERVICIOS', margin, y)
   y += 6
 
-  // Table header
   doc.setFillColor(26, 31, 46)
   doc.rect(margin, y, pageWidth - margin * 2, 8, 'F')
   doc.setTextColor(255, 255, 255)
@@ -152,7 +145,6 @@ function generateInvoicePDF(account: {
 
   let rowTotal = 0
   account.deliveries.forEach((delivery, index) => {
-    // Alternate row background
     if (index % 2 === 0) {
       doc.setFillColor(250, 251, 253)
       doc.rect(margin, y, pageWidth - margin * 2, 10, 'F')
@@ -168,7 +160,6 @@ function generateInvoicePDF(account: {
       y + 4
     )
 
-    // Recipient + address (2 lines)
     const recipientText = delivery.recipientName || 'N/A'
     const addressText = delivery.deliveryAddress
       ? delivery.deliveryAddress.substring(0, 45) + (delivery.deliveryAddress.length > 45 ? '...' : '')
@@ -181,7 +172,6 @@ function generateInvoicePDF(account: {
     doc.text(addressText, col2, y + 8.5)
     doc.setTextColor(30, 30, 30)
 
-    // Status badge color
     const statusColors: Record<string, [number, number, number]> = {
       ENTREGADO: [34, 197, 94],
       PAGADO: [59, 130, 246],
@@ -200,7 +190,6 @@ function generateInvoicePDF(account: {
 
     y += 10
 
-    // New page if needed
     if (y > 260) {
       doc.addPage()
       y = 20
@@ -214,12 +203,10 @@ function generateInvoicePDF(account: {
     y += 14
   }
 
-  // Separator line
   doc.setDrawColor(220, 220, 230)
   doc.line(margin, y + 2, pageWidth - margin, y + 2)
   y += 10
 
-  // Totals section
   const totalsX = pageWidth - margin - 70
   const totalsValueX = pageWidth - margin
 
@@ -241,7 +228,6 @@ function generateInvoicePDF(account: {
   doc.line(totalsX, y, totalsValueX, y)
   y += 5
 
-  // Grand total
   doc.setFillColor(26, 31, 46)
   doc.roundedRect(totalsX - 5, y - 1, totalsValueX - totalsX + 10, 12, 2, 2, 'F')
   doc.setTextColor(255, 255, 255)
@@ -253,7 +239,6 @@ function generateInvoicePDF(account: {
 
   y += 20
 
-  // Credit usage bar
   doc.setTextColor(30, 30, 30)
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(9)
@@ -282,7 +267,6 @@ function generateInvoicePDF(account: {
     y + 4
   )
 
-  // Footer
   const footerY = doc.internal.pageSize.getHeight() - 20
   doc.setDrawColor(220, 220, 230)
   doc.line(margin, footerY - 5, pageWidth - margin, footerY - 5)
@@ -297,7 +281,6 @@ function generateInvoicePDF(account: {
 }
 
 export async function POST(req: Request) {
-  // Validate cron secret
   const authHeader = req.headers.get('authorization')
   const expectedSecret = `Bearer ${process.env.CRON_SECRET}`
 
@@ -314,7 +297,6 @@ export async function POST(req: Request) {
   }
 
   try {
-    // Get all active B2B accounts due for billing
     const accounts = await prisma.b2BAccount.findMany({
       where: {
         status: 'ACTIVE',
@@ -335,12 +317,10 @@ export async function POST(req: Request) {
           continue
         }
 
-        // Calculate billing period
         const periodEnd = new Date(now)
         const periodStart = new Date(now)
         periodStart.setDate(periodStart.getDate() - account.billingCycle)
 
-        // Get deliveries for this period
         const deliveries = await prisma.pickupRequest.findMany({
           where: {
             userId: account.userId,
@@ -358,7 +338,6 @@ export async function POST(req: Request) {
           }
         })
 
-        // Skip if no credit used and no deliveries
         if (Number(account.creditUsed) === 0 && deliveries.length === 0) {
           results.skipped++
           continue
@@ -366,11 +345,9 @@ export async function POST(req: Request) {
 
         const invoiceNumber = `GMC-B2B-${account.id.slice(-6).toUpperCase()}-${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}`
 
-        // Calculate next billing date
         const nextBillingDate = new Date(now)
         nextBillingDate.setDate(nextBillingDate.getDate() + account.billingCycle)
 
-        // Generate PDF
         const pdfBuffer = generateInvoicePDF({
           businessName: account.businessName,
           businessAddress: account.businessAddress,
@@ -394,7 +371,6 @@ export async function POST(req: Request) {
           periodEnd
         })
 
-        // Send email with PDF attachment
         await resend.emails.send({
           from: 'GaspmakerCargo Facturación <facturacion@gaspmakercargo.com>',
           to: account.user.email,
@@ -405,15 +381,12 @@ export async function POST(req: Request) {
                 <h1 style="color: white; margin: 0; font-size: 24px;">GaspmakerCargo</h1>
                 <p style="color: #94a3b8; margin: 8px 0 0;">Estado de Cuenta B2B</p>
               </div>
-
               <div style="background: white; padding: 30px; border-radius: 0 0 12px 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
                 <h2 style="color: #1a1f2e; margin-top: 0;">Estimado/a ${account.contactName},</h2>
-
                 <p style="color: #475569; line-height: 1.6;">
                   Adjunto encontrará su factura correspondiente al período de facturación
                   <strong>${periodStart.toLocaleDateString('es-DO')} - ${periodEnd.toLocaleDateString('es-DO')}</strong>.
                 </p>
-
                 <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin: 20px 0;">
                   <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
                     <span style="color: #64748b;">Empresa:</span>
@@ -432,18 +405,15 @@ export async function POST(req: Request) {
                     <strong style="color: #1a1f2e; font-size: 20px;">$${Number(account.creditUsed).toFixed(2)}</strong>
                   </div>
                 </div>
-
                 <p style="color: #475569; line-height: 1.6;">
                   Su próxima fecha de facturación será el <strong>${nextBillingDate.toLocaleDateString('es-DO', { day: '2-digit', month: 'long', year: 'numeric' })}</strong>.
                 </p>
-
                 <div style="background: #eff6ff; border-left: 4px solid #3b82f6; padding: 15px; border-radius: 0 8px 8px 0; margin: 20px 0;">
                   <p style="margin: 0; color: #1e40af; font-size: 14px;">
                     💡 El PDF adjunto contiene el detalle completo de sus servicios.
                     Para cualquier consulta, responda este correo o escríbanos por WhatsApp.
                   </p>
                 </div>
-
                 <p style="color: #94a3b8; font-size: 13px; border-top: 1px solid #f1f5f9; padding-top: 20px; margin-bottom: 0;">
                   GaspmakerCargo · soporte@gaspmakercargo.com<br>
                   Este es un mensaje automático del sistema de facturación.
@@ -459,7 +429,6 @@ export async function POST(req: Request) {
           ]
         })
 
-        // Update account: reset creditUsed, set next billing date
         await prisma.b2BAccount.update({
           where: { id: account.id },
           data: {
