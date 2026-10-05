@@ -2,6 +2,7 @@ import { auth } from '@/auth';
 import { redirect } from 'next/navigation';
 import prisma from '@/lib/prisma';
 import Link from 'next/link';
+import DeliveriesClient from './DeliveriesClient';
 import { Truck, DollarSign, Clock, Package, Plus } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
@@ -76,34 +77,12 @@ export default async function DashboardB2BPage(props: any) {
           </div>
         </Link>
 
-        {/* Recent Deliveries */}
-        <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-          <div className="px-5 py-4 border-b border-gray-100">
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Recent Deliveries</p>
-          </div>
-          {recentPickups.length === 0 ? (
-            <div className="px-5 py-8 text-center text-gray-400 text-sm">No deliveries yet.</div>
-          ) : (
-            <div className="divide-y divide-gray-50">
-              {recentPickups.map(pickup => (
-                <div key={pickup.id} className="px-5 py-3 flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-800 truncate max-w-[200px]">{pickup.dropOffAddress}</p>
-                    <p className="text-xs text-gray-400">{new Date(pickup.createdAt).toLocaleDateString()}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-bold text-gray-900">${pickup.totalPaid?.toFixed(2) || '0.00'}</p>
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                      pickup.status === 'ENTREGADO' ? 'bg-green-100 text-green-700' :
-                      pickup.status === 'PAGADO' ? 'bg-blue-100 text-blue-700' :
-                      'bg-yellow-100 text-yellow-700'
-                    }`}>{pickup.status}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+         <DeliveriesClient initialPickups={recentPickups.map(p => ({
+          ...p,
+          createdAt: p.createdAt.toISOString(),
+          dropOffAddress: p.dropOffAddress ?? null,
+          totalPaid: p.totalPaid ? Number(p.totalPaid) : null,
+        }))} />
 
       </div>
     </div>
