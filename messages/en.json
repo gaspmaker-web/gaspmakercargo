@@ -1136,7 +1136,7 @@
 "s_location_li1": "What we collect: Real-time GPS coordinates (latitude, longitude, speed, heading).",
 "s_location_li2": "Why we collect it: To assign delivery routes, track active deliveries, and display driver position to our dispatch team.",
 "s_location_li3": "When we collect it: Only while the driver has explicitly activated the 'Go Online' status within the app.",
-"s_location_li4": "Who can see it: Only GaspMaker Cargo internal dispatch team. Location data is never sold or shared with third parties.",
+"s_location_li4": "Who can see it: GaspMaker Cargo dispatch team and the customer assigned to the active delivery. Location data is never sold or shared with third parties for marketing purposes.",
 "s_location_li5": "How to stop it: Tap 'Go Offline' at any time to immediately stop all location collection.",
     "s5_title": "5. Contact Us",
     "s5_text": "If you have questions or comments about this policy, you may email us at:",

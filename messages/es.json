@@ -1177,7 +1177,7 @@
 "s_location_li1": "Qué recopilamos: Coordenadas GPS en tiempo real (latitud, longitud, velocidad, dirección).",
 "s_location_li2": "Por qué lo recopilamos: Para asignar rutas de entrega, rastrear entregas activas y mostrar la posición del conductor a nuestro equipo de despacho.",
 "s_location_li3": "Cuándo lo recopilamos: Solo mientras el conductor ha activado explícitamente el estado 'En línea' dentro de la app.",
-"s_location_li4": "Quién puede verlo: Solo el equipo interno de despacho de GaspMaker Cargo. Los datos nunca se venden ni comparten con terceros.",
+"s_location_li4": "Quién puede verlo: El equipo de despacho de GaspMaker Cargo y el cliente asignado a la entrega activa. Los datos nunca se venden ni comparten con terceros con fines de marketing.",
 "s_location_li5": "Cómo detenerlo: Toca 'Desconectarse' en cualquier momento para detener inmediatamente la recopilación.",
     "s5_title": "5. Contáctenos",
     "s5_text": "Si tiene preguntas o comentarios sobre esta política, puede enviarnos un correo electrónico a:",

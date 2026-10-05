@@ -1159,7 +1159,7 @@
 "s_location_li1": "O que coletamos: Coordenadas GPS em tempo real (latitude, longitude, velocidade, direção).",
 "s_location_li2": "Por que coletamos: Para atribuir rotas de entrega, rastrear entregas ativas e exibir a posição do motorista para nossa equipe de despacho.",
 "s_location_li3": "Quando coletamos: Somente enquanto o motorista ativou explicitamente o status 'Online' no aplicativo.",
-"s_location_li4": "Quem pode ver: Apenas a equipe interna de despacho da GaspMaker Cargo. Os dados nunca são vendidos ou compartilhados.",
+"s_location_li4": "Quem pode ver: A equipe de despacho da GaspMaker Cargo e o cliente designado para a entrega ativa. Os dados nunca são vendidos ou compartilhados para fins de marketing.",
 "s_location_li5": "Como parar: Toque em 'Ficar Offline' a qualquer momento para interromper imediatamente a coleta.",
     "s5_title": "5. Fale Conosco",
     "s5_text": "Se você tiver dúvidas ou comentários sobre esta política, pode nos enviar um e-mail para:",

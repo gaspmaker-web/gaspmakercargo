@@ -261,7 +261,7 @@ if (vehicleStatus === 'REJECTED') {
               <div className="bg-gray-50 rounded-2xl p-4 mb-5 space-y-2 text-sm text-gray-600">
                 <div className="flex items-start gap-2"><span className="text-green-500 font-bold mt-0.5">✓</span><span><strong>Why:</strong> To assign you delivery routes and show your position to dispatch.</span></div>
                 <div className="flex items-start gap-2"><span className="text-green-500 font-bold mt-0.5">✓</span><span><strong>When:</strong> Only while you are marked as online for deliveries.</span></div>
-                <div className="flex items-start gap-2"><span className="text-green-500 font-bold mt-0.5">✓</span><span><strong>Who sees it:</strong> Only GaspMaker Cargo dispatch team.</span></div>
+                <div className="flex items-start gap-2"><span className="text-green-500 font-bold mt-0.5">✓</span><span><strong>Who sees it:</strong> GaspMaker Cargo dispatch team and the customer assigned to your active delivery.</span></div>
               </div>
               <button onClick={confirmGoOnline} className="w-full py-4 text-white text-base font-bold rounded-2xl mb-3" style={{ backgroundColor: '#222b3c' }}>
                 Understood, Go Online
