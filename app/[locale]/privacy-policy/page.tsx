@@ -1,5 +1,5 @@
 import React from 'react';
-import { Lock, Eye, Database, Globe, Shield, Mail, FileText, MessageSquare } from 'lucide-react';
+import { Lock, Eye, Database, Globe, Shield, Mail, FileText, MessageSquare, MapPin } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 
@@ -110,6 +110,21 @@ export default function PrivacyPolicyPage({ searchParams }: { searchParams: { fr
                     <li><strong>{t('s4_li3_label')}</strong> {t('s4_li3_text')}</li>
                 </ul>
             </Section>
+
+            {/* 5. LOCATION DATA */}
+<Section
+    icon={<MapPin size={24} className="text-blue-600"/>}
+    title={t('s_location_title')}
+>
+    <p>{t('s_location_text')}</p>
+    <ul className="list-disc pl-5 mt-3 space-y-2 text-gray-600 text-sm">
+        <li>{t('s_location_li1')}</li>
+        <li>{t('s_location_li2')}</li>
+        <li>{t('s_location_li3')}</li>
+        <li>{t('s_location_li4')}</li>
+        <li>{t('s_location_li5')}</li>
+    </ul>
+</Section>
 
             {/* 6. SMS & WHATSAPP */}
 <Section 
