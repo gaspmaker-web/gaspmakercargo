@@ -8,6 +8,7 @@ import { DriverContext } from '@/lib/maps/driverContext'
 import DriverLogoutButton from '@/components/DriverLogoutButton'
 import { MapPin, Truck, Home, DollarSign, Bell, Menu } from 'lucide-react'
 
+
 interface Props {
   driverId: string
   driverName: string
@@ -242,54 +243,36 @@ if (vehicleStatus === 'REJECTED') {
   )
 }
 
-{/* PROMINENT DISCLOSURE — requerido por Google Play antes de BACKGROUND_LOCATION */}
-{showLocationDisclosure && (
-  <div className="fixed inset-0 z-[99999] flex items-end justify-center bg-black/60 backdrop-blur-sm p-4">
-    <div className="bg-white rounded-3xl w-full max-w-sm p-6 animate-in slide-in-from-bottom-4 duration-300">
-      <div className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: '#F4DBA7' }}>
-        <MapPin size={24} style={{ color: '#222b3c' }} />
-      </div>
-      <h2 className="text-xl font-bold text-gray-900 text-center mb-2">
-        Location Access Required
-      </h2>
-      <p className="text-gray-600 text-sm text-center mb-4 leading-relaxed">
-        <strong>GaspMaker Cargo</strong> collects your location data to track deliveries in real time — even when the app is in the background or closed.
-      </p>
-      <div className="bg-gray-50 rounded-2xl p-4 mb-5 space-y-2 text-sm text-gray-600">
-        <div className="flex items-start gap-2">
-          <span className="text-green-500 font-bold mt-0.5">✓</span>
-          <span><strong>Why:</strong> To assign you delivery routes and show your position to dispatch.</span>
-        </div>
-        <div className="flex items-start gap-2">
-          <span className="text-green-500 font-bold mt-0.5">✓</span>
-          <span><strong>When:</strong> Only while you are marked as online for deliveries.</span>
-        </div>
-        <div className="flex items-start gap-2">
-          <span className="text-green-500 font-bold mt-0.5">✓</span>
-          <span><strong>Who sees it:</strong> Only GaspMaker Cargo dispatch team.</span>
-        </div>
-      </div>
-      <button
-        onClick={confirmGoOnline}
-        className="w-full py-4 text-white text-base font-bold rounded-2xl mb-3"
-        style={{ backgroundColor: '#222b3c' }}
-      >
-        Understood, Go Online
-      </button>
-      <button
-        onClick={() => setShowLocationDisclosure(false)}
-        className="w-full py-3 text-gray-500 text-sm font-medium"
-      >
-        Cancel
-      </button>
-    </div>
-  </div>
-)}
 
   // ── OFFLINE SCREEN ──────────────────────────────────────────────────────
   if (!isOnline) {
-    return (
-      <DriverContext.Provider value={contextValue}>
+        return (
+      <>
+        {showLocationDisclosure && (
+          <div className="fixed inset-0 z-[99999] flex items-end justify-center bg-black/60 backdrop-blur-sm p-4">
+            <div className="bg-white rounded-3xl w-full max-w-sm p-6 animate-in slide-in-from-bottom-4 duration-300">
+              <div className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: '#F4DBA7' }}>
+                <MapPin size={24} style={{ color: '#222b3c' }} />
+              </div>
+              <h2 className="text-xl font-bold text-gray-900 text-center mb-2">Location Access Required</h2>
+              <p className="text-gray-600 text-sm text-center mb-4 leading-relaxed">
+                <strong>GaspMaker Cargo</strong> collects your location data to track deliveries in real time — even when the app is in the background or closed.
+              </p>
+              <div className="bg-gray-50 rounded-2xl p-4 mb-5 space-y-2 text-sm text-gray-600">
+                <div className="flex items-start gap-2"><span className="text-green-500 font-bold mt-0.5">✓</span><span><strong>Why:</strong> To assign you delivery routes and show your position to dispatch.</span></div>
+                <div className="flex items-start gap-2"><span className="text-green-500 font-bold mt-0.5">✓</span><span><strong>When:</strong> Only while you are marked as online for deliveries.</span></div>
+                <div className="flex items-start gap-2"><span className="text-green-500 font-bold mt-0.5">✓</span><span><strong>Who sees it:</strong> Only GaspMaker Cargo dispatch team.</span></div>
+              </div>
+              <button onClick={confirmGoOnline} className="w-full py-4 text-white text-base font-bold rounded-2xl mb-3" style={{ backgroundColor: '#222b3c' }}>
+                Understood, Go Online
+              </button>
+              <button onClick={() => setShowLocationDisclosure(false)} className="w-full py-3 text-gray-500 text-sm font-medium">
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+        <DriverContext.Provider value={contextValue}>
         <div className="min-h-screen bg-white flex flex-col font-sans">
           {/* Header */}
           <div className="flex justify-between items-center px-5 pt-10 pb-2">
@@ -376,8 +359,9 @@ if (vehicleStatus === 'REJECTED') {
     <span className="text-[10px] font-medium text-gray-400">Menu</span>
 </a>
 </div>
-        </div>
+            </div>
       </DriverContext.Provider>
+      </>
     )
   }
 
