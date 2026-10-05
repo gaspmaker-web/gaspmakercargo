@@ -271,11 +271,11 @@ export default function PackageActions({ pkg, locale, onDeliverStore }: PackageA
         isOpen={isMenuOpen}
         onClose={() => setIsMenuOpen(false)}
       >
-        <button onClick={() => { setIsEditOpen(true); setIsMenuOpen(false); }} className="w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center gap-3 text-gray-700">
+        <button onClick={(e) => { e.stopPropagation(); setIsEditOpen(true); setIsMenuOpen(false); }} className="w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center gap-3 text-gray-700">
           <Edit size={16} className="text-gray-400" /> Edit Details
         </button>
 
-        <button onClick={() => { setShowPrintModal(true); setIsMenuOpen(false); }} className="w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center gap-3 text-gray-700">
+        <button onClick={(e) => { e.stopPropagation(); setShowPrintModal(true); setIsMenuOpen(false); }} className="w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center gap-3 text-gray-700">
           <Printer size={16} className="text-gray-400" /> Print Label
         </button>
 
