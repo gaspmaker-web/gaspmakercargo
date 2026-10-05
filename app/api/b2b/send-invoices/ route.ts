@@ -350,9 +350,9 @@ export async function POST(req: Request) {
           orderBy: { createdAt: 'desc' },
           select: {
             id: true,
-            recipientName: true,
-            deliveryAddress: true,
-            price: true,
+            dropOffContact: true,
+            dropOffAddress: true,
+            totalPaid: true,
             createdAt: true,
             status: true
           }
@@ -382,8 +382,12 @@ export async function POST(req: Request) {
           nextBillingDate,
           user: account.user,
           deliveries: deliveries.map(d => ({
-            ...d,
-            price: d.price ? Number(d.price) : 0
+            id: d.id,
+            recipientName: d.dropOffContact || 'N/A',
+            deliveryAddress: d.dropOffAddress || '',
+            price: d.totalPaid ? Number(d.totalPaid) : 0,
+            createdAt: d.createdAt,
+            status: d.status
           })),
           invoiceNumber,
           periodStart,
