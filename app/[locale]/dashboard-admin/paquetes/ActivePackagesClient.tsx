@@ -168,7 +168,7 @@ const handleConfirmDelivery = async () => {
             </div>
         )}
 
-     <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden relative z-0">
+     <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden" style={{ isolation: "isolate" }}>
     <div className="overflow-x-auto min-h-[400px]" style={{ transform: 'rotateX(180deg)' }}>
         <table className="w-full text-left border-collapse" style={{ transform: 'rotateX(180deg)' }}>
             <thead className="bg-gray-50 text-gray-500 text-xs uppercase font-bold border-b border-gray-200">
