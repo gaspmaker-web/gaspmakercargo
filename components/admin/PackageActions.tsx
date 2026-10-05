@@ -31,18 +31,22 @@ function DropdownPortal({
   onClose: () => void;
   children: React.ReactNode;
 }) {
-  const [position, setPosition] = useState({ top: 0, right: 0 });
-  const dropdownRef = useRef<HTMLDivElement>(null);
+const [position, setPosition] = useState({ top: 0, left: 0 });
+const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const updatePosition = useCallback(() => {
-    if (!anchorRef.current) return;
-    const rect = anchorRef.current.getBoundingClientRect();
-    const viewportWidth = window.innerWidth;
-    setPosition({
-      top: rect.bottom + window.scrollY + 4,
-      right: viewportWidth - rect.right - window.scrollX,
-    });
-  }, [anchorRef]);
+const updatePosition = useCallback(() => {
+  if (!anchorRef.current) return;
+  const rect = anchorRef.current.getBoundingClientRect();
+  const dropdownWidth = 256;
+  const spaceOnRight = window.innerWidth - rect.right;
+  
+  setPosition({
+    top: rect.bottom + 4,           // sin scrollY — fixed usa viewport
+    left: spaceOnRight < dropdownWidth
+      ? rect.right - dropdownWidth  // sin scrollX
+      : rect.left,
+  });
+}, [anchorRef]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -75,12 +79,7 @@ function DropdownPortal({
   return createPortal(
     <div
       ref={dropdownRef}
-      style={{
-        position: 'absolute',
-        top: position.top,
-        right: position.right,
-        zIndex: 99999,
-      }}
+      style={{ position: 'fixed', top: position.top, left: position.left, zIndex: 99999 }}
       className="w-64 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden font-montserrat animate-in fade-in zoom-in-95 duration-100 text-sm"
     >
       {children}
@@ -403,7 +402,10 @@ export default function PackageActions({ pkg, locale, onDeliverStore }: PackageA
         </div>
       )}
 
-      {isEditOpen && <EditPackageAdminModal isOpen={isEditOpen} onClose={() => setIsEditOpen(false)} pkg={pkg} />}
+      {isEditOpen && typeof window !== 'undefined' && createPortal(
+  <EditPackageAdminModal isOpen={isEditOpen} onClose={() => setIsEditOpen(false)} pkg={pkg} />,
+  document.body
+)}
     </div>
   );
 }
