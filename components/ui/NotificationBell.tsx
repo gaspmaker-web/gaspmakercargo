@@ -4,6 +4,7 @@
 import useSWR from 'swr'; 
 import { Bell } from 'lucide-react';
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
 
 // Fetcher simple para SWR
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
@@ -14,6 +15,8 @@ interface NotificationBellProps {
 }
 
 export default function NotificationBell({ className }: NotificationBellProps) {
+  const params = useParams();
+const locale = params?.locale as string || 'en';
   
   // 🔥 CONFIGURACIÓN ENTERPRISE (MANTENIDA EXACTAMENTE IGUAL):
   const { data: notifications = [] } = useSWR('/api/notifications', fetcher, {
@@ -31,7 +34,7 @@ export default function NotificationBell({ className }: NotificationBellProps) {
   return (
     // 🔥 CAMBIO PRINCIPAL: Ahora es un Link directo, no un div con botón
     <Link 
-      href="/dashboard-cliente/notificaciones"
+      href={`/${locale}/dashboard-cliente/notificaciones`}
       className={`relative p-2 rounded-full transition-all focus:outline-none hover:text-gmc-dorado-principal hover:bg-white/10 ${className || 'text-white'}`}
     >
         <Bell size={24} />
