@@ -25,7 +25,11 @@ const statusLabel: Record<string, string> = {
 
 export default function DeliveriesClient({ initialPickups }: { initialPickups: Pickup[] }) {
   const [pickups, setPickups] = useState<Pickup[]>(initialPickups);
-  const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
+  const [lastRefresh, setLastRefresh] = useState<string>('');
+
+  useEffect(() => {
+    setLastRefresh(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+  }, []);
 
   const refresh = useCallback(async () => {
     try {
@@ -33,7 +37,7 @@ export default function DeliveriesClient({ initialPickups }: { initialPickups: P
       if (res.ok) {
         const data = await res.json();
         setPickups(data);
-        setLastRefresh(new Date());
+        setLastRefresh(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
       }
     } catch {}
   }, []);
@@ -48,7 +52,7 @@ export default function DeliveriesClient({ initialPickups }: { initialPickups: P
       <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
         <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Recent Deliveries</p>
         <span className="text-[10px] text-gray-300">
-          Updated {lastRefresh.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          {lastRefresh ? `Updated ${lastRefresh}` : ''}
         </span>
       </div>
       {pickups.length === 0 ? (
