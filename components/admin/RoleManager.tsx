@@ -39,6 +39,10 @@ export default function RoleManager({ userId, currentRole, currentCountryCode }:
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [confirming, setConfirming] = useState(false);
+  const [showB2BModal, setShowB2BModal] = useState(false);
+  const [b2bName, setB2bName] = useState('');
+  const [b2bAddress, setB2bAddress] = useState('');
+const [b2bCreditLimit, setB2bCreditLimit] = useState('500');
 
   const handleSave = async () => {
     if (role === 'DRIVER' && !countryCode) {
@@ -51,7 +55,7 @@ export default function RoleManager({ userId, currentRole, currentCountryCode }:
       const res = await fetch('/api/admin/users/update-role', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, role, countryCode }),
+        body: JSON.stringify({ userId, role, countryCode, b2bName, b2bAddress, b2bCreditLimit: parseFloat(b2bCreditLimit) }),
       });
       if (res.ok) {
         setSuccess(true);
@@ -120,7 +124,7 @@ export default function RoleManager({ userId, currentRole, currentCountryCode }:
       {/* Confirmation + Save */}
       {!confirming ? (
         <button
-          onClick={() => setConfirming(true)}
+          onClick={() => role === 'B2B_STORE' ? setShowB2BModal(true) : setConfirming(true)}
           disabled={loading || success}
           className="w-full py-2.5 bg-gmc-gris-oscuro text-white rounded-xl font-bold text-sm hover:bg-black transition-all disabled:opacity-50 flex items-center justify-center gap-2"
         >
@@ -154,6 +158,64 @@ export default function RoleManager({ userId, currentRole, currentCountryCode }:
           </div>
         </div>
       )}
+
+      {/* B2B Setup Modal */}
+{showB2BModal && (
+  <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.5)', padding: '16px' }}>
+    <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl">
+      <h3 className="font-bold text-lg text-gray-800 mb-1">Setup B2B Account</h3>
+      <p className="text-xs text-gray-400 mb-4">This info will appear in the B2B dashboard and invoices.</p>
+      
+      <div className="space-y-3">
+        <div>
+          <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Business Name</label>
+          <input
+            type="text"
+            value={b2bName}
+            onChange={e => setB2bName(e.target.value)}
+            placeholder="e.g. Alejandra's Pharmacy"
+            className="w-full p-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-teal-400 focus:border-transparent"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Business Address (Pickup)</label>
+          <input
+            type="text"
+            value={b2bAddress}
+            onChange={e => setB2bAddress(e.target.value)}
+            placeholder="e.g. 1234 NW 7th Ave, Miami FL 33136"
+            className="w-full p-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-teal-400 focus:border-transparent"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Monthly Credit Limit ($)</label>
+          <input
+            type="number"
+            value={b2bCreditLimit}
+            onChange={e => setB2bCreditLimit(e.target.value)}
+            className="w-full p-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-teal-400 focus:border-transparent"
+          />
+        </div>
+      </div>
+
+      <div className="flex gap-2 mt-5">
+        <button
+          onClick={() => { setShowB2BModal(false); setConfirming(true); }}
+          disabled={!b2bName || !b2bAddress}
+          className="flex-1 py-2.5 bg-teal-600 text-white rounded-xl font-bold text-sm hover:bg-teal-700 transition disabled:opacity-40"
+        >
+          Continue
+        </button>
+        <button
+          onClick={() => setShowB2BModal(false)}
+          className="flex-1 py-2.5 bg-gray-100 text-gray-600 rounded-xl font-bold text-sm hover:bg-gray-200 transition"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
 }
