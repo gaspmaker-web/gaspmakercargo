@@ -74,12 +74,12 @@ export default async function RootLayout({
   }
 
   return (
-    <html lang={locale} className="overflow-x-hidden">
-      <body 
-        className={`${inter.variable} ${montserrat.variable} ${garamond.variable} font-sans flex flex-col min-h-screen overflow-x-hidden`}
-        suppressHydrationWarning={true}
-        style={tenantStyles}
-      >
+    <html lang={locale}>
+     <body 
+  className={`${inter.variable} ${montserrat.variable} ${garamond.variable} font-sans flex flex-col min-h-screen`}
+  suppressHydrationWarning={true}
+  style={tenantStyles}
+>
         {/* Fondo oscuro inmediato — evita flash blanco antes de la splash */}
         <script dangerouslySetInnerHTML={{ __html: `document.documentElement.style.background='#1a1f2e';document.body.style.background='#1a1f2e'` }} />
 
