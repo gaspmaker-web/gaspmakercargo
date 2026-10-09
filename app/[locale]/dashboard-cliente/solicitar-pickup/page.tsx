@@ -198,6 +198,9 @@ export default function SolicitarPickupPage() {
       return updated;
     });
   };
+  const handleStopDescriptionChange = (id: string, description: string) => {
+  setStops(prev => prev.map(s => s.id === id ? { ...s, description } : s));
+};
 
   const handleStopContactChange = (id: string, contact: string) => {
   setStops(prev => prev.map(s => s.id === id ? { ...s, contact } : s));
@@ -741,36 +744,34 @@ const payload = {
                         </div>
                     ) : (
                         <>
-                            {/* ✅ RouteSection v2 — array único, todo draggable */}
-                            <div ref={routeSectionRef} className="scroll-mt-4">
-                              <RouteSection
-                                serviceType={serviceType as 'SHIPPING' | 'DELIVERY'}
-                                stops={stops}
-                                distanceMiles={quote.distanceMiles}
-                                onStopAddressValid={handleStopAddressValid}
-                                onStopAddressError={handleStopAddressError}
-                                onStopAddressClear={handleStopAddressClear}
-                                onStopContactChange={handleStopContactChange}
-                                onStopPhoneChange={handleStopPhoneChange}
-                                onAddStop={handleAddStop}
-                                onRemoveStop={handleRemoveStop}
-                                onDragEnd={handleDragEnd}
-                                sensors={sensors}
-                                t_routeTitle={t('routeTitle')}
-                                t_pickupPointA={t('pickupPointA')}
-                                t_dropoffLabel={t('dropoffPointB')}
-                                t_interDestTitle={t('interDestTitle')}
-                                t_gmcWarehouse={t('gmcWarehouse')}
-                                t_exportNote={t('exportNote')}
-                                t_pickupDescPlaceholder={t('pickupDescPlaceholder')}
-                                t_dropoffDescPlaceholder={t('dropoffDescPlaceholder')}
-                                t_addStop={t('addStop')}
-                                t_countyError={t('countyError')}
-                                t_pickupAddress={t('pickupAddressPlaceholder')}
-                                t_dropoffAddress={t('dropoffAddressPlaceholder')}
-                                t_estimatedRoute={t('estimatedRoute')}
-                              />
-                            </div>
+                <RouteSection
+  serviceType={serviceType as 'SHIPPING' | 'DELIVERY'}
+  stops={stops}
+  distanceMiles={quote.distanceMiles}
+  onStopAddressValid={handleStopAddressValid}
+  onStopAddressError={handleStopAddressError}
+  onStopAddressClear={handleStopAddressClear}
+  onStopDescriptionChange={handleStopDescriptionChange}
+  onStopContactChange={handleStopContactChange}
+  onStopPhoneChange={handleStopPhoneChange}
+  onAddStop={handleAddStop}
+  onRemoveStop={handleRemoveStop}
+  onDragEnd={handleDragEnd}
+  sensors={sensors}
+  t_routeTitle={t('routeTitle')}
+  t_pickupPointA={t('pickupPointA')}
+  t_dropoffLabel={t('dropoffPointB')}
+  t_interDestTitle={t('interDestTitle')}
+  t_gmcWarehouse={t('gmcWarehouse')}
+  t_exportNote={t('exportNote')}
+  t_pickupDescPlaceholder={t('pickupDescPlaceholder')}
+  t_dropoffDescPlaceholder={t('dropoffDescPlaceholder')}
+  t_addStop={t('addStop')}
+  t_countyError={t('countyError')}
+  t_pickupAddress={t('pickupAddressPlaceholder')}
+  t_dropoffAddress={t('dropoffAddressPlaceholder')}
+  t_estimatedRoute={t('estimatedRoute')}
+/>
 
                             <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm border border-gray-200">
                                 <h3 className="font-bold text-gmc-gris-oscuro text-sm uppercase mb-4">{t('loadDetailsTitle')}</h3>

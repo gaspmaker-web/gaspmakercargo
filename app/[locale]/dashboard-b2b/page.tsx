@@ -109,12 +109,17 @@ export default async function DashboardB2BPage(props: any) {
           </div>
         </Link>
 
-        <DeliveriesClient initialPickups={recentPickups.map(p => ({
-          ...p,
-          createdAt: p.createdAt.toISOString(),
-          dropOffAddress: p.dropOffAddress ?? null,
-          totalPaid: p.totalPaid ? Number(p.totalPaid) : null,
-        }))} />
+   <DeliveriesClient initialPickups={recentPickups.map(p => ({
+  id: p.id,
+  createdAt: p.createdAt.toISOString(),
+  dropOffAddress: p.dropOffAddress ?? null,
+  description: p.description ?? null,
+  totalPaid: p.totalPaid ?? null,
+  status: p.status,
+  extraStops: p.extraStops as any,
+  photoPickupUrl: p.photoPickupUrl ?? null,
+  pickupPin: p.pickupPin ?? null,
+}))} />
 
       </div>
     </div>
