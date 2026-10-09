@@ -23,31 +23,51 @@ const withPWA = require("@ducanh2912/next-pwa").default({
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  
+
+  // Excluye plugins de Capacitor del build de Vercel
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      config.externals = [
+        ...(Array.isArray(config.externals) ? config.externals : []),
+        '@capacitor/camera',
+        '@capacitor/core',
+        '@aparajita/capacitor-biometric-auth',
+      ];
+    } else {
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        '@capacitor/camera': false,
+        '@capacitor/core': false,
+        '@aparajita/capacitor-biometric-auth': false,
+      };
+    }
+    return config;
+  },
+
   // --- CONFIGURACIÓN DE IMÁGENES ---
   images: {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'res.cloudinary.com', // ✅ CRÍTICO: Para que se vean tus avatares de Cloudinary
+        hostname: 'res.cloudinary.com',
         port: '',
         pathname: '**', 
       },
       {
         protocol: 'https',
-        hostname: 'cloudinary.com', // Por seguridad agregamos el dominio base
+        hostname: 'cloudinary.com',
         port: '',
         pathname: '**',
       },
       {
         protocol: 'https',
-        hostname: 'flagcdn.com', // ✅ AGREGADO: Para permitir las banderas de idiomas si usas <Image />
+        hostname: 'flagcdn.com',
         port: '',
         pathname: '**',
       },
       {
         protocol: 'https',
-        hostname: 'hwx8ivsyavlc8sq9.public.blob.vercel-storage.com', // 🔥 AGREGADO: Para las fotos de los sobres en Vercel Blob
+        hostname: 'hwx8ivsyavlc8sq9.public.blob.vercel-storage.com',
         port: '',
         pathname: '**',
       },
