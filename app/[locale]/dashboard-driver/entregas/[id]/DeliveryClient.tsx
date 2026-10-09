@@ -4,18 +4,34 @@ import React, { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Camera, CheckCircle, Loader2, ArrowLeft, PenTool, Navigation, Map, User, Phone, PackageCheck, AlertCircle, Box, Layers } from 'lucide-react';
-import SignatureCanvas from 'react-signature-canvas'; 
+import SignatureCanvas from 'react-signature-canvas';
 
-export default function DeliveryClient({ 
+// Capacitor Camera (solo carga en móvil nativo, no rompe en web)
+async function takeCameraPhoto(): Promise<string | null> {
+  try {
+    const { Camera: CapCamera, CameraResultType, CameraSource } = await import('@capacitor/camera');
+    const image = await CapCamera.getPhoto({
+      quality: 85,
+      allowEditing: false,
+      resultType: CameraResultType.DataUrl,
+      source: CameraSource.Camera,
+    });
+    return image.dataUrl || null;
+  } catch {
+    return null; // usuario canceló o no es nativo
+  }
+}
+
+export default function DeliveryClient({
     packageId, locale, deliveryAddress, clientName, clientPhone, tracking, clientNote = "", countryCode = "US",
-    childPackages = [], isConsolidation = false // 🔥 RECIBIMOS LOS PAQUETES
-}: { 
+    childPackages = [], isConsolidation = false
+}: {
     packageId: string, locale: string, deliveryAddress: string, clientName: string, clientPhone: string, tracking: string, clientNote?: string, countryCode?: string,
     childPackages?: any[], isConsolidation?: boolean
 }) {
   const router = useRouter();
   const sigPad = useRef<any>(null);
-  
+
   const [step, setStep] = useState(2);
   const [photoUrl, setPhotoUrl] = useState('');
   const [uploading, setUploading] = useState(false);
@@ -24,54 +40,79 @@ export default function DeliveryClient({
   const getCountryTheme = (code: string) => {
       const upperCode = code?.toUpperCase();
       switch (upperCode) {
-          case 'US': return 'border-yellow-400 ring-yellow-50'; 
-          case 'TT': return 'border-purple-300 ring-purple-50'; 
-          case 'VE': return 'border-blue-300 ring-blue-50';      
-          case 'DO': return 'border-red-300 ring-red-50';        
+          case 'US': return 'border-yellow-400 ring-yellow-50';
+          case 'TT': return 'border-purple-300 ring-purple-50';
+          case 'VE': return 'border-blue-300 ring-blue-50';
+          case 'DO': return 'border-red-300 ring-red-50';
           default: return 'border-gray-200 ring-gray-50';
       }
   };
   const themeClasses = getCountryTheme(countryCode);
 
-const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-  const file = e.target.files?.[0];
-  if (!file) return;
-  setUploading(true);
-  try {
-    const reader = new FileReader();
-    reader.onloadend = async () => {
-      try {
-        const base64 = reader.result as string;
-        const data = new FormData();
-        data.append('file', base64);
-        data.append('upload_preset', 'ml_default');
-        const res = await fetch('https://api.cloudinary.com/v1_1/dcu36bfyt/image/upload', { method: 'POST', body: data });
-        const json = await res.json();
-        if (json.secure_url) setPhotoUrl(json.secure_url);
-        else alert('Upload failed: ' + JSON.stringify(json));
-      } catch (err) {
-        alert('Upload error');
-      } finally {
-        setUploading(false);
+  // Sube base64 a Cloudinary y devuelve la URL
+  const uploadToCloudinary = async (base64: string): Promise<string | null> => {
+    const data = new FormData();
+    data.append('file', base64);
+    data.append('upload_preset', 'ml_default');
+    const res = await fetch('https://api.cloudinary.com/v1_1/dcu36bfyt/image/upload', { method: 'POST', body: data });
+    const json = await res.json();
+    return json.secure_url || null;
+  };
+
+  // 📸 Cámara nativa (Capacitor) con fallback a input file en web
+  const handleTakePhoto = async () => {
+    setUploading(true);
+    try {
+      const dataUrl = await takeCameraPhoto();
+      if (dataUrl) {
+        // Nativo: tenemos dataUrl directo
+        const url = await uploadToCloudinary(dataUrl);
+        if (url) setPhotoUrl(url);
+        else alert('Upload failed');
       }
-    };
-    reader.readAsDataURL(file);
-  } catch (error) {
-    alert("Error subiendo foto");
-    setUploading(false);
-  }
-};
+      // Si dataUrl es null, el usuario canceló — no hacemos nada
+    } catch {
+      alert('Error opening camera');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  // 📁 Fallback para web (input file)
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        try {
+          const base64 = reader.result as string;
+          const url = await uploadToCloudinary(base64);
+          if (url) setPhotoUrl(url);
+          else alert('Upload failed');
+        } catch {
+          alert('Upload error');
+        } finally {
+          setUploading(false);
+        }
+      };
+      reader.readAsDataURL(file);
+    } catch {
+      alert("Error subiendo foto");
+      setUploading(false);
+    }
+  };
 
   const handleCompleteDelivery = async () => {
     if (!photoUrl) return alert("📸 La foto es obligatoria.");
     if (sigPad.current?.isEmpty()) return alert("✍️ La firma es obligatoria.");
     setLoading(true);
-    const signatureData = sigPad.current.toDataURL(); 
+    const signatureData = sigPad.current.toDataURL();
     try {
         const res = await fetch('/api/driver/complete-delivery', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            // Enviamos un flag si es consolidación para que la API cierre todos los paquetes
             body: JSON.stringify({ packageId, photoUrl, signatureBase64: signatureData, isConsolidation })
         });
         if (res.ok) {
@@ -93,7 +134,6 @@ const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
   }
 
   if (step === 1) {
-      // (Mantenemos tu paso 1 oculto tal cual como lo tenías)
       return (
         <div className="min-h-screen bg-gray-50/50 p-4 font-sans pb-24 animate-in fade-in flex flex-col items-center pt-8">
             <div className="w-full max-w-md">
@@ -132,11 +172,10 @@ const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
           <button onClick={() => router.back()} className="flex items-center text-gray-500 mb-6 font-bold text-sm hover:text-black transition">
             <ArrowLeft size={18} className="mr-1"/> Back to Route
           </button>
-          
+
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
            <h1 className="text-xl font-bold text-gray-800 mb-2 uppercase tracking-wide">Delivery Evidence</h1>
-            
-            {/* 🔥 TÍTULO INTELIGENTE (Caja vs Paquete) */}
+
             <div className={`mb-6 p-3 rounded-lg border flex items-center gap-3 ${isConsolidation ? 'bg-purple-50 border-purple-100' : 'bg-gray-50 border-gray-100'}`}>
                 <div className={`p-2 rounded-full ${isConsolidation ? 'bg-purple-200 text-purple-700' : 'bg-gray-200 text-gray-700'}`}>
                     {isConsolidation ? <Layers size={18}/> : <PackageCheck size={18}/>}
@@ -149,7 +188,6 @@ const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
                 </div>
             </div>
 
-            {/* 🔥 CONTENIDO DE LA CAJA (DISEÑO AMAZON FLEX) 🔥 */}
             {isConsolidation && childPackages.length > 0 && (
                 <div className="mb-6 border border-purple-200 rounded-xl overflow-hidden shadow-sm">
                     <div className="bg-[#222b3c] px-4 py-3 flex items-center justify-between">
@@ -174,14 +212,37 @@ const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
                 </div>
             )}
 
+            {/* 📸 FOTO — botón nativo en app, input file en web */}
             <div className="mb-6">
-                <label className="block text-xs font-bold text-gray-600 uppercase mb-2 flex items-center gap-1.5"><Camera size={16} className="text-blue-500"/> 1. Take Photo</label>
+                <label className="block text-xs font-bold text-gray-600 uppercase mb-2 flex items-center gap-1.5">
+                    <Camera size={16} className="text-blue-500"/> 1. Take Photo
+                </label>
                 {!photoUrl ? (
-                    <label className="w-full h-40 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center bg-gray-50 cursor-pointer hover:bg-gray-100 transition active:scale-[0.98]">
-                        <input type="file" accept="image/*" capture="environment" className="hidden" onChange={handlePhotoUpload} disabled={uploading}/>
-                        {uploading ? <Loader2 className="animate-spin text-blue-600 mb-2" size={32}/> : <Camera size={36} className="text-gray-400 mb-2"/>}
-                        <span className="text-sm font-bold text-gray-500">{uploading ? 'Uploading photo...' : 'Tap to open camera'}</span>
-                    </label>
+                    <div className="w-full h-40 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center bg-gray-50 overflow-hidden">
+                        {uploading ? (
+                            <>
+                                <Loader2 className="animate-spin text-blue-600 mb-2" size={32}/>
+                                <span className="text-sm font-bold text-gray-500">Uploading photo...</span>
+                            </>
+                        ) : (
+                            <>
+                                {/* Botón nativo Capacitor */}
+                                <button
+                                    type="button"
+                                    onClick={handleTakePhoto}
+                                    className="w-full h-full flex flex-col items-center justify-center cursor-pointer hover:bg-gray-100 transition active:scale-[0.98]"
+                                >
+                                    <Camera size={36} className="text-gray-400 mb-2"/>
+                                    <span className="text-sm font-bold text-gray-500">Tap to open camera</span>
+                                </button>
+                                {/* Fallback input file (web) */}
+                                <label className="mt-2 text-[10px] text-gray-400 underline cursor-pointer">
+                                    or choose from gallery
+                                    <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} disabled={uploading}/>
+                                </label>
+                            </>
+                        )}
+                    </div>
                 ) : (
                     <div className="relative w-full h-48 rounded-xl overflow-hidden shadow-sm border border-gray-200">
                         <Image src={photoUrl} alt="Evidencia" fill className="object-cover"/>
