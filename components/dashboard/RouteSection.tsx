@@ -2,12 +2,7 @@
 
 /**
  * RouteSection.tsx — Enterprise v2
- *
  * Arquitectura: UN SOLO ARRAY de paradas — igual que Uber/Lyft
- * - Todo es draggable: Pickup, intermedios, Dropoff
- * - Cada parada tiene dirección + descripción
- * - El primero siempre es PICKUP, el último siempre es DROPOFF
- * - Reordenar → recalcula ruta automáticamente
  */
 
 import React, { useRef, useCallback } from "react";
@@ -19,7 +14,7 @@ import {
   SortableContext, verticalListSortingStrategy, useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { AlertTriangle, MapPin, Plus, Warehouse, GripVertical, X } from "lucide-react";
+import { AlertTriangle, MapPin, Plus, Warehouse, GripVertical, X, User, Phone } from "lucide-react";
 
 const ALLOWED_COUNTIES = ["Miami-Dade County", "Broward County"];
 
@@ -30,6 +25,8 @@ export interface Stop {
   type: StopType;
   address: string;
   description: string;
+  contact?: string;
+  phone?: string;
   error?: string;
 }
 
@@ -41,6 +38,8 @@ interface RouteSectionProps {
   onStopAddressError: (id: string, error: string) => void;
   onStopAddressClear: (id: string) => void;
   onStopDescriptionChange: (id: string, description: string) => void;
+  onStopContactChange?: (id: string, value: string) => void;
+  onStopPhoneChange?: (id: string, value: string) => void;
   onAddStop: () => void;
   onRemoveStop: (id: string) => void;
   onDragEnd: (event: DragEndEvent) => void;
@@ -81,7 +80,6 @@ function StopDot({ type, letter, serviceType }: {
       </div>
     );
   }
-  // STOP intermedio
   const color = serviceType === "SHIPPING" ? "bg-blue-600" : "bg-green-600";
   return (
     <div className={`w-7 h-7 rounded-full ${color} flex items-center justify-center shrink-0 shadow-sm`}>
@@ -90,7 +88,7 @@ function StopDot({ type, letter, serviceType }: {
   );
 }
 
-// ─── SortableStopRow — cada fila draggable ────────────────────────────────────
+// ─── SortableStopRow ─────────────────────────────────────────────────────────
 function SortableStopRow({
   stop,
   letter,
@@ -100,6 +98,8 @@ function SortableStopRow({
   onAddressError,
   onAddressClear,
   onDescriptionChange,
+  onContactChange,
+  onPhoneChange,
   onRemove,
   t_pickupDescPlaceholder,
   t_dropoffDescPlaceholder,
@@ -115,6 +115,8 @@ function SortableStopRow({
   onAddressError: (id: string, error: string) => void;
   onAddressClear: (id: string) => void;
   onDescriptionChange: (id: string, description: string) => void;
+  onContactChange: (id: string, value: string) => void;
+  onPhoneChange: (id: string, value: string) => void;
   onRemove: (id: string) => void;
   t_pickupDescPlaceholder: string;
   t_dropoffDescPlaceholder: string;
@@ -123,7 +125,6 @@ function SortableStopRow({
   t_dropoffAddress: string;
 }) {
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
-  // ✅ Ref al input DOM — necesario para limpiar visualmente (defaultValue no controlado)
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   const {
@@ -137,7 +138,6 @@ function SortableStopRow({
     zIndex: isDragging ? 999 : undefined,
   };
 
-  // Limpia visualmente el input Y notifica al padre
   const handleClearInput = () => {
     if (inputRef.current) inputRef.current.value = '';
     onAddressClear(stop.id);
@@ -164,7 +164,6 @@ function SortableStopRow({
   const isDropoff = stop.type === "DROPOFF";
   const isStop = stop.type === "STOP";
 
-  // Colores por tipo
   const borderColor = isPickup ? "border-gray-200"
     : isDropoff ? "border-green-200"
     : serviceType === "SHIPPING" ? "border-blue-100" : "border-green-100";
@@ -193,7 +192,6 @@ function SortableStopRow({
     : isDropoff ? "DROPOFF"
     : `STOP ${letter}`;
 
-  // Mostrar X si tiene dirección confirmada
   const hasAddress = stop.address !== '';
 
   return (
@@ -203,7 +201,6 @@ function SortableStopRow({
 
         {/* Header */}
         <div className={`flex items-center gap-2 px-3 py-2.5 ${headerBg}`}>
-          {/* Drag handle — touch-none SOLO aquí */}
           <button
             type="button"
             {...attributes}
@@ -219,7 +216,6 @@ function SortableStopRow({
             {label}
           </span>
 
-          {/* STOP intermedio → elimina la fila */}
           {isStop && (
             <button
               type="button"
@@ -231,7 +227,6 @@ function SortableStopRow({
             </button>
           )}
 
-          {/* PICKUP / DROPOFF → limpia la dirección (no elimina la fila) */}
           {(isPickup || isDropoff) && hasAddress && (
             <button
               type="button"
@@ -300,6 +295,34 @@ function SortableStopRow({
             />
           </div>
         </div>
+
+        {/* Contact + Phone — solo para STOP y DROPOFF */}
+        {!isPickup && (
+          <div className="px-3 pb-3 space-y-2">
+            <div className="relative">
+              <User size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"/>
+              <input
+                type="text"
+                placeholder="Recipient name"
+                value={stop.contact || ''}
+                onChange={e => onContactChange(stop.id, e.target.value)}
+                style={{ fontSize: '16px' }}
+                className="w-full pl-9 pr-3 py-2.5 border border-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-gray-200 bg-gray-50 placeholder-gray-400 text-sm"
+              />
+            </div>
+            <div className="relative">
+              <Phone size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"/>
+              <input
+                type="tel"
+                placeholder="Phone number"
+                value={stop.phone || ''}
+                onChange={e => onPhoneChange(stop.id, e.target.value)}
+                style={{ fontSize: '16px' }}
+                className="w-full pl-9 pr-3 py-2.5 border border-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-gray-200 bg-gray-50 placeholder-gray-400 text-sm"
+              />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -314,6 +337,8 @@ export default function RouteSection({
   onStopAddressError,
   onStopAddressClear,
   onStopDescriptionChange,
+  onStopContactChange,
+  onStopPhoneChange,
   onAddStop,
   onRemoveStop,
   onDragEnd,
@@ -368,6 +393,8 @@ export default function RouteSection({
                         onAddressError={onStopAddressError}
                         onAddressClear={onStopAddressClear}
                         onDescriptionChange={onStopDescriptionChange}
+                        onContactChange={onStopContactChange ?? (() => {})}
+                        onPhoneChange={onStopPhoneChange ?? (() => {})}
                         onRemove={onRemoveStop}
                         t_pickupDescPlaceholder={t_pickupDescPlaceholder}
                         t_dropoffDescPlaceholder={t_dropoffDescPlaceholder}
@@ -383,7 +410,7 @@ export default function RouteSection({
           </SortableContext>
         </DndContext>
 
-        {/* Botón Add Stop — SHIPPING y DELIVERY */}
+        {/* Botón Add Stop */}
         <div className="flex items-center gap-3 mt-3">
           <div className="w-7 shrink-0 flex justify-center z-10">
             <div className="w-5 h-5 rounded-full border-2 border-dashed border-gray-300 bg-white flex items-center justify-center">

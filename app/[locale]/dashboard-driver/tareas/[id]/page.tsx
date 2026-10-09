@@ -138,6 +138,54 @@ export default async function DriverTaskPage({ params }: { params: { id: string,
             </div>
         </div>
 
+        {/* --- PARADAS INTERMEDIAS --- */}
+{Array.isArray(task.extraStops) &&
+  (task.extraStops as any[]).filter((s: any) => s.type === 'STOP' && s.address).length > 0 && (
+  <div className="space-y-3">
+    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-1">Stops</p>
+    {(task.extraStops as any[])
+      .filter((s: any) => s.type === 'STOP' && s.address)
+      .map((stop: any, i: number) => (
+        <div key={stop.id || i} className={`relative p-5 rounded-2xl border-2 transition-all duration-500 ${isPickupDone ? 'bg-white border-blue-200 shadow-sm' : 'bg-gray-50 border-gray-200 opacity-60 grayscale'}`}>
+          {!isPickupDone && <div className="absolute inset-0 z-20 cursor-not-allowed"></div>}
+          <div className="flex items-center gap-3 mb-3">
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-sm ${isPickupDone ? 'bg-blue-600' : 'bg-gray-400'}`}>
+              {i + 1}
+            </div>
+            <div>
+              <h3 className="font-bold text-sm uppercase tracking-wide text-blue-700">Stop {i + 1}</h3>
+              <p className="text-xs text-gray-400 font-medium">Intermediate</p>
+            </div>
+            {!isPickupDone && <Lock className="text-gray-400 ml-auto" size={20}/>}
+          </div>
+          <div className="pl-11">
+            <p className="text-lg font-bold text-gray-800 leading-tight mb-1">{stop.address}</p>
+            {stop.description && (
+              <p className="text-xs text-gray-500 italic mb-2">"{stop.description}"</p>
+            )}
+            {(stop.contact || stop.phone) && (
+              <div className="flex items-center justify-between bg-blue-50 rounded-xl px-3 py-2 mb-2">
+                <div className="flex items-center gap-1.5">
+                  <User size={12} className="text-blue-400"/>
+                  <span className="text-xs font-medium text-blue-800">
+                    {stop.contact}{stop.phone ? ` · ${stop.phone}` : ''}
+                  </span>
+                </div>
+                {stop.phone && (
+                  <a href={`tel:${stop.phone}`} className="flex items-center gap-1 text-[11px] font-bold text-blue-600 bg-blue-100 px-2 py-1 rounded-lg">
+                    <Phone size={10}/> Call
+                  </a>
+                )}
+              </div>
+            )}
+            {isPickupDone && <MapButtons address={stop.address}/>}
+          </div>
+        </div>
+      ))
+    }
+  </div>
+)}
+
         {/* --- CONECTOR --- */}
         <div className="absolute left-[34px] md:left-[50%] md:-ml-[216px] -mt-8 h-10 border-l-2 border-dashed border-gray-300 z-0 hidden"></div> 
 

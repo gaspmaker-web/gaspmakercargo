@@ -145,9 +145,11 @@ export default function SolicitarPickupPage() {
     id: id ?? `stop-${Date.now()}-${Math.random()}`,
     type,
     address: '',
-    description: '',
-    error: undefined,
-  });
+     description: '',
+  contact: '',
+  phone: '',
+  error: undefined,
+});
 
    const [stops, setStops] = useState<Stop[]>(() => [
     { ...makeStop('PICKUP', 'pickup'), address: b2bPickupAddress || '' },
@@ -197,9 +199,13 @@ export default function SolicitarPickupPage() {
     });
   };
 
-  const handleStopDescriptionChange = (id: string, description: string) => {
-    setStops(prev => prev.map(s => s.id === id ? { ...s, description } : s));
-  };
+  const handleStopContactChange = (id: string, contact: string) => {
+  setStops(prev => prev.map(s => s.id === id ? { ...s, contact } : s));
+};
+
+const handleStopPhoneChange = (id: string, phone: string) => {
+  setStops(prev => prev.map(s => s.id === id ? { ...s, phone } : s));
+};
 
   const handleAddStop = () => {
     setStops(prev => {
@@ -601,11 +607,13 @@ const payload = {
     isPalletMode: formData.weightTier === 'w_151_plus',
     volumeInfo: autoVehicle.type,  // 🔥 Vehículo seleccionado automáticamente
     extraStops: stops.map(s => ({
-      id: s.id,
-      type: s.type,
-      address: s.address,
-      description: s.description,
-    })),
+  id: s.id,
+  type: s.type,
+  address: s.address,
+  description: s.description,
+  contact: s.contact,
+  phone: s.phone,
+})),
 };
 
         const orderRes = await fetch('/api/pickup', {
@@ -742,7 +750,8 @@ const payload = {
                                 onStopAddressValid={handleStopAddressValid}
                                 onStopAddressError={handleStopAddressError}
                                 onStopAddressClear={handleStopAddressClear}
-                                onStopDescriptionChange={handleStopDescriptionChange}
+                                onStopContactChange={handleStopContactChange}
+                                onStopPhoneChange={handleStopPhoneChange}
                                 onAddStop={handleAddStop}
                                 onRemoveStop={handleRemoveStop}
                                 onDragEnd={handleDragEnd}

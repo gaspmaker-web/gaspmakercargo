@@ -13,13 +13,17 @@ export async function GET() {
   const pickups = await prisma.pickupRequest.findMany({
     where: { userId: session.user.id },
     orderBy: { createdAt: 'desc' },
-    take: 10,
+    take: 20,
     select: {
       id: true,
       dropOffAddress: true,
+      description: true,
       createdAt: true,
       totalPaid: true,
       status: true,
+      extraStops: true,
+      photoPickupUrl: true,
+      pickupPin: true,
     },
   });
 
