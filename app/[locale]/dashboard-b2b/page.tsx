@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 import prisma from '@/lib/prisma';
 import Link from 'next/link';
 import DeliveriesClient from './DeliveriesClient';
-import { Truck, DollarSign, Clock, Package, Plus } from 'lucide-react';
+import { Clock, Plus, KeyRound } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,6 +25,11 @@ export default async function DashboardB2BPage(props: any) {
     orderBy: { createdAt: 'desc' },
     take: 10
   });
+
+  // Órdenes pendientes con PIN (esperando al driver)
+  const pendingWithPin = recentPickups.filter(p =>
+    p.pickupPin && (p.status === 'PENDIENTE' || p.status === 'ACEPTADO')
+  );
 
   const creditAvailable = (b2b?.creditLimit || 500) - (b2b?.creditUsed || 0);
   const creditPct = Math.min(100, ((b2b?.creditUsed || 0) / (b2b?.creditLimit || 500)) * 100);
@@ -62,6 +67,33 @@ export default async function DashboardB2BPage(props: any) {
           )}
         </div>
 
+        {/* PINs de recogida pendientes */}
+        {pendingWithPin.length > 0 && (
+          <div className="bg-white rounded-2xl border border-amber-200 overflow-hidden">
+            <div className="bg-amber-50 px-5 py-3 border-b border-amber-100 flex items-center gap-2">
+              <KeyRound size={14} className="text-amber-600" />
+              <p className="text-xs font-bold text-amber-700 uppercase tracking-wider">Driver Pickup PINs</p>
+            </div>
+            <div className="divide-y divide-gray-50">
+              {pendingWithPin.map(p => (
+                <div key={p.id} className="px-5 py-4 flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-800 truncate max-w-[200px]">{p.dropOffAddress || p.description}</p>
+                    <p className="text-xs text-gray-400">{new Date(p.createdAt).toLocaleDateString()}</p>
+                  </div>
+                  <div className="flex items-center gap-2 bg-[#222b3c] rounded-xl px-4 py-2">
+                    <KeyRound size={14} className="text-gmc-dorado-principal" />
+                    <span className="text-2xl font-bold tracking-widest text-gmc-dorado-principal font-mono">{p.pickupPin}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="px-5 py-3 bg-amber-50 border-t border-amber-100">
+              <p className="text-[11px] text-amber-600">Share this PIN with the driver when they arrive to pick up.</p>
+            </div>
+          </div>
+        )}
+
         {/* Quick Actions */}
         <Link href={`/${locale}/dashboard-cliente/solicitar-pickup?pickup=${encodeURIComponent(b2b?.businessAddress || '')}&b2b=true`}
           className="block bg-[#222b3c] text-white rounded-2xl p-5 hover:bg-[#2d3748] transition-colors">
@@ -77,7 +109,7 @@ export default async function DashboardB2BPage(props: any) {
           </div>
         </Link>
 
-         <DeliveriesClient initialPickups={recentPickups.map(p => ({
+        <DeliveriesClient initialPickups={recentPickups.map(p => ({
           ...p,
           createdAt: p.createdAt.toISOString(),
           dropOffAddress: p.dropOffAddress ?? null,

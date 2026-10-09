@@ -288,6 +288,7 @@ model PickupRequest {
   lng              Float?
   latDest          Float?
   lngDest          Float?
+  pickupPin        String?
   photoPickupUrl   String?  
   photoDeliveryUrl String?
   

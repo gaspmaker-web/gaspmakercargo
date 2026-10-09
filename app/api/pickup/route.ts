@@ -162,7 +162,8 @@ export async function POST(request: Request) {
         totalPaid,
         subtotal,
         processingFee,
-        stripePaymentId: body.stripePaymentId || null
+        stripePaymentId: body.stripePaymentId || null,
+        pickupPin: Math.floor(1000 + Math.random() * 9000).toString()
       },
     });
 
