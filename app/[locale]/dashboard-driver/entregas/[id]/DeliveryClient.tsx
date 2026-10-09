@@ -9,6 +9,9 @@ import SignatureCanvas from 'react-signature-canvas';
 // Capacitor Camera (solo carga en móvil nativo, no rompe en web)
 async function takeCameraPhoto(): Promise<string | null> {
   try {
+    if (typeof window === 'undefined') return null;
+    const { Capacitor } = await import('@capacitor/core');
+    if (!Capacitor.isNativePlatform()) return null;
     const { Camera: CapCamera, CameraResultType, CameraSource } = await import('@capacitor/camera');
     const image = await CapCamera.getPhoto({
       quality: 85,
@@ -18,7 +21,7 @@ async function takeCameraPhoto(): Promise<string | null> {
     });
     return image.dataUrl || null;
   } catch {
-    return null; // usuario canceló o no es nativo
+    return null;
   }
 }
 
