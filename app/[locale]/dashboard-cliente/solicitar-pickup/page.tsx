@@ -347,10 +347,23 @@ export default function SolicitarPickupPage() {
 
            baseFare = auraQuote.baseFare;
 
-           // ✅ CAMBIO: Para 151+ lbs, precio = exactWeight × $0.55 (sin selector de vehículo/pallets)
+           // ✅ Para 151+ lbs:
+           //    - Con stops intermedios → $0.55/lb
+           //    - Solo PICKUP + DROPOFF → tarifa fija por vehículo/pallets
            if (isPalletMode) {
-             const lbs = formData.exactWeight > 0 ? formData.exactWeight : 151;
-             baseFare = parseFloat((lbs * 0.55).toFixed(2));
+             const hasIntermediateStops = stops.filter((s: Stop) => s.type === 'STOP').length > 0;
+             if (hasIntermediateStops) {
+               const lbs = formData.exactWeight > 0 ? formData.exactWeight : 151;
+               baseFare = parseFloat((lbs * 0.55).toFixed(2));
+             } else {
+               if (formData.heavyVehicle === 'BOX_TRUCK') {
+                 baseFare = (tenantRates[`local_pallet_box_truck_${formData.palletCount}` as keyof typeof tenantRates] as number) ?? 195;
+               } else {
+                 baseFare = formData.palletCount === 2
+                   ? (tenantRates.local_pallet_cargo_van_2 as number) ?? 130
+                   : (tenantRates.local_pallet_cargo_van_1 as number) ?? 80;
+               }
+             }
            }
 
             const baseRadius = tenantRates.local_base_radius_miles;
@@ -375,7 +388,7 @@ export default function SolicitarPickupPage() {
     };
 
     calculateTotal();
-  }, [calcWeight, quote.distanceMiles, isLoaded, serviceType, inventory, autoVehicle.rate, formData.palletCount, formData.heavyVehicle, isPalletMode, formData.exactWeight]);
+  }, [calcWeight, quote.distanceMiles, isLoaded, serviceType, inventory, autoVehicle.rate, formData.palletCount, formData.heavyVehicle, isPalletMode, formData.exactWeight, stops]);
 
   const activeCardDetails = cards.find(c => c.id === selectedCardId);
   const isTrinidadCard = activeCardDetails?.country?.toUpperCase() === 'TT';
@@ -789,10 +802,14 @@ const calculateComplexRoute = async (origin: string, destination: string, curren
                                     </div>
                                 </div>
 
-                                {/* ✅ CAMBIO: 151+ Lbs — solo peso exacto + precio por libra ($0.55) */}
-                                {isPalletMode && (
+                                {/* 151+ Lbs:
+                                    - PICKUP + DROPOFF solos → SELECT VEHICLE + PALLETS (precio fijo)
+                                    - Con stops intermedios → precio por libra $0.55 */}
+                                {isPalletMode && (() => {
+                                  const hasIntermediateStops = stops.filter(s => s.type === 'STOP').length > 0;
+                                  return (
                                     <div className="space-y-4 mb-4 animate-in fade-in slide-in-from-top-2 duration-300">
-                                        {/* Exact Weight Input */}
+                                        {/* Peso exacto — siempre visible en 151+ */}
                                         <div className="relative">
                                             <Weight className="absolute left-3 top-1/2 -translate-y-1/2 text-gmc-dorado-principal" size={18} />
                                             <input
@@ -803,25 +820,93 @@ const calculateComplexRoute = async (origin: string, destination: string, curren
                                             />
                                         </div>
 
-                                        {/* ✅ Precio por libra */}
-                                        <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
-                                            <div className="flex items-center justify-between">
-                                                <div>
-                                                    <p className="text-xs font-bold text-yellow-800 uppercase tracking-wide">Heavy Cargo Rate</p>
-                                                    <p className="text-xs text-yellow-700 mt-0.5">$0.55 per lb</p>
-                                                </div>
-                                                {formData.exactWeight > 0 && (
-                                                    <div className="text-right">
-                                                        <p className="text-2xl font-black text-yellow-900">
-                                                            ${(formData.exactWeight * 0.55).toFixed(2)}
-                                                        </p>
-                                                        <p className="text-[10px] text-yellow-700">{formData.exactWeight} lbs × $0.55</p>
+                                        {hasIntermediateStops ? (
+                                            /* Con stops: precio por libra */
+                                            <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
+                                                <div className="flex items-center justify-between">
+                                                    <div>
+                                                        <p className="text-xs font-bold text-yellow-800 uppercase tracking-wide">Heavy Cargo Rate</p>
+                                                        <p className="text-xs text-yellow-700 mt-0.5">$0.55 per lb</p>
                                                     </div>
-                                                )}
+                                                    {formData.exactWeight > 0 && (
+                                                        <div className="text-right">
+                                                            <p className="text-2xl font-black text-yellow-900">
+                                                                ${(formData.exactWeight * 0.55).toFixed(2)}
+                                                            </p>
+                                                            <p className="text-[10px] text-yellow-700">{formData.exactWeight} lbs × $0.55</p>
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
-                                        </div>
+                                        ) : (
+                                            /* Solo PICKUP+DROPOFF: selector de vehículo + pallets */
+                                            <>
+                                                <label className="block text-xs font-bold text-gray-400 uppercase mb-2 ml-1">{t('selectVehicleLabel')}</label>
+                                                <div className="grid grid-cols-1 gap-3">
+                                                    {/* Cargo Van */}
+                                                    <div
+                                                        onClick={() => setFormData({ ...formData, heavyVehicle: 'CARGO_VAN', palletCount: 1 })}
+                                                        className={`group relative flex items-center p-4 rounded-2xl cursor-pointer transition-all duration-300 border-2 ${formData.heavyVehicle === 'CARGO_VAN' ? 'border-gmc-dorado-principal bg-yellow-50/30 shadow-md' : 'border-gray-100 bg-white hover:border-gray-200'}`}
+                                                    >
+                                                        {formData.heavyVehicle === 'CARGO_VAN' && (
+                                                            <div className="absolute top-1/2 -translate-y-1/2 -left-3 w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center shadow-sm z-10">
+                                                                <Check size={14} strokeWidth={3} />
+                                                            </div>
+                                                        )}
+                                                        <div className="w-14 h-12 bg-orange-50 border border-orange-100 rounded-xl flex items-center justify-center mr-4 shrink-0">
+                                                            <Warehouse size={22} className="text-orange-600" />
+                                                        </div>
+                                                        <div className="flex-1">
+                                                            <h4 className="font-bold text-gray-800 text-sm">{t('volHigh')}</h4>
+                                                            <p className="text-xs text-gray-500 leading-tight mt-0.5">{VEHICLE_DISPLAY.CARGO_VAN.desc}</p>
+                                                            <p className="text-[10px] text-gray-400 mt-1 flex items-center gap-1"><Ruler size={10} /> {VEHICLE_DISPLAY.CARGO_VAN.dims}</p>
+                                                        </div>
+                                                    </div>
+                                                    {/* Box Truck */}
+                                                    <div
+                                                        onClick={() => setFormData({ ...formData, heavyVehicle: 'BOX_TRUCK', palletCount: 3 })}
+                                                        className={`group relative flex items-center p-4 rounded-2xl cursor-pointer transition-all duration-300 border-2 ${formData.heavyVehicle === 'BOX_TRUCK' ? 'border-gmc-dorado-principal bg-yellow-50/30 shadow-md' : 'border-gray-100 bg-white hover:border-gray-200'}`}
+                                                    >
+                                                        {formData.heavyVehicle === 'BOX_TRUCK' && (
+                                                            <div className="absolute top-1/2 -translate-y-1/2 -left-3 w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center shadow-sm z-10">
+                                                                <Check size={14} strokeWidth={3} />
+                                                            </div>
+                                                        )}
+                                                        <div className="w-14 h-12 bg-red-50 border border-red-100 rounded-xl flex items-center justify-center mr-4 shrink-0">
+                                                            <Package size={22} className="text-red-600" />
+                                                        </div>
+                                                        <div className="flex-1">
+                                                            <h4 className="font-bold text-gray-800 text-sm">{t('volFull')}</h4>
+                                                            <p className="text-xs text-gray-500 leading-tight mt-0.5">{VEHICLE_DISPLAY.BOX_TRUCK.desc}</p>
+                                                            <p className="text-[10px] text-gray-400 mt-1 flex items-center gap-1"><Ruler size={10} /> {VEHICLE_DISPLAY.BOX_TRUCK.dims}</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                {/* Pallet count */}
+                                                <div className="mt-2 p-4 bg-red-50/30 border border-red-100 rounded-xl">
+                                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-3">{t('howManyPallets')}</label>
+                                                    <div className="flex gap-2">
+                                                        {(formData.heavyVehicle === 'CARGO_VAN' ? [1, 2] : [3, 4, 5, 6]).map(num => (
+                                                            <button
+                                                                key={num}
+                                                                type="button"
+                                                                onClick={() => setFormData({ ...formData, palletCount: num })}
+                                                                className={`flex-1 py-3 rounded-xl font-bold text-lg transition-all ${formData.palletCount === num ? 'bg-gmc-dorado-principal text-black shadow-md scale-105' : 'bg-white border border-gray-200 text-gray-600 hover:border-gray-400'}`}
+                                                            >{num}</button>
+                                                        ))}
+                                                    </div>
+                                                    <p className="text-[11px] text-gray-500 mt-2 text-center">
+                                                        {formData.heavyVehicle === 'CARGO_VAN'
+                                                            ? <><strong>${formData.palletCount === 2 ? tenantRates.local_pallet_cargo_van_2?.toFixed(2) : tenantRates.local_pallet_cargo_van_1?.toFixed(2)}</strong> ({formData.palletCount} pallet{formData.palletCount > 1 ? 's' : ''})</>
+                                                            : <><strong>${((tenantRates[`local_pallet_box_truck_${formData.palletCount}` as keyof typeof tenantRates] as number) ?? 195).toFixed(2)}</strong> ({formData.palletCount} pallets)</>
+                                                        }
+                                                    </p>
+                                                </div>
+                                            </>
+                                        )}
                                     </div>
-                                )}
+                                  );
+                                })()}
 
                                 {/* 🔥 AUTO VEHICLE INFO (0-150 lbs) */}
                                 {!isPalletMode && (
