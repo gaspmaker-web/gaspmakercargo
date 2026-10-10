@@ -14,7 +14,7 @@ import {
   SortableContext, verticalListSortingStrategy, useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { AlertTriangle, MapPin, Plus, Warehouse, GripVertical, X, User, Phone } from "lucide-react";
+import { AlertTriangle, MapPin, Plus, Warehouse, GripVertical, X, User, Phone, Camera } from "lucide-react";
 
 const ALLOWED_COUNTIES = ["Miami-Dade County", "Broward County"];
 
@@ -27,6 +27,7 @@ export interface Stop {
   description: string;
   contact?: string;
   phone?: string;
+  photoUrl?: string;
   error?: string;
 }
 
@@ -40,6 +41,7 @@ interface RouteSectionProps {
   onStopDescriptionChange: (id: string, description: string) => void;
   onStopContactChange?: (id: string, value: string) => void;
   onStopPhoneChange?: (id: string, value: string) => void;
+  onStopPhotoChange?: (id: string, file: File, previewUrl: string) => void;
   onAddStop: () => void;
   onRemoveStop: (id: string) => void;
   onDragEnd: (event: DragEndEvent) => void;
@@ -100,6 +102,7 @@ function SortableStopRow({
   onDescriptionChange,
   onContactChange,
   onPhoneChange,
+  onPhotoChange,
   onRemove,
   t_pickupDescPlaceholder,
   t_dropoffDescPlaceholder,
@@ -117,6 +120,7 @@ function SortableStopRow({
   onDescriptionChange: (id: string, description: string) => void;
   onContactChange: (id: string, value: string) => void;
   onPhoneChange: (id: string, value: string) => void;
+  onPhotoChange: (id: string, file: File, previewUrl: string) => void;
   onRemove: (id: string) => void;
   t_pickupDescPlaceholder: string;
   t_dropoffDescPlaceholder: string;
@@ -296,7 +300,7 @@ function SortableStopRow({
           </div>
         </div>
 
-        {/* Contact + Phone — solo para STOP y DROPOFF */}
+        {/* Contact + Phone + Photo — solo para STOP y DROPOFF */}
         {!isPickup && (
           <div className="px-3 pb-3 space-y-2">
             <div className="relative">
@@ -321,6 +325,37 @@ function SortableStopRow({
                 className="w-full pl-9 pr-3 py-2.5 border border-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-gray-200 bg-gray-50 placeholder-gray-400 text-sm"
               />
             </div>
+            {/* Photo capture */}
+            <div>
+              {stop.photoUrl ? (
+                <div className="relative w-full h-28 rounded-xl overflow-hidden border border-gray-200">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={stop.photoUrl} alt="Delivery photo" className="w-full h-full object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => onPhotoChange(stop.id, null as any, '')}
+                    className="absolute top-1.5 right-1.5 bg-red-500 text-white rounded-full p-1 shadow"
+                  >
+                    <X size={11} />
+                  </button>
+                </div>
+              ) : (
+                <label className="flex items-center gap-2 cursor-pointer w-full py-2.5 px-3 border border-dashed border-gray-300 rounded-xl bg-gray-50 hover:bg-gray-100 transition">
+                  <Camera size={15} className="text-gray-400 shrink-0" />
+                  <span className="text-xs font-medium text-gray-400">📦 Take delivery photo</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    className="hidden"
+                    onChange={e => {
+                      const f = e.target.files?.[0];
+                      if (f) onPhotoChange(stop.id, f, URL.createObjectURL(f));
+                    }}
+                  />
+                </label>
+              )}
+            </div>
           </div>
         )}
       </div>
@@ -339,6 +374,7 @@ export default function RouteSection({
   onStopDescriptionChange,
   onStopContactChange,
   onStopPhoneChange,
+  onStopPhotoChange,
   onAddStop,
   onRemoveStop,
   onDragEnd,
@@ -395,6 +431,7 @@ export default function RouteSection({
                         onDescriptionChange={onStopDescriptionChange}
                         onContactChange={onStopContactChange ?? (() => {})}
                         onPhoneChange={onStopPhoneChange ?? (() => {})}
+                        onPhotoChange={onStopPhotoChange ?? (() => {})}
                         onRemove={onRemoveStop}
                         t_pickupDescPlaceholder={t_pickupDescPlaceholder}
                         t_dropoffDescPlaceholder={t_dropoffDescPlaceholder}
@@ -410,28 +447,30 @@ export default function RouteSection({
           </SortableContext>
         </DndContext>
 
-        {/* Botón Add Stop */}
-        <div className="flex items-center gap-3 mt-3">
-          <div className="w-7 shrink-0 flex justify-center z-10">
-            <div className="w-5 h-5 rounded-full border-2 border-dashed border-gray-300 bg-white flex items-center justify-center">
-              <Plus size={9} className="text-gray-400" />
+        {/* Botón Add Stop — oculto para DELIVERY simple (solo PICKUP + DROPOFF) */}
+        {!(serviceType === "DELIVERY" && stops.length <= 2) && (
+          <div className="flex items-center gap-3 mt-3">
+            <div className="w-7 shrink-0 flex justify-center z-10">
+              <div className="w-5 h-5 rounded-full border-2 border-dashed border-gray-300 bg-white flex items-center justify-center">
+                <Plus size={9} className="text-gray-400" />
+              </div>
             </div>
+            <button
+              type="button"
+              onClick={onAddStop}
+              className={[
+                "flex-1 py-2.5 border-2 border-dashed rounded-xl text-xs font-bold",
+                "transition-colors flex items-center justify-center gap-1.5",
+                "border-gray-200 text-gray-400",
+                serviceType === "SHIPPING"
+                  ? "hover:border-blue-400 hover:text-blue-500"
+                  : "hover:border-green-400 hover:text-green-500",
+              ].join(" ")}
+            >
+              <Plus size={12} /> {t_addStop} ({nextLetter})
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={onAddStop}
-            className={[
-              "flex-1 py-2.5 border-2 border-dashed rounded-xl text-xs font-bold",
-              "transition-colors flex items-center justify-center gap-1.5",
-              "border-gray-200 text-gray-400",
-              serviceType === "SHIPPING"
-                ? "hover:border-blue-400 hover:text-blue-500"
-                : "hover:border-green-400 hover:text-green-500",
-            ].join(" ")}
-          >
-            <Plus size={12} /> {t_addStop} ({nextLetter})
-          </button>
-        </div>
+        )}
 
         {/* Bodega GMC — solo SHIPPING */}
         {serviceType === "SHIPPING" && (

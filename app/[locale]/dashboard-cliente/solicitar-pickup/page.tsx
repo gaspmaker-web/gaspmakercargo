@@ -44,12 +44,8 @@ const WEIGHT_OPTIONS = [
     { id: 'w_121_130', label: '121 - 130 Lbs',           estWeight: 130 },
     { id: 'w_131_140', label: '131 - 140 Lbs',           estWeight: 140 },
     { id: 'w_141_150', label: '141 - 150 Lbs',           estWeight: 150 },
-    { id: 'w_151_plus', label: '151+ Lbs (Pallet / Heavy)', estWeight: 0 },
-];
-
-
-
-// Función para calcular handling fee por paquete según su peso
+    { id: 'w_151_plus', label: '151+ Lbs', estWeight: 0 }, // ✅ CAMBIO: sin "(Pallet / Heavy)"
+];// Función para calcular handling fee por paquete según su peso
 function getHandlingFee(weightLbs: number | null | undefined, rates: any): number {
   const w = weightLbs || 0;
   if (w <= 10) return rates?.handling_mini_0_10lbs || 2.50;
@@ -102,8 +98,7 @@ export default function SolicitarPickupPage() {
           dims: t.has('boxTruckDims') ? t('boxTruckDims') : 'Max. 20 ft long · 8 ft tall'
       }
   };
-
-  const [step, setStep] = useState(1);
+ const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const isPayingRef = useRef(false);
 
@@ -140,16 +135,16 @@ export default function SolicitarPickupPage() {
   const [orderId, setOrderId] = useState<string | null>(null);
 
   // ─── ARQUITECTURA UBER/LYFT: UN SOLO ARRAY DE PARADAS ──────────────
-  // Pickup siempre [0], Dropoff siempre [último], intermedios en el medio
   const makeStop = (type: StopType, id?: string): Stop => ({
     id: id ?? `stop-${Date.now()}-${Math.random()}`,
     type,
     address: '',
-     description: '',
-  contact: '',
-  phone: '',
-  error: undefined,
-});
+    description: '',
+    contact: '',
+    phone: '',
+    photoUrl: '',
+    error: undefined,
+  });
 
    const [stops, setStops] = useState<Stop[]>(() => [
     { ...makeStop('PICKUP', 'pickup'), address: b2bPickupAddress || '' },
@@ -158,13 +153,12 @@ export default function SolicitarPickupPage() {
 
     useEffect(() => {
     if (b2bPickupAddress) {
-      setStops(prev => prev.map((s, i) => 
+      setStops(prev => prev.map((s, i) =>
         i === 0 ? { ...s, address: b2bPickupAddress } : s
       ));
     }
   }, [b2bPickupAddress]);
-
-  // Refs estables para acceder al array actual en callbacks async
+ // Refs estables para acceder al array actual en callbacks async
   const stopsRef = useRef<Stop[]>([]);
   useEffect(() => { stopsRef.current = stops; }, [stops]);
 
@@ -192,32 +186,34 @@ export default function SolicitarPickupPage() {
   const handleStopAddressClear = (id: string) => {
     setStops(prev => {
       const updated = prev.map(s => s.id === id ? { ...s, address: '', error: undefined } : s);
-      // Si cualquier parada se limpia → reset distancia
-      // No tiene sentido mostrar una ruta si falta algún punto
       setQuote(q => ({ ...q, distanceMiles: 0, distanceSurcharge: 0 }));
       return updated;
     });
   };
+
   const handleStopDescriptionChange = (id: string, description: string) => {
-  setStops(prev => prev.map(s => s.id === id ? { ...s, description } : s));
-};
+    setStops(prev => prev.map(s => s.id === id ? { ...s, description } : s));
+  };
 
   const handleStopContactChange = (id: string, contact: string) => {
-  setStops(prev => prev.map(s => s.id === id ? { ...s, contact } : s));
-};
+    setStops(prev => prev.map(s => s.id === id ? { ...s, contact } : s));
+  };
 
-const handleStopPhoneChange = (id: string, phone: string) => {
-  setStops(prev => prev.map(s => s.id === id ? { ...s, phone } : s));
-};
+  const handleStopPhoneChange = (id: string, phone: string) => {
+    setStops(prev => prev.map(s => s.id === id ? { ...s, phone } : s));
+  };
+
+  // ✅ NUEVO: handler de foto por stop
+  const handleStopPhotoChange = (id: string, file: File | null, previewUrl: string) => {
+    setStops(prev => prev.map(s => s.id === id ? { ...s, photoUrl: previewUrl, _photoFile: file } as any : s));
+  };
 
   const handleAddStop = () => {
     setStops(prev => {
       const newStop = makeStop('STOP');
       if (serviceType === 'SHIPPING') {
-        // SHIPPING: no hay DROPOFF en el array → agregar al final
         return [...prev, newStop];
       } else {
-        // DELIVERY: insertar antes del DROPOFF (último elemento)
         const withoutLast = prev.slice(0, -1);
         const last = prev[prev.length - 1];
         return [...withoutLast, newStop, last];
@@ -239,7 +235,6 @@ const handleStopPhoneChange = (id: string, phone: string) => {
         prev.findIndex(s => s.id === over.id)
       );
       stopsRef.current = reordered;
-      // Recalcular ruta con nuevo orden
       const origin  = reordered[0]?.address ?? '';
       const dropoff = reordered[reordered.length - 1]?.address ?? '';
       calculateComplexRoute(origin, dropoff, reordered);
@@ -258,7 +253,7 @@ const handleStopPhoneChange = (id: string, phone: string) => {
     termsAccepted: false
   });
 
-  // 🔥 PESO CALCULADO (igual que cotizador público)
+  // 🔥 PESO CALCULADO
   const calcWeight = useMemo(() => {
       if (formData.weightTier === 'w_151_plus') {
           return formData.exactWeight > 0 ? formData.exactWeight : 151;
@@ -267,15 +262,13 @@ const handleStopPhoneChange = (id: string, phone: string) => {
       return tier?.estWeight || 40;
   }, [formData.weightTier, formData.exactWeight]);
 
-  // 🔥 VEHÍCULO AUTO-ASIGNADO (igual que cotizador público)
+  // 🔥 VEHÍCULO AUTO-ASIGNADO
   const autoVehicle = useMemo(() => {
       if (formData.weightTier === 'w_151_plus') {
-          // Para 151+, el cliente elige entre Cargo Van y Box Truck
          return formData.heavyVehicle === 'BOX_TRUCK'
   ? { type: 'BOX_TRUCK', rate: tenantRates.local_per_mile_box_truck, maxLength: '20 ft', maxHeight: '8 ft' }
   : { type: 'CARGO_VAN', rate: tenantRates.local_per_mile_cargo_van, maxLength: '12 ft', maxHeight: '6 ft' };
       }
-
       return getVehicleByWeight(calcWeight);
   }, [calcWeight, formData.weightTier, formData.heavyVehicle]);
 
@@ -304,14 +297,11 @@ const handleStopPhoneChange = (id: string, phone: string) => {
       fetchData();
   }, []);
 
-  // --- 2. MANEJO DE SELECCIÓN (con auto-scroll a la sección correcta) ---
   const handleServiceSelect = (type: string) => {
       setServiceType(type);
       setTimeError(null);
       setQuote(prev => ({ ...prev, distanceMiles: 0, distanceSurcharge: 0 }));
 
-      // ✅ SHIPPING: solo PICKUP — destino siempre es bodega GMC
-      // ✅ DELIVERY: PICKUP + DROPOFF — el cliente define ambos puntos
       if (type === 'SHIPPING') {
         setStops([makeStop('PICKUP', 'pickup')]);
       } else {
@@ -324,7 +314,7 @@ const handleStopPhoneChange = (id: string, phone: string) => {
       }, 100);
   };
 
-  // --- 3. CÁLCULOS (AURA ENGINE + VEHICLE OVERRIDE, igual que cotizador público) ---
+  // --- 3. CÁLCULOS (AURA ENGINE) ---
   useEffect(() => {
     if (!isLoaded && serviceType !== 'PICKUP_WAREHOUSE') return;
 
@@ -333,7 +323,6 @@ const handleStopPhoneChange = (id: string, phone: string) => {
         let baseFare = 0;
         let distanceSurcharge = 0;
 
-        // A. LÓGICA DE BODEGA (Retiro Personal - Handling Fee)
         if (serviceType === 'PICKUP_WAREHOUSE') {
              let totalHandling = 0;
              if (inventory && inventory.length > 0) {
@@ -348,7 +337,6 @@ const handleStopPhoneChange = (id: string, phone: string) => {
              subtotal = totalHandling;
              baseFare = totalHandling;
         }
-        // B. LÓGICA DE CALLE (Pickup / Delivery con AURA ENTERPRISE)
         else {
             const simulatedBox: AuraBox = {
                 length: 10, width: 10, height: 10,
@@ -357,19 +345,14 @@ const handleStopPhoneChange = (id: string, phone: string) => {
 
             const auraQuote = calculateAuraLocalDelivery([simulatedBox], quote.distanceMiles);
 
-           // Solicitar-pickup: vehículo = precio flat (no multiplica)
            baseFare = auraQuote.baseFare;
-           if (isPalletMode) {
-           if (formData.heavyVehicle === 'BOX_TRUCK') {
-           const boxTruckRates: Record<number, number> = { 3: 195, 4: 250, 5: 300, 6: 350 };
-const rateKey = `local_pallet_box_truck_${formData.palletCount}` as keyof typeof tenantRates;
-baseFare = (tenantRates[rateKey] as number) ?? boxTruckRates[formData.palletCount] ?? 195;
-           } else {
-            baseFare = formData.palletCount === 2 ? tenantRates.local_pallet_cargo_van_2 : tenantRates.local_pallet_cargo_van_1;
-              }
-            }
 
-            // Override distancia con la tarifa del vehículo asignado (radio base 10 mi)
+           // ✅ CAMBIO: Para 151+ lbs, precio = exactWeight × $0.55 (sin selector de vehículo/pallets)
+           if (isPalletMode) {
+             const lbs = formData.exactWeight > 0 ? formData.exactWeight : 151;
+             baseFare = parseFloat((lbs * 0.55).toFixed(2));
+           }
+
             const baseRadius = tenantRates.local_base_radius_miles;
          if (quote.distanceMiles > baseRadius) {
           distanceSurcharge = parseFloat(((quote.distanceMiles - baseRadius) * autoVehicle.rate).toFixed(2));
@@ -385,16 +368,15 @@ baseFare = (tenantRates[rateKey] as number) ?? boxTruckRates[formData.palletCoun
             baseFare,
             distanceSurcharge,
             subtotal,
-                       processingFee: fee,
+            processingFee: fee,
             total: isB2B ? subtotal : subtotal + fee,
             appliedStrategy: serviceType === 'PICKUP_WAREHOUSE' ? 'HANDLING_FEE' : 'AURA_ENGINE'
         }));
     };
 
     calculateTotal();
-  }, [calcWeight, quote.distanceMiles, isLoaded, serviceType, inventory, autoVehicle.rate, formData.palletCount, formData.heavyVehicle, isPalletMode]);
+  }, [calcWeight, quote.distanceMiles, isLoaded, serviceType, inventory, autoVehicle.rate, formData.palletCount, formData.heavyVehicle, isPalletMode, formData.exactWeight]);
 
-  // ✅ LÓGICA ENTERPRISE: Basada en la Tarjeta
   const activeCardDetails = cards.find(c => c.id === selectedCardId);
   const isTrinidadCard = activeCardDetails?.country?.toUpperCase() === 'TT';
   const tasaTTD = 7.30;
@@ -420,7 +402,7 @@ useEffect(() => {
         .finally(() => setLoadingEstimate(false));
 }, [calcWeight]);
 
-  const calculateComplexRoute = async (origin: string, destination: string, currentStops?: Stop[]) => {
+const calculateComplexRoute = async (origin: string, destination: string, currentStops?: Stop[]) => {
     if (!isLoaded || typeof google === 'undefined' || !origin) return;
 
     try {
@@ -441,7 +423,6 @@ useEffect(() => {
                 : el.distance.value / 1609.34;
         };
 
-        // Leer stops actuales — todas las direcciones válidas en orden
         const allStops = currentStops ?? stopsRef.current;
         const validAddresses = allStops
           .filter(s => s.address)
@@ -450,24 +431,20 @@ useEffect(() => {
         if (validAddresses.length < 1) return;
 
         if (serviceType === 'SHIPPING') {
-            // Bodega → origen → paradas intermedias
             totalMiles += await getLeg(GMC_WAREHOUSE_ADDRESS, validAddresses[0]);
             for (let i = 0; i < validAddresses.length - 1; i++) {
                 totalMiles += await getLeg(validAddresses[i], validAddresses[i + 1]);
             }
-            // 🔥 REGLA AURA: Box Truck cobra regreso a bodega
             if (autoVehicle.type === 'BOX_TRUCK') {
                 totalMiles += await getLeg(validAddresses[validAddresses.length - 1], GMC_WAREHOUSE_ADDRESS);
             }
         }
         else if (serviceType === 'DELIVERY') {
             if (validAddresses.length < 2) return;
-            // Bodega → todos los puntos en orden
             totalMiles += await getLeg(GMC_WAREHOUSE_ADDRESS, validAddresses[0]);
             for (let i = 0; i < validAddresses.length - 1; i++) {
                 totalMiles += await getLeg(validAddresses[i], validAddresses[i + 1]);
             }
-            // 🔥 REGLA AURA: Box Truck cobra regreso a bodega
             if (autoVehicle.type === 'BOX_TRUCK') {
                 totalMiles += await getLeg(validAddresses[validAddresses.length - 1], GMC_WAREHOUSE_ADDRESS);
             }
@@ -541,38 +518,36 @@ useEffect(() => {
             paymentId: 'PREPAID_PICKUP'
         };
 
-           if (isB2B && serviceType !== 'PICKUP_WAREHOUSE' && quote.total > 0) {
-        // B2B: charge to account, no Stripe
-        await fetch('/api/b2b/charge-account', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ amount: quote.total })
-        });
-        paymentData = {
-          subtotal: quote.subtotal,
-          fee: 0,
-          total: quote.total,
-          paymentId: 'B2B_ACCOUNT'
-        };
-      } else if (serviceType !== 'PICKUP_WAREHOUSE' && quote.total > 0) {
-    const payRes = await fetch('/api/payments/charge', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            amountNet: quote.total,
-            paymentMethodId: selectedCardId,
-            serviceType,
-            description: `${serviceType}`,
-            // 🛡️ Validación de precio en servidor
-            weightLbs: calcWeight,
-            distanceMiles: quote.distanceMiles,
-            heavyVehicle: formData.heavyVehicle,
-            palletCount: formData.palletCount,
-            isPalletMode: formData.weightTier === 'w_151_plus',
-            volumeInfo: autoVehicle.type,
-            extraStops: stops.filter(s => s.address),
-        })
-    });
+        if (isB2B && serviceType !== 'PICKUP_WAREHOUSE' && quote.total > 0) {
+          await fetch('/api/b2b/charge-account', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ amount: quote.total })
+          });
+          paymentData = {
+            subtotal: quote.subtotal,
+            fee: 0,
+            total: quote.total,
+            paymentId: 'B2B_ACCOUNT'
+          };
+        } else if (serviceType !== 'PICKUP_WAREHOUSE' && quote.total > 0) {
+          const payRes = await fetch('/api/payments/charge', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                  amountNet: quote.total,
+                  paymentMethodId: selectedCardId,
+                  serviceType,
+                  description: `${serviceType}`,
+                  weightLbs: calcWeight,
+                  distanceMiles: quote.distanceMiles,
+                  heavyVehicle: formData.heavyVehicle,
+                  palletCount: formData.palletCount,
+                  isPalletMode: formData.weightTier === 'w_151_plus',
+                  volumeInfo: autoVehicle.type,
+                  extraStops: stops.filter(s => s.address),
+              })
+          });
 
             try {
                 const payData = await payRes.json();
@@ -591,33 +566,52 @@ useEffect(() => {
             }
         }
 
-const payload = {
-    ...formData,
-    serviceType,
-    status: 'PAGADO',
-    originAddress: serviceType === 'PICKUP_WAREHOUSE' ? GMC_WAREHOUSE_ADDRESS : originAddress,
-    dropOffAddress: serviceType === 'DELIVERY' ? dropOffAddress : GMC_WAREHOUSE_ADDRESS,
-    subtotal: paymentData.subtotal,
-    processingFee: paymentData.fee,
-    totalPaid: paymentData.total,
-    stripePaymentId: paymentData.paymentId,
-    description: serviceType === 'PICKUP_WAREHOUSE'
-      ? 'Retiro Personal en Bodega'
-      : stops.map(s => s.description).filter(Boolean).join(' | '),
-    weightInfo: formData.weightTier,
-    weightLbs: calcWeight,
-    distanceMiles: quote.distanceMiles,
-    isPalletMode: formData.weightTier === 'w_151_plus',
-    volumeInfo: autoVehicle.type,  // 🔥 Vehículo seleccionado automáticamente
-    extraStops: stops.map(s => ({
-  id: s.id,
-  type: s.type,
-  address: s.address,
-  description: s.description,
-  contact: s.contact,
-  phone: s.phone,
-})),
-};
+        // ✅ Subir fotos de stops a Cloudinary
+        const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+        const stopsWithPhotos = await Promise.all(stops.map(async (s: any) => {
+          if (s._photoFile) {
+            try {
+              const fd = new FormData();
+              fd.append("file", s._photoFile);
+              fd.append("upload_preset", "ml_default");
+              const r = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+                method: 'POST', body: fd
+              });
+              const d = await r.json();
+              return { ...s, photoUrl: d.secure_url };
+            } catch { return s; }
+          }
+          return s;
+        }));
+
+        const payload = {
+            ...formData,
+            serviceType,
+            status: 'PAGADO',
+            originAddress: serviceType === 'PICKUP_WAREHOUSE' ? GMC_WAREHOUSE_ADDRESS : originAddress,
+            dropOffAddress: serviceType === 'DELIVERY' ? dropOffAddress : GMC_WAREHOUSE_ADDRESS,
+            subtotal: paymentData.subtotal,
+            processingFee: paymentData.fee,
+            totalPaid: paymentData.total,
+            stripePaymentId: paymentData.paymentId,
+            description: serviceType === 'PICKUP_WAREHOUSE'
+              ? 'Retiro Personal en Bodega'
+              : stops.map(s => s.description).filter(Boolean).join(' | '),
+            weightInfo: formData.weightTier,
+            weightLbs: calcWeight,
+            distanceMiles: quote.distanceMiles,
+            isPalletMode: formData.weightTier === 'w_151_plus',
+            volumeInfo: autoVehicle.type,
+            extraStops: stopsWithPhotos.map((s: any) => ({
+              id: s.id,
+              type: s.type,
+              address: s.address,
+              description: s.description,
+              contact: s.contact,
+              phone: s.phone,
+              photoUrl: s.photoUrl || null,
+            })),
+        };
 
         const orderRes = await fetch('/api/pickup', {
             method: 'POST',
@@ -713,7 +707,7 @@ const payload = {
                                         const paidAmount = getHandlingFee(pkg.weightLbs, tenantRates);
                                         return (
                                             <div key={idx} className="flex justify-between items-center p-4 bg-gray-50 rounded-xl border border-gray-100 text-sm shadow-sm hover:border-blue-300 transition-colors">
-                                                <div className="flex items-center gap-3">
+  <div className="flex items-center gap-3">
                                                     <div className="bg-white p-2 rounded-lg border border-gray-200">
                                                         <Package size={20} className="text-blue-500"/>
                                                     </div>
@@ -754,6 +748,7 @@ const payload = {
   onStopDescriptionChange={handleStopDescriptionChange}
   onStopContactChange={handleStopContactChange}
   onStopPhoneChange={handleStopPhoneChange}
+  onStopPhotoChange={handleStopPhotoChange}
   onAddStop={handleAddStop}
   onRemoveStop={handleRemoveStop}
   onDragEnd={handleDragEnd}
@@ -772,11 +767,10 @@ const payload = {
   t_dropoffAddress={t('dropoffAddressPlaceholder')}
   t_estimatedRoute={t('estimatedRoute')}
 />
-
-                            <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm border border-gray-200">
+    <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm border border-gray-200">
                                 <h3 className="font-bold text-gmc-gris-oscuro text-sm uppercase mb-4">{t('loadDetailsTitle')}</h3>
 
-                                {/* 🔥 WEIGHT SELECTOR (Granular, igual que cotizador público) */}
+                                {/* 🔥 WEIGHT SELECTOR */}
                                 <div className="mb-4">
                                     <label className="block text-xs font-bold text-gray-400 uppercase mb-2 ml-1">
                                         {t('weightQuestion')}
@@ -795,7 +789,7 @@ const payload = {
                                     </div>
                                 </div>
 
-                                {/* 🔥 151+ LBS: Peso exacto + Selector de vehículo + Pallets */}
+                                {/* ✅ CAMBIO: 151+ Lbs — solo peso exacto + precio por libra ($0.55) */}
                                 {isPalletMode && (
                                     <div className="space-y-4 mb-4 animate-in fade-in slide-in-from-top-2 duration-300">
                                         {/* Exact Weight Input */}
@@ -809,77 +803,22 @@ const payload = {
                                             />
                                         </div>
 
-                                        {/* Vehicle Selector (Only Cargo Van / Box Truck) */}
-                                        <label className="block text-xs font-bold text-gray-400 uppercase mb-2 ml-1">{t('selectVehicleLabel')}</label>
-                                        <div className="grid grid-cols-1 gap-3">
-                                            {/* Cargo Van */}
-                                            <div
-                                                onClick={() => setFormData({ ...formData, heavyVehicle: 'CARGO_VAN', palletCount: 1 })}
-                                                className={`group relative flex items-center p-4 rounded-2xl cursor-pointer transition-all duration-300 border-2 ${formData.heavyVehicle === 'CARGO_VAN' ? 'border-gmc-dorado-principal bg-yellow-50/30 shadow-md' : 'border-gray-100 bg-white hover:border-gray-200'}`}
-                                            >
-                                                {formData.heavyVehicle === 'CARGO_VAN' && (
-                                                    <div className="absolute top-1/2 -translate-y-1/2 -left-3 w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center shadow-sm z-10">
-                                                        <Check size={14} strokeWidth={3} />
+                                        {/* ✅ Precio por libra */}
+                                        <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
+                                            <div className="flex items-center justify-between">
+                                                <div>
+                                                    <p className="text-xs font-bold text-yellow-800 uppercase tracking-wide">Heavy Cargo Rate</p>
+                                                    <p className="text-xs text-yellow-700 mt-0.5">$0.55 per lb</p>
+                                                </div>
+                                                {formData.exactWeight > 0 && (
+                                                    <div className="text-right">
+                                                        <p className="text-2xl font-black text-yellow-900">
+                                                            ${(formData.exactWeight * 0.55).toFixed(2)}
+                                                        </p>
+                                                        <p className="text-[10px] text-yellow-700">{formData.exactWeight} lbs × $0.55</p>
                                                     </div>
                                                 )}
-                                                <div className="w-14 h-12 bg-orange-50 border border-orange-100 rounded-xl flex items-center justify-center mr-4 shrink-0">
-                                                    <Warehouse size={22} className="text-orange-600" />
-                                                </div>
-                                                <div className="flex-1">
-                                                    <h4 className="font-bold text-gray-800 text-sm">{t('volHigh')}</h4>
-                                                    <p className="text-xs text-gray-500 leading-tight mt-0.5">{VEHICLE_DISPLAY.CARGO_VAN.desc}</p>
-                                                    <p className="text-[10px] text-gray-400 mt-1 flex items-center gap-1"><Ruler size={10} /> {VEHICLE_DISPLAY.CARGO_VAN.dims}</p>
-                                                </div>
                                             </div>
-
-                                            {/* Box Truck */}
-                                            <div
-                                                onClick={() => setFormData({ ...formData, heavyVehicle: 'BOX_TRUCK', palletCount: 3 })}
-                                                className={`group relative flex items-center p-4 rounded-2xl cursor-pointer transition-all duration-300 border-2 ${formData.heavyVehicle === 'BOX_TRUCK' ? 'border-gmc-dorado-principal bg-yellow-50/30 shadow-md' : 'border-gray-100 bg-white hover:border-gray-200'}`}
-                                            >
-                                                {formData.heavyVehicle === 'BOX_TRUCK' && (
-                                                    <div className="absolute top-1/2 -translate-y-1/2 -left-3 w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center shadow-sm z-10">
-                                                        <Check size={14} strokeWidth={3} />
-                                                    </div>
-                                                )}
-                                                <div className="w-14 h-12 bg-red-50 border border-red-100 rounded-xl flex items-center justify-center mr-4 shrink-0">
-                                                    <Package size={22} className="text-red-600" />
-                                                </div>
-                                                <div className="flex-1">
-                                                    <h4 className="font-bold text-gray-800 text-sm">{t('volFull')}</h4>
-                                                    <p className="text-xs text-gray-500 leading-tight mt-0.5">{VEHICLE_DISPLAY.BOX_TRUCK.desc}</p>
-                                                    <p className="text-[10px] text-gray-400 mt-1 flex items-center gap-1"><Ruler size={10} /> {VEHICLE_DISPLAY.BOX_TRUCK.dims}</p>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* 🔥 PALLET COUNT */}
-                                        <div className="mt-4 p-4 bg-red-50/30 border border-red-100 rounded-xl animate-in fade-in slide-in-from-top-2 duration-300">
-                                            <label className="block text-xs font-bold text-gray-500 uppercase mb-3">
-                                                {t('howManyPallets')}
-                                            </label>
-                                            <div className="flex gap-2">
-                                                {(formData.heavyVehicle === 'CARGO_VAN' ? [1, 2] : [3, 4, 5, 6]).map(num => (
-                                                    <button
-                                                        key={num}
-                                                        type="button"
-                                                        onClick={() => setFormData({ ...formData, palletCount: num })}
-                                                        className={`flex-1 py-3 rounded-xl font-bold text-lg transition-all ${
-                                                            formData.palletCount === num
-                                                                ? 'bg-gmc-dorado-principal text-black shadow-md scale-105'
-                                                                : 'bg-white border border-gray-200 text-gray-600 hover:border-gray-400'
-                                                        }`}
-                                                    >
-                                                        {num}
-                                                    </button>
-                                                ))}
-                                            </div>
-                                            <p className="text-[11px] text-gray-500 mt-2 text-center">
-                                                {formData.heavyVehicle === 'CARGO_VAN' 
-    ? <><strong>${formData.palletCount === 2 ? tenantRates.local_pallet_cargo_van_2?.toFixed(2) : tenantRates.local_pallet_cargo_van_1?.toFixed(2)}</strong> ({formData.palletCount} pallet{formData.palletCount > 1 ? 's' : ''})</>
-: <><strong>${((tenantRates[`local_pallet_box_truck_${formData.palletCount}` as keyof typeof tenantRates] as number) ?? 195).toFixed(2)}</strong> ({formData.palletCount} pallets)</>
-}
-                                            </p>
                                         </div>
                                     </div>
                                 )}
@@ -923,8 +862,7 @@ const payload = {
                                             <input
                                                 type="datetime-local"
                                                 style={{ fontSize: '16px' }}
-                                                className={`w-full p-3 pl-10 border rounded-xl bg-white focus:ring-2 focus:ring-gmc-dorado-principal min-h-[48px] ${timeError ? 'border-red-500 bg-red-50' : 'border-gray-200 focus:border-transparent'}`}
-                                                onChange={handleDateTimeChange}
+                                                className={`w-full p-3 pl-10 border rounded-xl bg-white focus:ring-2 focus:ring-gmc-dorado-principal min-h-[48px] ${timeError ? 'border-red-500 bg-red-50' : 'border-gray-200 focus:border-transparent'}`}  onChange={handleDateTimeChange}
                                             />
                                         </div>
                                         {timeError && (
@@ -958,7 +896,7 @@ const payload = {
                     )}
                 </div>
 
-               {!isBodega && (
+                {!isBodega && (
                     <div className="hidden lg:block lg:col-span-1">
                         <div className="bg-gmc-gris-oscuro text-white p-6 rounded-2xl shadow-xl sticky top-6">
                             <h3 className="font-bold text-gmc-dorado-principal text-lg mb-4 border-b border-gray-600 pb-2">{t('summaryTitle')}</h3>
@@ -985,7 +923,6 @@ const payload = {
     <span>${quote.total.toFixed(2)}</span>
 </div>
 
-{/* 🌍 ESTIMADO ENVÍO INTERNACIONAL */}
 {shippingEstimate && serviceType === 'SHIPPING' && (
     <div className="mt-3 p-3 bg-gray-700/50 rounded-xl border border-gray-600 space-y-1.5">
         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1">
@@ -1009,9 +946,8 @@ const payload = {
             * {t('estDisclaimer')}
         </p>
     </div>
-)}
-</div>
-                            {/* Vehicle badge (igual que cotizador público) */}
+)}</div>
+
                             <div className="flex items-center gap-2 p-3 bg-gray-700/50 rounded-xl border border-gray-600 mb-4">
                                 <div className="w-8 h-8 bg-gray-600 rounded-lg flex items-center justify-center">
                                     {vehicleInfo.icon}
@@ -1022,7 +958,6 @@ const payload = {
                                 </div>
                             </div>
 
-                            {/* 🔥 ALERTA PAGO LOCAL TRINIDAD (DESKTOP) 🔥 */}
                             {isTrinidadCard && quote.total > 0 && (
                                 <div className="mt-4 p-3 bg-blue-900/40 border border-blue-500/50 rounded-xl mb-4">
                                     <div className="flex items-center gap-2 mb-1">
@@ -1051,7 +986,7 @@ const payload = {
 </div>
 )}
                            <button onClick={handlePaymentAndSubmit} disabled={isLoading || quote.total === 0 || !isAddressValid || !isTimeValid} className="w-full py-3 bg-gmc-dorado-principal text-gmc-gris-oscuro font-bold rounded-xl flex justify-center items-center gap-2 hover:bg-white transition-colors disabled:opacity-50">
-    {isLoading ? <Loader2 className="animate-spin"/> : <CreditCard size={18}/>} 
+    {isLoading ? <Loader2 className="animate-spin"/> : <CreditCard size={18}/>}
     {isB2B ? 'Dispatch & Charge to Account' : t('btnPay')}
 </button>
                         </div>
@@ -1097,8 +1032,7 @@ const payload = {
     <span>+${quote.processingFee.toFixed(2)}</span>
 </div>
 )}
-
-                            <div className="flex items-center gap-2 pt-3 border-t border-gray-600">
+  <div className="flex items-center gap-2 pt-3 border-t border-gray-600">
                                 <div className="w-6 h-6 bg-gray-600 rounded flex items-center justify-center">{vehicleInfo.icon}</div>
                                 <span className="text-xs text-gray-400">{vehicleInfo.title} · {vehicleInfo.dims}</span>
                             </div>
