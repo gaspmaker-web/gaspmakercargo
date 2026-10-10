@@ -33,6 +33,8 @@ export interface Stop {
 
 interface RouteSectionProps {
   serviceType: "SHIPPING" | "DELIVERY";
+  b2bBusinessName?: string;
+b2bLogoUrl?: string;
   stops: Stop[];
   distanceMiles: number;
   onStopAddressValid: (id: string, address: string) => void;
@@ -95,6 +97,8 @@ function SortableStopRow({
   stop,
   letter,
   serviceType,
+  b2bBusinessName,
+b2bLogoUrl, 
   isOnly,
   onAddressValid,
   onAddressError,
@@ -113,6 +117,8 @@ function SortableStopRow({
   stop: Stop;
   letter: string;
   serviceType: "SHIPPING" | "DELIVERY";
+    b2bBusinessName?: string;
+  b2bLogoUrl?: string;
   isOnly: boolean;
   onAddressValid: (id: string, address: string) => void;
   onAddressError: (id: string, error: string) => void;
@@ -217,8 +223,18 @@ function SortableStopRow({
           </button>
 
           <span className={`text-xs font-bold uppercase tracking-wide flex-1 ${labelColor}`}>
-            {label}
-          </span>
+  {label}
+</span>
+
+{isPickup && b2bBusinessName && (
+  <div className="flex items-center gap-1.5">
+    {b2bLogoUrl && (
+      <img src={b2bLogoUrl} alt={b2bBusinessName}
+        className="w-5 h-5 rounded-full object-cover border border-gray-200" />
+    )}
+    <span className="text-xs font-bold text-gmc-dorado-principal">{b2bBusinessName}</span>
+  </div>
+)}
 
           {isStop && (
             <button
@@ -392,6 +408,8 @@ export default function RouteSection({
   t_pickupAddress,
   t_dropoffAddress,
   t_estimatedRoute,
+  b2bBusinessName,
+b2bLogoUrl,
 }: RouteSectionProps) {
   const getStopLetter = (index: number) => String.fromCharCode(66 + index);
   let stopLetterIndex = 0;
@@ -421,10 +439,12 @@ export default function RouteSection({
                     </div>
                     <div className="flex-1 min-w-0">
                       <SortableStopRow
-                        stop={stop}
-                        letter={letter}
-                        serviceType={serviceType}
-                        isOnly={stops.length <= 2}
+  stop={stop}
+  letter={letter}
+  serviceType={serviceType}
+  b2bBusinessName={b2bBusinessName}
+  b2bLogoUrl={b2bLogoUrl}
+  isOnly={stops.length <= 2}
                         onAddressValid={onStopAddressValid}
                         onAddressError={onStopAddressError}
                         onAddressClear={onStopAddressClear}

@@ -736,6 +736,9 @@ model B2BAccount {
   nextBillingDate   DateTime?
   autoPayEnabled    Boolean  @default(false)
 
+  // Logo
+  logoUrl           String?
+
   // Estado
   status            String   @default("ACTIVE") // ACTIVE, SUSPENDED, PENDING
 }

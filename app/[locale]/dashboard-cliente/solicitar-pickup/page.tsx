@@ -61,6 +61,8 @@ export default function SolicitarPickupPage() {
   const searchParams = useSearchParams();
   const b2bPickupAddress = searchParams.get('pickup');
     const isB2B = searchParams.get('b2b') === 'true';
+    const b2bBusinessName = searchParams.get('businessName');
+const b2bLogoUrl = searchParams.get('logoUrl');
   const tenantRates = useTenantRates();
   const inventorySectionRef = useRef<HTMLDivElement>(null);
   const routeSectionRef = useRef<HTMLDivElement>(null);

@@ -95,7 +95,7 @@ export default async function DashboardB2BPage(props: any) {
         )}
 
         {/* Quick Actions */}
-        <Link href={`/${locale}/dashboard-cliente/solicitar-pickup?pickup=${encodeURIComponent(b2b?.businessAddress || '')}&b2b=true`}
+        <Link href={`/${locale}/dashboard-cliente/solicitar-pickup?pickup=${encodeURIComponent(b2b?.businessAddress || '')}&b2b=true&businessName=${encodeURIComponent(b2b?.businessName || '')}&logoUrl=${encodeURIComponent(b2b?.logoUrl || '')}`}
           className="block bg-[#222b3c] text-white rounded-2xl p-5 hover:bg-[#2d3748] transition-colors">
           <div className="flex items-center justify-between">
             <div>
