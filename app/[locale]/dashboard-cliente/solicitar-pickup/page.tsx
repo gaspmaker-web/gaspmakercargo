@@ -246,7 +246,7 @@ export default function SolicitarPickupPage() {
     calculateComplexRoute(originAddress, dropOffAddress);
 
   const [formData, setFormData] = useState({
-    originAddress: '', originCity: '', pickupDate: '', description: '', contactPhone: '',
+    originAddress: '', originCity: '', pickupDate: '', description: '', contactPhone: '', pickupContactName: '',
     dropOffAddress: '', dropOffCity: '', dropOffContact: '', dropOffPhone: '',
     weightTier: 'w_0_40', exactWeight: 0,
     heavyVehicle: 'CARGO_VAN', palletCount: 1,
@@ -949,7 +949,25 @@ const calculateComplexRoute = async (origin: string, destination: string, curren
                                     </div>
                                 )}
 
+
                                 <div className="space-y-4 mb-4">
+                                    {/* Pickup Contact Name */}
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-400 uppercase mb-1.5">
+                                            Pickup Contact Name
+                                        </label>
+                                        <div className="relative">
+                                            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
+                                            <input
+                                                type="text"
+                                                placeholder="Name of person at pickup"
+                                                style={{ fontSize: '16px' }}
+                                                className="w-full p-3 pl-10 border border-gray-200 rounded-xl bg-white focus:ring-2 focus:ring-gmc-dorado-principal focus:border-transparent min-h-[48px]"
+                                                onChange={e => setFormData({...formData, pickupContactName: e.target.value})}
+                                            />
+                                        </div>
+                                    </div>
+
                                     {/* Pickup Window */}
                                     <div>
                                         <label className="block text-xs font-bold text-gray-400 uppercase mb-1.5">
