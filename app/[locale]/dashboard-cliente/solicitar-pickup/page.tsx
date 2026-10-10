@@ -347,21 +347,30 @@ export default function SolicitarPickupPage() {
 
            baseFare = auraQuote.baseFare;
 
-           // ✅ Para 151+ lbs:
-           //    - Con stops intermedios → $0.55/lb
-           //    - Solo PICKUP + DROPOFF → tarifa fija por vehículo/pallets
+           // ✅ Para 151+ lbs: Opción B — mínimo $85 + $0.57 por cada lb sobre 150
+           //    Nunca baja del precio del tier anterior ($85).
+           //    Con stops intermedios → misma fórmula por libra (sin selector vehículo)
+           //    Solo PICKUP + DROPOFF → fórmula por libra + selector vehículo/pallets
            if (isPalletMode) {
+             const lbs = formData.exactWeight > 0 ? formData.exactWeight : 151;
+             const BASE_HEAVY = 85;        // precio mínimo (igual al tier 141-150)
+             const RATE_PER_LB = 0.57;     // $0.57 por cada lb sobre 150
+             const perLbFare = parseFloat(Math.max(BASE_HEAVY, BASE_HEAVY + (lbs - 150) * RATE_PER_LB).toFixed(2));
+
              const hasIntermediateStops = stops.filter((s: Stop) => s.type === 'STOP').length > 0;
              if (hasIntermediateStops) {
-               const lbs = formData.exactWeight > 0 ? formData.exactWeight : 151;
-               baseFare = parseFloat((lbs * 0.55).toFixed(2));
+               // Con stops: precio por libra, sin selector de vehículo
+               baseFare = perLbFare;
              } else {
+               // Sin stops: precio por libra base, pero si eligió Box Truck aplicar tarifa mayor
                if (formData.heavyVehicle === 'BOX_TRUCK') {
-                 baseFare = (tenantRates[`local_pallet_box_truck_${formData.palletCount}` as keyof typeof tenantRates] as number) ?? 195;
+                 const boxRate = (tenantRates[`local_pallet_box_truck_${formData.palletCount}` as keyof typeof tenantRates] as number) ?? 195;
+                 baseFare = Math.max(perLbFare, boxRate);
                } else {
-                 baseFare = formData.palletCount === 2
+                 const vanRate = formData.palletCount === 2
                    ? (tenantRates.local_pallet_cargo_van_2 as number) ?? 130
                    : (tenantRates.local_pallet_cargo_van_1 as number) ?? 80;
+                 baseFare = Math.max(perLbFare, vanRate);
                }
              }
            }
@@ -826,14 +835,18 @@ const calculateComplexRoute = async (origin: string, destination: string, curren
                                                 <div className="flex items-center justify-between">
                                                     <div>
                                                         <p className="text-xs font-bold text-yellow-800 uppercase tracking-wide">Heavy Cargo Rate</p>
-                                                        <p className="text-xs text-yellow-700 mt-0.5">$0.55 per lb</p>
+                                                        <p className="text-xs text-yellow-700 mt-0.5">$85 base + $0.57/lb over 150</p>
                                                     </div>
                                                     {formData.exactWeight > 0 && (
                                                         <div className="text-right">
                                                             <p className="text-2xl font-black text-yellow-900">
-                                                                ${(formData.exactWeight * 0.55).toFixed(2)}
+                                                                ${Math.max(85, 85 + (formData.exactWeight - 150) * 0.57).toFixed(2)}
                                                             </p>
-                                                            <p className="text-[10px] text-yellow-700">{formData.exactWeight} lbs × $0.55</p>
+                                                            <p className="text-[10px] text-yellow-700">
+                                                              {formData.exactWeight > 150
+                                                                ? `$85 + ${formData.exactWeight - 150} lbs × $0.57`
+                                                                : `${formData.exactWeight} lbs`}
+                                                            </p>
                                                         </div>
                                                     )}
                                                 </div>
