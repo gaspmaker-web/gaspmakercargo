@@ -447,30 +447,28 @@ export default function RouteSection({
           </SortableContext>
         </DndContext>
 
-        {/* Botón Add Stop — oculto para DELIVERY simple (solo PICKUP + DROPOFF) */}
-        {!(serviceType === "DELIVERY" && stops.length <= 2) && (
-          <div className="flex items-center gap-3 mt-3">
-            <div className="w-7 shrink-0 flex justify-center z-10">
-              <div className="w-5 h-5 rounded-full border-2 border-dashed border-gray-300 bg-white flex items-center justify-center">
-                <Plus size={9} className="text-gray-400" />
-              </div>
+        {/* Botón Add Stop — siempre visible */}
+        <div className="flex items-center gap-3 mt-3">
+          <div className="w-7 shrink-0 flex justify-center z-10">
+            <div className="w-5 h-5 rounded-full border-2 border-dashed border-gray-300 bg-white flex items-center justify-center">
+              <Plus size={9} className="text-gray-400" />
             </div>
-            <button
-              type="button"
-              onClick={onAddStop}
-              className={[
-                "flex-1 py-2.5 border-2 border-dashed rounded-xl text-xs font-bold",
-                "transition-colors flex items-center justify-center gap-1.5",
-                "border-gray-200 text-gray-400",
-                serviceType === "SHIPPING"
-                  ? "hover:border-blue-400 hover:text-blue-500"
-                  : "hover:border-green-400 hover:text-green-500",
-              ].join(" ")}
-            >
-              <Plus size={12} /> {t_addStop} ({nextLetter})
-            </button>
           </div>
-        )}
+          <button
+            type="button"
+            onClick={onAddStop}
+            className={[
+              "flex-1 py-2.5 border-2 border-dashed rounded-xl text-xs font-bold",
+              "transition-colors flex items-center justify-center gap-1.5",
+              "border-gray-200 text-gray-400",
+              serviceType === "SHIPPING"
+                ? "hover:border-blue-400 hover:text-blue-500"
+                : "hover:border-green-400 hover:text-green-500",
+            ].join(" ")}
+          >
+            <Plus size={12} /> {t_addStop} ({nextLetter})
+          </button>
+        </div>
 
         {/* Bodega GMC — solo SHIPPING */}
         {serviceType === "SHIPPING" && (
