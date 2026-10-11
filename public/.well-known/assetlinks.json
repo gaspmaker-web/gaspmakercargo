@@ -2,9 +2,9 @@
   "relation": ["delegate_permission/common.handle_all_urls"],
   "target": {
     "namespace": "android_app",
-    "package_name": "com.gaspmakercargo.twa",
+    "package_name": "com.gaspmakercargo.app",
     "sha256_cert_fingerprints": [
-      "FE:FF:AC:82:D7:51:36:00:7C:30:3B:FA:8B:A5:CD:8C:38:8A:C4:BC:42:D6:9F:28:EE:E3:83:DD:9D:74:DB:81"
+      "45:67:4E:C2:51:7F:D0:15:BD:8F:A7:A4:A5:26:85:C6:92:26:05:AC:3E:79:22:37:88:8B:45:55:1B:EF:B2:F2"
     ]
   }
 }]
