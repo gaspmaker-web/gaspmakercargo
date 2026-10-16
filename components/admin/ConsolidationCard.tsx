@@ -3,14 +3,15 @@
 import React, { useState, useEffect } from 'react';
 import { Package, MapPin, Calendar, ArrowRight, X, Loader2, Box, Ruler, DollarSign, Truck, Plane, Ship, Plus, Trash2, AlertTriangle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import ConsolidationScanner from './ConsolidationScanner';
 
 export default function ConsolidationCard({ request }: { request: any }) {
   const router = useRouter();
-  
+
   // Estado del Modal
   const [showModal, setShowModal] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  
+
   // =================================================================
   // ✈️ ESTADO PARA AÉREO (Un solo bulto global)
   // =================================================================
@@ -42,62 +43,63 @@ export default function ConsolidationCard({ request }: { request: any }) {
   }, [finalValue]);
 
   // 🏢 TARIFAS DINÁMICAS DESDE BD
-const [hazmatRates, setHazmatRates] = useState({
-  hazmat_prep_fee: 120.00,
-  hazmat_shipping_line_fee: 180.00,
-  air_hazmat_fee: 275.00,
-  eei_fee: 40.00,
-  container_eh: 20.00,
-  container_e: 30.00,
-  container_d: 60.00,
-  container_jumbo_fiber: 50.00,
-  container_caja_regular: 7.00,
-});
+  const [hazmatRates, setHazmatRates] = useState({
+    hazmat_prep_fee: 120.00,
+    hazmat_shipping_line_fee: 180.00,
+    air_hazmat_fee: 275.00,
+    eei_fee: 40.00,
+    container_eh: 20.00,
+    container_e: 30.00,
+    container_d: 60.00,
+    container_jumbo_fiber: 50.00,
+    container_caja_regular: 7.00,
+  });
 
-useEffect(() => {
-  fetch('/api/admin/rates')
-    .then(r => r.json())
-    .then(data => {
-      if (data.rates) {
-        const getRate = (concept: string) => {
-          const r = data.rates.find((r: any) => r.concept === concept && !r.countryCode);
-          return r ? Number(r.value) : null;
-        };
-        setHazmatRates({
-          hazmat_prep_fee: getRate('hazmat_prep_fee') ?? 120.00,
-          hazmat_shipping_line_fee: getRate('hazmat_shipping_line_fee') ?? 180.00,
-          air_hazmat_fee: getRate('air_hazmat_fee') ?? 275.00,
-          eei_fee: getRate('eei_fee') ?? 40.00,
-          container_eh: getRate('container_eh') ?? 20.00,
-          container_e: getRate('container_e') ?? 30.00,
-          container_d: getRate('container_d') ?? 60.00,
-          container_jumbo_fiber: getRate('container_jumbo_fiber') ?? 50.00,
-          container_caja_regular: getRate('container_caja_regular') ?? 7.00,
-        });
-      }
-    })
-    .catch(() => {});
-}, []);
+  useEffect(() => {
+    fetch('/api/admin/rates')
+      .then(r => r.json())
+      .then(data => {
+        if (data.rates) {
+          const getRate = (concept: string) => {
+            const r = data.rates.find((r: any) => r.concept === concept && !r.countryCode);
+            return r ? Number(r.value) : null;
+          };
+          setHazmatRates({
+            hazmat_prep_fee: getRate('hazmat_prep_fee') ?? 120.00,
+            hazmat_shipping_line_fee: getRate('hazmat_shipping_line_fee') ?? 180.00,
+            air_hazmat_fee: getRate('air_hazmat_fee') ?? 275.00,
+            eei_fee: getRate('eei_fee') ?? 40.00,
+            container_eh: getRate('container_eh') ?? 20.00,
+            container_e: getRate('container_e') ?? 30.00,
+            container_d: getRate('container_d') ?? 60.00,
+            container_jumbo_fiber: getRate('container_jumbo_fiber') ?? 50.00,
+            container_caja_regular: getRate('container_caja_regular') ?? 7.00,
+          });
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   // 🚢 ESTADO PARA CONTAINER MARÍTIMO
-const [containerQuantities, setContainerQuantities] = useState<Record<string, number>>({
-  EH: 0, E: 0, D: 0, JUMBO_FIBER: 0, REGULAR: 0
-});
+  const [containerQuantities, setContainerQuantities] = useState<Record<string, number>>({
+    EH: 0, E: 0, D: 0, JUMBO_FIBER: 0, REGULAR: 0
+  });
 
-const updateContainerQty = (id: string, delta: number) => {
-  setContainerQuantities(prev => ({
-    ...prev,
-    [id]: Math.max(0, (prev[id] || 0) + delta)
-  }));
-};
+  const updateContainerQty = (id: string, delta: number) => {
+    setContainerQuantities(prev => ({
+      ...prev,
+      [id]: Math.max(0, (prev[id] || 0) + delta)
+    }));
+  };
 
-const CONTAINER_OPTIONS = [
-  { id: 'EH', label: 'EH Container', price: hazmatRates.container_eh },
-  { id: 'E', label: 'E Container', price: hazmatRates.container_e },
-  { id: 'D', label: 'D Container', price: hazmatRates.container_d },
-  { id: 'JUMBO_FIBER', label: 'Jumbo Fiber', price: hazmatRates.container_jumbo_fiber },
-  { id: 'REGULAR', label: 'Caja Regular', price: hazmatRates.container_caja_regular },
-];
+  const CONTAINER_OPTIONS = [
+    { id: 'EH', label: 'EH Container', price: hazmatRates.container_eh },
+    { id: 'E', label: 'E Container', price: hazmatRates.container_e },
+    { id: 'D', label: 'D Container', price: hazmatRates.container_d },
+    { id: 'JUMBO_FIBER', label: 'Jumbo Fiber', price: hazmatRates.container_jumbo_fiber },
+    { id: 'REGULAR', label: 'Caja Regular', price: hazmatRates.container_caja_regular },
+  ];
+
   // =================================================================
   // 🚚🚢 ESTADO PARA LOCAL DELIVERY Y OCEAN (Múltiples Pallets Físicos)
   // =================================================================
@@ -108,10 +110,9 @@ const CONTAINER_OPTIONS = [
   const isLocalDelivery = request.serviceType === 'LOCAL_DELIVERY';
   const isOcean = request.serviceType === 'OCEAN_CONSOLIDATION';
   const isPickup = request.serviceType === 'PICKUP' || request.gmcShipmentNumber?.startsWith('PICKUP');
-  
-  // 🔥 LA LLAVE MAESTRA: Activamos las filas dinámicas si es Camión o Barco
+
   const isDynamicPalletMode = true;
-const isAir = !isLocalDelivery && !isOcean && !isPickup;
+  const isAir = !isLocalDelivery && !isOcean && !isPickup;
 
   const handleCashPayment = async () => {
     if (!confirm(`Mark ${request.gmcShipmentNumber} as paid with cash?`)) return;
@@ -131,7 +132,8 @@ const isAir = !isLocalDelivery && !isOcean && !isPickup;
     } catch (error) {
         alert('Connection error.');
     }
-};
+  };
+
   // --- Funciones para manejar las filas de los Pallets ---
   const handleAddPiece = () => {
     setAuraPieces([...auraPieces, { weight: '', length: '', width: '', height: '' }]);
@@ -152,58 +154,54 @@ const isAir = !isLocalDelivery && !isOcean && !isPickup;
   const handleProcess = async () => {
     setIsSaving(true);
     try {
-        let payload: any = { 
+        let payload: any = {
             consolidationId: request.id,
-            isAura: isDynamicPalletMode, // 🔥 Enviamos array dinámico al backend
+            isAura: isDynamicPalletMode,
             isOcean: isOcean,
             extraCharges: specialCharges,
-            finalValue: parseFloat(finalValue) || 0 
+            finalValue: parseFloat(finalValue) || 0
         };
 
         if (isDynamicPalletMode) {
-            // Validación Aura / Ocean (Múltiples Pallets)
             const isIncomplete = auraPieces.some(p => !p.weight || !p.length || !p.width || !p.height);
             if (isIncomplete) {
                 setIsSaving(false);
                 return alert("⚠️ Por favor completa el Peso y las 3 Medidas en todas las filas.");
             }
 
-  payload.containerQuantities = containerQuantities;
-payload.containerFee = CONTAINER_OPTIONS.reduce(
-  (acc, c) => acc + (containerQuantities[c.id] || 0) * c.price, 0
-);
-payload.containerType = CONTAINER_OPTIONS
-  .filter(c => (containerQuantities[c.id] || 0) > 0)
-  .map(c => c.id)
-  .join(',') || 'MIXED';
+            payload.containerQuantities = containerQuantities;
+            payload.containerFee = CONTAINER_OPTIONS.reduce(
+              (acc, c) => acc + (containerQuantities[c.id] || 0) * c.price, 0
+            );
+            payload.containerType = CONTAINER_OPTIONS
+              .filter(c => (containerQuantities[c.id] || 0) > 0)
+              .map(c => c.id)
+              .join(',') || 'MIXED';
 
-            // Mapeamos los pallets físicos armados
             payload.auraPieces = auraPieces.map(p => {
                 const w = parseFloat(p.weight);
                 const l = parseFloat(p.length);
                 const wd = parseFloat(p.width);
                 const h = parseFloat(p.height);
                 const volWeight = (l * wd * h) / 166;
-                
+
                 return {
                     weight: w,
-                    realWeight: w, // Enviamos el peso real limpio
+                    realWeight: w,
                     length: l,
                     width: wd,
                     height: h,
-                    billableWeight: Math.max(w, volWeight) 
+                    billableWeight: Math.max(w, volWeight)
                 };
             });
-            
-            // Calculamos peso global visual
+
             payload.finalWeight = auraPieces.reduce((acc, p) => acc + parseFloat(p.weight), 0);
-            
+
             if (isLocalDelivery) {
                 payload.distanceMiles = request.user?.distanceMiles || 0;
             }
 
         } else {
-            // Validación Aéreo (Bulto único)
             if (!finalWeight || !dims.length || !dims.width || !dims.height) {
                 setIsSaving(false);
                 return alert("⚠️ Please enter the Weight and 3 real dimensions of the cargo.");
@@ -216,18 +214,18 @@ payload.containerType = CONTAINER_OPTIONS
             };
         }
 
-        const res = await fetch('/api/admin/consolidate-confirm', { 
+        const res = await fetch('/api/admin/consolidate-confirm', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         });
 
         const data = await res.json();
-        
+
         if (res.ok) {
             alert(`✅ Consolidation processed successfully. Client can now pay.`);
             setShowModal(false);
-            router.refresh(); 
+            router.refresh();
         } else {
             alert("Error: " + (data.message || "Unknown error"));
         }
@@ -238,6 +236,15 @@ payload.containerType = CONTAINER_OPTIONS
         setIsSaving(false);
     }
   };
+
+  // 🔥 Paquetes para el scanner (mapeados desde request.packages)
+  const scannerPackages = (request.packages || []).map((pkg: any) => ({
+    id: pkg.id,
+    gmcTrackingNumber: pkg.gmcTrackingNumber || '',
+    carrierTrackingNumber: pkg.carrierTrackingNumber || null,
+    description: pkg.description || null,
+    weightLbs: pkg.weightLbs || null,
+  }));
 
   return (
     <>
@@ -259,31 +266,30 @@ payload.containerType = CONTAINER_OPTIONS
                     <p className={`text-xs font-mono ${isLocalDelivery ? 'text-gray-400' : 'text-gray-500'}`}>STE: {request.user?.suiteNo}</p>
                 </div>
             </div>
-            
+
             {/* BADGES VISUALES DEL TIPO DE SERVICIO */}
             <div className={`flex flex-col items-end text-sm ${isLocalDelivery ? 'text-gray-300' : 'text-gray-600'}`}>
               {isLocalDelivery ? (
-    <div className="flex items-center gap-1.5 font-bold text-white bg-gray-800 px-2 py-1 rounded text-xs">
-        <Truck size={14} /> LOCAL (AURA)
-    </div>
-) : isOcean ? (
-    <div className="flex items-center gap-1.5 font-bold text-white bg-blue-600 px-2 py-1 rounded text-xs shadow-sm border border-blue-700">
-        <Ship size={14} /> {request.destinationCountryCode || 'DESTINATION'} (OCEAN)
-    </div>
-) : isPickup ? (
-    <div className="flex items-center gap-1.5 font-bold text-green-700 bg-green-100 px-2 py-1 rounded text-xs border border-green-200">
-        <Package size={14} /> STORE PICKUP
-    </div>
-) : (
-    <div className="flex items-center gap-1.5 font-bold text-indigo-700 bg-indigo-100 px-2 py-1 rounded text-xs border border-indigo-200">
-        <Plane size={14} /> {request.destinationCountryCode || 'DESTINATION'} (AIR)
-    </div>
-)}
-                
-                <div className="flex items-center gap-1 mt-1 text-xs">
-                    <Calendar size={12} />
-                    <span>{new Date(request.createdAt).toLocaleDateString()}</span>
+                <div className="flex items-center gap-1.5 font-bold text-white bg-gray-800 px-2 py-1 rounded text-xs">
+                    <Truck size={14} /> LOCAL (AURA)
                 </div>
+              ) : isOcean ? (
+                <div className="flex items-center gap-1.5 font-bold text-white bg-blue-600 px-2 py-1 rounded text-xs shadow-sm border border-blue-700">
+                    <Ship size={14} /> {request.destinationCountryCode || 'DESTINATION'} (OCEAN)
+                </div>
+              ) : isPickup ? (
+                <div className="flex items-center gap-1.5 font-bold text-green-700 bg-green-100 px-2 py-1 rounded text-xs border border-green-200">
+                    <Package size={14} /> STORE PICKUP
+                </div>
+              ) : (
+                <div className="flex items-center gap-1.5 font-bold text-indigo-700 bg-indigo-100 px-2 py-1 rounded text-xs border border-indigo-200">
+                    <Plane size={14} /> {request.destinationCountryCode || 'DESTINATION'} (AIR)
+                </div>
+              )}
+              <div className="flex items-center gap-1 mt-1 text-xs">
+                  <Calendar size={12} />
+                  <span>{new Date(request.createdAt).toLocaleDateString()}</span>
+              </div>
             </div>
         </div>
 
@@ -291,7 +297,7 @@ payload.containerType = CONTAINER_OPTIONS
             <h4 className="text-sm font-bold text-gray-400 uppercase mb-3 flex items-center gap-2">
                 <Package size={14} /> {request.packages?.length || 0} Boxes to {isLocalDelivery ? 'Build (Pallet)' : isOcean ? 'Group in Pallets' : 'Group'}:
             </h4>
-            
+
             <div className="space-y-2 mb-6 max-h-40 overflow-y-auto pr-2 custom-scrollbar">
                 {request.packages?.map((pkg: any) => (
                     <div key={pkg.id} className={`flex justify-between items-center p-3 rounded-lg border ${
@@ -309,32 +315,44 @@ payload.containerType = CONTAINER_OPTIONS
                 ))}
             </div>
 
-  <div className={`flex justify-end pt-4 border-t ${isLocalDelivery ? 'border-gray-200' : 'border-gray-100'}`}>
-    {isPickup ? (
-        <button
-            onClick={handleCashPayment}
-            className="px-6 py-2.5 rounded-xl font-bold text-sm transition-colors flex items-center gap-2 bg-green-600 text-white hover:bg-green-700"
-        >
-            <DollarSign size={16} /> Mark as Paid (Cash)
-        </button>
-    ) : (
-        <button 
-            onClick={(e) => {
-                e.stopPropagation(); 
-                setShowModal(true);
-            }}
-            className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-colors flex items-center gap-2 ${
-                isLocalDelivery 
-                    ? 'bg-black text-white hover:bg-gray-800' 
-                    : isOcean
-                    ? 'bg-blue-600 text-white hover:bg-blue-700'
-                    : 'bg-indigo-600 text-white hover:bg-indigo-700'
-            }`}
-        >
-            {isLocalDelivery ? 'Measure Aura Pallets' : isOcean ? 'Measure Ocean Pallets' : 'Process Air'} <ArrowRight size={16} />
-        </button>
-    )}
-</div>
+            {/* 🔥 BOTONES DE ACCIÓN */}
+            <div className={`flex flex-wrap items-center justify-between gap-2 pt-4 border-t ${isLocalDelivery ? 'border-gray-200' : 'border-gray-100'}`}>
+
+              {/* Scanner Bluetooth — siempre visible (no aplica a PICKUP de una caja) */}
+              {!isPickup && (
+                <ConsolidationScanner
+                  consolidationId={request.id}
+                  gmcShipmentNumber={request.gmcShipmentNumber}
+                  packages={scannerPackages}
+                />
+              )}
+
+              {/* Botón Measure / Process / Cash */}
+              {isPickup ? (
+                <button
+                    onClick={handleCashPayment}
+                    className="ml-auto px-6 py-2.5 rounded-xl font-bold text-sm transition-colors flex items-center gap-2 bg-green-600 text-white hover:bg-green-700"
+                >
+                    <DollarSign size={16} /> Mark as Paid (Cash)
+                </button>
+              ) : (
+                <button
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        setShowModal(true);
+                    }}
+                    className={`ml-auto px-6 py-2.5 rounded-xl font-bold text-sm transition-colors flex items-center gap-2 ${
+                        isLocalDelivery
+                            ? 'bg-black text-white hover:bg-gray-800'
+                            : isOcean
+                            ? 'bg-blue-600 text-white hover:bg-blue-700'
+                            : 'bg-indigo-600 text-white hover:bg-indigo-700'
+                    }`}
+                >
+                    {isLocalDelivery ? 'Measure Aura Pallets' : isOcean ? 'Measure Ocean Pallets' : 'Process Air'} <ArrowRight size={16} />
+                </button>
+              )}
+            </div>
         </div>
       </div>
 
@@ -352,14 +370,14 @@ payload.containerType = CONTAINER_OPTIONS
                 </div>
 
                 <div className={`p-4 rounded-lg mb-4 text-xs border ${
-                    isLocalDelivery 
-                        ? 'bg-white border-gray-200 text-gray-800' 
-                        : isOcean 
-                        ? 'bg-blue-50 border-blue-100 text-blue-800' 
+                    isLocalDelivery
+                        ? 'bg-white border-gray-200 text-gray-800'
+                        : isOcean
+                        ? 'bg-blue-50 border-blue-100 text-blue-800'
                         : 'bg-indigo-50 border-indigo-100 text-indigo-800'
                 }`}>
                    <p>
-                  {isDynamicPalletMode ? <Truck size={14} className="inline mr-1"/> : '📦 '} 
+                  {isDynamicPalletMode ? <Truck size={14} className="inline mr-1"/> : '📦 '}
                    You are preparing <strong>{request.packages?.length} packages</strong> for {
                    isLocalDelivery ? 'AURA LOGISTICS' : isOcean ? 'OCEAN SHIPMENT' : 'INTERNATIONAL SHIPMENT (AIR)'
                    }. Build pallets in warehouse and enter measurements for each one.
@@ -371,8 +389,8 @@ payload.containerType = CONTAINER_OPTIONS
                     <label className="block text-xs font-bold text-blue-600 uppercase mb-1 flex items-center gap-1">
                         <DollarSign size={12}/> Total Declared Value ($)
                     </label>
-                    <input 
-                        type="number" 
+                    <input
+                        type="number"
                         value={finalValue}
                         onChange={(e) => setFinalValue(e.target.value)}
                         placeholder="0.00"
@@ -421,12 +439,12 @@ payload.containerType = CONTAINER_OPTIONS
                                 </div>
                             </div>
                         ))}
-                        
-                        <button 
+
+                        <button
                             onClick={handleAddPiece}
                             className={`w-full py-3 border-2 border-dashed rounded-xl transition-colors flex justify-center items-center gap-2 text-xs font-bold uppercase ${
-                                isOcean 
-                                ? 'border-blue-300 text-blue-600 hover:border-blue-600 hover:bg-blue-50' 
+                                isOcean
+                                ? 'border-blue-300 text-blue-600 hover:border-blue-600 hover:bg-blue-50'
                                 : 'border-gray-300 text-gray-500 hover:border-black hover:text-black'
                             }`}
                         >
@@ -434,21 +452,20 @@ payload.containerType = CONTAINER_OPTIONS
                         </button>
                     </div>
                 ) : (
-                /* ============================================================== */
-                /* ✈️ INTERFAZ ESTÁTICA ORIGINAL (SÓLO AÉREO)                      */
-                /* ============================================================== */
+                    /* ============================================================== */
+                    /* ✈️ INTERFAZ ESTÁTICA ORIGINAL (SÓLO AÉREO)                      */
+                    /* ============================================================== */
                     <>
                         <div className="mb-4">
                             <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Final Weight (Lbs)</label>
-                            <input 
-                                type="number" 
+                            <input
+                                type="number"
                                 value={finalWeight}
                                 onChange={(e) => setFinalWeight(e.target.value)}
                                 placeholder="Ej: 50.5"
                                 className="w-full border border-gray-300 rounded-lg p-3 font-mono text-lg outline-none focus:ring-2 focus:ring-indigo-500"
                             />
                         </div>
-
                         <div className="grid grid-cols-3 gap-2 mb-4">
                             <div>
                                 <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1 flex items-center gap-1"><Ruler size={10}/> Length</label>
@@ -481,7 +498,6 @@ payload.containerType = CONTAINER_OPTIONS
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        {/* Hazmat Preparation Fee */}
                         <label className={`flex items-center gap-2 p-2.5 rounded-lg border cursor-pointer transition-all ${specialCharges.hazmatPrepFee ? 'bg-orange-100 border-orange-400' : 'bg-white border-orange-100 hover:bg-orange-50'}`}>
                             <input type="checkbox" checked={specialCharges.hazmatPrepFee} onChange={() => toggleCharge('hazmatPrepFee')} className="w-4 h-4 text-orange-600 rounded shrink-0" />
                             <div className="min-w-0 flex-1">
@@ -490,7 +506,6 @@ payload.containerType = CONTAINER_OPTIONS
                             </div>
                         </label>
 
-                        {/* Hazmat Shipping Line Fee */}
                         <label className={`flex items-center gap-2 p-2.5 rounded-lg border cursor-pointer transition-all ${specialCharges.hazmatShippingLineFee ? 'bg-orange-100 border-orange-400' : 'bg-white border-orange-100 hover:bg-orange-50'}`}>
                             <input type="checkbox" checked={specialCharges.hazmatShippingLineFee} onChange={() => toggleCharge('hazmatShippingLineFee')} className="w-4 h-4 text-orange-600 rounded shrink-0" />
                             <div className="min-w-0 flex-1">
@@ -499,7 +514,6 @@ payload.containerType = CONTAINER_OPTIONS
                             </div>
                         </label>
 
-                        {/* Air Hazmat Compliance */}
                         <label className={`flex items-center gap-2 p-2.5 rounded-lg border cursor-pointer transition-all sm:col-span-2 ${specialCharges.airHazmat ? 'bg-orange-100 border-orange-400' : 'bg-white border-orange-100 hover:bg-orange-50'}`}>
                             <input type="checkbox" checked={specialCharges.airHazmat} onChange={() => toggleCharge('airHazmat')} className="w-4 h-4 text-orange-600 rounded shrink-0" />
                             <div>
@@ -508,7 +522,6 @@ payload.containerType = CONTAINER_OPTIONS
                             </div>
                         </label>
 
-                        {/* Trámite EEI */}
                         <label className={`flex items-center gap-2 p-2.5 rounded-lg border cursor-pointer transition-all sm:col-span-2 ${specialCharges.eei ? 'bg-blue-100 border-blue-400' : 'bg-white border-blue-100 hover:bg-blue-50'}`}>
                             <input type="checkbox" checked={specialCharges.eei} onChange={() => toggleCharge('eei')} className="w-4 h-4 text-blue-600 rounded shrink-0" />
                             <div className="flex-1">
@@ -523,70 +536,70 @@ payload.containerType = CONTAINER_OPTIONS
                         </label>
                     </div>
                 </div>
-               {/* 📦 CONTAINER - Air y Ocean */}
-{/* 📦 CONTAINER - Air y Ocean */}
-{(isOcean || isAir || isLocalDelivery) && (
-  <div className="bg-blue-50/50 p-3 rounded-xl border border-blue-200 mb-4 shadow-sm">
-    <div className="flex items-center gap-2 mb-3">
-      <Ship size={16} className="text-blue-600" />
-      <label className="text-xs font-bold text-blue-800 uppercase tracking-wider">
-        Maritime Container (Optional)
-      </label>
-    </div>
-    <div className="space-y-2">
-      {CONTAINER_OPTIONS.map((c) => {
-        const qty = containerQuantities[c.id] || 0;
-        return (
-          <div key={c.id} className="flex items-center justify-between bg-white border border-blue-100 rounded-lg px-3 py-2">
-            <div>
-              <p className="text-[11px] font-bold text-gray-800 uppercase">{c.label}</p>
-              <p className="text-[10px] text-blue-600 font-bold">+${c.price}.00 c/u</p>
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => updateContainerQty(c.id, -1)}
-                className="w-7 h-7 rounded-full border border-gray-300 flex items-center justify-center text-gray-600 hover:bg-red-50 hover:border-red-300 font-bold text-sm"
-              >−</button>
-              <span className="w-6 text-center font-bold text-sm">{qty}</span>
-              <button
-                type="button"
-                onClick={() => updateContainerQty(c.id, 1)}
-                className="w-7 h-7 rounded-full border border-blue-300 flex items-center justify-center text-blue-600 hover:bg-blue-100 font-bold text-sm"
-              >+</button>
-            </div>
-          </div>
-        );
-      })}
-    </div>
-    {Object.values(containerQuantities).some(q => q > 0) && (
-      <div className="mt-3 pt-2 border-t border-blue-200 flex justify-between items-center">
-        <span className="text-xs font-bold text-blue-800 uppercase">Container Total</span>
-        <span className="text-sm font-bold text-blue-700">
-          +${CONTAINER_OPTIONS.reduce((acc, c) => acc + (containerQuantities[c.id] || 0) * c.price, 0).toFixed(2)}
-        </span>
-      </div>
-    )}
-  </div>
-)}
 
-<button 
-  onClick={handleProcess} 
-  disabled={isSaving}
-  className={`w-full text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all mt-2 shadow-md ${
-    isLocalDelivery 
-      ? 'bg-black hover:bg-gray-800' 
-      : isOcean
-      ? 'bg-blue-600 hover:bg-blue-700'
-      : 'bg-indigo-600 hover:bg-indigo-700'
-  }`}
->
-  {isSaving ? <Loader2 className="animate-spin"/> : (isDynamicPalletMode ? <Truck size={18}/> : <Plane size={18}/>)}
-  Save and Enable Payment
-</button>
+                {/* 📦 CONTAINER - Air y Ocean */}
+                {(isOcean || isAir || isLocalDelivery) && (
+                  <div className="bg-blue-50/50 p-3 rounded-xl border border-blue-200 mb-4 shadow-sm">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Ship size={16} className="text-blue-600" />
+                      <label className="text-xs font-bold text-blue-800 uppercase tracking-wider">
+                        Maritime Container (Optional)
+                      </label>
+                    </div>
+                    <div className="space-y-2">
+                      {CONTAINER_OPTIONS.map((c) => {
+                        const qty = containerQuantities[c.id] || 0;
+                        return (
+                          <div key={c.id} className="flex items-center justify-between bg-white border border-blue-100 rounded-lg px-3 py-2">
+                            <div>
+                              <p className="text-[11px] font-bold text-gray-800 uppercase">{c.label}</p>
+                              <p className="text-[10px] text-blue-600 font-bold">+${c.price}.00 c/u</p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={() => updateContainerQty(c.id, -1)}
+                                className="w-7 h-7 rounded-full border border-gray-300 flex items-center justify-center text-gray-600 hover:bg-red-50 hover:border-red-300 font-bold text-sm"
+                              >−</button>
+                              <span className="w-6 text-center font-bold text-sm">{qty}</span>
+                              <button
+                                type="button"
+                                onClick={() => updateContainerQty(c.id, 1)}
+                                className="w-7 h-7 rounded-full border border-blue-300 flex items-center justify-center text-blue-600 hover:bg-blue-100 font-bold text-sm"
+                              >+</button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    {Object.values(containerQuantities).some(q => q > 0) && (
+                      <div className="mt-3 pt-2 border-t border-blue-200 flex justify-between items-center">
+                        <span className="text-xs font-bold text-blue-800 uppercase">Container Total</span>
+                        <span className="text-sm font-bold text-blue-700">
+                          +${CONTAINER_OPTIONS.reduce((acc, c) => acc + (containerQuantities[c.id] || 0) * c.price, 0).toFixed(2)}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <button
+                  onClick={handleProcess}
+                  disabled={isSaving}
+                  className={`w-full text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all mt-2 shadow-md ${
+                    isLocalDelivery
+                      ? 'bg-black hover:bg-gray-800'
+                      : isOcean
+                      ? 'bg-blue-600 hover:bg-blue-700'
+                      : 'bg-indigo-600 hover:bg-indigo-700'
+                  }`}
+                >
+                  {isSaving ? <Loader2 className="animate-spin"/> : (isDynamicPalletMode ? <Truck size={18}/> : <Plane size={18}/>)}
+                  Save and Enable Payment
+                </button>
+            </div>
         </div>
-      </div>
-    )}
-  </>
+      )}
+    </>
   );
 }

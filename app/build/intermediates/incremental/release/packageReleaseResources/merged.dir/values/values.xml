@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <bool name="enableNotification">true</bool>
+    <bool name="enableSiteSettingsShortcut">true</bool>
+    <color name="backgroundColor">#222B3C</color>
+    <color name="colorPrimary">#222B3C</color>
+    <color name="colorPrimaryDark">#000000</color>
+    <color name="navigationColor">#000000</color>
+    <color name="navigationColorDark">#000000</color>
+    <color name="navigationDividerColor">#000000</color>
+    <color name="navigationDividerColorDark">#000000</color>
+    <color name="shortcut_background">#F5F5F5</color>
+    <integer name="splashScreenFadeOutDuration">300</integer>
+    <string name="appName" translatable="false">Gasp Maker Cargo</string>
+    <string name="assetStatements">
+    [{
+        \"relation\": [\"delegate_permission/common.handle_all_urls\"],
+        \"target\": {
+            \"namespace\": \"web\",
+            \"site\": \"https://gaspmakercargo.com\"
+        }
+    }]
+    
+  </string>
+    <string name="fallbackType" translatable="false">customtabs</string>
+    <string name="fullScopeUrl" translatable="false">https://gaspmakercargo.com/</string>
+    <string name="generatorApp" translatable="false">bubblewrap-cli</string>
+    <string name="hostName" translatable="false">gaspmakercargo.com</string>
+    <string name="launchUrl" translatable="false">https://gaspmakercargo.com/</string>
+    <string name="launcherName" translatable="false">Gasp Maker</string>
+    <string name="orientation" translatable="false">portrait</string>
+    <string name="providerAuthority" translatable="false">com.gaspmakercargo.twa.fileprovider</string>
+    <string name="shortcut_name_0" translatable="false">Ver mis paquetes</string>
+    <string name="shortcut_name_1" translatable="false">Notificaciones</string>
+    <string name="shortcut_name_2" translatable="false">Escanear Carga</string>
+    <string name="shortcut_short_name_0" translatable="false">Paquetes</string>
+    <string name="shortcut_short_name_1" translatable="false">Alertas</string>
+    <string name="shortcut_short_name_2" translatable="false">Escanear</string>
+    <string name="webManifestUrl" translatable="false">https://gaspmakercargo.com/manifest.json</string>
+</resources>

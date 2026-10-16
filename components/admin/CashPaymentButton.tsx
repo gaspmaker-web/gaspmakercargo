@@ -2,10 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { DollarSign, Loader2, X, User, Package, Calendar, Clock, Printer } from 'lucide-react';
+import ConsolidationScanner from './ConsolidationScanner';
 
 interface PackageItem {
   id: string;
   gmcTrackingNumber: string;
+  carrierTrackingNumber?: string | null;
   description: string;
   weightLbs: number;
 }
@@ -24,14 +26,13 @@ interface ShipmentDetails {
   packages: PackageItem[];
 }
 
-export default function CashPaymentButton({ 
-    shipmentId, 
+export default function CashPaymentButton({
+    shipmentId,
     shipmentNumber,
     autoOpen = false,
     deliverOnly = false,
-    onClose
-}: { 
-    shipmentId: string; 
+    onClose}: {
+    shipmentId: string;
     shipmentNumber: string;
     autoOpen?: boolean;
     deliverOnly?: boolean;
@@ -75,7 +76,6 @@ export default function CashPaymentButton({
       });
       if (res.ok) {
         setPaid(true);
-        // Abrir ventana de impresión
         const printWindow = window.open('', '_blank');
         if (printWindow && details) {
           const date = details.courierService?.replace('Cita: ', '') || '';
@@ -152,7 +152,7 @@ export default function CashPaymentButton({
 
               <div class="total">TOTAL PAID: $${details.totalAmount?.toFixed(2)}</div>
               <div style="text-align:right; font-size:12px; color:#666;">Payment Method: CASH</div>
-<div style="text-align:right; font-size:12px; color:#666;">Delivered by: ${staffName}</div>
+              <div style="text-align:right; font-size:12px; color:#666;">Delivered by: ${staffName}</div>
 
               <div class="footer">
                 <p>Thank you for your business!</p>
@@ -185,20 +185,20 @@ export default function CashPaymentButton({
         disabled={loadingDetails}
         className="mt-2 w-full px-4 py-2 rounded-lg font-bold text-xs transition-colors flex items-center justify-center gap-2 bg-green-600 text-white hover:bg-green-700 disabled:opacity-50"
       >
-  {loadingDetails ? <Loader2 size={14} className="animate-spin" /> : deliverOnly ? <Package size={14} /> : <DollarSign size={14} />}
-  {deliverOnly ? 'Deliver to Client' : 'Mark as Paid (Cash)'}
-</button>
+        {loadingDetails ? <Loader2 size={14} className="animate-spin" /> : deliverOnly ? <Package size={14} /> : <DollarSign size={14} />}
+        {deliverOnly ? 'Deliver to Client' : 'Mark as Paid (Cash)'}
+      </button>
 
       {showModal && details && (
         <div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
-            
+
             {/* Header */}
-           <div className={`p-4 flex justify-between items-center ${deliverOnly ? 'bg-emerald-600' : 'bg-green-600'}`}>
-            <h3 className="font-bold text-white flex items-center gap-2">
-    {deliverOnly ? <Package size={20} /> : <DollarSign size={20} />}
-    {deliverOnly ? 'Deliver to Client' : 'Cash Payment'} — {details.gmcShipmentNumber}
-</h3>
+            <div className={`p-4 flex justify-between items-center ${deliverOnly ? 'bg-emerald-600' : 'bg-green-600'}`}>
+              <h3 className="font-bold text-white flex items-center gap-2">
+                {deliverOnly ? <Package size={20} /> : <DollarSign size={20} />}
+                {deliverOnly ? 'Deliver to Client' : 'Cash Payment'} — {details.gmcShipmentNumber}
+              </h3>
               <button onClick={() => setShowModal(false)} className="text-white hover:text-green-200">
                 <X size={24} />
               </button>
@@ -223,10 +223,10 @@ export default function CashPaymentButton({
                   <div>
                     <p className="text-xs text-gray-400">Appointment</p>
                     <p className="font-bold text-sm">
-    {details.courierService === 'Recogida en Tienda' 
-        ? 'Store Pickup' 
-        : details.courierService?.replace('Cita: ', '')}
-</p>
+                      {details.courierService === 'Recogida en Tienda'
+                          ? 'Store Pickup'
+                          : details.courierService?.replace('Cita: ', '')}
+                    </p>
                   </div>
                 </div>
                 <div className="bg-purple-50 rounded-xl p-3 flex-1 flex items-center gap-2">
@@ -252,29 +252,44 @@ export default function CashPaymentButton({
                 </div>
               </div>
 
-              {/* Total */}
-              {/* Total */}
-<div className="bg-green-50 rounded-xl p-4 flex justify-between items-center border border-green-200">
-    <span className="font-bold text-gray-700">{deliverOnly ? 'TOTAL PAID:' : 'TOTAL TO COLLECT:'}</span>
-    <span className="text-2xl font-bold text-green-700">${details.totalAmount?.toFixed(2)}</span>
-</div>
+              {/* 🔥 BARCODE SCANNER — verifica paquetes antes de entregar */}
+              <div className="border-t border-gray-100 pt-3">
+                <p className="text-xs font-bold text-gray-400 uppercase mb-2">Verify Before Delivery</p>
+                <ConsolidationScanner
+                  consolidationId={details.id}
+                  gmcShipmentNumber={details.gmcShipmentNumber}
+                  packages={details.packages.map(pkg => ({
+                    id: pkg.id,
+                    gmcTrackingNumber: pkg.gmcTrackingNumber,
+                    carrierTrackingNumber: pkg.carrierTrackingNumber ?? null,
+                    description: pkg.description ?? null,
+                    weightLbs: pkg.weightLbs ?? null,
+                  }))}
+                />
+              </div>
 
-{/* Delivered By */}
-<div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
-    <label className="block text-xs font-bold text-gray-400 uppercase mb-1">
-        Delivered By (Staff):
-    </label>
-    <div className="relative">
-        <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16}/>
-        <input
-            type="text"
-            placeholder="Your name..."
-            className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 outline-none"
-            value={staffName}
-            onChange={(e) => setStaffName(e.target.value)}
-        />
-    </div>
-</div>
+              {/* Total */}
+              <div className="bg-green-50 rounded-xl p-4 flex justify-between items-center border border-green-200">
+                <span className="font-bold text-gray-700">{deliverOnly ? 'TOTAL PAID:' : 'TOTAL TO COLLECT:'}</span>
+                <span className="text-2xl font-bold text-green-700">${details.totalAmount?.toFixed(2)}</span>
+              </div>
+
+              {/* Delivered By */}
+              <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                <label className="block text-xs font-bold text-gray-400 uppercase mb-1">
+                  Delivered By (Staff):
+                </label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16}/>
+                  <input
+                    type="text"
+                    placeholder="Your name..."
+                    className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 outline-none"
+                    value={staffName}
+                    onChange={(e) => setStaffName(e.target.value)}
+                  />
+                </div>
+              </div>
 
             </div>
 
