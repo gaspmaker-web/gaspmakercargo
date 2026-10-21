@@ -4,17 +4,7 @@
     "namespace": "android_app",
     "package_name": "com.gaspmakercargo.app",
     "sha256_cert_fingerprints": [
-      "45:67:4E:C2:51:7F:D0:15:BD:8F:A7:A4:A5:26:85:C6:92:26:05:AC:3E:79:22:37:88:8B:45:55:1B:EF:B2:F2"
-    ]
-  }
-},
-{
-  "relation": ["delegate_permission/common.handle_all_urls"],
-  "target": {
-    "namespace": "android_app",
-    "package_name": "com.gaspmakercargo.app",
-    "sha256_cert_fingerprints": [
-      "45:67:4E:C2:51:7F:D0:15:BD:8F:A7:A4:A5:26:85:C6:92:26:05:AC:3E:79:22:37:88:8B:45:55:1B:EF:B2:F2"
+      "F6:CC:B9:D1:69:BE:7C:DD:C5:BC:25:3C:49:CB:85:7D:DF:76:82:DD:2D:BB:F4:E0:38:FF:D5:D4:C4:86:F3:16"
     ]
   }
 }]
