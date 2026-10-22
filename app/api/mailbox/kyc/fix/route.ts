@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import prisma from '@/lib/prisma';
-import { put } from '@vercel/blob';
+import { uploadToR2 } from '@/lib/r2';
 
 export async function POST(req: Request) {
   try {
@@ -18,36 +18,25 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Faltan documentos requeridos." }, { status: 400 });
     }
 
-    // Seguridad: Verificar que el destinatario sea de este usuario
     const recipient = await prisma.additionalRecipient.findFirst({
         where: { id: recipientId, subscription: { userId: session.user.id } }
     });
 
     if (!recipient) return NextResponse.json({ error: "Persona no encontrada." }, { status: 404 });
 
-    // Función para subir a Vercel Blob
     const uploadFile = async (file: File) => {
       const bytes = await file.arrayBuffer();
       const buffer = Buffer.from(bytes);
       const safeName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, '');
-      const { url } = await put(`kyc_documents/fix-${Date.now()}-${safeName}`, buffer, {
-        access: 'public',
-        contentType: file.type,
-      });
-      return url;
+      return await uploadToR2(buffer, `kyc_documents/fix-${Date.now()}-${safeName}`, file.type);
     };
 
-    const formUrl = await uploadFile(formFile);
-    const id1Url = await uploadFile(id1File);
-    const id2Url = await uploadFile(id2File);
-
-    // Actualizamos la base de datos y lo devolvemos a "PENDIENTE"
     await prisma.additionalRecipient.update({
         where: { id: recipientId },
         data: {
-            uspsForm1583Url: formUrl,
-            primaryIdUrl: id1Url,
-            secondaryIdUrl: id2Url,
+            uspsForm1583Url: await uploadFile(formFile),
+            primaryIdUrl: await uploadFile(id1File),
+            secondaryIdUrl: await uploadFile(id2File),
             status: 'PENDING_USPS',
             rejectionReason: null
         }

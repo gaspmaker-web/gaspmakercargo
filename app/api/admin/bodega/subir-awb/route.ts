@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { put } from '@vercel/blob';
+import { uploadToR2 } from '@/lib/r2';
 
 export async function POST(req: Request) {
   try {
@@ -13,17 +13,10 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "No se recibió el documento." }, { status: 400 });
     }
 
-    // 1. Subir el archivo usando Vercel Blob (que ya tienes instalado)
     const fileName = `awb/${type}/${id}-${Date.now()}.pdf`;
-    
-    const blob = await put(fileName, file, { 
-        access: 'public',
-        contentType: 'application/pdf'
-    });
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const publicUrl = await uploadToR2(buffer, fileName, 'application/pdf');
 
-    const publicUrl = blob.url;
-
-    // 2. Actualizar la base de datos (Prisma) con la nueva URL
     if (type === 'CONSOLIDATED') {
       await prisma.consolidatedShipment.update({ 
         where: { id }, 
