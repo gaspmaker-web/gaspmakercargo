@@ -126,7 +126,7 @@ b2bLogoUrl,
   onDescriptionChange: (id: string, description: string) => void;
   onContactChange: (id: string, value: string) => void;
   onPhoneChange: (id: string, value: string) => void;
-  onPhotoChange: (id: string, file: File, previewUrl: string) => void;
+  onPhotoChange?: (id: string, file: File, previewUrl: string) => void;
   onRemove: (id: string) => void;
   t_pickupDescPlaceholder: string;
   t_dropoffDescPlaceholder: string;
@@ -341,8 +341,8 @@ b2bLogoUrl,
                 className="w-full pl-9 pr-3 py-2.5 border border-gray-100 rounded-xl outline-none focus:ring-2 focus:ring-gray-200 bg-gray-50 placeholder-gray-400 text-sm"
               />
             </div>
-            {/* Photo capture */}
-            <div>
+           {/* Photo capture */}
+{onPhotoChange && <div>
               {stop.photoUrl ? (
                 <div className="relative w-full h-28 rounded-xl overflow-hidden border border-gray-200">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -371,7 +371,7 @@ b2bLogoUrl,
                   />
                 </label>
               )}
-            </div>
+                       </div>}
           </div>
         )}
       </div>
@@ -451,7 +451,7 @@ b2bLogoUrl,
                         onDescriptionChange={onStopDescriptionChange}
                         onContactChange={onStopContactChange ?? (() => {})}
                         onPhoneChange={onStopPhoneChange ?? (() => {})}
-                        onPhotoChange={onStopPhotoChange ?? (() => {})}
+                        onPhotoChange={onStopPhotoChange}
                         onRemove={onRemoveStop}
                         t_pickupDescPlaceholder={t_pickupDescPlaceholder}
                         t_dropoffDescPlaceholder={t_dropoffDescPlaceholder}
