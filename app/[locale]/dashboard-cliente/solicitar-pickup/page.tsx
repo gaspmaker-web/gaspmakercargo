@@ -772,7 +772,6 @@ const calculateComplexRoute = async (origin: string, destination: string, curren
   onStopDescriptionChange={handleStopDescriptionChange}
   onStopContactChange={handleStopContactChange}
   onStopPhoneChange={handleStopPhoneChange}
-  onStopPhotoChange={handleStopPhotoChange}
   onAddStop={handleAddStop}
   onRemoveStop={handleRemoveStop}
   onDragEnd={handleDragEnd}
