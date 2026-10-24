@@ -1,0 +1,77 @@
+{
+  "name": "Gasp Maker Cargo - Aura",
+  "short_name": "Gasp Maker",
+  "description": "Tu casillero logístico y rastreo inteligente en Miami.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#222b3c",
+  "theme_color": "#222b3c",
+  "icons": [
+    {
+      "src": "/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Ver mis paquetes",
+      "short_name": "Paquetes",
+      "description": "Rastrea tu carga recibida",
+      "url": "/dashboard-cliente",
+      "icons": [
+        {
+          "src": "/icon-192x192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Notificaciones",
+      "short_name": "Alertas",
+      "description": "Ver actualizaciones de envíos",
+      "url": "/dashboard-cliente/notificaciones",
+      "icons": [
+        {
+          "src": "/icon-192x192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Escanear Carga",
+      "short_name": "Escanear",
+      "description": "Cámara para bodega (Admin)",
+      "url": "/dashboard-admin/crear-envio",
+      "icons": [
+        {
+          "src": "/icon-192x192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
+  ]
+}

@@ -17,7 +17,7 @@ export async function POST(req: Request) {
   const driver = await getDriverFromToken(req);
   if (!driver) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
 
-  const { packageId, stopIndex, photoUrl, recipientName } = await req.json();
+  const { packageId, stopIndex, photoUrl, photoUrls, recipientName } = await req.json();
   if (!packageId || stopIndex === undefined || !photoUrl) {
     return NextResponse.json({ error: 'Faltan datos' }, { status: 400 });
   }
@@ -29,6 +29,7 @@ if (stops[stopIndex]) {
   stops[stopIndex] = {
     ...stops[stopIndex],
     photoUrl: photoUrl,
+    photoUrls: photoUrls || [],   // ← guardar array
     recipientName: recipientName || null,
   };
 }

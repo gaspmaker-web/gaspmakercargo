@@ -1,0 +1,26 @@
+{
+  "expo": {
+    "name": "GMC Driver",
+    "slug": "gaspmakercargo-driver",
+    "platforms": [
+      "ios",
+      "android"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "cb02b712-624b-445a-ac62-84b763c80cea"
+      }
+    },
+    "updates": {
+      "url": "https://u.expo.dev/cb02b712-624b-445a-ac62-84b763c80cea"
+    },
+    "android": {
+      "runtimeVersion": "1.0.0"
+    },
+    "ios": {
+      "runtimeVersion": {
+        "policy": "appVersion"
+      }
+    }
+  }
+}

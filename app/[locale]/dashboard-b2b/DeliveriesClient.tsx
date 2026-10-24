@@ -10,6 +10,7 @@ type StopDetail = {
   description?: string;
   photoUrl?: string;         // ← este es el campo real
   photoDeliveryUrl?: string; // ← mantener por compatibilidad
+  photoUrls?: string[];
   recipientName?: string;
 };
 
@@ -140,16 +141,23 @@ function PickupCard({ pickup }: { pickup: Pickup }) {
                           <span className="text-[10px] text-green-700 font-semibold">Received by: {stop.recipientName}</span>
                         </div>
                       )}
-                     {(stop.photoUrl || stop.photoDeliveryUrl) && (
-  <a
-    href={stop.photoUrl || stop.photoDeliveryUrl}
-    target="_blank"
-    rel="noopener noreferrer"
-    className="inline-flex items-center gap-1.5 text-[10px] text-green-700 font-bold bg-green-50 border border-green-100 px-2 py-1 rounded-lg hover:bg-green-100 transition"
-  >
-    <Camera size={11}/> Delivery Photo
-  </a>
-)}
+                   {/* Mostrar todas las fotos */}
+{(() => {
+  const allPhotos = stop.photoUrls?.length 
+    ? stop.photoUrls 
+    : (stop.photoUrl ? [stop.photoUrl] : (stop.photoDeliveryUrl ? [stop.photoDeliveryUrl] : []));
+  return allPhotos.map((url, pi) => (
+    <a
+      key={pi}
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-flex items-center gap-1.5 text-[10px] text-green-700 font-bold bg-green-50 border border-green-100 px-2 py-1 rounded-lg hover:bg-green-100 transition"
+    >
+      <Camera size={11}/> Photo {allPhotos.length > 1 ? pi + 1 : ''}
+    </a>
+  ));
+})()}
                     </div>
                   </div>
                 </div>
