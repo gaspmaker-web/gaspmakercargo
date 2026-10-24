@@ -141,3 +141,55 @@ function PickupCard({ pickup }: { pickup: Pickup }) {
                           )}
                         </div>
                       )}
+                      {(stop.recipientName || (i === stops.length - 1 && pickup.recipientName)) && (
+                        <div className="flex items-center gap-1.5">
+                          <PackageCheck size={11} className="text-green-500"/>
+                          <span className="text-[10px] text-green-700 font-semibold">Received by: {stop.recipientName || pickup.recipientName}</span>
+                        </div>
+                      )}
+                      {(() => {
+                        const isLast = i === stops.length - 1;
+                        const allPhotos = stop.photoUrls?.length
+                          ? stop.photoUrls
+                          : (stop.photoUrl ? [stop.photoUrl] : (stop.photoDeliveryUrl ? [stop.photoDeliveryUrl] : (isLast && pickup.photoDeliveryUrl ? [pickup.photoDeliveryUrl] : [])));
+                        return allPhotos.map((url, pi) => (
+                          <a key={pi} href={url} target="_blank" rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 text-[10px] text-green-700 font-bold bg-green-50 border border-green-100 px-2 py-1 rounded-lg hover:bg-green-100 transition">
+                            <Camera size={11}/> Photo {allPhotos.length > 1 ? pi + 1 : ''}
+                          </a>
+                        ));
+                      })()}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default function DeliveriesClient({ userId }: { userId: string }) {
+  const [pickups, setPickups] = useState<Pickup[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    const res = await fetch('/api/b2b/deliveries');
+    if (res.ok) setPickups(await res.json());
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  if (loading) return <div className="p-8 text-center text-gray-400 text-sm">Loading deliveries...</div>;
+  if (pickups.length === 0) return <div className="p-8 text-center text-gray-400 text-sm">No deliveries yet.</div>;
+
+  return (
+    <div className="divide-y divide-gray-50">
+      {pickups.map(p => <PickupCard key={p.id} pickup={p} />)}
+    </div>
+  );
+}
