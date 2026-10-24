@@ -118,6 +118,8 @@ export default async function DashboardB2BPage(props: any) {
   status: p.status,
   extraStops: p.extraStops as any,
   photoPickupUrl: p.photoPickupUrl ?? null,
+  photoDeliveryUrl: p.photoDeliveryUrl ?? null,
+  recipientName: p.recipientName ?? null,
   pickupPin: p.pickupPin ?? null,
 }))} />
 

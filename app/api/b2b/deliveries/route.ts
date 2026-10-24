@@ -23,6 +23,8 @@ export async function GET() {
       status: true,
       extraStops: true,
       photoPickupUrl: true,
+      photoDeliveryUrl: true,
+      recipientName: true,
       pickupPin: true,
     },
   });

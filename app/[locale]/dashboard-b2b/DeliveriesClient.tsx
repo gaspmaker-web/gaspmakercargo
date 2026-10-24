@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState, useCallback } from 'react';
-import { ChevronDown, ChevronUp, User, Phone, Camera } from 'lucide-react';
+import { ChevronDown, ChevronUp, User, Phone, Camera, PackageCheck } from 'lucide-react';
 
 type StopDetail = {
   id?: string;
@@ -8,6 +8,8 @@ type StopDetail = {
   contact?: string;
   phone?: string;
   description?: string;
+  photoDeliveryUrl?: string;
+  recipientName?: string;
 };
 
 type Pickup = {
@@ -19,6 +21,8 @@ type Pickup = {
   status: string;
   extraStops?: StopDetail[] | null;
   photoPickupUrl?: string | null;
+  photoDeliveryUrl?: string | null;
+  recipientName?: string | null;
   pickupPin?: string | null;
 };
 
@@ -41,7 +45,7 @@ const statusLabel: Record<string, string> = {
 function PickupCard({ pickup }: { pickup: Pickup }) {
   const [expanded, setExpanded] = useState(false);
   const stops = Array.isArray(pickup.extraStops) ? pickup.extraStops.filter(s => s.address) : [];
-  const hasDetails = stops.length > 0 || pickup.photoPickupUrl;
+  const hasDetails = stops.length > 0 || pickup.photoPickupUrl || pickup.photoDeliveryUrl || pickup.recipientName;
 
   return (
     <div className="border-b border-gray-50 last:border-0">
@@ -77,24 +81,39 @@ function PickupCard({ pickup }: { pickup: Pickup }) {
       </div>
 
       {expanded && hasDetails && (
-        <div className="px-5 pb-4 bg-gray-50/50 animate-in fade-in slide-in-from-top-1 duration-200">
+        <div className="px-5 pb-4 bg-gray-50/50 animate-in fade-in slide-in-from-top-1 duration-200 space-y-3">
+          {(pickup.recipientName || pickup.photoDeliveryUrl) && stops.length === 0 && (
+            <div className="bg-white rounded-xl border border-gray-100 p-3 space-y-2">
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Delivery Confirmation</p>
+              {pickup.recipientName && (
+                <div className="flex items-center gap-1.5">
+                  <PackageCheck size={13} className="text-green-500"/>
+                  <span className="text-xs font-semibold text-gray-800">Received by: {pickup.recipientName}</span>
+                </div>
+              )}
+              {pickup.photoDeliveryUrl && (
+                <a href={pickup.photoDeliveryUrl} target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-2 text-xs text-green-700 font-bold bg-green-50 border border-green-100 px-3 py-2 rounded-xl hover:bg-green-100 transition">
+                  <Camera size={13}/> View Delivery Photo
+                </a>
+              )}
+            </div>
+          )}
           {stops.length > 0 && (
-            <div className="space-y-2 mb-3">
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Delivery Stops</p>
+            <div className="space-y-2">
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Delivery Stops</p>
               {stops.map((stop, i) => (
                 <div key={stop.id || i} className="bg-white rounded-xl border border-gray-100 p-3">
                   <div className="flex items-start gap-2">
                     <div className="w-5 h-5 rounded-full bg-[#222b3c] flex items-center justify-center text-[9px] font-bold text-white shrink-0 mt-0.5">{i + 1}</div>
-                    <div className="min-w-0 flex-1">
+                    <div className="min-w-0 flex-1 space-y-1.5">
                       <p className="text-xs font-semibold text-gray-800">{stop.address}</p>
-                      {stop.description && <p className="text-[10px] text-gray-400 italic mt-0.5">"{stop.description}"</p>}
+                      {stop.description && <p className="text-[10px] text-gray-400 italic">"{stop.description}"</p>}
                       {(stop.contact || stop.phone) && (
-                        <div className="flex items-center justify-between mt-2">
+                        <div className="flex items-center justify-between">
                           <div className="flex items-center gap-1.5">
                             <User size={11} className="text-blue-400"/>
-                            <span className="text-xs text-blue-700 font-medium">
-                              {stop.contact}{stop.phone ? ` · ${stop.phone}` : ''}
-                            </span>
+                            <span className="text-xs text-blue-700 font-medium">{stop.contact}{stop.phone ? ` · ${stop.phone}` : ''}</span>
                           </div>
                           {stop.phone && (
                             <a href={`tel:${stop.phone}`} className="text-[10px] text-blue-500 font-bold flex items-center gap-1">
@@ -103,20 +122,27 @@ function PickupCard({ pickup }: { pickup: Pickup }) {
                           )}
                         </div>
                       )}
+                      {stop.recipientName && (
+                        <div className="flex items-center gap-1.5">
+                          <PackageCheck size={11} className="text-green-500"/>
+                          <span className="text-[10px] text-green-700 font-semibold">Received by: {stop.recipientName}</span>
+                        </div>
+                      )}
+                      {stop.photoDeliveryUrl && (
+                        <a href={stop.photoDeliveryUrl} target="_blank" rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 text-[10px] text-green-700 font-bold bg-green-50 border border-green-100 px-2 py-1 rounded-lg hover:bg-green-100 transition">
+                          <Camera size={11}/> Delivery Photo
+                        </a>
+                      )}
                     </div>
                   </div>
                 </div>
               ))}
             </div>
           )}
-
           {pickup.photoPickupUrl && (
-            <a
-              href={pickup.photoPickupUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 text-xs text-blue-600 font-bold bg-blue-50 border border-blue-100 px-3 py-2 rounded-xl hover:bg-blue-100 transition"
-            >
+            <a href={pickup.photoPickupUrl} target="_blank" rel="noopener noreferrer"
+              className="flex items-center gap-2 text-xs text-blue-600 font-bold bg-blue-50 border border-blue-100 px-3 py-2 rounded-xl hover:bg-blue-100 transition">
               <Camera size={13}/> View Pickup Photo
             </a>
           )}
@@ -154,18 +180,12 @@ export default function DeliveriesClient({ initialPickups }: { initialPickups: P
     <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
       <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
         <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Delivery History</p>
-        <span className="text-[10px] text-gray-300">
-          {lastRefresh ? `Updated ${lastRefresh}` : ''}
-        </span>
+        <span className="text-[10px] text-gray-300">{lastRefresh ? `Updated ${lastRefresh}` : ''}</span>
       </div>
       {pickups.length === 0 ? (
         <div className="px-5 py-8 text-center text-gray-400 text-sm">No deliveries yet.</div>
       ) : (
-        <div>
-          {pickups.map(pickup => (
-            <PickupCard key={pickup.id} pickup={pickup} />
-          ))}
-        </div>
+        <div>{pickups.map(pickup => <PickupCard key={pickup.id} pickup={pickup} />)}</div>
       )}
     </div>
   );

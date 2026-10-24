@@ -291,6 +291,7 @@ model PickupRequest {
   pickupPin        String?
   photoPickupUrl   String?  
   photoDeliveryUrl String?
+  recipientName    String?
   
   signatureUrl     String?   
   tookanLink       String?   

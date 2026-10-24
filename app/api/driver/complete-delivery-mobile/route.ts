@@ -23,7 +23,7 @@ export async function POST(req: Request) {
 
     const prisma = (await import("@/lib/prisma")).default;
     const body = await req.json();
-    const { packageId, photoUrl, signatureBase64 } = body;
+    const { packageId, photoUrl, signatureBase64, recipientName } = body;
 
     if (!packageId || !photoUrl) {
       return NextResponse.json({ error: 'Faltan datos' }, { status: 400 });
@@ -32,7 +32,8 @@ export async function POST(req: Request) {
     try {
       const updatedPickup = await prisma.pickupRequest.update({
         where: { id: packageId },
-        data: { status: 'ENTREGADO', photoDeliveryUrl: photoUrl, signatureUrl: signatureBase64 || null, updatedAt: new Date() },
+        data: { status: 'ENTREGADO', photoDeliveryUrl: photoUrl,
+          recipientName: recipientName || null, signatureUrl: signatureBase64 || null, updatedAt: new Date() },
         include: { user: true },
       });
       await notifyClient(updatedPickup.user.id, "Delivery Local", packageId);
