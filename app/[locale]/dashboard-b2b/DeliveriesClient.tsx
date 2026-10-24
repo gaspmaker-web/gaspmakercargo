@@ -104,7 +104,19 @@ function PickupCard({ pickup }: { pickup: Pickup }) {
               )}
             </div>
           )}
-
+          {/* Pickup origin section */}
+          {stops.length > 0 && pickup.photoPickupUrl && (
+            <div className="bg-white rounded-xl border border-blue-100 p-3 space-y-1.5">
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Pickup Origin</p>
+              <div className="flex flex-wrap gap-1.5">
+                <a href={pickup.photoPickupUrl} target="_blank" rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-[10px] text-blue-600 font-bold bg-blue-50 border border-blue-100 px-2 py-1 rounded-lg hover:bg-blue-100 transition">
+                  <Camera size={11}/> Pickup Photo
+                </a>
+              </div>
+            </div>
+          )}
+          
           {/* Multi-stop deliveries */}
           {stops.length > 0 && (
             <div className="space-y-2">
@@ -129,84 +141,3 @@ function PickupCard({ pickup }: { pickup: Pickup }) {
                           )}
                         </div>
                       )}
-                      {/* Stop 1 gets the pickup photo */}
-                      {i === 0 && pickup.photoPickupUrl && (
-                        <a href={pickup.photoPickupUrl} target="_blank" rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 text-[10px] text-blue-600 font-bold bg-blue-50 border border-blue-100 px-2 py-1 rounded-lg hover:bg-blue-100 transition">
-                          <Camera size={11}/> Pickup Photo
-                        </a>
-                      )}
-                     {(stop.recipientName || (i === stops.length - 1 && pickup.recipientName)) && (
-  <div className="flex items-center gap-1.5">
-    <PackageCheck size={11} className="text-green-500"/>
-    <span className="text-[10px] text-green-700 font-semibold">Received by: {stop.recipientName || pickup.recipientName}</span>
-  </div>
-)}
-                   {/* Mostrar todas las fotos */}
-{(() => {
- const isLast = i === stops.length - 1;
-const allPhotos = stop.photoUrls?.length 
-  ? stop.photoUrls 
-  : (stop.photoUrl ? [stop.photoUrl] : (stop.photoDeliveryUrl ? [stop.photoDeliveryUrl] : (isLast && pickup.photoDeliveryUrl ? [pickup.photoDeliveryUrl] : [])));
-  return allPhotos.map((url, pi) => (
-    <a
-      key={pi}
-      href={url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="inline-flex items-center gap-1.5 text-[10px] text-green-700 font-bold bg-green-50 border border-green-100 px-2 py-1 rounded-lg hover:bg-green-100 transition"
-    >
-      <Camera size={11}/> Photo {allPhotos.length > 1 ? pi + 1 : ''}
-    </a>
-  ));
-})()}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
-
-export default function DeliveriesClient({ initialPickups }: { initialPickups: Pickup[] }) {
-  const [pickups, setPickups] = useState<Pickup[]>(initialPickups);
-  const [lastRefresh, setLastRefresh] = useState<string>('');
-
-  useEffect(() => {
-    setLastRefresh(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
-  }, []);
-
-  const refresh = useCallback(async () => {
-    try {
-      const res = await fetch('/api/b2b/deliveries');
-      if (res.ok) {
-        const data = await res.json();
-        setPickups(data);
-        setLastRefresh(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
-      }
-    } catch {}
-  }, []);
-
-  useEffect(() => {
-    const interval = setInterval(refresh, 15000);
-    return () => clearInterval(interval);
-  }, [refresh]);
-
-  return (
-    <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-      <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-        <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Delivery History</p>
-        <span className="text-[10px] text-gray-300">{lastRefresh ? `Updated ${lastRefresh}` : ''}</span>
-      </div>
-      {pickups.length === 0 ? (
-        <div className="px-5 py-8 text-center text-gray-400 text-sm">No deliveries yet.</div>
-      ) : (
-        <div>{pickups.map(pickup => <PickupCard key={pickup.id} pickup={pickup} />)}</div>
-      )}
-    </div>
-  );
-}
