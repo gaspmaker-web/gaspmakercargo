@@ -12,6 +12,7 @@ type StopDetail = {
   photoDeliveryUrl?: string; // ← mantener por compatibilidad
   photoUrls?: string[];
   recipientName?: string;
+  type?: string;
 };
 
 type Pickup = {
