@@ -274,7 +274,7 @@ b2bLogoUrl,
               <input
                 ref={inputRef}
                 type="text"
-                placeholder={isDropoff ? t_dropoffAddress : t_pickupAddress}
+                placeholder={isDropoff ? t_dropoffAddress : isStop ? "Stop address..." : t_pickupAddress}
                 defaultValue={stop.address}
                 autoComplete="off"
                 style={{ fontSize: '16px' }}
