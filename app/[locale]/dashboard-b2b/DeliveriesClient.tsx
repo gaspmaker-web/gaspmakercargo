@@ -104,18 +104,25 @@ function PickupCard({ pickup }: { pickup: Pickup }) {
               )}
             </div>
           )}
-          {/* Pickup origin section */}
-          {stops.length > 0 && pickup.photoPickupUrl && (
-            <div className="bg-white rounded-xl border border-blue-100 p-3 space-y-1.5">
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Pickup Origin</p>
-              <div className="flex flex-wrap gap-1.5">
-                <a href={pickup.photoPickupUrl} target="_blank" rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-[10px] text-blue-600 font-bold bg-blue-50 border border-blue-100 px-2 py-1 rounded-lg hover:bg-blue-100 transition">
-                  <Camera size={11}/> Pickup Photo
-                </a>
+                    {/* Pickup origin section */}
+          {stops.length > 0 && (() => {
+            const pickupStop = Array.isArray(pickup.extraStops) ? pickup.extraStops.find((s: any) => s.type === 'PICKUP') : null;
+            const pickupPhotos = pickupStop?.photoUrls?.length ? pickupStop.photoUrls : (pickup.photoPickupUrl ? [pickup.photoPickupUrl] : []);
+            if (pickupPhotos.length === 0) return null;
+            return (
+              <div className="bg-white rounded-xl border border-blue-100 p-3 space-y-1.5">
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Pickup Origin</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {pickupPhotos.map((url: string, pi: number) => (
+                    <a key={pi} href={url} target="_blank" rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 text-[10px] text-blue-600 font-bold bg-blue-50 border border-blue-100 px-2 py-1 rounded-lg hover:bg-blue-100 transition">
+                      <Camera size={11}/> Photo {pickupPhotos.length > 1 ? pi + 1 : ''}
+                    </a>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
           
           {/* Multi-stop deliveries */}
           {stops.length > 0 && (
