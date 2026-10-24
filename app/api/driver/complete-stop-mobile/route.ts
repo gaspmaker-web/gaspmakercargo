@@ -24,15 +24,14 @@ export async function POST(req: Request) {
 
   const task = await prisma.pickupRequest.findUnique({ where: { id: packageId } });
   if (!task) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-
-  const stops = Array.isArray(task.extraStops) ? [...(task.extraStops as any[])] : [];
-  if (stops[stopIndex]) {
-    stops[stopIndex] = {
-      ...stops[stopIndex],
-      photoDeliveryUrl: photoUrl,
-      recipientName: recipientName || null,
-    };
-  }
+const stops = Array.isArray(task.extraStops) ? [...(task.extraStops as any[])] : [];
+if (stops[stopIndex]) {
+  stops[stopIndex] = {
+    ...stops[stopIndex],
+    photoUrl: photoUrl,
+    recipientName: recipientName || null,
+  };
+}
 
   await prisma.pickupRequest.update({
     where: { id: packageId },

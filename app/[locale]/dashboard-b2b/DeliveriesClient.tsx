@@ -8,7 +8,8 @@ type StopDetail = {
   contact?: string;
   phone?: string;
   description?: string;
-  photoDeliveryUrl?: string;
+  photoUrl?: string;         // ← este es el campo real
+  photoDeliveryUrl?: string; // ← mantener por compatibilidad
   recipientName?: string;
 };
 
@@ -139,12 +140,16 @@ function PickupCard({ pickup }: { pickup: Pickup }) {
                           <span className="text-[10px] text-green-700 font-semibold">Received by: {stop.recipientName}</span>
                         </div>
                       )}
-                      {stop.photoDeliveryUrl && (
-                        <a href={stop.photoDeliveryUrl} target="_blank" rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 text-[10px] text-green-700 font-bold bg-green-50 border border-green-100 px-2 py-1 rounded-lg hover:bg-green-100 transition">
-                          <Camera size={11}/> Delivery Photo
-                        </a>
-                      )}
+                     {(stop.photoUrl || stop.photoDeliveryUrl) && (
+  <a
+    href={stop.photoUrl || stop.photoDeliveryUrl}
+    target="_blank"
+    rel="noopener noreferrer"
+    className="inline-flex items-center gap-1.5 text-[10px] text-green-700 font-bold bg-green-50 border border-green-100 px-2 py-1 rounded-lg hover:bg-green-100 transition"
+  >
+    <Camera size={11}/> Delivery Photo
+  </a>
+)}
                     </div>
                   </div>
                 </div>
