@@ -23,7 +23,22 @@ export async function POST(req: Request) {
 
     const prisma = (await import("@/lib/prisma")).default;
     const body = await req.json();
-    const { packageId, photoUrl, signatureBase64, recipientName } = body;
+    const { packageId, photoUrl, extraPhotos, signatureBase64, recipientName } = body;
+
+const allPhotos = [photoUrl, ...(extraPhotos || [])];
+
+// Save all photos to DROPOFF stop in extraStops
+try {
+  const task = await prisma.pickupRequest.findUnique({ where: { id: packageId } });
+  if (task && Array.isArray(task.extraStops)) {
+    const stops = [...(task.extraStops as any[])];
+    const dropoffIdx = stops.findIndex((s: any) => s.type === 'DROPOFF');
+    if (dropoffIdx !== -1) {
+      stops[dropoffIdx] = { ...stops[dropoffIdx], photoUrl, photoUrls: allPhotos, recipientName: recipientName || null };
+      await prisma.pickupRequest.update({ where: { id: packageId }, data: { extraStops: stops } });
+    }
+  }
+} catch {}
 
     if (!packageId || !photoUrl) {
       return NextResponse.json({ error: 'Faltan datos' }, { status: 400 });
