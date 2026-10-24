@@ -63,26 +63,22 @@ function PickupCard({ pickup }: { pickup: Pickup }) {
         </div>
         <div className="text-right flex items-center gap-2 ml-3">
           <div>
-            <p className="text-sm font-bold text-gray-900">
-              ${pickup.totalPaid?.toFixed(2) ?? '0.00'}
-            </p>
-            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-              statusStyle[pickup.status] ?? 'bg-yellow-100 text-yellow-700'
-            }`}>
+            <p className="text-sm font-bold text-gray-900">${pickup.totalPaid?.toFixed(2) ?? '0.00'}</p>
+            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${statusStyle[pickup.status] ?? 'bg-yellow-100 text-yellow-700'}`}>
               {statusLabel[pickup.status] ?? pickup.status}
             </span>
           </div>
           {hasDetails && (
-            <div className="text-gray-300">
-              {expanded ? <ChevronUp size={14}/> : <ChevronDown size={14}/>}
-            </div>
+            <div className="text-gray-300">{expanded ? <ChevronUp size={14}/> : <ChevronDown size={14}/>}</div>
           )}
         </div>
       </div>
 
       {expanded && hasDetails && (
         <div className="px-5 pb-4 bg-gray-50/50 animate-in fade-in slide-in-from-top-1 duration-200 space-y-3">
-          {(pickup.recipientName || pickup.photoDeliveryUrl) && stops.length === 0 && (
+
+          {/* Direct delivery (no stops) */}
+          {stops.length === 0 && (
             <div className="bg-white rounded-xl border border-gray-100 p-3 space-y-2">
               <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Delivery Confirmation</p>
               {pickup.recipientName && (
@@ -90,6 +86,12 @@ function PickupCard({ pickup }: { pickup: Pickup }) {
                   <PackageCheck size={13} className="text-green-500"/>
                   <span className="text-xs font-semibold text-gray-800">Received by: {pickup.recipientName}</span>
                 </div>
+              )}
+              {pickup.photoPickupUrl && (
+                <a href={pickup.photoPickupUrl} target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-2 text-xs text-blue-600 font-bold bg-blue-50 border border-blue-100 px-3 py-2 rounded-xl hover:bg-blue-100 transition">
+                  <Camera size={13}/> View Pickup Photo
+                </a>
               )}
               {pickup.photoDeliveryUrl && (
                 <a href={pickup.photoDeliveryUrl} target="_blank" rel="noopener noreferrer"
@@ -99,6 +101,8 @@ function PickupCard({ pickup }: { pickup: Pickup }) {
               )}
             </div>
           )}
+
+          {/* Multi-stop deliveries */}
           {stops.length > 0 && (
             <div className="space-y-2">
               <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Delivery Stops</p>
@@ -122,6 +126,13 @@ function PickupCard({ pickup }: { pickup: Pickup }) {
                           )}
                         </div>
                       )}
+                      {/* Stop 1 gets the pickup photo */}
+                      {i === 0 && pickup.photoPickupUrl && (
+                        <a href={pickup.photoPickupUrl} target="_blank" rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 text-[10px] text-blue-600 font-bold bg-blue-50 border border-blue-100 px-2 py-1 rounded-lg hover:bg-blue-100 transition">
+                          <Camera size={11}/> Pickup Photo
+                        </a>
+                      )}
                       {stop.recipientName && (
                         <div className="flex items-center gap-1.5">
                           <PackageCheck size={11} className="text-green-500"/>
@@ -139,12 +150,6 @@ function PickupCard({ pickup }: { pickup: Pickup }) {
                 </div>
               ))}
             </div>
-          )}
-          {pickup.photoPickupUrl && (
-            <a href={pickup.photoPickupUrl} target="_blank" rel="noopener noreferrer"
-              className="flex items-center gap-2 text-xs text-blue-600 font-bold bg-blue-50 border border-blue-100 px-3 py-2 rounded-xl hover:bg-blue-100 transition">
-              <Camera size={13}/> View Pickup Photo
-            </a>
           )}
         </div>
       )}
