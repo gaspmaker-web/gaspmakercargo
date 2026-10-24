@@ -46,7 +46,7 @@ const statusLabel: Record<string, string> = {
 
 function PickupCard({ pickup }: { pickup: Pickup }) {
   const [expanded, setExpanded] = useState(false);
-  const stops = Array.isArray(pickup.extraStops) ? pickup.extraStops.filter(s => s.address) : [];
+  const stops = Array.isArray(pickup.extraStops) ? pickup.extraStops.filter(s => s.address && s.type !== 'PICKUP') : [];
   const hasDetails = stops.length > 0 || pickup.photoPickupUrl || pickup.photoDeliveryUrl || pickup.recipientName;
 
   return (
@@ -135,17 +135,18 @@ function PickupCard({ pickup }: { pickup: Pickup }) {
                           <Camera size={11}/> Pickup Photo
                         </a>
                       )}
-                      {stop.recipientName && (
-                        <div className="flex items-center gap-1.5">
-                          <PackageCheck size={11} className="text-green-500"/>
-                          <span className="text-[10px] text-green-700 font-semibold">Received by: {stop.recipientName}</span>
-                        </div>
-                      )}
+                     {(stop.recipientName || (i === stops.length - 1 && pickup.recipientName)) && (
+  <div className="flex items-center gap-1.5">
+    <PackageCheck size={11} className="text-green-500"/>
+    <span className="text-[10px] text-green-700 font-semibold">Received by: {stop.recipientName || pickup.recipientName}</span>
+  </div>
+)}
                    {/* Mostrar todas las fotos */}
 {(() => {
-  const allPhotos = stop.photoUrls?.length 
-    ? stop.photoUrls 
-    : (stop.photoUrl ? [stop.photoUrl] : (stop.photoDeliveryUrl ? [stop.photoDeliveryUrl] : []));
+ const isLast = i === stops.length - 1;
+const allPhotos = stop.photoUrls?.length 
+  ? stop.photoUrls 
+  : (stop.photoUrl ? [stop.photoUrl] : (stop.photoDeliveryUrl ? [stop.photoDeliveryUrl] : (isLast && pickup.photoDeliveryUrl ? [pickup.photoDeliveryUrl] : [])));
   return allPhotos.map((url, pi) => (
     <a
       key={pi}
