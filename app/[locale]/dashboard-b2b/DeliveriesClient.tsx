@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState, useCallback } from 'react';
+import { useState } from 'react';
 import { ChevronDown, ChevronUp, User, Phone, Camera, PackageCheck } from 'lucide-react';
 
 type StopDetail = {
@@ -171,25 +171,12 @@ function PickupCard({ pickup }: { pickup: Pickup }) {
   );
 }
 
-export default function DeliveriesClient({ userId }: { userId: string }) {
-  const [pickups, setPickups] = useState<Pickup[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  const load = useCallback(async () => {
-    setLoading(true);
-    const res = await fetch('/api/b2b/deliveries');
-    if (res.ok) setPickups(await res.json());
-    setLoading(false);
-  }, []);
-
-  useEffect(() => { load(); }, [load]);
-
-  if (loading) return <div className="p-8 text-center text-gray-400 text-sm">Loading deliveries...</div>;
-  if (pickups.length === 0) return <div className="p-8 text-center text-gray-400 text-sm">No deliveries yet.</div>;
+export default function DeliveriesClient({ initialPickups }: { initialPickups: Pickup[] }) {
+  if (initialPickups.length === 0) return <div className="p-8 text-center text-gray-400 text-sm">No deliveries yet.</div>;
 
   return (
     <div className="divide-y divide-gray-50">
-      {pickups.map(p => <PickupCard key={p.id} pickup={p} />)}
+      {initialPickups.map(p => <PickupCard key={p.id} pickup={p} />)}
     </div>
   );
 }
