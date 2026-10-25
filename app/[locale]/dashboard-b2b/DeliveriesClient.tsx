@@ -113,7 +113,6 @@ function PickupCard({ pickup }: { pickup: Pickup }) {
               <div className="bg-white rounded-xl border border-blue-100 p-3 space-y-1.5">
                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Pickup Origin</p>
                 <p className="text-xs font-semibold text-gray-700">{pickupStop?.address}</p>
-                <p className="text-xs font-semibold text-gray-700">{pickupStop?.address}</p>
                 <div className="flex flex-wrap gap-1.5">
                   {pickupPhotos.map((url: string, pi: number) => (
                     <a key={pi} href={url} target="_blank" rel="noopener noreferrer"
