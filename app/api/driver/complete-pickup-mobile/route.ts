@@ -21,8 +21,19 @@ export async function POST(req: Request) {
     const body = await req.json();
     const pickupId = body.packageId || body.pickupId;
     const photoUrl = body.photoPickupUrl || body.photoUrl;
+    const photoUrls = [photoUrl, ...(body.extraPickupPhotos || body.photoUrls || [])];
 
-    if (!pickupId || !photoUrl) return NextResponse.json({ error: 'Faltan datos' }, { status: 400 });
+    if (!pickupId || !photoUrl) return NextResponse.json({ error: "Faltan datos" }, { status: 400 });
+
+    const existing = await prisma.pickupRequest.findUnique({ where: { id: pickupId } });
+    if (existing && Array.isArray(existing.extraStops)) {
+      const stops = [...(existing.extraStops as any[])];
+      const pickupIdx = stops.findIndex((s: any) => s.type === "PICKUP");
+      if (pickupIdx !== -1) {
+        stops[pickupIdx] = { ...stops[pickupIdx], photoUrl, photoUrls };
+        await prisma.pickupRequest.update({ where: { id: pickupId }, data: { extraStops: stops } });
+      }
+    }
 
     const task = await prisma.pickupRequest.update({
       where: { id: pickupId },
