@@ -17,16 +17,16 @@ export async function GET(req: Request) {
   const driver = await getDriverFromToken(req)
   if (!driver) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   try {
-    const completedDeliveries = await prisma.pickupRequest.findMany({
+    const deliveries = await prisma.pickupRequest.findMany({
       where: { driverId: driver.id, status: 'ENTREGADO' },
       select: { id: true, totalPaid: true, updatedAt: true, originAddress: true, dropOffAddress: true },
       orderBy: { updatedAt: 'desc' },
       take: 50
     })
-    const totalEarned = completedDeliveries.reduce((sum, d) => sum + (d.totalPaid || 0) * 0.7, 0)
+    const totalEarned = deliveries.reduce((sum, d) => sum + (d.totalPaid || 0) * 0.7, 0)
     return NextResponse.json({
       totalEarned,
-      deliveries: completedDeliveries.map(d => ({
+      deliveries: deliveries.map(d => ({
         id: d.id,
         originAddress: d.originAddress,
         dropOffAddress: d.dropOffAddress,
@@ -35,7 +35,7 @@ export async function GET(req: Request) {
       }))
     })
   } catch (err) {
-    console.error('[driver/earnings-mobile]', err)
+    console.error('[earnings-mobile]', err)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

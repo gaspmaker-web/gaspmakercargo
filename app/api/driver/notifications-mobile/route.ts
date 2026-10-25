@@ -23,7 +23,7 @@ export async function GET(req: Request) {
       take: 50
     })
     return NextResponse.json({ notifications })
-  } catch (err) {
+  } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
@@ -34,7 +34,7 @@ export async function DELETE(req: Request) {
   try {
     await prisma.notification.deleteMany({ where: { userId: driver.id } })
     return NextResponse.json({ success: true })
-  } catch (err) {
+  } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

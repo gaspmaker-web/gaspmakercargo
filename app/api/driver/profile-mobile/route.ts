@@ -19,7 +19,7 @@ export async function GET(req: Request) {
   try {
     const user = await prisma.user.findUnique({
       where: { id: driver.id },
-      select: { id: true, name: true, email: true, phone: true, countryCode: true, image: true, createdAt: true }
+      select: { name: true, email: true, phone: true, countryCode: true, image: true, createdAt: true }
     })
     const vehicle = await prisma.driverVehicle.findUnique({
       where: { driverId: driver.id },
@@ -38,7 +38,7 @@ export async function GET(req: Request) {
       } : null
     })
   } catch (err) {
-    console.error('[driver/profile-mobile]', err)
+    console.error('[profile-mobile]', err)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

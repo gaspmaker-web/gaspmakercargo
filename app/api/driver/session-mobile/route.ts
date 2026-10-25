@@ -25,7 +25,7 @@ export async function POST(req: Request) {
     })
     return NextResponse.json({ success: true, session: driverSession })
   } catch (err) {
-    console.error('[driver/session-mobile]', err)
+    console.error('[session-mobile]', err)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
@@ -36,7 +36,7 @@ export async function GET(req: Request) {
   try {
     const driverSession = await prisma.driverSession.findUnique({ where: { driverId: driver.id } })
     return NextResponse.json({ session: driverSession })
-  } catch (err) {
+  } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
