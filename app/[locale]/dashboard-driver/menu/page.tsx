@@ -84,10 +84,10 @@ export default async function MenuPage(props: any) {
           </span>
         </div>
       ))}
-      <Link href={`/${locale}/dashboard-driver/vehicle/register`} className="px-4 py-3 flex items-center justify-between hover:bg-gray-50">
-        <p className="text-sm text-blue-600 font-medium">Update Vehicle Info</p>
-        <ChevronRight size={16} className="text-gray-300" />
-      </Link>
+   <Link href={`/${locale}/dashboard-driver/vehicle/register`} className="px-4 py-3 flex items-center justify-between hover:bg-gray-50">
+  <p className="text-sm text-blue-600 font-medium">Add Another Vehicle</p>
+  <ChevronRight size={16} className="text-gray-300" />
+</Link>
     </div>
   ) : (
     <Link href={`/${locale}/dashboard-driver/vehicle/register`} className="px-4 py-3 flex items-center justify-between hover:bg-gray-50">
