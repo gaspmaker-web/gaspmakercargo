@@ -20,8 +20,8 @@ export default async function MenuPage(props: any) {
     select: { name: true, email: true, countryCode: true, stripeAccountId: true, image: true }
   })
 
-  const vehicle = await prisma.driverVehicle.findUnique({
-    where: { driverId: session.user.id },
+  const vehicle = await prisma.driverVehicle.findFirst({
+  where: { driverId: session.user.id, isActive: true },
     select: {
       type: true, make: true, model: true, year: true,
       licensePlate: true, color: true, status: true,

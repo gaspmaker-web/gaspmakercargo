@@ -40,11 +40,10 @@ export default async function DriverDashboardPage(props: any) {
     where: { id: driverId },
     select: { countryCode: true, country: true, name: true, stripeAccountId: true, image: true }
   });
-
-  const driverVehicle = await prisma.driverVehicle.findUnique({
-    where: { driverId },
-    select: { status: true, type: true, make: true, model: true, isVerified: true }
-  });
+const driverVehicle = await prisma.driverVehicle.findFirst({
+  where: { driverId: session.user.id, isActive: true },
+  select: { status: true, type: true, make: true, model: true, isVerified: true }
+})
 
   const driverZone = driver?.countryCode; 
 

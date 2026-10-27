@@ -9,9 +9,12 @@ export async function POST(req: Request) {
 
     const { type, make, model, year, color, licensePlate, vehiclePhotoUrl, driverLicenseUrl, driverLicenseBackUrl, insuranceUrl } = await req.json()
 
-    const vehicle = await prisma.driverVehicle.upsert({
-      where: { driverId: session.user.id },
-          create: {
+    const existingCount = await prisma.driverVehicle.count({
+      where: { driverId: session.user.id }
+    })
+
+    const vehicle = await prisma.driverVehicle.create({
+      data: {
         driverId: session.user.id,
         type, make, model, year, color, licensePlate,
         vehiclePhotoUrl: vehiclePhotoUrl || null,
@@ -19,15 +22,7 @@ export async function POST(req: Request) {
         driverLicenseBackUrl: driverLicenseBackUrl || null,
         insuranceUrl: insuranceUrl || null,
         status: 'PENDING',
-      },
-      update: {
-        type, make, model, year, color, licensePlate,
-        vehiclePhotoUrl: vehiclePhotoUrl || null,
-        driverLicenseUrl: driverLicenseUrl || null,
-        driverLicenseBackUrl: driverLicenseBackUrl || null,
-        insuranceUrl: insuranceUrl || null,
-        status: 'PENDING',
-        isVerified: false,
+        isActive: existingCount === 0,
       },
     })
 

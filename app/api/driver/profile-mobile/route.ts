@@ -29,14 +29,14 @@ export async function GET(req: Request) {
         image: true,
         address: true,
         createdAt: true,
-        driverVehicle: true,
+        driverVehicles: { where: { isActive: true }, take: 1 },
         driverSession: { select: { isOnline: true } },
       }
     })
 
     if (!user) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
-    const v = user.driverVehicle
+    const v = user.driverVehicles[0]
 
     return NextResponse.json({
       driver: {
