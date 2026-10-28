@@ -17,12 +17,12 @@ export async function POST(req: Request) {
   const driver = await getDriverFromToken(req)
   if (!driver) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   try {
-    const { isOnline, lat, lng, heading, speed, deviceId } = await req.json()
-    const driverSession = await prisma.driverSession.upsert({
-      where: { driverId: driver.id },
-      create: { driverId: driver.id, isOnline, lastSeen: new Date(), lat, lng, heading, speed, deviceId },
-      update: { isOnline, lastSeen: new Date(), lat, lng, heading, speed, deviceId },
-    })
+   const { isOnline, lat, lng, heading, speed, deviceId, pushToken } = await req.json()
+const driverSession = await prisma.driverSession.upsert({
+  where: { driverId: driver.id },
+  create: { driverId: driver.id, isOnline, lastSeen: new Date(), lat, lng, heading, speed, deviceId, pushToken },
+  update: { isOnline, lastSeen: new Date(), lat, lng, heading, speed, deviceId, ...(pushToken && { pushToken }) },
+})
     return NextResponse.json({ success: true, session: driverSession })
   } catch (err) {
     console.error('[session-mobile]', err)

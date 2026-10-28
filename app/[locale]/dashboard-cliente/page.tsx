@@ -144,16 +144,25 @@ const normalizedPackages = allPackages.map(pkg => calculateFees(pkg, t));
       return isClientRetiro || isServicePickup || isConsolidatedPickup;
   };
 
-  const inTransitCount = normalizedPackages.filter(pkg => {
-    const s = pkg.status?.toUpperCase().trim() || ''; 
-    const activeStatuses = [
-        'EN_TRANSITO', 'EN_REPARTO', 'EN_PROCESO_ENVIO', 'ADUANA', 'TRANSIT',
-        'LISTO_PARA_ENVIO', 'POR_ENVIAR', 'DESPACHADO', 'LISTO PARA ENVIO',
-        'ENVIADO', 'SENT'
-    ];
-    const isActive = activeStatuses.includes(s) || activeStatuses.includes(s.replace(/\s+/g, '_'));
-    return isActive && !isPickupPackage(pkg);
-  }).length;
+const inTransitCount = (() => {
+    const transitPkgs = normalizedPackages.filter(pkg => {
+        const s = pkg.status?.toUpperCase().trim() || '';
+        const activeStatuses = [
+            'EN_TRANSITO', 'EN_REPARTO', 'EN_PROCESO_ENVIO', 'ADUANA', 'TRANSIT',
+            'LISTO_PARA_ENVIO', 'POR_ENVIAR', 'DESPACHADO', 'LISTO PARA ENVIO',
+            'ENVIADO', 'SENT'
+        ];
+        const isActive = activeStatuses.includes(s) || activeStatuses.includes(s.replace(/\s+/g, '_'));
+        return isActive && !isPickupPackage(pkg);
+    });
+    const consolidatedIds = new Set(
+        transitPkgs
+            .filter(pkg => pkg.consolidatedShipmentId)
+            .map(pkg => pkg.consolidatedShipmentId)
+    );
+    const unconsolidated = transitPkgs.filter(pkg => !pkg.consolidatedShipmentId).length;
+    return consolidatedIds.size + unconsolidated;
+})();
 
   const enDestinoCount = normalizedPackages.filter(pkg => {
     const s = pkg.status?.toUpperCase().trim() || '';
