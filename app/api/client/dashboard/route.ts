@@ -41,8 +41,6 @@ async function getUserFromToken(req: Request) {
   catch { return null; }
 }
 
-const MIAMI_ADDRESS = { address: '8351 NW 21st Street, Suite', city: 'Doral', state: 'FL', zip: '33122', country: 'United States' };
-
 export async function GET(req: Request) {
   const user = await getUserFromToken(req);
   if (!user) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
@@ -64,8 +62,7 @@ export async function GET(req: Request) {
       const storageFee = calculateStorageFee({ createdAt: new Date(p.createdAt), storagePaidUntil: p.storagePaidUntil ? new Date(p.storagePaidUntil) : null, lengthIn: p.lengthIn, widthIn: p.widthIn, heightIn: p.heightIn });
       const handlingFee = calculateHandlingFee(p.weightLbs);
       const isBlocked = storageFee >= 5;
-      const isPickupService = ['CLIENTE_RETIRO', 'PICKUP', 'TIENDA'].includes(p.service || '');
-      return { id: p.id, gmcTrackingNumber: p.gmcTrackingNumber, status: p.status, description: p.description, weightLbs: p.weightLbs, createdAt: p.createdAt, courier: p.courier, service: p.service, storageFee, handlingFee, isBlocked, isPickupService };
+      return { id: p.id, gmcTrackingNumber: p.gmcTrackingNumber, status: p.status, description: p.description, weightLbs: p.weightLbs, createdAt: p.createdAt, courier: p.courier, service: p.service, storageFee, handlingFee, isBlocked };
     });
 
     const shipments = await prisma.consolidatedShipment.findMany({
@@ -95,7 +92,7 @@ export async function GET(req: Request) {
     const totalHandlingFees = parseFloat(packagesWithFees.reduce((s, p) => s + p.handlingFee, 0).toFixed(2));
 
     return NextResponse.json({
-      user: { ...dbUser, miamiAddress: { recipient: dbUser.name, address: `${MIAMI_ADDRESS.address} ${dbUser.suiteNo || ''}`, city: `${MIAMI_ADDRESS.city}, ${MIAMI_ADDRESS.state} ${MIAMI_ADDRESS.zip}`, country: MIAMI_ADDRESS.country, phone: dbUser.phone } },
+      user: { ...dbUser, miamiAddress: { recipient: dbUser.name, address: `8351 NW 21st Street, Suite ${dbUser.suiteNo || ''}`, city: 'Doral, FL 33122', country: 'United States', phone: dbUser.phone } },
       packages: packagesWithFees.slice(0, 20),
       shipments: shipments.map(s => ({ ...s, packagesCount: s.packages.length })),
       pickups, notifications,
