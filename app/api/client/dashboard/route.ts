@@ -55,7 +55,7 @@ export async function GET(req: Request) {
     const allPackages = await prisma.package.findMany({
       where: { userId: user.id, consolidatedShipmentId: null },
       orderBy: { createdAt: 'desc' }, take: 50,
-      select: { id: true, gmcTrackingNumber: true, status: true, description: true, weightLbs: true, createdAt: true, courier: true, service: true, lengthIn: true, widthIn: true, heightIn: true, storagePaidUntil: true }
+      select: { id: true, gmcTrackingNumber: true, status: true, description: true, weightLbs: true, createdAt: true, courier: true, lengthIn: true, widthIn: true, heightIn: true, storagePaidUntil: true }
     });
 
     const packagesWithFees = allPackages.map(p => {
