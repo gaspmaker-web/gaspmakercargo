@@ -254,7 +254,7 @@ useEffect(() => {
       });
             setLoading(false);
     });
-  fetch('/api/admin/locker-config')
+  fetch('/api/admin/locker-config', { credentials: 'include' })
     .then(r => r.json())
     .then(data => {
       if (data.config) setLockerConfig(prev => ({ ...prev, ...data.config }));
@@ -264,7 +264,7 @@ useEffect(() => {
 const saveLocker = async () => {
   setLockerLoading(true);
   try {
-    const res = await fetch('/api/admin/locker-config', {
+    const res = await fetch('/api/admin/locker-config', { credentials: 'include',
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ config: lockerConfig }),
