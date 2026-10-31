@@ -227,7 +227,15 @@ export default function ConfiguracionPage() {
   const [saving, setSaving] = useState(false);
   const [expandedCountry, setExpandedCountry] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
-  const [activeTab, setActiveTab] = useState<'international' | 'global' | 'local' | 'driver' | 'apis'>('international');
+  const [activeTab, setActiveTab] = useState<'international' | 'global' | 'local' | 'driver' | 'apis' | 'locker'>('international');
+const [lockerConfig, setLockerConfig] = useState<Record<string, string>>({
+  address: '1861 NW 22nd St',
+  city: 'Miami, FL 33142',
+  country: 'United States',
+  phone: '786-282-0763',
+});
+const [lockerLoading, setLockerLoading] = useState(false);
+const [lockerSaved, setLockerSaved] = useState(false);
   const [newCountry, setNewCountry] = useState('');
   const [mailboxPriceIds, setMailboxPriceIds] = useState({
     stripe_mailbox_basic_price_id: '',
@@ -244,9 +252,27 @@ useEffect(() => {
         stripe_mailbox_basic_price_id: data.mailboxPriceIds?.stripe_mailbox_basic_price_id || '',
         stripe_mailbox_premium_price_id: data.mailboxPriceIds?.stripe_mailbox_premium_price_id || '',
       });
-      setLoading(false);
+            setLoading(false);
+    });
+  fetch('/api/admin/locker-config')
+    .then(r => r.json())
+    .then(data => {
+      if (data.config) setLockerConfig(prev => ({ ...prev, ...data.config }));
     });
 }, []);
+
+const saveLocker = async () => {
+  setLockerLoading(true);
+  try {
+    const res = await fetch('/api/admin/locker-config', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ config: lockerConfig }),
+    });
+    if (res.ok) { setLockerSaved(true); setTimeout(() => setLockerSaved(false), 3000); }
+  } catch (e) { console.error('Locker save error:', e); }
+  finally { setLockerLoading(false); }
+};
 
   const getTextRate = (concept: string, countryCode: string | null = null) => {
   const r = rates.find(r => r.concept === concept && r.countryCode === countryCode);
@@ -374,6 +400,7 @@ const internationalCountries = Array.from(new Set(
             { id: 'local', label: 'Local Delivery', icon: Truck },
             { id: 'driver', label: 'Driver Pay 🚗', icon: Truck },
             { id: 'apis', label: 'API Keys', icon: Key },
+            { id: 'locker', label: 'Locker 📦', icon: Package },
           ].map(({ id, label, icon: Icon }) => (
             <button
               key={id}
@@ -958,6 +985,53 @@ const internationalCountries = Array.from(new Set(
           </div>
         )}
 
+{/* TAB: LOCKER */}
+{activeTab === 'locker' && (
+  <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+    <div className="flex items-center justify-between mb-4">
+      <div>
+        <h2 className="font-bold text-gray-900">Global Locker Address</h2>
+        <p className="text-sm text-gray-500 mt-1">Default values shown to all clients in their dashboard</p>
+      </div>
+      <button
+        onClick={saveLocker}
+        disabled={lockerLoading}
+        className="flex items-center gap-2 bg-black text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-gray-800 transition disabled:opacity-50"
+      >
+        <Save size={16} />
+        {lockerLoading ? 'Saving...' : lockerSaved ? '✅ Saved' : 'Save Locker'}
+      </button>
+    </div>
+
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      {[
+        { key: 'address', label: 'Street Address', placeholder: '1861 NW 22nd St' },
+        { key: 'city', label: 'City, State ZIP', placeholder: 'Miami, FL 33142' },
+        { key: 'country', label: 'Country', placeholder: 'United States' },
+        { key: 'phone', label: 'Warehouse Phone', placeholder: '786-282-0763' },
+      ].map(({ key, label, placeholder }) => (
+        <div key={key}>
+          <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 block">{label}</label>
+          <input
+            type="text"
+            placeholder={placeholder}
+            value={lockerConfig[key] || ''}
+            onChange={e => setLockerConfig(prev => ({ ...prev, [key]: e.target.value }))}
+            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
+          />
+        </div>
+      ))}
+    </div>
+
+    <div className="mt-4 p-4 bg-blue-50 rounded-xl text-sm text-blue-700">
+      <p className="font-semibold mb-1">📦 Current locker address:</p>
+      <p>{lockerConfig.address}</p>
+      <p>{lockerConfig.city}</p>
+      <p>{lockerConfig.country}</p>
+      <p>📞 {lockerConfig.phone}</p>
+    </div>
+  </div>
+)}
       </div>
     </div>
   );
