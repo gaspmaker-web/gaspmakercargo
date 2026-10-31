@@ -62,7 +62,7 @@ export async function GET(req: Request) {
       const storageFee = calculateStorageFee({ createdAt: new Date(p.createdAt), storagePaidUntil: p.storagePaidUntil ? new Date(p.storagePaidUntil) : null, lengthIn: p.lengthIn, widthIn: p.widthIn, heightIn: p.heightIn });
       const handlingFee = calculateHandlingFee(p.weightLbs);
       const isBlocked = storageFee >= 5;
-      return { id: p.id, gmcTrackingNumber: p.gmcTrackingNumber, status: p.status, description: p.description, weightLbs: p.weightLbs, createdAt: p.createdAt, courier: p.courier, service: p.service, storageFee, handlingFee, isBlocked };
+      return { id: p.id, gmcTrackingNumber: p.gmcTrackingNumber, status: p.status, description: p.description, weightLbs: p.weightLbs, createdAt: p.createdAt, courier: p.courier, storageFee, handlingFee, isBlocked };
     });
 
     const shipments = await prisma.consolidatedShipment.findMany({
