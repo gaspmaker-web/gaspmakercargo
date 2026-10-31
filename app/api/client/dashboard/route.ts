@@ -51,7 +51,7 @@ export async function GET(req: Request) {
       where: { id: user.id },
       select: { id: true, name: true, email: true, suiteNo: true, walletBalance: true, image: true, countryCode: true, phone: true }
     }),
-      prisma.lockerConfig.findMany().catch(e => { console.error("[locker-findMany-ERROR]", e.message); return []; }),
+      prisma.lockerConfig.findMany(),
     ]);
 
     const locker: Record<string, string> = {};
