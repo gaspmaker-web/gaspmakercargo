@@ -46,10 +46,16 @@ export async function GET(req: Request) {
   if (!user) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
 
   try {
-    const dbUser = await prisma.user.findUnique({
+    const [dbUser, lockerRows] = await Promise.all([
+      prisma.user.findUnique({
       where: { id: user.id },
       select: { id: true, name: true, email: true, suiteNo: true, walletBalance: true, image: true, countryCode: true, phone: true }
-    });
+    }),
+      prisma.lockerConfig.findMany(),
+    ]);
+
+    const locker: Record<string, string> = {};
+    for (const row of lockerRows) locker[row.key] = row.value;
     if (!dbUser) return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 });
 
     const allPackages = await prisma.package.findMany({
@@ -92,7 +98,7 @@ export async function GET(req: Request) {
     const totalHandlingFees = parseFloat(packagesWithFees.reduce((s, p) => s + p.handlingFee, 0).toFixed(2));
 
     return NextResponse.json({
-      user: { ...dbUser, miamiAddress: { recipient: dbUser.name, address: `1861 NW 22nd St, Suite ${dbUser.suiteNo || ''}`, city: 'Miami, FL 33142', country: 'United States', phone: '786-282-0763' } },
+      user: { ...dbUser, miamiAddress: { recipient: dbUser.name, address: `${locker.address || '1861 NW 22nd St'}, Suite ${dbUser.suiteNo || ''}`, city: locker.city || 'Miami, FL 33142', country: locker.country || 'United States', phone: locker.phone || '786-282-0763' } },
       packages: packagesWithFees.slice(0, 20),
       shipments: shipments.map(s => ({ ...s, packagesCount: s.packages.length })),
       pickups, notifications,

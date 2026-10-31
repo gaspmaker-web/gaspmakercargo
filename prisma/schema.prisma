@@ -742,3 +742,11 @@ model B2BAccount {
   // Estado
   status            String   @default("ACTIVE") // ACTIVE, SUSPENDED, PENDING
 }
+model LockerConfig {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     String
+  updatedAt DateTime @updatedAt
+
+  @@map("locker_config")
+}
