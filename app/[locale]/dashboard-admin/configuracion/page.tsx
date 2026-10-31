@@ -254,11 +254,13 @@ useEffect(() => {
       });
             setLoading(false);
     });
-  fetch('/api/admin/locker-config', { credentials: 'include' })
+  fetch('/api/admin/locker-config')
     .then(r => r.json())
     .then(data => {
+      console.log('[locker-config GET]', data);
       if (data.config) setLockerConfig(prev => ({ ...prev, ...data.config }));
-    });
+    })
+    .catch(e => console.error('[locker-config ERROR]', e));
 }, []);
 
 const saveLocker = async () => {
