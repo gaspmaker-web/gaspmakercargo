@@ -46,13 +46,13 @@ const AddressRow = ({ label, value, isHighlighted = false }: { label: string, va
   </div>
 );
 
-export default function AddressCard({ recipient, suiteNo }: AddressCardProps) {
+export default function AddressCard({ recipient, suiteNo, address, cityZip, country, phone }: AddressCardProps) {
   const t = useTranslations('AddressCard');
   
-  const MIAMI_ADDRESS = "1861 NW 22nd St";
-  const MIAMI_CITY_STATE = "Miami, FL 33142";
-  const MIAMI_PHONE = "786-282-0763";
-  const MIAMI_COUNTRY = "United States";
+  const MIAMI_ADDRESS = address || "1861 NW 22nd St";
+  const MIAMI_CITY_STATE = cityZip || "Miami, FL 33142";
+  const MIAMI_PHONE = phone || "786-282-0763";
+  const MIAMI_COUNTRY = country || "United States";
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6 items-stretch h-full">

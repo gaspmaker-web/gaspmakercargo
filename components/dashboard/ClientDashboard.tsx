@@ -361,7 +361,7 @@ useEffect(() => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6 mt-6 sm:mt-0 mb-8">
             <div className="lg:col-span-8 xl:col-span-9 flex">
                 <div className="w-full h-full">
-                    <AddressCard recipient={(user as any).name || 'Cliente'} suiteNo={(user as any).suiteNo || 'GMC-PENDING'} />
+                    <AddressCard recipient={(user as any).name || 'Cliente'} suiteNo={(user as any).suiteNo || 'GMC-PENDING'} address={(user as any).miamiAddress?.address} cityZip={(user as any).miamiAddress?.city} country={(user as any).miamiAddress?.country} phone={(user as any).miamiAddress?.phone} />
                 </div>
             </div>
             
