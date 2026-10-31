@@ -1,14 +1,16 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { verifyAdminToken } from '@/lib/auth';
+import { auth } from '@/auth';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-export async function GET(req: Request) {
+export async function GET() {
+  const session = await auth();
+  if (!session || session.user.role !== 'ADMIN') {
+    return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+  }
   try {
-    const admin = await verifyAdminToken(req);
-    if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const rows = await prisma.lockerConfig.findMany();
     const config: Record<string, string> = {};
     for (const row of rows) config[row.key] = row.value;
@@ -19,9 +21,11 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
+  const session = await auth();
+  if (!session || session.user.role !== 'ADMIN') {
+    return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+  }
   try {
-    const admin = await verifyAdminToken(req);
-    if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const { config } = await req.json() as { config: Record<string, string> };
     if (!config || typeof config !== 'object') {
       return NextResponse.json({ error: 'Invalid payload' }, { status: 400 });
