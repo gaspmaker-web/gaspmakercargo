@@ -228,12 +228,7 @@ export default function ConfiguracionPage() {
   const [expandedCountry, setExpandedCountry] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [activeTab, setActiveTab] = useState<'international' | 'global' | 'local' | 'driver' | 'apis' | 'locker'>('international');
-const [lockerConfig, setLockerConfig] = useState<Record<string, string>>({
-  address: '1861 NW 22nd St',
-  city: 'Miami, FL 33142',
-  country: 'United States',
-  phone: '786-282-0763',
-});
+const [lockerConfig, setLockerConfig] = useState<Record<string, string>>({});
 const [lockerLoading, setLockerLoading] = useState(false);
 const [lockerSaved, setLockerSaved] = useState(false);
   const [newCountry, setNewCountry] = useState('');
