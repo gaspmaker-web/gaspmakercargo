@@ -92,7 +92,7 @@ export async function GET(req: Request) {
     const totalHandlingFees = parseFloat(packagesWithFees.reduce((s, p) => s + p.handlingFee, 0).toFixed(2));
 
     return NextResponse.json({
-      user: { ...dbUser, miamiAddress: { recipient: dbUser.name, address: `8351 NW 21st Street, Suite ${dbUser.suiteNo || ''}`, city: 'Doral, FL 33122', country: 'United States', phone: dbUser.phone } },
+      user: { ...dbUser, miamiAddress: { recipient: 'Renischka Laporte', address: `1861 NW 22nd St, Suite ${dbUser.suiteNo || ''}`, city: 'Miami, FL 33142', country: 'United States', phone: dbUser.phone || '786-282-0763' } },
       packages: packagesWithFees.slice(0, 20),
       shipments: shipments.map(s => ({ ...s, packagesCount: s.packages.length })),
       pickups, notifications,
