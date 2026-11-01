@@ -24,7 +24,6 @@ export async function POST(req: NextRequest) {
 
     const e164 = toE164(phone)
 
-    // Invalidate previous unused codes for this phone
     await prisma.smsOtp.updateMany({
       where: { phone: e164, used: false },
       data: { used: true },
