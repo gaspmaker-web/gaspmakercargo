@@ -98,7 +98,7 @@ export async function GET(req: Request) {
     const totalHandlingFees = parseFloat(packagesWithFees.reduce((s, p) => s + p.handlingFee, 0).toFixed(2));
 
     return NextResponse.json({
-      user: { ...dbUser, miamiAddress: { recipient: dbUser.name, address: `${locker.address || '1861 NW 22nd St'}, Suite ${dbUser.suiteNo || ''}`, city: locker.city || 'Miami, FL 33142', country: locker.country || 'United States', phone: locker.phone || '786-282-0763' } },
+      user: { ...dbUser, miamiAddress: { recipient: dbUser.name, address: locker.address || '1861 NW 22nd St', city: locker.city || 'Miami, FL 33142', country: locker.country || 'United States', phone: locker.phone || '786-282-0763' } },
       packages: packagesWithFees.slice(0, 20),
       shipments: shipments.map(s => ({ ...s, packagesCount: s.packages.length })),
       pickups, notifications,
