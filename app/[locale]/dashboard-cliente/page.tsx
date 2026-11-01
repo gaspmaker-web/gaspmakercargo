@@ -106,6 +106,10 @@ export default async function DashboardPage({ params: { locale } }: Props) {
   const userPlan = (dbUser as any)?.planType;
   const resolvedPlanType = userPlan === 'VIP_WHOLESALE' ? 'VIP_WHOLESALE' : planType;
 
+  const lockerRows = await prisma.lockerConfig.findMany();
+  const locker: Record<string, string> = {};
+  for (const row of lockerRows) locker[row.key] = row.value;
+
   const savedCards = await prisma.paymentMethod.findMany({
     where: { userId: session.user.id }
   });
@@ -237,7 +241,7 @@ const normalizedPackages = allPackages.map(pkg => calculateFees(pkg, t));
         <OneSignalInit userId={session.user.id} />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <ClientDashboard
-                user={{...(session.user as any), countryCode: (defaultAddress?.countryCode || defaultAddress?.country || (dbUser as any)?.countryCode || '').toUpperCase() || undefined, isUSClient}}
+                user={{...(session.user as any), countryCode: (defaultAddress?.countryCode || defaultAddress?.country || (dbUser as any)?.countryCode || '').toUpperCase() || undefined, isUSClient, miamiAddress: { address: locker.address || '1861 NW 22nd St', city: locker.city || 'Miami, FL 33142', country: locker.country || 'United States', phone: locker.phone || '786-282-0763' }}}
                 packages={activePackages}
                 totalDebt={totalDebt}
                 pendingBillsCount={pendingBills.length}
