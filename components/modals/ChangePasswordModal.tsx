@@ -110,6 +110,14 @@ export default function ChangePasswordModal({ isOpen, onClose, hasPassword = tru
                         <CheckCircle size={32} />
                     </div>
                     <p className="text-xl font-bold text-green-700">{t('success')}</p>
+                    {!hasPassword && (
+                      <a
+                        href="gaspmakercargo://auth/login"
+                        className="mt-6 px-6 py-3 bg-gmc-dorado-principal text-gmc-gris-oscuro font-bold rounded-2xl text-sm hover:brightness-105 transition-all"
+                      >
+                        📱 Abrir en la App
+                      </a>
+                    )}
                   </div>
                 ) : (
                   <form onSubmit={handleSubmit} className="space-y-6">
