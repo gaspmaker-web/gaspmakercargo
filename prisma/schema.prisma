@@ -1,149 +1,86 @@
-// prisma/schema.prisma
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
   provider  = "postgresql"
-  url       = env("DATABASE_URL") // Transaction Mode (Puerto 6543 - Supabase)
-  directUrl = env("DIRECT_URL")   // Session Mode (Puerto 5432 - Supabase)
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
-// -----------------------------------------------------------------------------------------
-
 model User {
-  id                    String                @id @default(uuid())
+  id                    String                 @id @default(uuid())
   name                  String?
-  
-  // ✅ CAMPO IMAGEN (Avatar)
-  image                 String?               
-
-  // ✅ EMAIL (Único)
-  email                 String                @unique
-  emailVerified         DateTime?             // 🔄 VERIFICACIÓN DE EMAIL (Auth.js)
-  
-  // 🔐 AUTENTICACIÓN (CORREGIDO)
-  password              String?
-
-  // 🔄 RECUPERACIÓN
-  resetToken            String?               @unique 
-  resetTokenExpiry      DateTime? 
-
-  role                  String                @default("CLIENTE")
-
- // 🔥 PLAN CORPORATIVO / VIP (AÑADIR ESTA LÍNEA)
-  planType              String?               @default("STANDARD")
-  // 🔥 EXENCIÓN DE FEE DE CONSOLIDACIÓN (CLIENTES VIP ESPECIALES)
-  noConsolidationFee    Boolean               @default(false)
-  createdAt             DateTime              @default(now())
-  lastLoginAt           DateTime?
-
-  // Campos de Perfil
+  email                 String                 @unique
+  role                  String                 @default("CLIENTE")
+  createdAt             DateTime               @default(now())
   countryCode           String?
-  suiteNo               String?               @unique 
+  suiteNo               String?                @unique
   dateOfBirth           DateTime?
   address               String?
   cityZip               String?
   country               String?
   phone                 String?
-  smsConsent            Boolean               @default(false)
-  preferredLocale       String                @default("en")
- 
-  // 💰 BILLETERA & REFERIDOS
-  referralCode          String?               @unique 
-  referredBy          String?
-  referralRewardPaid  Boolean  @default(false) // 🔥 NUEVO: Control exacto de si ya se pagó el bono por este cliente
-  walletBalance         Float                 @default(0.0) 
-  shippingBalance       Float                 @default(0.0) 
-
-  // --- STRIPE ---
-  stripeCustomerId      String?               @unique 
-  stripeAccountId       String?               @unique  // Stripe Connect Express ID
-
-// 🏢 MULTI-TENANT
+  referralCode          String?                @unique
+  referredBy            String?
+  shippingBalance       Float                  @default(0.0)
+  stripeCustomerId      String?                @unique
+  image                 String?
+  password              String?
+  referralRewardPaid    Boolean                @default(false)
+  resetToken            String?                @unique
+  resetTokenExpiry      DateTime?
+  walletBalance         Float                  @default(0.0)
+  emailVerified         DateTime?
+  planType              String?                @default("STANDARD")
+  noConsolidationFee    Boolean                @default(false)
   tenant_id             String?
-  tenant                Tenant?  @relation(fields: [tenant_id], references: [id])
-
-  // Relaciones
-  packages              Package[]
-  consolidatedShipments ConsolidatedShipment[]
-  pickupRequests        PickupRequest[]       
-  paymentMethods        PaymentMethod[]
+  lastLoginAt           DateTime?
+  stripeAccountId       String?                @unique
+  smsConsent            Boolean                @default(false)
+  preferredLocale       String                 @default("en")
   addresses             Address[]
-  
-  // Tareas asignadas como Chofer
-  assignedTasks         PickupRequest[]       @relation("DriverAssignments")
-
-  driverSession         DriverSession?        @relation("DriverSession")
-
-  driverVehicles        DriverVehicle[]       @relation("DriverVehicle")
-
-  // Notificaciones
-  notifications         Notification[]
-
-  // 📭 VIRTUAL MAILBOX (NUEVO)
-  mailboxSubscription   MailboxSubscription? // 1 a 1 (Solo puede tener un plan activo)
-  mailItems             MailItem[]           // 1 a muchos (Puede tener cientos de sobres)
-  mailboxTransactions   MailboxTransaction[]
-  mailPickupRequests    MailPickupRequest[]  // 🔥 AÑADE ESTA LÍNEA AQUÍ
-
-  // 🛒 PERSONAL SHOPPER (NUEVO - Relación)
-  shopperOrders         ShopperOrder[]
   b2bAccount            B2BAccount?
+  consolidatedShipments ConsolidatedShipment[]
+  mailItems             MailItem[]
+  mailPickupRequests    MailPickupRequest[]
+  mailboxSubscription   MailboxSubscription?
+  mailboxTransactions   MailboxTransaction[]
+  notifications         Notification[]
+  packages              Package[]
+  paymentMethods        PaymentMethod[]
+  assignedTasks         PickupRequest[]        @relation("DriverAssignments")
+  pickupRequests        PickupRequest[]
+  shopperOrders         ShopperOrder[]
+  tenant                Tenant?                @relation(fields: [tenant_id], references: [id])
+  driverSession         DriverSession?         @relation("DriverSession")
+  driverVehicles        DriverVehicle[]        @relation("DriverVehicle")
 }
-
-// -----------------------------------------------------------------------------------------
 
 model PaymentMethod {
   id                    String   @id @default(uuid())
   createdAt             DateTime @default(now())
-  
-  stripePaymentMethodId String   @unique 
-  brand                 String   
-  last4                 String   
+  stripePaymentMethodId String   @unique
+  brand                 String
+  last4                 String
   expMonth              Int
   expYear               Int
-  
   isDefault             Boolean  @default(false)
   isBackup              Boolean  @default(false)
-
   userId                String
   user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Package {
-  id                     String   @id @default(uuid())
-  createdAt              DateTime @default(now())
-  updatedAt              DateTime @updatedAt
-  
-  status                 String   
+  id                     String                @id @default(uuid())
+  createdAt              DateTime              @default(now())
+  updatedAt              DateTime              @updatedAt
+  status                 String
   description            String?
-
-// 🔥 NUEVO: Etiqueta Enterprise para el historial
-  serviceType            String?  @default("SHIPPING_INTL")
-
-  storagePaidUntil       DateTime? 
-  storageDebt            Float    @default(0.0) 
-  
-  courier                String?   
-  declaredValue          Float?   @default(0.0) 
-  
-  selectedCourier        String?   
-  courierService         String? 
-  shippingAddress        String?   // 🔥 NUEVO: Dirección para paquetes individuales Nivel Amazon  
-
-  shippingSubtotal       Float?   @default(0.0) 
-  shippingProcessingFee  Float?   @default(0.0) 
-  shippingTotalPaid      Float?   @default(0.0) 
-  stripePaymentId        String?   
-
-  // 🔥 NUEVO: Para guardar la tabla detallada de aduanas (DHL/FedEx)
-  customsItems           Json? 
-
- // 🚨 NUEVO: Para guardar Cargos Especiales (Hazmat, EEI, Prep Fee, etc.)
-  extraCharges           Json?   
-
+  storagePaidUntil       DateTime?
+  storageDebt            Float                 @default(0.0)
+  courier                String?
+  declaredValue          Float?                @default(0.0)
   weightLbs              Float?
   lengthIn               Float?
   widthIn                Float?
@@ -151,106 +88,80 @@ model Package {
   photoUrlMiami          String?
   receiptUrl             String?
   invoiceUrl             String?
-  shippingLabelUrl       String?
-  awbDocumentUrl         String?   // 🔥 NUEVO: Documento AWB/Aduana para el cliente
-  deliveryPhotoUrl       String?   
-  deliverySignature      String?   
-  deliveredBy            String?   // 🔥 NUEVO: Nombre del personal que entregó
-  tookanLink             String?   
-  
-  carrierTrackingNumber  String?   
-  gmcTrackingNumber      String    @unique 
-  
-  finalTrackingNumber    String?
+  carrierTrackingNumber  String?
+  gmcTrackingNumber      String                @unique
   estimatedArrival       DateTime?
-  
   userId                 String
-  user                   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
   consolidatedShipmentId String?
+  courierService         String?
+  customsItems           Json?
+  deliveredBy            String?
+  deliveryPhotoUrl       String?
+  deliverySignature      String?
+  finalTrackingNumber    String?
+  selectedCourier        String?
+  shippingAddress        String?
+  shippingLabelUrl       String?
+  shippingProcessingFee  Float?                @default(0.0)
+  shippingSubtotal       Float?                @default(0.0)
+  shippingTotalPaid      Float?                @default(0.0)
+  stripePaymentId        String?
+  tookanLink             String?
+  serviceType            String?               @default("SHIPPING_INTL")
+  awbDocumentUrl         String?
+  extraCharges           Json?
+  tenant_id              String?
+  easypostRateId         String?
+  easypostShipmentId     String?
+  easypostTrackerId      String?
   consolidatedShipment   ConsolidatedShipment? @relation(fields: [consolidatedShipmentId], references: [id])
+  tenant                 Tenant?               @relation(fields: [tenant_id], references: [id])
+  user                   User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  // 🏢 MULTI-TENANT
-  tenant_id             String?
-  tenant                Tenant?  @relation(fields: [tenant_id], references: [id])
-
-  // 🔥 EasyPost Rate IDs — para comprar etiqueta exacta sin que expire
-  easypostRateId       String?
-  easypostShipmentId   String?
-  easypostTrackerId    String?  // 🔥 Para webhooks de tracking
-
-  // ==========================================
-  // 🚀 ÍNDICES DE RENDIMIENTO (ENTERPRISE)
-  // ==========================================
   @@index([gmcTrackingNumber])
   @@index([userId])
 }
 
 model ConsolidatedShipment {
-  id                     String   @id @default(uuid())
-  createdAt              DateTime @default(now())
-  updatedAt              DateTime @updatedAt
-
-  gmcShipmentNumber      String   @unique 
+  id                     String    @id @default(uuid())
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+  gmcShipmentNumber      String    @unique
   destinationCountryCode String?
-
-  // 🔥 NUEVO: Dirección exacta de entrega seleccionada Nivel Amazon
-  shippingAddress        String?
-
-  status                 String   
-  
-  serviceType            String   @default("CONSOLIDATION")
-
+  status                 String
   storagePaidUntil       DateTime?
   selectedCourier        String?
   courierService         String?
   finalTrackingNumber    String?
   shippingLabelUrl       String?
-  awbDocumentUrl         String?   // 🔥 NUEVO: Documento AWB/BL de la carga consolidada
-  deliveredBy            String?   // 🔥 NUEVO: Nombre del personal que entregó
-
   paymentId              String?
   weightLbs              Float?
-  
-  declaredValue          Float?   @default(0.0)
-
-  // 🔥 NUEVO: Para guardar la tabla detallada de aduanas de cajas agrupadas
-  customsItems           Json?    
-
- // 🚨 NUEVO: Para guardar Cargos Especiales de toda la consolidación
-  extraCharges           Json?
-  chargeConsolidationFee Boolean @default(false)
-
-  // 🚀 NUEVO: Aquí se guardará el arreglo con Pallet 1, Pallet 2, etc.
-  auraDetails            Json?    
-
-  subtotalAmount         Float?   @default(0.0) 
-  processingFee          Float?   @default(0.0) 
+  subtotalAmount         Float?    @default(0.0)
+  processingFee          Float?    @default(0.0)
   totalAmount            Float?
   widthIn                Float?
   heightIn               Float?
   lengthIn               Float?
-  
   userId                 String
-  user                   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
+  customsItems           Json?
+  declaredValue          Float?    @default(0.0)
+  deliveredBy            String?
+  serviceType            String    @default("CONSOLIDATION")
+  shippingAddress        String?
+  awbDocumentUrl         String?
+  auraDetails            Json?
+  extraCharges           Json?
+  tenant_id              String?
+  easypostRateId         String?
+  easypostShipmentId     String?
+  easypostTrackerId      String?
+  lat                    Float?
+  lng                    Float?
+  chargeConsolidationFee Boolean   @default(false)
+  tenant                 Tenant?   @relation(fields: [tenant_id], references: [id])
+  user                   User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   packages               Package[]
 
-
-  tenant_id             String?
-  tenant                Tenant?  @relation(fields: [tenant_id], references: [id])
-
-  // 🔥 EasyPost Rate IDs — para comprar etiqueta exacta sin que expire
-  easypostRateId       String?
-  easypostShipmentId   String?
-  easypostTrackerId    String?  // 🔥 Para webhooks de tracking
-
-  // ==========================================
-  lat              Float?
-  lng              Float?
-
-  // 🚀 ÍNDICES DE RENDIMIENTO (ENTERPRISE)
-  // ==========================================
   @@index([gmcShipmentNumber])
   @@index([userId])
 }
@@ -259,27 +170,30 @@ model PickupRequest {
   id               String   @id @default(uuid())
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
-  
-  serviceType      String   @default("SHIPPING") 
-
+  serviceType      String   @default("SHIPPING")
   originAddress    String
   originCity       String
-  pickupDate       DateTime 
-  description      String   
+  pickupDate       DateTime
+  description      String
   contactPhone     String
-
   dropOffAddress   String?
   dropOffCity      String?
   dropOffContact   String?
   dropOffPhone     String?
-  
-  subtotal         Float?   @default(0.0) 
-  processingFee    Float?   @default(0.0) 
-  totalPaid        Float?   @default(0.0) 
-  
+  subtotal         Float?   @default(0.0)
+  processingFee    Float?   @default(0.0)
+  totalPaid        Float?   @default(0.0)
   stripePaymentId  String?
   weightInfo       String?
   volumeInfo       String?
+  photoPickupUrl   String?
+  photoDeliveryUrl String?
+  status           String   @default("PENDIENTE")
+  userId           String
+  driverId         String?
+  signatureUrl     String?
+  tookanLink       String?
+  tenant_id        String?
   weightLbs        Float?
   distanceMiles    Float?
   isPalletMode     Boolean  @default(false)
@@ -289,262 +203,176 @@ model PickupRequest {
   latDest          Float?
   lngDest          Float?
   pickupPin        String?
-  photoPickupUrl   String?  
-  photoDeliveryUrl String?
   recipientName    String?
-  
-  signatureUrl     String?   
-  tookanLink       String?   
-  
-  status           String   @default("PENDIENTE") 
-
-  driverId         String?  
-  driver           User?    @relation("DriverAssignments", fields: [driverId], references: [id], onDelete: SetNull)
-  
-  userId           String
+  driver           User?    @relation("DriverAssignments", fields: [driverId], references: [id])
+  tenant           Tenant?  @relation(fields: [tenant_id], references: [id])
   user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-// 🏢 MULTI-TENANT
-  tenant_id             String?
-  tenant                Tenant?  @relation(fields: [tenant_id], references: [id])
 }
 
 model Notification {
   id        String   @id @default(uuid())
   createdAt DateTime @default(now())
-  
   title     String
   message   String
   href      String?
   isRead    Boolean  @default(false)
-  type      String   @default("INFO") 
-
+  type      String   @default("INFO")
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
-  @@index([userId, isRead]) 
+  @@index([userId, isRead])
 }
 
 model Address {
-  id            String   @id @default(uuid())
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  fullName      String   // Para guardar "anto sol"
-  address       String   // La calle
-
-// 🔥 NUEVOS CAMPOS ESTRUCTURADOS
-  city          String?  // Ej: "Medley"
-  state         String?  // Ej: "FL"
-  zip           String?  // Ej: "33178"
-
-  cityZip       String   // La ciudad y código postal
-  country       String   // El país
-  countryCode   String?  // Código de 2 letras (US, TT, etc)
-  phone         String?  // Teléfono del contacto
-
-  isDefault     Boolean  @default(false)
-
-  userId        String
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id          String   @id @default(uuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  fullName    String
+  address     String
+  cityZip     String
+  country     String
+  countryCode String?
+  phone       String?
+  isDefault   Boolean  @default(false)
+  userId      String
+  city        String?
+  state       String?
+  zip         String?
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 }
 
-// -----------------------------------------------------------------------------------------
-// 📭 VIRTUAL MAILBOX
-// -----------------------------------------------------------------------------------------
-
 model MailboxSubscription {
-  id                   String   @id @default(uuid())
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
-
-  planType             String   // Ej: "BASIC_799", "PREMIUM_1499"
-  status               String   @default("PENDING_USPS") // "PENDING_USPS", "ACTIVE", "CANCELLED", "PAST_DUE", "REJECTED"
-  
-  // Archivos Legales del Titular Principal
-  uspsForm1583Url      String?  
-  primaryIdUrl         String?  
-  secondaryIdUrl       String?  
-  
-  rejectionReason      String?  
-
-  // Control de facturación
-  currentPeriodEnd     DateTime? 
-  stripeSubscriptionId String?  @unique
-
-  // Relación con el Usuario
-  userId               String   @unique
-  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  // Relación con los usuarios adicionales
+  id                   String                @id @default(uuid())
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  planType             String
+  status               String                @default("PENDING_USPS")
+  uspsForm1583Url      String?
+  primaryIdUrl         String?
+  secondaryIdUrl       String?
+  rejectionReason      String?
+  currentPeriodEnd     DateTime?
+  stripeSubscriptionId String?               @unique
+  userId               String                @unique
+  tenant_id            String?
   additionalRecipients AdditionalRecipient[]
-
-// 🏢 MULTI-TENANT
-  tenant_id   String?
-  tenant      Tenant?  @relation(fields: [tenant_id], references: [id])
+  tenant               Tenant?               @relation(fields: [tenant_id], references: [id])
+  user                 User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model AdditionalRecipient {
-  id                   String   @id @default(uuid())
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
-
-  fullName             String   
-  email                String?  
-
-  uspsForm1583Url      String?  
-  primaryIdUrl         String?  
-  secondaryIdUrl       String?  
-
-  status               String   @default("PENDING_USPS") 
-  rejectionReason      String?
-
-  subscriptionId       String
-  subscription         MailboxSubscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  id              String              @id @default(uuid())
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  fullName        String
+  email           String?
+  uspsForm1583Url String?
+  primaryIdUrl    String?
+  secondaryIdUrl  String?
+  status          String              @default("PENDING_USPS")
+  rejectionReason String?
+  subscriptionId  String
+  subscription    MailboxSubscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
 }
 
 model MailItem {
-  id                   String   @id @default(uuid())
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
-
-// 🔥 NUEVO: El tracking interno corto
-  trackingNumber       String?  @unique
-  
-  senderName           String?  
-  weightOz             Float?   
-  
-  lengthIn             Float?   
-  widthIn              Float?   
-  heightIn             Float?   
-
-  isDamaged            Boolean  @default(false) 
-  
-  envelopeImageUrl     String   
-  scannedDocUrl        String?  
-  
-  status               String   @default("UNREAD") 
-  
-  receivedAt           DateTime @default(now()) 
-  
-  userId               String
-  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  cargoPackageId       String?  @unique
-  pickupRequests       MailPickupRequest[] // 🔥 AÑADE ESTA LÍNEA AQUÍ 
-
-// 🏢 MULTI-TENANT
-  tenant_id   String?
-  tenant      Tenant?  @relation(fields: [tenant_id], references: [id])
+  id               String              @id @default(uuid())
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  trackingNumber   String?             @unique
+  senderName       String?
+  weightOz         Float?
+  lengthIn         Float?
+  widthIn          Float?
+  heightIn         Float?
+  isDamaged        Boolean             @default(false)
+  envelopeImageUrl String
+  scannedDocUrl    String?
+  status           String              @default("UNREAD")
+  receivedAt       DateTime            @default(now())
+  userId           String
+  cargoPackageId   String?             @unique
+  tenant_id        String?
+  tenant           Tenant?             @relation(fields: [tenant_id], references: [id])
+  user             User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pickupRequests   MailPickupRequest[] @relation("MailItemToMailPickupRequest")
 }
 
 model MailboxTransaction {
   id              String   @id @default(uuid())
   createdAt       DateTime @default(now())
-  
   amount          Float
-  description     String   
+  description     String
   status          String   @default("COMPLETED")
   stripePaymentId String?
-
   userId          String
   user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-// ==========================================
-// 🛒 MÓDULO: PERSONAL SHOPPER (COMPRA POR MÍ)
-// ==========================================
-
 model ShopperOrder {
-  id                String        @id @default(cuid())
-  
-  // 🔥 AÑADIDA RELACIÓN CON USER
-  userId            String        
-  user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  status            String        @default("PENDING_QUOTE")
-  
-  // 🔥 NUEVO: Etiqueta Enterprise para el historial
-  serviceType       String        @default("PERSONAL_SHOPPER")
-  
-  items             ShopperItem[]
+  id               String        @id @default(cuid())
+  userId           String
+  status           String        @default("PENDING_QUOTE")
+  itemsSubtotal    Float         @default(0)
+  usTaxes          Float         @default(0)
+  domesticShipping Float         @default(0)
+  gmcShopperFee    Float         @default(0)
+  stripeFee        Float         @default(0)
+  totalAmount      Float         @default(0)
+  stripePaymentId  String?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  serviceType      String        @default("PERSONAL_SHOPPER")
+  tenant_id        String?
+  items            ShopperItem[]
+  tenant           Tenant?       @relation(fields: [tenant_id], references: [id])
+  user             User          @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  itemsSubtotal     Float         @default(0) 
-  usTaxes           Float         @default(0) 
-  domesticShipping  Float         @default(0) 
-  gmcShopperFee     Float         @default(0) 
-  stripeFee         Float         @default(0) 
-  totalAmount       Float         @default(0) 
-
-  stripePaymentId   String?       
-  
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
-
-// 🏢 MULTI-TENANT
-  tenant_id   String?
-  tenant      Tenant?  @relation(fields: [tenant_id], references: [id])
-
-  // ==========================================
-  // 🚀 ÍNDICE AÑADIDO AQUÍ (Correcto)
-  // ==========================================
   @@index([userId])
 }
 
 model ShopperItem {
-  id                String        @id @default(cuid())
-  orderId           String
-  order             ShopperOrder  @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  
-  storeName         String?       
-  productUrl        String        @db.Text 
-  name              String?       
-  details           String?       @db.Text 
-  quantity          Int           @default(1)
-  
-  declaredPrice     Float         
-  actualPrice       Float?        
-  
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
+  id            String       @id @default(cuid())
+  orderId       String
+  storeName     String?
+  productUrl    String
+  name          String?
+  details       String?
+  quantity      Int          @default(1)
+  declaredPrice Float
+  actualPrice   Float?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  order         ShopperOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
-  // ==========================================
-  // 🚀 ÍNDICE CAMBIADO AQUÍ (orderId, no userId)
-  // ==========================================
   @@index([orderId])
 }
 
 model MailPickupRequest {
   id            String     @id @default(cuid())
   userId        String
-  user          User       @relation(fields: [userId], references: [id])
   scheduledDate DateTime
   scheduledTime String
-  status        String     @default("PENDING") // PENDING, READY, COMPLETED
-  mailItems     MailItem[] // Relación con los sobres seleccionados
+  status        String     @default("PENDING")
   createdAt     DateTime   @default(now())
   completedAt   DateTime?
-
-// 🏢 MULTI-TENANT
-  tenant_id   String?
-  tenant      Tenant?  @relation(fields: [tenant_id], references: [id])
+  tenant_id     String?
+  tenant        Tenant?    @relation(fields: [tenant_id], references: [id])
+  user          User       @relation(fields: [userId], references: [id])
+  mailItems     MailItem[] @relation("MailItemToMailPickupRequest")
 }
-
-// ==========================================
-// 📦 MÓDULO: MIAMI LOCKER (PRODUCTOS AFILIADOS)
-// ==========================================
 
 model AmazonProduct {
   id           String   @id @default(uuid())
-  title        String   // Nombre del producto
-  price        String   // Precio (ej. "$29.99")
-  imageUrl     String   // Link de la imagen de SiteStripe
-  affiliateUrl String   // Tu link con el tag gaspmakercarg-20
-  category     String?  // Para filtrar por nichos luego
-  isActive     Boolean  @default(true) // Para ocultar productos sin borrarlos
-  
+  title        String
+  price        String
+  imageUrl     String
+  affiliateUrl String
+  category     String?
+  isActive     Boolean  @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -552,39 +380,37 @@ model AmazonProduct {
 }
 
 model Tenant {
-  id                     String    @id @default(uuid())
-  company_name           String
-  slug                   String    @unique
-  custom_domain          String?   @unique
-  logo_url               String?
-  primary_color          String    @default("#000000")
-  secondary_color        String    @default("#ffffff")
-  owner_name             String?
-  owner_email            String    @unique
-  owner_phone            String?
-  easypost_api_key       String?
-  twilio_account_sid     String?
-  twilio_auth_token      String?
-  twilio_messaging_service_sid String?
-  twilio_phone_number    String?
-  stripe_publishable_key String?
-  stripe_secret_key      String?
+  id                              String                 @id @default(uuid())
+  company_name                    String
+  slug                            String                 @unique
+  custom_domain                   String?                @unique
+  logo_url                        String?
+  primary_color                   String                 @default("#000000")
+  secondary_color                 String                 @default("#ffffff")
+  owner_name                      String?
+  owner_email                     String                 @unique
+  owner_phone                     String?
+  easypost_api_key                String?
+  stripe_publishable_key          String?
+  stripe_secret_key               String?
+  created_at                      DateTime               @default(now())
+  updated_at                      DateTime               @updatedAt
   stripe_mailbox_basic_price_id   String?
   stripe_mailbox_premium_price_id String?
-  created_at             DateTime  @default(now())
-  updated_at             DateTime  @updatedAt
-
-  // Relaciones
-  tenantPlan            TenantPlan?
-  users                 User[]
-  packages              Package[]
-  consolidatedShipments ConsolidatedShipment[]
-  pickupRequests        PickupRequest[]
-  shopperOrders         ShopperOrder[]
-  mailItems             MailItem[]
-  mailboxSubscriptions  MailboxSubscription[]
-  mailPickupRequests    MailPickupRequest[]
-  tenantRates           TenantRate[]
+  twilio_account_sid              String?
+  twilio_auth_token               String?
+  twilio_messaging_service_sid    String?
+  twilio_phone_number             String?
+  consolidatedShipments           ConsolidatedShipment[]
+  mailItems                       MailItem[]
+  mailPickupRequests              MailPickupRequest[]
+  mailboxSubscriptions            MailboxSubscription[]
+  packages                        Package[]
+  pickupRequests                  PickupRequest[]
+  shopperOrders                   ShopperOrder[]
+  users                           User[]
+  tenantPlan                      TenantPlan?
+  tenantRates                     TenantRate[]
 
   @@map("tenants")
 }
@@ -598,19 +424,18 @@ model VerificationToken {
 }
 
 model TenantPlan {
-  id            String    @id @default(uuid())
-  tenantId      String    @unique @map("tenant_id")
-  plan          String    @default("starter") // starter | growth | pro
-  status        String    @default("trial")   // trial | active | suspended | cancelled
-  setupPaid     Boolean   @default(false)     @map("setup_paid")
-  billingStart  DateTime? @map("billing_start") @db.Date
-  nextBilling   DateTime? @map("next_billing")  @db.Date
-  monthlyPrice  Int       @default(14900)     @map("monthly_price") // centavos
-  notes         String?
-  createdAt     DateTime  @default(now())     @map("created_at")
-  updatedAt     DateTime  @updatedAt          @map("updated_at")
-
-  tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  id           String    @id @default(uuid())
+  tenantId     String    @unique @map("tenant_id")
+  plan         String    @default("starter")
+  status       String    @default("trial")
+  setupPaid    Boolean   @default(false) @map("setup_paid")
+  billingStart DateTime? @map("billing_start") @db.Date
+  nextBilling  DateTime? @map("next_billing") @db.Date
+  monthlyPrice Int       @default(14900) @map("monthly_price")
+  notes        String?
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+  tenant       Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@map("tenant_plans")
 }
@@ -621,9 +446,8 @@ model TenantRate {
   concept     String
   value       Decimal  @db.Decimal(10, 4)
   countryCode String?  @map("country_code")
-  textValue   String?  @map("text_value")
   updatedAt   DateTime @updatedAt @map("updated_at")
-
+  textValue   String?  @map("text_value")
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@unique([tenantId, concept, countryCode])
@@ -638,11 +462,11 @@ model Lead {
   email        String?
   form_id      String?
   source       String?   @default("facebook")
-  status       String?   @default("new")
-  notes        String?
-  contacted_at DateTime?
   created_time DateTime?
   created_at   DateTime  @default(now())
+  contacted_at DateTime?
+  notes        String?
+  status       String?   @default("new")
 
   @@map("Lead")
 }
@@ -650,7 +474,6 @@ model Lead {
 model DriverSession {
   id        String   @id @default(uuid())
   driverId  String   @unique
-  driver    User     @relation("DriverSession", fields: [driverId], references: [id], onDelete: Cascade)
   isOnline  Boolean  @default(false)
   lastSeen  DateTime @default(now())
   lat       Float?
@@ -658,39 +481,36 @@ model DriverSession {
   heading   Float?
   speed     Float?
   deviceId  String?
-  pushToken String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  pushToken String?
+  driver    User     @relation("DriverSession", fields: [driverId], references: [id], onDelete: Cascade)
 
   @@index([isOnline])
   @@map("driver_sessions")
 }
 
 model DriverVehicle {
-  id           String   @id @default(uuid())
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  driverId     String
-  driver       User     @relation("DriverVehicle", fields: [driverId], references: [id], onDelete: Cascade)
-
-  type         String
-  make         String
-  model        String
-  year         Int
-  color        String
-  licensePlate String
-
+  id                   String    @id @default(uuid())
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  driverId             String
+  type                 String
+  make                 String
+  model                String
+  year                 Int
+  color                String
+  licensePlate         String
   vehiclePhotoUrl      String?
   insuranceUrl         String?
   driverLicenseUrl     String?
+  isVerified           Boolean   @default(false)
+  verifiedAt           DateTime?
+  rejectionReason      String?
+  status               String    @default("PENDING")
   driverLicenseBackUrl String?
-
-  isVerified      Boolean  @default(false)
-  verifiedAt      DateTime?
-  rejectionReason String?
-  status          String   @default("PENDING")
-  isActive        Boolean  @default(false)
+  isActive             Boolean   @default(false)
+  driver               User      @relation("DriverVehicle", fields: [driverId], references: [id], onDelete: Cascade)
 
   @@map("driver_vehicles")
 }
@@ -699,7 +519,6 @@ model DriverApplication {
   id           String   @id @default(uuid())
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
-  
   name         String
   email        String
   phone        String
@@ -707,46 +526,50 @@ model DriverApplication {
   vehicleType  String
   hasInsurance String?
   message      String?
-  
-  status       String   @default("PENDING") // PENDING | APPROVED | REJECTED
+  status       String   @default("PENDING")
   notes        String?
-  
+
   @@map("driver_applications")
 }
 
 model B2BAccount {
-  id                String   @id @default(uuid())
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-
-  // Relación con el usuario
-  userId            String   @unique
-  user              User     @relation(fields: [userId], references: [id])
-
-  // Info del negocio
-  businessName      String
-  businessAddress   String
-  businessPhone     String?
-  contactName       String?
-
-  // Crédito
-  creditLimit       Float    @default(500)
-  creditUsed        Float    @default(0)
-  billingCycle      Int      @default(30) // días: 15 o 30
-  nextBillingDate   DateTime?
-  autoPayEnabled    Boolean  @default(false)
-
-  // Logo
-  logoUrl           String?
-
-  // Estado
-  status            String   @default("ACTIVE") // ACTIVE, SUSPENDED, PENDING
+  id              String    @id @default(uuid())
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  userId          String    @unique
+  businessName    String
+  businessAddress String
+  businessPhone   String?
+  contactName     String?
+  creditLimit     Float     @default(500)
+  creditUsed      Float     @default(0)
+  billingCycle    Int       @default(30)
+  nextBillingDate DateTime?
+  autoPayEnabled  Boolean   @default(false)
+  status          String    @default("ACTIVE")
+  logoUrl         String?
+  user            User      @relation(fields: [userId], references: [id])
 }
+
 model LockerConfig {
-  id        String   @id @default(uuid())
+  id        String   @id @default(dbgenerated("(gen_random_uuid())::text"))
   key       String   @unique
   value     String
-  updatedAt DateTime @updatedAt
+  updatedAt DateTime @default(now()) @updatedAt @db.Timestamptz(6)
 
   @@map("locker_config")
+}
+
+model SmsOtp {
+  id        String   @id @default(dbgenerated("(gen_random_uuid())::text"))
+  phone     String
+  code      String
+  userId    String?  @map("user_id")
+  used      Boolean  @default(false)
+  expiresAt DateTime @map("expires_at") @db.Timestamptz(6)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([phone], map: "idx_sms_otp_phone")
+  @@index([userId], map: "idx_sms_otp_user_id")
+  @@map("sms_otp")
 }
