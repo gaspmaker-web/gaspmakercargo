@@ -72,11 +72,6 @@ export default async function RootLayout({
     notFound();
   }
 
-  const VALID_LOCALES = ['en', 'es', 'fr', 'pt'];
-  if (!VALID_LOCALES.includes(locale)) {
-    notFound();
-  }
-
   let messages;
   try {
     messages = (await import(`../../messages/${locale}.json`)).default;
