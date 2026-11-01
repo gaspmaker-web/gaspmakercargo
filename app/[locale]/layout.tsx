@@ -15,6 +15,7 @@ import { getTenant, getTenantCSSVars } from '@/lib/tenant';
 import Script from 'next/script';
 
 // 🔥 QUITA LA IMPORTACIÓN DE ONESIGNAL DE AQUÍ 🔥
+import { notFound } from 'next/navigation';
 import { auth } from "@/auth"; 
 
 // Configuración de fuentes
@@ -65,6 +66,11 @@ export default async function RootLayout({
   const tenant = await getTenant();
   const tenantStyles = getTenantCSSVars(tenant);
   const tenantSlug = tenant?.slug || process.env.TENANT_SLUG || 'gaspmaker';
+
+  const VALID_LOCALES = ['en', 'es', 'fr', 'pt'];
+  if (!VALID_LOCALES.includes(locale)) {
+    notFound();
+  }
 
   let messages;
   try {
