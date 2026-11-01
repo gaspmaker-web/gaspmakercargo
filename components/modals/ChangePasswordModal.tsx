@@ -8,9 +8,10 @@ import { useTranslations } from 'next-intl';
 interface ChangePasswordModalProps {
   isOpen: boolean;
   onClose: () => void;
+  hasPassword?: boolean;
 }
 
-export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordModalProps) {
+export default function ChangePasswordModal({ isOpen, onClose, hasPassword = true }: ChangePasswordModalProps) {
   // 🔥 Hook de traducción
   const t = useTranslations('ChangePasswordModal');
 
@@ -120,8 +121,8 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
                         </div>
                     )}
 
-                    {/* Campo Contraseña Actual */}
-                    <div className="group">
+                    {/* Campo Contraseña Actual - solo si ya tiene contraseña */}
+                    {hasPassword && <div className="group">
                       <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 ml-1">
                         {t('currentLabel')}
                       </label>
@@ -138,7 +139,7 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
                             className="w-full pl-11 pr-4 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl text-gray-700 font-medium outline-none focus:bg-white focus:border-gmc-dorado-principal focus:ring-4 focus:ring-gmc-dorado-principal/10 transition-all shadow-sm"
                           />
                       </div>
-                    </div>
+                    </div>}
 
                     {/* Campo Nueva Contraseña */}
                     <div className="group">

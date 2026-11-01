@@ -236,7 +236,7 @@ dobFormatted = utcDate.toLocaleDateString(undefined, { year: 'numeric', month: '
     body: JSON.stringify({ smsConsent: newValue })
   });
 }}/><label className="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"></label></div></div>
-                        <div className="flex justify-between items-center"><div><label className="block text-sm font-medium text-gray-500">{t('password')}</label><p className="text-lg text-gmc-gris-oscuro">••••••••</p></div><button onClick={() => setIsPasswordModalOpen(true)} className="text-sm font-medium text-gmc-dorado-principal hover:underline">{t('changePassword')}</button></div>
+                        <div className="flex justify-between items-center"><div><label className="block text-sm font-medium text-gray-500">{t('password')}</label><p className="text-lg text-gmc-gris-oscuro">••••••••</p></div><button onClick={() => setIsPasswordModalOpen(true)} className="text-sm font-medium text-gmc-dorado-principal hover:underline">{(session?.user as any)?.hasPassword ? t('changePassword') : t('setPassword')}</button></div>
                         <div className="flex justify-between items-center"><div><label className="block text-sm font-medium text-gray-500">{t('dob')}</label><p className="text-lg text-gmc-gris-oscuro capitalize">{userData.dob}</p></div><button onClick={() => alert('Fecha no editable')}><Edit size={18} className="text-gray-300 cursor-not-allowed" /></button></div>
                     </div>
                 </div>
@@ -310,7 +310,7 @@ dobFormatted = utcDate.toLocaleDateString(undefined, { year: 'numeric', month: '
 
             {/* MODALES */}
             <EditNameModal isOpen={isEditNameModalOpen} onClose={() => setIsEditNameModalOpen(false)} onSave={handleSaveName} currentName={userData.name} />
-            <ChangePasswordModal isOpen={isPasswordModalOpen} onClose={() => setIsPasswordModalOpen(false)} />
+            <ChangePasswordModal isOpen={isPasswordModalOpen} onClose={() => setIsPasswordModalOpen(false)} hasPassword={!!(session?.user as any)?.hasPassword} />
             <EditMobileModal isOpen={isEditMobileModalOpen} onClose={() => setIsEditMobileModalOpen(false)} onSave={handleSaveMobile} currentMobile={userData.phone} />
             <EditCountryModal isOpen={isEditCountryModalOpen} onClose={() => setIsEditCountryModalOpen(false)} onSave={handleSaveCountry} currentCountryCode={userData.countryCode} />
             

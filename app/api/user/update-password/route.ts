@@ -27,17 +27,21 @@ export async function POST(req: Request) {
       where: { id: session.user.id },
     });
 
-    // 🔴 CAMBIO: Usamos 'password' en lugar de 'password_hash'
-    if (!user || !user.password) {
+    if (!user) {
       return NextResponse.json({ message: "Usuario no encontrado" }, { status: 404 });
     }
 
-    // 2. Verificar que la contraseña actual sea correcta
-    // 🔴 CAMBIO: Comparamos contra 'user.password'
-    const isValid = await bcrypt.compare(currentPassword, user.password);
-    if (!isValid) {
-      return NextResponse.json({ message: "La contraseña actual es incorrecta" }, { status: 400 });
+    // Si el usuario tiene contraseña, verificar la actual
+    if (user.password) {
+      if (!currentPassword) {
+        return NextResponse.json({ message: "Debes ingresar tu contraseña actual" }, { status: 400 });
+      }
+      const isValid = await bcrypt.compare(currentPassword, user.password);
+      if (!isValid) {
+        return NextResponse.json({ message: "La contraseña actual es incorrecta" }, { status: 400 });
+      }
     }
+    // Si no tiene contraseña (cuenta Google), permitir establecerla directamente
 
     // 3. Hashear la nueva contraseña
     const newPasswordHash = await bcrypt.hash(newPassword, 10);

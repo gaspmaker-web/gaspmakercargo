@@ -94,6 +94,7 @@ export const authConfig = {
         token.address = (user as any).address;
         token.cityZip = (user as any).cityZip;
         token.country = (user as any).country;
+        token.hasPassword = !!(user as any).password;
       }
 
       // 2. Al actualizar datos desde el Frontend (update)
@@ -122,6 +123,7 @@ export const authConfig = {
         session.user.phone = token.phone as string;
         session.user.countryCode = token.countryCode as string;
         (session.user as any).dateOfBirth = token.dateOfBirth;
+        (session.user as any).hasPassword = token.hasPassword as boolean;
         (session.user as any).address = token.address;
         (session.user as any).cityZip = token.cityZip;
         (session.user as any).country = token.country;
