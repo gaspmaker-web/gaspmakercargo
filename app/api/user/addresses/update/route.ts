@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
   try {
+    const prisma = (await import('@/lib/prisma')).default;
     const { auth } = await import('@/auth');
         const session = await auth();
         const mobileUser = await getMobileUser(req);
