@@ -32,7 +32,12 @@ interface TenantRatesPublic {
   local_pallet_box_truck_3: number;
 local_pallet_box_truck_4: number;
 local_pallet_box_truck_5: number;
-local_pallet_box_truck_6: number;
+  local_pallet_box_truck_6: number;
+  // 📈 PSS
+  pss_active: number;
+  pss_percentage: number;
+  pss_start_date: string;
+  pss_end_date: string;
 }
 
 const DEFAULT_RATES: TenantRatesPublic = {
@@ -67,6 +72,10 @@ const DEFAULT_RATES: TenantRatesPublic = {
 local_pallet_box_truck_4: 250,
 local_pallet_box_truck_5: 300,
 local_pallet_box_truck_6: 350,
+  pss_active: 0,
+  pss_percentage: 0,
+  pss_start_date: '',
+  pss_end_date: '',
 };
 
 export function useTenantRates(): TenantRatesPublic {

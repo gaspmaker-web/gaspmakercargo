@@ -422,7 +422,22 @@ containerFeeSubtotal += parseFloat(billExtraCharges.containerFee) || 0;  // ← 
           }
       });
 
-      const taxableAmount = serviceSubtotal + handlingSubtotal + insuranceSubtotal + specialChargesSubtotal + containerFeeSubtotal;
+            // 📈 PSS — Peak Season Surcharge
+      let pssSubtotal = 0;
+      const pssActive = tenantRates.pss_active as number ?? 0;
+      const pssPercentage = tenantRates.pss_percentage as number ?? 0;
+      if (pssActive === 1 && pssPercentage > 0) {
+        const today = new Date().toISOString().split('T')[0];
+        const pssStart = tenantRates.pss_start_date as string ?? '';
+        const pssEnd = tenantRates.pss_end_date as string ?? '';
+        const inRange = (!pssStart && !pssEnd) ||
+          ((!pssStart || today >= pssStart) && (!pssEnd || today <= pssEnd));
+        if (inRange) {
+          pssSubtotal = parseFloat((serviceSubtotal * pssPercentage).toFixed(2));
+        }
+      }
+
+      const taxableAmount = serviceSubtotal + handlingSubtotal + insuranceSubtotal + specialChargesSubtotal + containerFeeSubtotal + pssSubtotal;
       
       let isPayingAura = false;
       selectedBillIds.forEach(id => {
@@ -454,10 +469,11 @@ containerFeeSubtotal += parseFloat(billExtraCharges.containerFee) || 0;  // ← 
 
       const allActiveSpecialCharges = Object.entries(specialChargesMap).map(([label, amount]) => ({ label, amount }));
       
-      return { 
+           return { 
           serviceSubtotal, 
           handlingSubtotal, 
-          containerFeeSubtotal,  // ← AGREGAR
+          containerFeeSubtotal,
+          pssSubtotal,
           insuranceSubtotal, 
           specialChargesSubtotal, 
           allActiveSpecialCharges, 
@@ -1043,46 +1059,46 @@ containerFeeSubtotal += parseFloat(billExtraCharges.containerFee) || 0;  // ← 
                             )}
                         </div>
 
-                        {totals.count === 0 ? (
-                            <div className="flex flex-col justify-center items-center h-[200px] text-center opacity-50">
-                                <Truck size={48} className="mb-4 text-gray-400" />
-                                <p className="text-sm text-gray-300 max-w-[200px]">{t('selectInvoice')}</p>
-                            </div>
-                        ) : (
-                            <div className="animate-fadeIn">
-                                <div className="space-y-3 text-sm mb-6">
-                                    <div className="flex justify-between">
-                                        <span className="text-gray-300">{t('freightCost')}</span>
-                                        <span className="font-bold">${totals.serviceSubtotal.toFixed(2)}</span>
-                                    </div>
-                                    
-                                    {totals.handlingSubtotal > 0 && (
-                                        <div className="flex justify-between text-yellow-400">
-                                            <span>{t('consolidationFee')}</span>
-                                            <span className="font-bold">+${totals.handlingSubtotal.toFixed(2)}</span>
-                                        </div>
-                                    )}
-
-{totals.containerFeeSubtotal > 0 && (
-    <div className="flex justify-between text-blue-300">
-        <span>{t('containerFeeLabel')}</span>
-        <span className="font-bold">+${totals.containerFeeSubtotal.toFixed(2)}</span>
+                       {totals.count === 0 ? (
+    <div className="flex flex-col justify-center items-center h-[200px] text-center opacity-50">
+        <Truck size={48} className="mb-4 text-gray-400" />
+        <p className="text-sm text-gray-300 max-w-[200px]">{t('selectInvoice')}</p>
     </div>
-)}
+) : (
+    <div className="animate-fadeIn">
+        <div className="space-y-3 text-sm mb-6">
+            <div className="flex justify-between">
+                <span className="text-gray-300">{t('freightCost')}</span>
+                <span className="font-bold">${totals.serviceSubtotal.toFixed(2)}</span>
+            </div>
 
-{totals.insuranceSubtotal > 0 && (
-    <div className="flex justify-between text-blue-300">
-        <span className="flex items-center gap-1"><ShieldCheck size={14}/> + Ins (3%)</span>
-        <span className="font-bold">+${totals.insuranceSubtotal.toFixed(2)}</span>
-    </div>
-)}
-                                    {totals.insuranceSubtotal > 0 && (
-                                        <div className="flex justify-between text-blue-300">
-                                            <span className="flex items-center gap-1"><ShieldCheck size={14}/> + Ins (3%)</span>
-                                            <span className="font-bold">+${totals.insuranceSubtotal.toFixed(2)}</span>
-                                        </div>
-                                    )}
+            {totals.handlingSubtotal > 0 && (
+                <div className="flex justify-between text-yellow-400">
+                    <span>{t('consolidationFee')}</span>
+                    <span className="font-bold">+${totals.handlingSubtotal.toFixed(2)}</span>
+                </div>
+            )}
 
+            {totals.containerFeeSubtotal > 0 && (
+                <div className="flex justify-between text-blue-300">
+                    <span>{t('containerFeeLabel')}</span>
+                    <span className="font-bold">+${totals.containerFeeSubtotal.toFixed(2)}</span>
+                </div>
+            )}
+
+            {totals.pssSubtotal > 0 && (
+                <div className="flex justify-between text-orange-300">
+                    <span className="flex items-center gap-1">📈 PSS ({parseFloat(((tenantRates.pss_percentage as number ?? 0) * 100).toFixed(2))}%)</span>
+                    <span className="font-bold">+${totals.pssSubtotal.toFixed(2)}</span>
+                </div>
+            )}
+
+            {totals.insuranceSubtotal > 0 && (
+                <div className="flex justify-between text-blue-300">
+                    <span className="flex items-center gap-1"><ShieldCheck size={14}/> + Ins (3%)</span>
+                    <span className="font-bold">+${totals.insuranceSubtotal.toFixed(2)}</span>
+                </div>
+            )}
                                     {/* 🔥 NUEVA SECCIÓN DE CARGOS ESPECIALES EN DESKTOP (MULTILINGÜE) 🔥 */}
                                     {totals.specialChargesSubtotal > 0 && (
                                         <div className="pt-2 pb-2">
@@ -1285,6 +1301,13 @@ containerFeeSubtotal += parseFloat(billExtraCharges.containerFee) || 0;  // ← 
     <div className="flex justify-between text-blue-300">
         <span>{t('containerFeeLabel')}</span>
         <span>+${totals.containerFeeSubtotal.toFixed(2)}</span>
+    </div>
+)}
+
+{totals.pssSubtotal > 0 && (
+    <div className="flex justify-between text-orange-300">
+        <span>📈 PSS ({parseFloat(((tenantRates.pss_percentage as number ?? 0) * 100).toFixed(2))}%)</span>
+        <span>+${totals.pssSubtotal.toFixed(2)}</span>
     </div>
 )}
 

@@ -56,6 +56,11 @@ return NextResponse.json({
 local_pallet_box_truck_4: Number(rates['local_pallet_box_truck_4'] ?? 250),
 local_pallet_box_truck_5: Number(rates['local_pallet_box_truck_5'] ?? 300),
 local_pallet_box_truck_6: Number(rates['local_pallet_box_truck_6'] ?? 350),
+  // 📈 PSS
+  pss_active: Number(rates['pss_active'] ?? 0),
+  pss_percentage: Number(rates['pss_percentage'] ?? 0),
+  pss_start_date: String(rates['pss_start_date'] ?? ''),
+  pss_end_date: String(rates['pss_end_date'] ?? ''),
 });
 } catch (error) {
     console.error('Error loading public rates:', error);
