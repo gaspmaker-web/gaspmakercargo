@@ -8,6 +8,7 @@ export async function POST(req: Request) {
   try {
     // 👇 VACUNA 2: Imports dentro de la función (Lazy Loading)
     const prisma = (await import('@/lib/prisma')).default;
+    const bcrypt = (await import('bcryptjs')).default;
     const { auth } = await import('@/auth');
         const session = await auth();
         const mobileUser = await getMobileUser(req);

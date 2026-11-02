@@ -12,7 +12,9 @@ export async function GET(req: Request) {
   const { stripe } = await import("@/lib/stripe"); // 🔥 IMPORTAMOS STRIPE AQUÍ TAMBIÉN
 
   const session = await auth();
-  if (!session?.user?.id) return NextResponse.json({ message: "No autorizado" }, { status: 401 });
+  const mobileUser = await getMobileUser(req);
+  const userId = session?.user?.id || mobileUser?.id;
+  if (!userId) return NextResponse.json({ message: "No autorizado" }, { status: 401 });
 
   const rawCards = await prisma.paymentMethod.findMany({
     where: { userId: userId },
@@ -49,7 +51,9 @@ export async function POST(req: Request) {
     const { stripe } = await import("@/lib/stripe");
 
     const session = await auth();
-    if (!session?.user?.id) return NextResponse.json({ message: "No autorizado" }, { status: 401 });
+    const mobileUser = await getMobileUser(req);
+    const userId = session?.user?.id || mobileUser?.id;
+    if (!userId) return NextResponse.json({ message: "No autorizado" }, { status: 401 });
 
     const { paymentMethodId } = await req.json();
 
@@ -126,7 +130,9 @@ export async function DELETE(req: Request) {
     const { stripe } = await import("@/lib/stripe");
 
     const session = await auth();
-    if (!session?.user?.id) return NextResponse.json({ status: 401 });
+    const mobileUser = await getMobileUser(req);
+    const userId = session?.user?.id || mobileUser?.id;
+    if (!userId) return NextResponse.json({ status: 401 });
 
     const { cardId } = await req.json();
 

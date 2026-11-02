@@ -9,7 +9,9 @@ export async function GET(req: Request) {
     const prisma = (await import("@/lib/prisma")).default;
 
     const session = await auth();
-    if (!session || !session.user?.id) return NextResponse.json({ message: "No autorizado" }, { status: 401 });
+    const mobileUser = await getMobileUser(req);
+    const userId = session?.user?.id || mobileUser?.id;
+    if (!userId) return NextResponse.json({ message: "No autorizado" }, { status: 401 });
 
     
     // 1. Buscamos en la nueva libreta de direcciones
