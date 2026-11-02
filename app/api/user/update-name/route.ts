@@ -1,3 +1,4 @@
+import { getMobileUser } from '@/lib/getMobileUser';
 import { NextResponse } from "next/server";
 
 // 👇 VACUNA 1: Forzar modo dinámico (Vital para evitar el error de Build)
@@ -13,17 +14,11 @@ export async function POST(req: Request) {
         
         // --- CAMBIO DE NEXTAUTH v5 ---
         // 1. Importa 'auth' dinámicamente
-        const { auth } = await import("@/auth");
-        // -----------------------------
-
-        // --- CAMBIO DE NEXTAUTH v5 ---
-        // 2. Obtén la sesión directamente con la función 'auth'
+        const { auth } = await import('@/auth');
         const session = await auth();
-        // -----------------------------
-
-        // 2. Seguridad: Verificar si el usuario está autenticado
-        if (!session || !session.user || !session.user.id) {
-            console.error("API: Error - No hay sesión o falta user.id");
+        const mobileUser = await getMobileUser(req);
+        const userId = session?.user?.id || mobileUser?.id;
+        if (!userId) {
             return NextResponse.json({ message: 'No autenticado' }, { status: 401 });
         }
         
@@ -35,8 +30,7 @@ export async function POST(req: Request) {
         }
 
         // 4. Obtener el ID de usuario de la sesión
-        const userId = session.user.id;
-        
+                
         console.log(`API: Actualizando nombre para userId: ${userId} a "${name}"`);
 
         // 5. Actualizar la base de datos

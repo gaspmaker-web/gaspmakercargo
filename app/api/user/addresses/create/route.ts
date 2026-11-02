@@ -1,16 +1,17 @@
+import { getMobileUser } from '@/lib/getMobileUser';
 import { NextResponse } from "next/server";
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
   try {
-    const { auth } = await import("@/auth");
-    const prisma = (await import("@/lib/prisma")).default;
-
-    const session = await auth();
-    if (!session || !session.user?.id) {
-      return NextResponse.json({ message: "No autorizado" }, { status: 401 });
-    }
+    const { auth } = await import('@/auth');
+        const session = await auth();
+        const mobileUser = await getMobileUser(req);
+        const userId = session?.user?.id || mobileUser?.id;
+        if (!userId) {
+            return NextResponse.json({ message: 'No autenticado' }, { status: 401 });
+        }
 
     // 🔥 ACTUALIZADO: Ahora extraemos las piezas limpias que vienen del nuevo Modal
     const { 
@@ -26,7 +27,7 @@ export async function POST(req: Request) {
 
     // Verificamos si es la primera dirección para marcarla como DEFAULT
     const count = await prisma.address.count({ 
-      where: { userId: session.user.id } 
+      where: { userId: userId } 
     });
     const isDefault = count === 0;
 
@@ -43,7 +44,7 @@ export async function POST(req: Request) {
         cityZip, // Mantenemos este para compatibilidad
         country,
         isDefault,
-        userId: session.user.id
+        userId: userId
       },
     });
 

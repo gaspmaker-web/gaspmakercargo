@@ -1,3 +1,4 @@
+import { getMobileUser } from '@/lib/getMobileUser';
 import { NextResponse } from "next/server";
 
 // 👇 VACUNA 1: Forzar modo dinámico (Vital para Stripe)
@@ -14,7 +15,7 @@ export async function GET(req: Request) {
   if (!session?.user?.id) return NextResponse.json({ message: "No autorizado" }, { status: 401 });
 
   const rawCards = await prisma.paymentMethod.findMany({
-    where: { userId: session.user.id },
+    where: { userId: userId },
     orderBy: { isDefault: 'desc' } // Muestra la predeterminada primero
   });
 
@@ -60,9 +61,9 @@ export async function POST(req: Request) {
     }
 
     // 2. Extraer datos del usuario y su suscripción en la BD
-    const user = await prisma.user.findUnique({ where: { id: session.user.id } });
+    const user = await prisma.user.findUnique({ where: { id: userId } });
     const activeSub = await prisma.mailboxSubscription.findUnique({
-        where: { userId: session.user.id }
+        where: { userId: userId }
     });
 
     // 3. 🛡️ OPERACIÓN MAESTRA EN STRIPE 🛡️
@@ -91,14 +92,14 @@ export async function POST(req: Request) {
 
     // 4. Quitar el estado 'Default' a las tarjetas anteriores en la BD local
     await prisma.paymentMethod.updateMany({
-        where: { userId: session.user.id },
+        where: { userId: userId },
         data: { isDefault: false }
     });
 
     // 5. Guardar la nueva tarjeta como Default absoluto en BD local
     const newCard = await prisma.paymentMethod.create({
         data: {
-            userId: session.user.id,
+            userId: userId,
             stripePaymentMethodId: paymentMethod.id,
             brand: paymentMethod.card.brand,
             last4: paymentMethod.card.last4,

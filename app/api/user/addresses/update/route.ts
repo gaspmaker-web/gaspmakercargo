@@ -1,16 +1,17 @@
+import { getMobileUser } from '@/lib/getMobileUser';
 import { NextResponse } from "next/server";
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
   try {
-    const { auth } = await import("@/auth");
-    const prisma = (await import("@/lib/prisma")).default;
-
-    const session = await auth();
-    if (!session || !session.user?.id) {
-      return NextResponse.json({ message: "No autorizado" }, { status: 401 });
-    }
+    const { auth } = await import('@/auth');
+        const session = await auth();
+        const mobileUser = await getMobileUser(req);
+        const userId = session?.user?.id || mobileUser?.id;
+        if (!userId) {
+            return NextResponse.json({ message: 'No autenticado' }, { status: 401 });
+        }
 
     // 🔥 ACTUALIZADO: Extraemos las piezas limpias del body
     const { 

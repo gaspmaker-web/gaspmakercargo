@@ -1,3 +1,4 @@
+import { getMobileUser } from '@/lib/getMobileUser';
 import { NextResponse } from "next/server";
 
 export const dynamic = 'force-dynamic';
@@ -14,7 +15,7 @@ export async function POST(req: Request) {
 
     // 1. Le quitamos la corona de DEFAULT a todas las direcciones del usuario
     await prisma.address.updateMany({
-      where: { userId: session.user.id },
+      where: { userId: userId },
       data: { isDefault: false }
     });
 

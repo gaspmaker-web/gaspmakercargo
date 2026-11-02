@@ -1,21 +1,22 @@
+import { getMobileUser } from '@/lib/getMobileUser';
 import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
   try {
-    const { auth } = await import("@/auth");
-    const prisma = (await import("@/lib/prisma")).default;
-
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
-    }
+    const { auth } = await import('@/auth');
+        const session = await auth();
+        const mobileUser = await getMobileUser(req);
+        const userId = session?.user?.id || mobileUser?.id;
+        if (!userId) {
+            return NextResponse.json({ message: 'No autenticado' }, { status: 401 });
+        }
 
     const { smsConsent } = await req.json();
 
     await prisma.user.update({
-      where: { id: session.user.id },
+      where: { id: userId },
       data: { smsConsent: Boolean(smsConsent) }
     });
 

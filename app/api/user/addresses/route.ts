@@ -1,3 +1,4 @@
+import { getMobileUser } from '@/lib/getMobileUser';
 import { NextResponse } from "next/server";
 
 export const dynamic = 'force-dynamic';
@@ -10,8 +11,7 @@ export async function GET(req: Request) {
     const session = await auth();
     if (!session || !session.user?.id) return NextResponse.json({ message: "No autorizado" }, { status: 401 });
 
-    const userId = session.user.id;
-
+    
     // 1. Buscamos en la nueva libreta de direcciones
     let addresses = await prisma.address.findMany({
       where: { userId: userId },
