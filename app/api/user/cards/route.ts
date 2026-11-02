@@ -55,7 +55,21 @@ export async function POST(req: Request) {
     const userId = session?.user?.id || mobileUser?.id;
     if (!userId) return NextResponse.json({ message: "No autorizado" }, { status: 401 });
 
-    const { paymentMethodId } = await req.json();
+    const body = await req.json();
+    let paymentMethodId = body.paymentMethodId;
+
+    // Si viene setupIntentId, consultamos Stripe para obtener el paymentMethod
+    if (!paymentMethodId && body.setupIntentId) {
+      const setupIntent = await stripe.setupIntents.retrieve(body.setupIntentId);
+      if (!setupIntent.payment_method) {
+        return NextResponse.json({ message: "SetupIntent sin tarjeta adjunta" }, { status: 400 });
+      }
+      paymentMethodId = setupIntent.payment_method as string;
+    }
+
+    if (!paymentMethodId) {
+      return NextResponse.json({ message: "Se requiere paymentMethodId o setupIntentId" }, { status: 400 });
+    }
 
     // 1. Recuperar detalles de la tarjeta desde Stripe
     const paymentMethod = await stripe.paymentMethods.retrieve(paymentMethodId);

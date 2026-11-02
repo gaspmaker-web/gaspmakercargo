@@ -74,7 +74,7 @@ export async function POST(req: Request) {
       usage: 'off_session', 
     });
 
-    return NextResponse.json({ clientSecret: setupIntent.client_secret });
+    return NextResponse.json({ clientSecret: setupIntent.client_secret, setupIntentId: setupIntent.id });
 
   } catch (error: any) {
     console.error("🔥 Error Stripe:", error.message);
