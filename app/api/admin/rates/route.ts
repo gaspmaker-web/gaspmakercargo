@@ -66,26 +66,33 @@ export async function POST(req: NextRequest) {
 if (rates && Array.isArray(rates)) {
   await prisma.$transaction(async (tx) => {
     for (const rate of rates) {
-      await tx.tenantRate.upsert({
+      const existing = await tx.tenantRate.findFirst({
         where: {
-          tenantId_concept_countryCode: {
-            tenantId: tenant.id,
-            concept: rate.concept,
-            countryCode: rate.countryCode ?? '',
-          }
-        },
-        update: {
-          value: rate.value,
-          ...(rate.textValue !== undefined && { textValue: rate.textValue }),
-        },
-        create: {
           tenantId: tenant.id,
           concept: rate.concept,
           countryCode: rate.countryCode ?? null,
-          value: rate.value,
-          ...(rate.textValue !== undefined && { textValue: rate.textValue }),
         }
       });
+
+      if (existing) {
+        await tx.tenantRate.update({
+          where: { id: existing.id },
+          data: {
+            value: rate.value,
+            ...(rate.textValue !== undefined && { textValue: rate.textValue }),
+          }
+        });
+      } else {
+        await tx.tenantRate.create({
+          data: {
+            tenantId: tenant.id,
+            concept: rate.concept,
+            countryCode: rate.countryCode ?? null,
+            value: rate.value,
+            ...(rate.textValue !== undefined && { textValue: rate.textValue }),
+          }
+        });
+      }
     }
   }, { timeout: 30000 });
 }
