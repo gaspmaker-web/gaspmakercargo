@@ -772,6 +772,86 @@ const internationalCountries = Array.from(new Set(
               </div>
             </div>
 
+                        {/* PSS — Peak Season Surcharge */}
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+              <h2 className="font-bold text-gray-900 mb-1 flex items-center gap-2">
+                📈 PSS — Peak Season Surcharge
+              </h2>
+              <p className="text-sm text-gray-500 mb-5">Additional percentage applied to air freight rates during peak season.</p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Porcentaje */}
+                <div>
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 block">PSS Percentage (%)</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      step="0.1"
+                      min="0"
+                      max="100"
+                      value={parseFloat((getRate('pss_percentage') * 100).toFixed(2))}
+                      onChange={e => setRate('pss_percentage', null, (parseFloat(e.target.value) || 0) / 100)}
+                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
+                    />
+                    <span className="text-gray-400 text-sm">%</span>
+                  </div>
+                  <p className="text-xs text-gray-400 mt-1">e.g. 15 = 15% surcharge added on top of air rate</p>
+                </div>
+
+                {/* Activo / Inactivo */}
+                <div>
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 block">PSS Status</label>
+                  <div className="flex items-center gap-3 mt-2">
+                    <button
+                      onClick={() => setRate('pss_active', null, getRate('pss_active') === 1 ? 0 : 1)}
+                      className={`relative inline-flex h-8 w-16 items-center rounded-full transition-colors ${
+                        getRate('pss_active') === 1 ? 'bg-green-500' : 'bg-gray-300'
+                      }`}
+                    >
+                      <span className={`inline-block h-6 w-6 transform rounded-full bg-white shadow transition-transform ${
+                        getRate('pss_active') === 1 ? 'translate-x-9' : 'translate-x-1'
+                      }`} />
+                    </button>
+                    <span className={`text-sm font-bold ${getRate('pss_active') === 1 ? 'text-green-600' : 'text-gray-400'}`}>
+                      {getRate('pss_active') === 1 ? '🟢 Active' : '⚪ Inactive'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Fecha inicio */}
+                <div>
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 block">Start Date</label>
+                  <input
+                    type="date"
+                    value={getTextRate('pss_start_date') || ''}
+                    onChange={e => setTextRate('pss_start_date', null, e.target.value)}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
+                  />
+                </div>
+
+                {/* Fecha fin */}
+                <div>
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 block">End Date</label>
+                  <input
+                    type="date"
+                    value={getTextRate('pss_end_date') || ''}
+                    onChange={e => setTextRate('pss_end_date', null, e.target.value)}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
+                  />
+                </div>
+              </div>
+
+              {/* Preview */}
+              {getRate('pss_active') === 1 && getRate('pss_percentage') > 0 && (
+                <div className="mt-4 p-3 bg-orange-50 border border-orange-200 rounded-xl text-sm text-orange-700">
+                  ⚠️ PSS active: <strong>{parseFloat((getRate('pss_percentage') * 100).toFixed(2))}%</strong> surcharge applied to all air rates
+                  {getTextRate('pss_start_date') && getTextRate('pss_end_date') && (
+                    <> from <strong>{getTextRate('pss_start_date')}</strong> to <strong>{getTextRate('pss_end_date')}</strong></>
+                  )}.
+                </div>
+              )}
+            </div>
+
             {/* Buzón Virtual */}
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
               <h2 className="font-bold text-gray-900 mb-4">📬 Virtual Mailbox</h2>

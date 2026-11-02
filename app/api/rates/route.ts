@@ -555,7 +555,22 @@ if (showAir && airCountries.includes(targetForAir)) {
             : chargeableWeight <= 36 
             ? minRateMid 
             : 0;
-        let priceAir = Math.max(chargeableWeight * airPerLb, applicableMin);
+            let priceAir = Math.max(chargeableWeight * airPerLb, applicableMin);
+
+        // 📈 PSS — Peak Season Surcharge
+        const pssActive = rate('pss_active', undefined, 0);
+        const pssPercentage = rate('pss_percentage', undefined, 0);
+        const pssStartDate = rateText('pss_start_date', undefined, '');
+        const pssEndDate = rateText('pss_end_date', undefined, '');
+        if (pssActive === 1 && pssPercentage > 0) {
+          const today = new Date().toISOString().split('T')[0];
+          const inRange = (!pssStartDate && !pssEndDate) ||
+            ((!pssStartDate || today >= pssStartDate) && (!pssEndDate || today <= pssEndDate));
+          if (inRange) {
+            priceAir = parseFloat((priceAir * (1 + pssPercentage)).toFixed(2));
+          }
+        }
+
     const vipMinWeight = rate('vip_wholesale_min_weight', targetForAir, 230);
     const vipRateAir = rate('vip_wholesale_rate_air', targetForAir, 2.80);
 if (isVipWholesale && chargeableWeight >= vipMinWeight) {
