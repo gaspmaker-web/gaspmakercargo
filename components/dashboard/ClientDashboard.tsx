@@ -99,6 +99,7 @@ export default function ClientDashboard({
   const [pickupTime, setPickupTime] = useState("");
   const [isProcessingPickup, setIsProcessingPickup] = useState(false);
   const [shippingEstimate, setShippingEstimate] = useState<any>(null);
+  const [showPssBanner, setShowPssBanner] = useState(true);
 
   // 1. FILTRADO
   const displayPackages = packages.filter(pkg => 
@@ -356,7 +357,29 @@ useEffect(() => {
                     <span className="bg-blue-800 px-1.5 py-0.5 rounded text-[10px]">{totalSelectedWeight.toFixed(1)} lbs</span>
                 </div>
             )}
-        </div>
+               </div>
+        {/* PSS Banner */}
+        {showPssBanner && (
+            <div className="relative bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-2xl p-4 mb-6 shadow-lg flex items-start gap-3 animate-in slide-in-from-top duration-500">
+                <div className="bg-white/20 p-2 rounded-full shrink-0 mt-0.5">
+                    <AlertTriangle size={18} className="text-white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                    <p className="font-bold text-sm mb-0.5">⚓ {t('pssBannerTitle')}</p>
+                    <p className="text-xs text-white/90 leading-relaxed">
+                        {t.rich('pssBannerDesc', {
+                            strong: (chunks) => <strong>{chunks}</strong>
+                        })}
+                    </p>
+                </div>
+                <button
+                    onClick={() => setShowPssBanner(false)}
+                    className="text-white/70 hover:text-white transition-colors shrink-0 mt-0.5"
+                >
+                    <X size={18} />
+                </button>
+            </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6 mt-6 sm:mt-0 mb-8">
             <div className="lg:col-span-8 xl:col-span-9 flex">

@@ -265,7 +265,9 @@
     "requestOcean": "Consolidación Marítima",
     "btnConfirmLocal": "Confirmar Entrega Local",
     "btnConsolidateLocalPallet": "Agrupar en Pallet (Delivery)",
-    "searchByTracking": "Buscar por tracking o descripción..."
+    "searchByTracking": "Buscar por tracking o descripción...",
+    "pssBannerTitle": "Recargo de Temporada Alta (PSS)",
+    "pssBannerDesc": "Un <strong>recargo del 7.5%</strong> aplicará a todas las rutas y mercancías del <strong>1 de noviembre al 31 de diciembre de 2026</strong>."
   },
   "Notifications": {
     "title": "Notificaciones",

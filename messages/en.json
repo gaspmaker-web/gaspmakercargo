@@ -265,7 +265,9 @@
     "requestOcean": "Ocean Consolidation",
     "btnConfirmLocal": "Confirm Local Delivery",
     "btnConsolidateLocalPallet": "Group on Pallet (delivery)",
-    "searchByTracking": "Search by tracking or description..."
+    "searchByTracking": "Search by tracking or description...",
+    "pssBannerTitle": "Peak Season Surcharge (PSS)",
+    "pssBannerDesc": "A <strong>7.5% surcharge</strong> will apply to all routes and commodities from <strong>November 1st to December 31st, 2026</strong>."
   },
   "Notifications": {
     "title": "Notifications",

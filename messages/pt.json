@@ -265,7 +265,9 @@
     "requestOcean": "Consolidação Marítima",
     "btnConfirmLocal": "Confirmar Entrega Local",
     "btnConsolidateLocalPallet": "Agrupar em Pallet (Delivery)",
-    "searchByTracking": "Buscar por rastreamento ou descrição..."
+    "searchByTracking": "Buscar por rastreamento ou descrição...",
+    "pssBannerTitle": "Sobretaxa de Alta Temporada (PSS)",
+    "pssBannerDesc": "Uma <strong>sobretaxa de 7,5%</strong> será aplicada a todas as rotas e mercadorias de <strong>1º de novembro a 31 de dezembro de 2026</strong>."
   },
   "Notifications": {
     "title": "Notificações",

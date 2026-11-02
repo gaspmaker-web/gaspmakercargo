@@ -265,7 +265,9 @@
     "requestOcean": "Consolidation Maritime",
     "btnConfirmLocal": "Confirmer la Livraison Locale",
     "btnConsolidateLocalPallet": "Grouper sur Palette (Livraison)",
-    "searchByTracking": "Rechercher par suivi ou description..."
+    "searchByTracking": "Rechercher par suivi ou description...",
+    "pssBannerTitle": "Surcharge Haute Saison (PSS)",
+    "pssBannerDesc": "Une <strong>surcharge de 7,5%</strong> s'appliquera à toutes les routes et marchandises du <strong>1er novembre au 31 décembre 2026</strong>."
   },
   "Notifications": {
     "title": "Notifications",
