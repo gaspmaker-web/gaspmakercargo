@@ -19,30 +19,27 @@ export async function POST(req: Request) {
     const user = await getUserFromToken(req);
     if (!user?.id || !user?.email) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
 
-    const { getTenant } = await import('@/lib/tenant');
-    const tenant = await getTenant();
     const stripe = await getTenantStripe(process.env.TENANT_SLUG || 'gaspmaker');
     const body = await req.json();
     const { planType } = body;
 
-    const tenantFull = await prisma.tenant.findUnique({ where: { id: tenant?.id || '' }, select: { stripe_mailbox_basic_price_id: true, stripe_mailbox_premium_price_id: true } });
-
-    const { getTenantId } = await import('@/lib/tenant-cache');
-    const { getTenantRate } = await import('@/lib/tenant-rates');
-    const tenantId = await getTenantId(process.env.TENANT_SLUG || 'gaspmaker');
-    const basicPrice = tenantId ? (await getTenantRate(tenantId, 'mailbox_basic_monthly')) ?? 7.99 : 7.99;
-    const premiumPrice = tenantId ? (await getTenantRate(tenantId, 'mailbox_premium_monthly')) ?? 14.99 : 14.99;
+    const tenant = await prisma.tenant.findFirst({
+      where: { slug: process.env.TENANT_SLUG || 'gaspmaker' },
+      select: { id: true, stripe_mailbox_basic_price_id: true, stripe_mailbox_premium_price_id: true }
+    });
 
     let priceId = '', amountToSave = 0, exactDbPlanName = '';
     if (planType === 'Digital Basic') {
-      priceId = tenantFull?.stripe_mailbox_basic_price_id || 'price_1TBrULJwbF2jSvCs6ouoqK77';
-      amountToSave = basicPrice; exactDbPlanName = 'Digital Basic';
+      priceId = tenant?.stripe_mailbox_basic_price_id || '';
+      amountToSave = 7.99; exactDbPlanName = 'Digital Basic';
     } else if (planType === 'Premium Cargo') {
-      priceId = tenantFull?.stripe_mailbox_premium_price_id || 'price_1TBrV9JwbF2jSvCs8hx6RhSA';
-      amountToSave = premiumPrice; exactDbPlanName = 'Premium Cargo';
+      priceId = tenant?.stripe_mailbox_premium_price_id || '';
+      amountToSave = 14.99; exactDbPlanName = 'Premium Cargo';
     } else {
       return NextResponse.json({ error: 'Plan invalido' }, { status: 400 });
     }
+
+    if (!priceId) return NextResponse.json({ error: 'Price ID no configurado' }, { status: 500 });
 
     const dbUser = await prisma.user.findUnique({ where: { id: user.id } });
     let customerId = dbUser?.stripeCustomerId;
