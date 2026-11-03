@@ -2,6 +2,24 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { jwtVerify } from 'jose';
 
+
+function generateRandomString(length) {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let result = '';
+  for (let i = 0; i < length; i++) result += chars.charAt(Math.floor(Math.random() * chars.length));
+  return result;
+}
+
+async function ensureReferralCode(prisma, dbUser) {
+  if (dbUser.referralCode) return dbUser.referralCode;
+  const cleanName = dbUser.name?.split(' ')[0].toUpperCase().replace(/[^A-Z0-9]/g, '') || 'USER';
+  const suitePart = dbUser.suiteNo ? dbUser.suiteNo.split('-')[1] || dbUser.suiteNo.replace(/[^0-9]/g, '') : 'GMC';
+  const randomSuffix = generateRandomString(4);
+  const code = `${cleanName}-${suitePart}-${randomSuffix}`;
+  await prisma.user.update({ where: { id: dbUser.id }, data: { referralCode: code } });
+  return code;
+}
+
 export const dynamic = 'force-dynamic';
 
 const STORAGE_FREE_DAYS = 30;
@@ -57,6 +75,7 @@ export async function GET(req: Request) {
     const locker: Record<string, string> = {};
     for (const row of lockerRows) locker[row.key] = row.value;
     if (!dbUser) return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 });
+    dbUser.referralCode = await ensureReferralCode(prisma, dbUser);
 
     const allPackages = await prisma.package.findMany({
       where: { userId: user.id, consolidatedShipmentId: null },
