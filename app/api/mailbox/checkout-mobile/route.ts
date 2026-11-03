@@ -78,7 +78,7 @@ export async function POST(req: Request) {
       expand: ['latest_invoice.payment_intent'],
     });
 
-    // Extract client secret from the subscription's payment intent
+    // Extract client secret — retrieve invoice explicitly if needed
     const latestInvoice: any = subscription.latest_invoice;
     let paymentIntentId: string | null = null;
     let clientSecret: string | null = null;
@@ -86,17 +86,26 @@ export async function POST(req: Request) {
     if (latestInvoice?.payment_intent && typeof latestInvoice.payment_intent === 'object') {
       clientSecret = latestInvoice.payment_intent.client_secret ?? null;
       paymentIntentId = latestInvoice.payment_intent.id ?? null;
-    } else if (latestInvoice?.payment_intent && typeof latestInvoice.payment_intent === 'string') {
-      const pi = await stripe.paymentIntents.retrieve(latestInvoice.payment_intent);
-      clientSecret = pi.client_secret ?? null;
-      paymentIntentId = pi.id;
+    } else {
+      // Expand failed — retrieve invoice and its payment intent directly
+      const invoiceId = typeof latestInvoice === 'string' ? latestInvoice : latestInvoice?.id;
+      if (invoiceId) {
+        const invoice: any = await stripe.invoices.retrieve(invoiceId, {
+          expand: ['payment_intent'],
+        });
+        if (invoice.payment_intent && typeof invoice.payment_intent === 'object') {
+          clientSecret = invoice.payment_intent.client_secret ?? null;
+          paymentIntentId = invoice.payment_intent.id ?? null;
+        } else if (typeof invoice.payment_intent === 'string') {
+          const pi = await stripe.paymentIntents.retrieve(invoice.payment_intent);
+          clientSecret = pi.client_secret ?? null;
+          paymentIntentId = pi.id;
+        }
+      }
     }
 
     if (!clientSecret) {
-      throw new Error(
-        `No client_secret — invoice status: ${latestInvoice?.status}, ` +
-        `pi type: ${typeof latestInvoice?.payment_intent}`
-      );
+      throw new Error('No se pudo obtener el client_secret para procesar el pago');
     }
 
     // Upsert mailbox subscription record
