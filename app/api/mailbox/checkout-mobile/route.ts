@@ -10,14 +10,20 @@ async function getUserFromToken(req: Request) {
   if (!auth?.startsWith('Bearer ')) return null;
   const token = auth.slice(7);
   const secret = new TextEncoder().encode(process.env.NEXTAUTH_SECRET || 'secret');
-  try { const { payload } = await jwtVerify(token, secret); return payload as any; }
-  catch { return null; }
+  try {
+    const { payload } = await jwtVerify(token, secret);
+    return payload as any;
+  } catch {
+    return null;
+  }
 }
 
 export async function POST(req: Request) {
   try {
     const user = await getUserFromToken(req);
-    if (!user?.id || !user?.email) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+    if (!user?.id || !user?.email) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+    }
 
     const stripe = await getTenantStripe(process.env.TENANT_SLUG || 'gaspmaker');
     const body = await req.json();
@@ -25,30 +31,45 @@ export async function POST(req: Request) {
 
     const tenant = await prisma.tenant.findFirst({
       where: { slug: process.env.TENANT_SLUG || 'gaspmaker' },
-      select: { id: true, stripe_mailbox_basic_price_id: true, stripe_mailbox_premium_price_id: true }
+      select: {
+        id: true,
+        stripe_mailbox_basic_price_id: true,
+        stripe_mailbox_premium_price_id: true,
+      },
     });
 
-    let priceId = '', amountToSave = 0, exactDbPlanName = '';
+    let priceId = '';
+    let amountToSave = 0;
+    let exactDbPlanName = '';
+
     if (planType === 'Digital Basic') {
       priceId = tenant?.stripe_mailbox_basic_price_id || '';
-      amountToSave = 7.99; exactDbPlanName = 'Digital Basic';
+      amountToSave = 7.99;
+      exactDbPlanName = 'Digital Basic';
     } else if (planType === 'Premium Cargo') {
       priceId = tenant?.stripe_mailbox_premium_price_id || '';
-      amountToSave = 14.99; exactDbPlanName = 'Premium Cargo';
+      amountToSave = 14.99;
+      exactDbPlanName = 'Premium Cargo';
     } else {
       return NextResponse.json({ error: 'Plan invalido' }, { status: 400 });
     }
 
-    console.error("[checkout-mobile] priceId:", priceId, "tenant:", JSON.stringify(tenant)); if (!priceId) return NextResponse.json({ error: 'Price ID no configurado' }, { status: 500 });
+    if (!priceId) {
+      return NextResponse.json({ error: 'Price ID no configurado' }, { status: 500 });
+    }
 
+    // Get or create Stripe customer
     const dbUser = await prisma.user.findUnique({ where: { id: user.id } });
     let customerId = dbUser?.stripeCustomerId;
     if (!customerId) {
       const existing = await stripe.customers.list({ email: user.email, limit: 1 });
-      customerId = existing.data.length > 0 ? existing.data[0].id : (await stripe.customers.create({ email: user.email, name: user.name || 'Cliente GMC' })).id;
+      customerId = existing.data.length > 0
+        ? existing.data[0].id
+        : (await stripe.customers.create({ email: user.email, name: user.name || 'Cliente GMC' })).id;
       await prisma.user.update({ where: { id: user.id }, data: { stripeCustomerId: customerId } });
     }
 
+    // Create subscription with incomplete payment
     const subscription: any = await stripe.subscriptions.create({
       customer: customerId,
       items: [{ price: priceId }],
@@ -57,30 +78,69 @@ export async function POST(req: Request) {
       expand: ['latest_invoice.payment_intent'],
     });
 
-    let clientSecret = null;
+    // Extract client secret from the subscription's payment intent
     const latestInvoice: any = subscription.latest_invoice;
-    if (latestInvoice?.payment_intent?.client_secret) {
-      clientSecret = latestInvoice.payment_intent.client_secret;
-    } else if (latestInvoice?.payment_intent) {
-      // Retrieve payment intent directly
-      const pi = await stripe.paymentIntents.retrieve(latestInvoice.payment_intent);
-      clientSecret = pi.client_secret;
-    }
-    if (!clientSecret) throw new Error('No client_secret - invoice status: ' + latestInvoice?.status + ' pi: ' + JSON.stringify(latestInvoice?.payment_intent));
+    let paymentIntentId: string | null = null;
+    let clientSecret: string | null = null;
 
+    if (latestInvoice?.payment_intent && typeof latestInvoice.payment_intent === 'object') {
+      clientSecret = latestInvoice.payment_intent.client_secret ?? null;
+      paymentIntentId = latestInvoice.payment_intent.id ?? null;
+    } else if (latestInvoice?.payment_intent && typeof latestInvoice.payment_intent === 'string') {
+      const pi = await stripe.paymentIntents.retrieve(latestInvoice.payment_intent);
+      clientSecret = pi.client_secret ?? null;
+      paymentIntentId = pi.id;
+    }
+
+    if (!clientSecret) {
+      throw new Error(
+        `No client_secret — invoice status: ${latestInvoice?.status}, ` +
+        `pi type: ${typeof latestInvoice?.payment_intent}`
+      );
+    }
+
+    // Upsert mailbox subscription record
     const existingSub = await prisma.mailboxSubscription.findFirst({ where: { userId: user.id } });
     if (existingSub) {
-      await prisma.mailboxSubscription.update({ where: { id: existingSub.id }, data: { planType: exactDbPlanName, stripeSubscriptionId: subscription.id, currentPeriodEnd: new Date(subscription.current_period_end * 1000), status: 'PENDING_PAYMENT' } });
+      await prisma.mailboxSubscription.update({
+        where: { id: existingSub.id },
+        data: {
+          planType: exactDbPlanName,
+          stripeSubscriptionId: subscription.id,
+          currentPeriodEnd: new Date(subscription.current_period_end * 1000),
+          status: 'PENDING_PAYMENT',
+        },
+      });
     } else {
-      await prisma.mailboxSubscription.create({ data: { userId: user.id, tenant_id: tenant?.id || null, planType: exactDbPlanName, stripeSubscriptionId: subscription.id, currentPeriodEnd: new Date(subscription.current_period_end * 1000), status: 'PENDING_PAYMENT' } });
+      await prisma.mailboxSubscription.create({
+        data: {
+          userId: user.id,
+          tenant_id: tenant?.id ?? null,
+          planType: exactDbPlanName,
+          stripeSubscriptionId: subscription.id,
+          currentPeriodEnd: new Date(subscription.current_period_end * 1000),
+          status: 'PENDING_PAYMENT',
+        },
+      });
     }
 
-    await prisma.mailboxTransaction.create({ data: { userId: user.id, amount: amountToSave, description: exactDbPlanName === 'Digital Basic' ? 'SUSCRIPCION BUZON BASICO' : 'SUSCRIPCION BUZON PREMIUM', stripePaymentId: paymentIntent.id, status: 'PENDIENTE' } });
+    // Record transaction
+    await prisma.mailboxTransaction.create({
+      data: {
+        userId: user.id,
+        amount: amountToSave,
+        description: exactDbPlanName === 'Digital Basic'
+          ? 'SUSCRIPCION BUZON BASICO'
+          : 'SUSCRIPCION BUZON PREMIUM',
+        stripePaymentId: paymentIntentId ?? subscription.id,
+        status: 'PENDIENTE',
+      },
+    });
 
     return NextResponse.json({ clientSecret, subscriptionId: subscription.id });
+
   } catch (error: any) {
     console.error('[checkout-mobile]', error);
     return NextResponse.json({ error: error.message || 'Error interno' }, { status: 500 });
   }
 }
-// Mon Nov  2 23:43:23 EST 2026
