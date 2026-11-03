@@ -39,7 +39,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Plan invalido' }, { status: 400 });
     }
 
-    if (!priceId) return NextResponse.json({ error: 'Price ID no configurado' }, { status: 500 });
+    console.error("[checkout-mobile] priceId:", priceId, "tenant:", JSON.stringify(tenant)); if (!priceId) return NextResponse.json({ error: 'Price ID no configurado' }, { status: 500 });
 
     const dbUser = await prisma.user.findUnique({ where: { id: user.id } });
     let customerId = dbUser?.stripeCustomerId;
@@ -57,8 +57,16 @@ export async function POST(req: Request) {
       expand: ['latest_invoice.payment_intent'],
     });
 
-    const paymentIntent: any = subscription.latest_invoice?.payment_intent;
-    if (!paymentIntent?.client_secret) throw new Error('No client_secret');
+    let clientSecret = null;
+    const latestInvoice: any = subscription.latest_invoice;
+    if (latestInvoice?.payment_intent?.client_secret) {
+      clientSecret = latestInvoice.payment_intent.client_secret;
+    } else if (latestInvoice?.payment_intent) {
+      // Retrieve payment intent directly
+      const pi = await stripe.paymentIntents.retrieve(latestInvoice.payment_intent);
+      clientSecret = pi.client_secret;
+    }
+    if (!clientSecret) throw new Error('No client_secret - invoice status: ' + latestInvoice?.status + ' pi: ' + JSON.stringify(latestInvoice?.payment_intent));
 
     const existingSub = await prisma.mailboxSubscription.findFirst({ where: { userId: user.id } });
     if (existingSub) {
@@ -69,7 +77,7 @@ export async function POST(req: Request) {
 
     await prisma.mailboxTransaction.create({ data: { userId: user.id, amount: amountToSave, description: exactDbPlanName === 'Digital Basic' ? 'SUSCRIPCION BUZON BASICO' : 'SUSCRIPCION BUZON PREMIUM', stripePaymentId: paymentIntent.id, status: 'PENDIENTE' } });
 
-    return NextResponse.json({ clientSecret: paymentIntent.client_secret, subscriptionId: subscription.id });
+    return NextResponse.json({ clientSecret, subscriptionId: subscription.id });
   } catch (error: any) {
     console.error('[checkout-mobile]', error);
     return NextResponse.json({ error: error.message || 'Error interno' }, { status: 500 });
