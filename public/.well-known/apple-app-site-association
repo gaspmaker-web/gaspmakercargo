@@ -1,0 +1,14 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "X6MU8CKYZ7.com.gaspmakercargo.app",
+        "paths": [
+          "/*/registro-cliente",
+          "/*/registro-cliente/*"
+        ]
+      }
+    ]
+  }
+}
