@@ -278,10 +278,23 @@ const STRIPE_FIXED_FEE = 0.30;
                         data: { walletBalance: { increment: 25.00 } }
                     });
 
+                    // 🎁 También damos $25 al cliente nuevo por usar el código de referido
+                    await prisma.user.update({
+                        where: { id: user.id },
+                        data: { walletBalance: { increment: 25.00 } }
+                    });
+
                     await sendNotification({
                         userId: promotor.id,
                         title: "¡Ganaste $25.00 USD! 🎁",
                         message: `Tu referido ${user.name} acaba de completar su envío. ¡Te hemos abonado $25 a tu billetera!`,
+                        type: "SUCCESS"
+                    });
+
+                    await sendNotification({
+                        userId: user.id,
+                        title: "¡Tienes $25.00 USD de bienvenida! 🎁",
+                        message: `¡Felicitaciones por tu primer envío! Te hemos abonado $25 a tu billetera como bono de referido.`,
                         type: "SUCCESS"
                     });
                 } else {
