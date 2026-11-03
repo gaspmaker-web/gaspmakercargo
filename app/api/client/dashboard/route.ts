@@ -49,7 +49,7 @@ export async function GET(req: Request) {
     const [dbUser, lockerRows] = await Promise.all([
       prisma.user.findUnique({
       where: { id: user.id },
-      select: { id: true, name: true, email: true, suiteNo: true, walletBalance: true, image: true, countryCode: true, phone: true }
+      select: { id: true, name: true, email: true, suiteNo: true, walletBalance: true, image: true, countryCode: true, phone: true, referralCode: true }
     }),
       prisma.lockerConfig.findMany(),
     ]);
