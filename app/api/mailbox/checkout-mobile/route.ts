@@ -69,7 +69,7 @@ export async function POST(req: Request) {
       await prisma.user.update({ where: { id: user.id }, data: { stripeCustomerId: customerId } });
     }
 
-    // Create subscription with incomplete payment
+    // Create subscription
     const subscription: any = await stripe.subscriptions.create({
       customer: customerId,
       items: [{ price: priceId }],
@@ -78,29 +78,43 @@ export async function POST(req: Request) {
       expand: ['latest_invoice.payment_intent'],
     });
 
-    // Extract client secret — retrieve invoice explicitly if needed
+    // Get invoice ID
     const latestInvoice: any = subscription.latest_invoice;
-    let paymentIntentId: string | null = null;
-    let clientSecret: string | null = null;
+    const invoiceId = typeof latestInvoice === 'string' ? latestInvoice : latestInvoice?.id;
 
-    if (latestInvoice?.payment_intent && typeof latestInvoice.payment_intent === 'object') {
-      clientSecret = latestInvoice.payment_intent.client_secret ?? null;
-      paymentIntentId = latestInvoice.payment_intent.id ?? null;
-    } else {
-      // Expand failed — retrieve invoice and its payment intent directly
-      const invoiceId = typeof latestInvoice === 'string' ? latestInvoice : latestInvoice?.id;
-      if (invoiceId) {
-        const invoice: any = await stripe.invoices.retrieve(invoiceId, {
-          expand: ['payment_intent'],
-        });
-        if (invoice.payment_intent && typeof invoice.payment_intent === 'object') {
-          clientSecret = invoice.payment_intent.client_secret ?? null;
-          paymentIntentId = invoice.payment_intent.id ?? null;
-        } else if (typeof invoice.payment_intent === 'string') {
-          const pi = await stripe.paymentIntents.retrieve(invoice.payment_intent);
-          clientSecret = pi.client_secret ?? null;
-          paymentIntentId = pi.id;
-        }
+    if (!invoiceId) {
+      throw new Error('No invoice found on subscription');
+    }
+
+    // Retrieve invoice with payment_intent expanded
+    const invoice: any = await stripe.invoices.retrieve(invoiceId, {
+      expand: ['payment_intent'],
+    });
+
+    let clientSecret: string | null = null;
+    let paymentIntentId: string | null = null;
+
+    if (invoice.payment_intent && typeof invoice.payment_intent === 'object') {
+      clientSecret = invoice.payment_intent.client_secret ?? null;
+      paymentIntentId = invoice.payment_intent.id ?? null;
+    } else if (typeof invoice.payment_intent === 'string') {
+      const pi = await stripe.paymentIntents.retrieve(invoice.payment_intent);
+      clientSecret = pi.client_secret ?? null;
+      paymentIntentId = pi.id;
+    }
+
+    // If still no payment_intent, finalize invoice to force creation
+    if (!clientSecret) {
+      const finalized: any = await stripe.invoices.finalizeInvoice(invoiceId, {
+        expand: ['payment_intent'],
+      });
+      if (finalized.payment_intent && typeof finalized.payment_intent === 'object') {
+        clientSecret = finalized.payment_intent.client_secret ?? null;
+        paymentIntentId = finalized.payment_intent.id ?? null;
+      } else if (typeof finalized.payment_intent === 'string') {
+        const pi = await stripe.paymentIntents.retrieve(finalized.payment_intent);
+        clientSecret = pi.client_secret ?? null;
+        paymentIntentId = pi.id;
       }
     }
 
@@ -133,7 +147,6 @@ export async function POST(req: Request) {
       });
     }
 
-    // Record transaction
     await prisma.mailboxTransaction.create({
       data: {
         userId: user.id,
