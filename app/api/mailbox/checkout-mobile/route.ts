@@ -75,3 +75,4 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: error.message || 'Error interno' }, { status: 500 });
   }
 }
+// Mon Nov  2 23:43:23 EST 2026
