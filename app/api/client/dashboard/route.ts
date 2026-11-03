@@ -95,6 +95,14 @@ export async function GET(req: Request) {
       select: { id: true, gmcShipmentNumber: true, status: true, selectedCourier: true, finalTrackingNumber: true, createdAt: true, totalAmount: true, packages: { select: { id: true } } }
     });
 
+    // Referral stats
+    const referredUsers = await prisma.user.findMany({
+      where: { referredBy: dbUser.referralCode || '' },
+      select: { id: true, referralRewardPaid: true }
+    });
+    const referralCount = referredUsers.length;
+    const referralEarned = referredUsers.filter(u => u.referralRewardPaid === true).length * 25;
+
     const DEBT_STATUSES = ['PENDIENTE_PAGO', 'PENDIENTE', 'CREATED', 'EN_ALMACEN'];
     const totalDebt = shipments.filter(s => DEBT_STATUSES.includes(s.status)).reduce((sum, s) => sum + (s.totalAmount || 0), 0);
 
@@ -120,7 +128,7 @@ export async function GET(req: Request) {
       user: { ...dbUser, miamiAddress: { recipient: dbUser.name, address: locker.address || '1861 NW 22nd St', city: locker.city || 'Miami, FL 33142', country: locker.country || 'United States', phone: locker.phone || '786-282-0763' } },
       packages: packagesWithFees.slice(0, 20),
       shipments: shipments.map(s => ({ ...s, packagesCount: s.packages.length })),
-      pickups, notifications,
+      pickups, notifications, referrals: { count: referralCount, earned: referralEarned },
       summary: { packagesInMiami, inTransit, atDestination, pendingPickups, unreadNotifications: notifications.length, blockedPackages, totalStorageFees, totalHandlingFees, totalDebt: parseFloat(totalDebt.toFixed(2)), hasDebt: totalDebt > 0 }
     });
   } catch (err) {
