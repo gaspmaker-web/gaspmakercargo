@@ -562,7 +562,7 @@ if (showAir && airCountries.includes(targetForAir)) {
         const pssPercentage = rate('pss_percentage', undefined, 0);
         const pssStartDate = rateText('pss_start_date', undefined, '');
         const pssEndDate = rateText('pss_end_date', undefined, '');
-        if (pssActive === 1 && pssPercentage > 0) {
+        if (pssActive === 1 && pssPercentage > 0 && !isVipWholesale) {
           const today = new Date().toISOString().split('T')[0];
           const inRange = (!pssStartDate && !pssEndDate) ||
             ((!pssStartDate || today >= pssStartDate) && (!pssEndDate || today <= pssEndDate));
