@@ -106,7 +106,7 @@ if (subscription) {
               data: {
                 planType,
                 stripeSubscriptionId: subscription.id,
-                currentPeriodEnd: new Date(subscription.current_period_end * 1000),
+                currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
                 status: 'ACTIVE',
                 updatedAt: new Date(),
               },
@@ -118,7 +118,7 @@ if (subscription) {
                 tenant_id: tenantId || null,
                 planType,
                 stripeSubscriptionId: subscription.id,
-                currentPeriodEnd: new Date(subscription.current_period_end * 1000),
+                currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
                 status: 'ACTIVE',
               },
             });
