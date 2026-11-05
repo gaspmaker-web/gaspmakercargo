@@ -65,13 +65,13 @@ export async function POST(req: Request) {
       await prisma.user.update({ where: { id: user.id }, data: { stripeCustomerId: customerId } });
     }
 
-    // Ephemeral key so saved payment methods appear in the sheet
+    // Ephemeral key for saved payment methods
     const ephemeralKey = await stripe.ephemeralKeys.create(
       { customer: customerId },
       { apiVersion: '2023-10-16' }
     );
 
-    // Create subscription — same approach as web
+    // Create subscription
     const subscription: any = await stripe.subscriptions.create({
       customer: customerId,
       items: [{ price: priceId }],
@@ -80,15 +80,30 @@ export async function POST(req: Request) {
       expand: ['latest_invoice.payment_intent'],
     });
 
-    const invoice: any = subscription.latest_invoice;
-    const paymentIntent: any = invoice?.payment_intent;
+    // Get invoice ID and retrieve it explicitly
+    const rawInvoice: any = subscription.latest_invoice;
+    const invoiceId = typeof rawInvoice === 'string' ? rawInvoice : rawInvoice?.id;
 
-    if (!paymentIntent || typeof paymentIntent === 'string') {
-      throw new Error('El PaymentIntent no se expandió correctamente.');
+    if (!invoiceId) throw new Error('No invoice on subscription');
+
+    // Retrieve invoice explicitly with payment_intent expanded
+    const invoice: any = await stripe.invoices.retrieve(invoiceId, {
+      expand: ['payment_intent'],
+    });
+
+    let clientSecret: string | null = null;
+    let paymentIntentId: string | null = null;
+
+    if (invoice.payment_intent && typeof invoice.payment_intent === 'object') {
+      clientSecret = invoice.payment_intent.client_secret ?? null;
+      paymentIntentId = invoice.payment_intent.id ?? null;
+    } else if (typeof invoice.payment_intent === 'string') {
+      const pi = await stripe.paymentIntents.retrieve(invoice.payment_intent);
+      clientSecret = pi.client_secret ?? null;
+      paymentIntentId = pi.id;
     }
 
-    const clientSecret = paymentIntent.client_secret;
-    if (!clientSecret) throw new Error('No se pudo generar el client_secret');
+    if (!clientSecret) throw new Error('No se pudo obtener el client_secret');
 
     const currentPeriodEnd = subscription.current_period_end
       ? new Date(subscription.current_period_end * 1000)
@@ -112,17 +127,12 @@ export async function POST(req: Request) {
         userId: user.id,
         amount: amountToSave,
         description: exactDbPlanName === 'Digital Basic' ? 'SUSCRIPCION BUZON BASICO' : 'SUSCRIPCION BUZON PREMIUM',
-        stripePaymentId: paymentIntent.id,
+        stripePaymentId: paymentIntentId ?? subscription.id,
         status: 'PENDIENTE',
       },
     });
 
-    return NextResponse.json({
-      clientSecret,
-      subscriptionId: subscription.id,
-      ephemeralKey: ephemeralKey.secret,
-      customerId,
-    });
+    return NextResponse.json({ clientSecret, subscriptionId: subscription.id, ephemeralKey: ephemeralKey.secret, customerId });
 
   } catch (error: any) {
     console.error('[checkout-mobile]', error);
