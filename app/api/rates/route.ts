@@ -575,6 +575,15 @@ if (showAir && airCountries.includes(targetForAir)) {
     const vipRateAir = rate('vip_wholesale_rate_air', targetForAir, 2.80);
 if (isVipWholesale && chargeableWeight >= vipMinWeight) {
     priceAir = chargeableWeight * vipRateAir;
+    // 📈 PSS sobre precio VIP
+    if (pssActive === 1 && pssPercentage > 0) {
+        const today = new Date().toISOString().split('T')[0];
+        const inRange = (!pssStartDate && !pssEndDate) ||
+            ((!pssStartDate || today >= pssStartDate) && (!pssEndDate || today <= pssEndDate));
+        if (inRange) {
+            priceAir = parseFloat((priceAir * (1 + pssPercentage)).toFixed(2));
+        }
+    }
 }
         rawRates.push({
             id: `GMC-${targetForAir}-AIR`,
