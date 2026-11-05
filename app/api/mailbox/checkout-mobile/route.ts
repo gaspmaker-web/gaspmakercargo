@@ -35,15 +35,18 @@ export async function POST(req: Request) {
     });
 
     let priceId = '';
+    let amountCents = 0;
     let amountToSave = 0;
     let exactDbPlanName = '';
 
     if (planType === 'Digital Basic') {
       priceId = tenant?.stripe_mailbox_basic_price_id || '';
+      amountCents = 799;
       amountToSave = 7.99;
       exactDbPlanName = 'Digital Basic';
     } else if (planType === 'Premium Cargo') {
       priceId = tenant?.stripe_mailbox_premium_price_id || '';
+      amountCents = 1499;
       amountToSave = 14.99;
       exactDbPlanName = 'Premium Cargo';
     } else {
@@ -83,8 +86,6 @@ export async function POST(req: Request) {
       items: [{ price: priceId }],
       payment_behavior: 'default_incomplete',
       payment_settings: { save_default_payment_method: 'on_subscription' },
-      collection_method: 'send_invoice',
-      days_until_due: 0,
     });
 
     const invoiceId = typeof subscription.latest_invoice === 'string'
@@ -92,32 +93,43 @@ export async function POST(req: Request) {
       : subscription.latest_invoice?.id;
 
     if (!invoiceId) {
-      console.error('[checkout-mobile] No invoice ID on subscription', subscription.id);
       return NextResponse.json({ error: 'No se pudo obtener la invoice' }, { status: 500 });
     }
-// Finalize the draft invoice to trigger payment_intent creation
-await stripe.invoices.finalizeInvoice(invoiceId);
 
     const invoice: any = await stripe.invoices.retrieve(invoiceId, {
       expand: ['payment_intent'],
     });
 
-    console.log('[checkout-mobile-debug] invoice.id:', invoice.id, 'status:', invoice.status, 'pi:', typeof invoice.payment_intent === 'object' ? invoice.payment_intent?.id : invoice.payment_intent);
-
     let clientSecret: string | null = null;
     let paymentIntentId: string | null = null;
 
-    if (invoice?.payment_intent && typeof invoice.payment_intent === 'object') {
+    if (invoice?.payment_intent && typeof invoice.payment_intent === 'object' && invoice.payment_intent.client_secret) {
       clientSecret = invoice.payment_intent.client_secret;
       paymentIntentId = invoice.payment_intent.id;
     } else if (invoice?.payment_intent && typeof invoice.payment_intent === 'string') {
       const pi = await stripe.paymentIntents.retrieve(invoice.payment_intent);
       clientSecret = pi.client_secret;
       paymentIntentId = pi.id;
+    } else {
+      const pi = await stripe.paymentIntents.create({
+        amount: amountCents,
+        currency: 'usd',
+        customer: customerId,
+        metadata: {
+          subscriptionId: subscription.id,
+          invoiceId,
+          planType: exactDbPlanName,
+          userId: user.id,
+        },
+        setup_future_usage: 'off_session',
+      });
+      clientSecret = pi.client_secret;
+      paymentIntentId = pi.id;
+      console.log('[checkout-mobile] Created manual PaymentIntent:', pi.id, 'for subscription:', subscription.id);
     }
 
     if (!clientSecret) {
-      console.error('[checkout-mobile] still no client_secret. invoice.status:', invoice?.status, 'pi:', JSON.stringify(invoice?.payment_intent));
+      console.error('[checkout-mobile] Fatal: no client_secret after all fallbacks');
       return NextResponse.json(
         { error: 'No se pudo obtener el client_secret para procesar el pago' },
         { status: 500 }
