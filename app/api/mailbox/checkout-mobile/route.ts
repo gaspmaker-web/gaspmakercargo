@@ -103,7 +103,19 @@ export async function POST(req: Request) {
       paymentIntentId = pi.id;
     }
 
-    if (!clientSecret) throw new Error('No se pudo obtener el client_secret');
+    // If still no payment_intent, the invoice needs to be paid to generate one
+    if (!clientSecret) {
+      // Get payment intent via subscription's pending_setup_intent or create directly
+      const pi = await stripe.paymentIntents.create({
+        amount: Math.round(amountToSave * 100),
+        currency: 'usd',
+        customer: customerId,
+        setup_future_usage: 'off_session',
+        metadata: { subscriptionId: subscription.id, invoiceId, userId: user.id, planType: exactDbPlanName },
+      });
+      clientSecret = pi.client_secret!;
+      paymentIntentId = pi.id;
+    }
 
     const currentPeriodEnd = subscription.current_period_end
       ? new Date(subscription.current_period_end * 1000)
