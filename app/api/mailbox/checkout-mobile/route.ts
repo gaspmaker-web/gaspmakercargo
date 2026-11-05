@@ -18,6 +18,33 @@ async function getUserFromToken(req: Request) {
   }
 }
 
+async function getClientSecretFromInvoice(stripe: any, invoiceId: string): Promise<{ clientSecret: string; paymentIntentId: string }> {
+  // Retrieve invoice with payment_intent expanded
+  const invoice: any = await stripe.invoices.retrieve(invoiceId, {
+    expand: ['payment_intent'],
+  });
+
+  if (invoice.payment_intent && typeof invoice.payment_intent === 'object' && invoice.payment_intent.client_secret) {
+    return { clientSecret: invoice.payment_intent.client_secret, paymentIntentId: invoice.payment_intent.id };
+  }
+
+  if (typeof invoice.payment_intent === 'string') {
+    const pi = await stripe.paymentIntents.retrieve(invoice.payment_intent);
+    if (pi.client_secret) return { clientSecret: pi.client_secret, paymentIntentId: pi.id };
+  }
+
+  // No payment_intent on invoice — create one manually for the invoice amount
+  const pi = await stripe.paymentIntents.create({
+    amount: invoice.amount_due,
+    currency: invoice.currency,
+    customer: invoice.customer as string,
+    metadata: { invoice_id: invoiceId },
+    setup_future_usage: 'off_session',
+  });
+
+  return { clientSecret: pi.client_secret!, paymentIntentId: pi.id };
+}
+
 export async function POST(req: Request) {
   try {
     const user = await getUserFromToken(req);
@@ -69,7 +96,7 @@ export async function POST(req: Request) {
       await prisma.user.update({ where: { id: user.id }, data: { stripeCustomerId: customerId } });
     }
 
-    // Create subscription
+    // Create subscription with default_incomplete behavior
     const subscription: any = await stripe.subscriptions.create({
       customer: customerId,
       items: [{ price: priceId }],
@@ -78,7 +105,6 @@ export async function POST(req: Request) {
       expand: ['latest_invoice.payment_intent'],
     });
 
-    // Get invoice ID
     const latestInvoice: any = subscription.latest_invoice;
     const invoiceId = typeof latestInvoice === 'string' ? latestInvoice : latestInvoice?.id;
 
@@ -86,41 +112,7 @@ export async function POST(req: Request) {
       throw new Error('No invoice found on subscription');
     }
 
-    // Retrieve invoice with payment_intent expanded
-    const invoice: any = await stripe.invoices.retrieve(invoiceId, {
-      expand: ['payment_intent'],
-    });
-
-    let clientSecret: string | null = null;
-    let paymentIntentId: string | null = null;
-
-    if (invoice.payment_intent && typeof invoice.payment_intent === 'object') {
-      clientSecret = invoice.payment_intent.client_secret ?? null;
-      paymentIntentId = invoice.payment_intent.id ?? null;
-    } else if (typeof invoice.payment_intent === 'string') {
-      const pi = await stripe.paymentIntents.retrieve(invoice.payment_intent);
-      clientSecret = pi.client_secret ?? null;
-      paymentIntentId = pi.id;
-    }
-
-    // If still no payment_intent, finalize invoice to force creation
-    if (!clientSecret) {
-      const finalized: any = await stripe.invoices.finalizeInvoice(invoiceId, {
-        expand: ['payment_intent'],
-      });
-      if (finalized.payment_intent && typeof finalized.payment_intent === 'object') {
-        clientSecret = finalized.payment_intent.client_secret ?? null;
-        paymentIntentId = finalized.payment_intent.id ?? null;
-      } else if (typeof finalized.payment_intent === 'string') {
-        const pi = await stripe.paymentIntents.retrieve(finalized.payment_intent);
-        clientSecret = pi.client_secret ?? null;
-        paymentIntentId = pi.id;
-      }
-    }
-
-    if (!clientSecret) {
-      throw new Error('No se pudo obtener el client_secret para procesar el pago');
-    }
+    const { clientSecret, paymentIntentId } = await getClientSecretFromInvoice(stripe, invoiceId);
 
     // Upsert mailbox subscription record
     const existingSub = await prisma.mailboxSubscription.findFirst({ where: { userId: user.id } });
@@ -154,7 +146,7 @@ export async function POST(req: Request) {
         description: exactDbPlanName === 'Digital Basic'
           ? 'SUSCRIPCION BUZON BASICO'
           : 'SUSCRIPCION BUZON PREMIUM',
-        stripePaymentId: paymentIntentId ?? subscription.id,
+        stripePaymentId: paymentIntentId,
         status: 'PENDIENTE',
       },
     });
