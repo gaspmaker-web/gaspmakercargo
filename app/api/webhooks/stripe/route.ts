@@ -77,6 +77,70 @@ if (subscription) {
       }
     }
 
+
+    // ==================================================================
+    // NUEVA SUSCRIPCIÓN MAILBOX DESDE APP MÓVIL (SetupIntent)
+    // ==================================================================
+    if (event.type === 'setup_intent.succeeded') {
+      const setupIntent = event.data.object as any;
+      const { userId, planType, priceId, tenantId } = setupIntent.metadata || {};
+
+      if (userId && planType && priceId) {
+        try {
+          const stripe2 = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2023-10-16' as any });
+          
+          // Create the actual subscription now that payment method is confirmed
+          const subscription = await stripe2.subscriptions.create({
+            customer: setupIntent.customer,
+            items: [{ price: priceId }],
+            default_payment_method: setupIntent.payment_method,
+            metadata: { userId, planType },
+          });
+
+          const amountToSave = planType === 'Digital Basic' ? 7.99 : 14.99;
+
+          const existingSub = await prisma.mailboxSubscription.findFirst({ where: { userId } });
+          if (existingSub) {
+            await prisma.mailboxSubscription.update({
+              where: { id: existingSub.id },
+              data: {
+                planType,
+                stripeSubscriptionId: subscription.id,
+                currentPeriodEnd: new Date(subscription.current_period_end * 1000),
+                status: 'ACTIVE',
+                updatedAt: new Date(),
+              },
+            });
+          } else {
+            await prisma.mailboxSubscription.create({
+              data: {
+                userId,
+                tenant_id: tenantId || null,
+                planType,
+                stripeSubscriptionId: subscription.id,
+                currentPeriodEnd: new Date(subscription.current_period_end * 1000),
+                status: 'ACTIVE',
+              },
+            });
+          }
+
+          await prisma.mailboxTransaction.create({
+            data: {
+              userId,
+              amount: amountToSave,
+              description: planType === 'Digital Basic' ? 'SUSCRIPCION BUZON BASICO' : 'SUSCRIPCION BUZON PREMIUM',
+              stripePaymentId: setupIntent.id,
+              status: 'COMPLETADO',
+            },
+          });
+
+          console.log(\`✅ Suscripción mailbox creada desde app móvil: \${subscription.id}\`);
+        } catch (err: any) {
+          console.error('❌ Error creando suscripción desde SetupIntent:', err);
+        }
+      }
+    }
+
     const session = event.data.object as Stripe.Checkout.Session;
 
     // Solo procesamos si el pago se completó
