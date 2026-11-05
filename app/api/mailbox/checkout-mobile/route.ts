@@ -92,7 +92,11 @@ export async function POST(req: Request) {
       expand: ['latest_invoice.payment_intent'],
     });
 
-    const invoice: any = subscription.latest_invoice;
+        const invoice: any = subscription.latest_invoice;
+
+    // DEBUG
+    console.log('[checkout-mobile-debug] sub.id:', subscription.id, 'sub.status:', subscription.status);
+    console.log('[checkout-mobile-debug] invoice:', invoice ? JSON.stringify({ id: invoice.id, status: invoice.status, pi_type: typeof invoice.payment_intent, pi_value: typeof invoice.payment_intent === 'string' ? invoice.payment_intent : invoice.payment_intent?.id }) : 'NULL');
     let clientSecret: string | null = null;
     let paymentIntentId: string | null = null;
 
