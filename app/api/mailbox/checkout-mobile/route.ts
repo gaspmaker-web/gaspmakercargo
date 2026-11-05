@@ -122,7 +122,7 @@ export async function POST(req: Request) {
         data: {
           planType: exactDbPlanName,
           stripeSubscriptionId: subscription.id,
-          currentPeriodEnd: new Date(subscription.current_period_end * 1000),
+          currentPeriodEnd: subscription.current_period_end ? new Date(subscription.current_period_end * 1000) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
           status: 'PENDING_PAYMENT',
         },
       });
@@ -133,7 +133,7 @@ export async function POST(req: Request) {
           tenant_id: tenant?.id ?? null,
           planType: exactDbPlanName,
           stripeSubscriptionId: subscription.id,
-          currentPeriodEnd: new Date(subscription.current_period_end * 1000),
+          currentPeriodEnd: subscription.current_period_end ? new Date(subscription.current_period_end * 1000) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
           status: 'PENDING_PAYMENT',
         },
       });
