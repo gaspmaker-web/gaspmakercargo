@@ -71,13 +71,19 @@ export async function POST(req: Request) {
       await stripe.subscriptions.cancel(sub.id);
     }
 
+    // Clear default payment method so Stripe does NOT auto-charge
+    // This forces Stripe to always create a pending payment_intent
+    await stripe.customers.update(customerId, {
+      invoice_settings: { default_payment_method: '' as any },
+    });
+
     // Ephemeral key for saved payment methods in the sheet
     const ephemeralKey = await stripe.ephemeralKeys.create(
       { customer: customerId },
       { apiVersion: '2023-10-16' }
     );
 
-    // Create subscription with default_incomplete behavior
+    // Create subscription — Stripe will now always create a pending payment_intent
     const subscription: any = await stripe.subscriptions.create({
       customer: customerId,
       items: [{ price: priceId }],
@@ -87,26 +93,22 @@ export async function POST(req: Request) {
     });
 
     const invoice: any = subscription.latest_invoice;
-
-    // payment_intent can be:
-    // - an expanded object (customer has no default payment method → needs to pay now)
-    // - a string ID (Stripe charged automatically via default payment method)
-    // - null/undefined (edge case)
     let clientSecret: string | null = null;
     let paymentIntentId: string | null = null;
 
-    if (invoice?.payment_intent && typeof invoice.payment_intent === 'object') {
-      // Normal case: payment_intent fully expanded, customer needs to enter card
+    // Case 1: payment_intent fully expanded as object
+    if (invoice?.payment_intent && typeof invoice.payment_intent === 'object' && invoice.payment_intent.client_secret) {
       clientSecret = invoice.payment_intent.client_secret;
       paymentIntentId = invoice.payment_intent.id;
-    } else if (invoice?.payment_intent && typeof invoice.payment_intent === 'string') {
-      // Customer has default payment method → Stripe charged automatically
-      // Retrieve the payment intent to get client_secret
+    }
+    // Case 2: payment_intent is a string ID — retrieve it
+    else if (invoice?.payment_intent && typeof invoice.payment_intent === 'string') {
       const pi = await stripe.paymentIntents.retrieve(invoice.payment_intent);
       clientSecret = pi.client_secret;
       paymentIntentId = pi.id;
-    } else if (invoice?.id) {
-      // Fallback: retrieve invoice and get its payment intent
+    }
+    // Case 3: payment_intent is undefined — retrieve invoice fresh with expand
+    else if (invoice?.id) {
       const freshInvoice: any = await stripe.invoices.retrieve(invoice.id, {
         expand: ['payment_intent'],
       });
@@ -114,7 +116,7 @@ export async function POST(req: Request) {
         clientSecret = freshInvoice.payment_intent.client_secret;
         paymentIntentId = freshInvoice.payment_intent.id;
       } else if (freshInvoice?.payment_intent && typeof freshInvoice.payment_intent === 'string') {
-        const pi = await stripe.paymentIntents.retrieve(freshInvoice.payment_intent);
+        const pi = await stripe.paymentIntents.retrieve(freshInvoice.payment_intent as string);
         clientSecret = pi.client_secret;
         paymentIntentId = pi.id;
       }
