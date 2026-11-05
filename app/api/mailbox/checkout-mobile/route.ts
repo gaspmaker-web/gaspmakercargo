@@ -71,13 +71,13 @@ export async function POST(req: Request) {
       await stripe.subscriptions.cancel(sub.id);
     }
 
-    // Ephemeral key for saved payment methods
+    // Ephemeral key for saved payment methods in the sheet
     const ephemeralKey = await stripe.ephemeralKeys.create(
       { customer: customerId },
       { apiVersion: '2023-10-16' }
     );
 
-    // Create subscription
+    // Create subscription with default_incomplete behavior
     const subscription: any = await stripe.subscriptions.create({
       customer: customerId,
       items: [{ price: priceId }],
@@ -87,26 +87,71 @@ export async function POST(req: Request) {
     });
 
     const invoice: any = subscription.latest_invoice;
-    const paymentIntent: any = invoice?.payment_intent;
 
-    if (!paymentIntent || typeof paymentIntent !== 'object' || !paymentIntent.client_secret) {
-      throw new Error('El PaymentIntent no se expandió correctamente.');
+    // payment_intent can be:
+    // - an expanded object (customer has no default payment method → needs to pay now)
+    // - a string ID (Stripe charged automatically via default payment method)
+    // - null/undefined (edge case)
+    let clientSecret: string | null = null;
+    let paymentIntentId: string | null = null;
+
+    if (invoice?.payment_intent && typeof invoice.payment_intent === 'object') {
+      // Normal case: payment_intent fully expanded, customer needs to enter card
+      clientSecret = invoice.payment_intent.client_secret;
+      paymentIntentId = invoice.payment_intent.id;
+    } else if (invoice?.payment_intent && typeof invoice.payment_intent === 'string') {
+      // Customer has default payment method → Stripe charged automatically
+      // Retrieve the payment intent to get client_secret
+      const pi = await stripe.paymentIntents.retrieve(invoice.payment_intent);
+      clientSecret = pi.client_secret;
+      paymentIntentId = pi.id;
+    } else if (invoice?.id) {
+      // Fallback: retrieve invoice and get its payment intent
+      const freshInvoice: any = await stripe.invoices.retrieve(invoice.id, {
+        expand: ['payment_intent'],
+      });
+      if (freshInvoice?.payment_intent && typeof freshInvoice.payment_intent === 'object') {
+        clientSecret = freshInvoice.payment_intent.client_secret;
+        paymentIntentId = freshInvoice.payment_intent.id;
+      } else if (freshInvoice?.payment_intent && typeof freshInvoice.payment_intent === 'string') {
+        const pi = await stripe.paymentIntents.retrieve(freshInvoice.payment_intent);
+        clientSecret = pi.client_secret;
+        paymentIntentId = pi.id;
+      }
     }
 
-    const currentPeriodEnd = subscription.current_period_end
-      ? new Date(subscription.current_period_end * 1000)
-      : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+    if (!clientSecret) {
+      console.error('[checkout-mobile] invoice status:', invoice?.status, 'pi type:', typeof invoice?.payment_intent, 'sub status:', subscription.status);
+      return NextResponse.json(
+        { error: 'No se pudo obtener el client_secret para procesar el pago' },
+        { status: 500 }
+      );
+    }
 
-    // Upsert mailbox subscription
+    const currentPeriodEnd = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+
+    // Upsert mailbox subscription as PENDING_PAYMENT (webhook activates it)
     const existingSub = await prisma.mailboxSubscription.findFirst({ where: { userId: user.id } });
     if (existingSub) {
       await prisma.mailboxSubscription.update({
         where: { id: existingSub.id },
-        data: { planType: exactDbPlanName, stripeSubscriptionId: subscription.id, currentPeriodEnd, status: 'PENDING_PAYMENT' },
+        data: {
+          planType: exactDbPlanName,
+          stripeSubscriptionId: subscription.id,
+          currentPeriodEnd,
+          status: 'PENDING_PAYMENT',
+        },
       });
     } else {
       await prisma.mailboxSubscription.create({
-        data: { userId: user.id, tenant_id: tenant?.id ?? null, planType: exactDbPlanName, stripeSubscriptionId: subscription.id, currentPeriodEnd, status: 'PENDING_PAYMENT' },
+        data: {
+          userId: user.id,
+          tenant_id: tenant?.id ?? null,
+          planType: exactDbPlanName,
+          stripeSubscriptionId: subscription.id,
+          currentPeriodEnd,
+          status: 'PENDING_PAYMENT',
+        },
       });
     }
 
@@ -114,14 +159,16 @@ export async function POST(req: Request) {
       data: {
         userId: user.id,
         amount: amountToSave,
-        description: exactDbPlanName === 'Digital Basic' ? 'SUSCRIPCION BUZON BASICO' : 'SUSCRIPCION BUZON PREMIUM',
-        stripePaymentId: paymentIntent.id,
+        description: exactDbPlanName === 'Digital Basic'
+          ? 'SUSCRIPCION BUZON BASICO'
+          : 'SUSCRIPCION BUZON PREMIUM',
+        stripePaymentId: paymentIntentId!,
         status: 'PENDIENTE',
       },
     });
 
     return NextResponse.json({
-      clientSecret: paymentIntent.client_secret,
+      clientSecret,
       subscriptionId: subscription.id,
       ephemeralKey: ephemeralKey.secret,
       customerId,
