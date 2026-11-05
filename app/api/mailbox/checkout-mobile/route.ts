@@ -35,16 +35,13 @@ export async function POST(req: Request) {
     });
 
     let priceId = '';
-    let amountToSave = 0;
     let exactDbPlanName = '';
 
     if (planType === 'Digital Basic') {
       priceId = tenant?.stripe_mailbox_basic_price_id || '';
-      amountToSave = 7.99;
       exactDbPlanName = 'Digital Basic';
     } else if (planType === 'Premium Cargo') {
       priceId = tenant?.stripe_mailbox_premium_price_id || '';
-      amountToSave = 14.99;
       exactDbPlanName = 'Premium Cargo';
     } else {
       return NextResponse.json({ error: 'Plan invalido' }, { status: 400 });
@@ -65,86 +62,29 @@ export async function POST(req: Request) {
       await prisma.user.update({ where: { id: user.id }, data: { stripeCustomerId: customerId } });
     }
 
-    // Ephemeral key for saved payment methods
+    // Ephemeral key for saved payment methods in the sheet
     const ephemeralKey = await stripe.ephemeralKeys.create(
       { customer: customerId },
       { apiVersion: '2023-10-16' }
     );
 
-    // Create subscription
-    const subscription: any = await stripe.subscriptions.create({
+    // SetupIntent — card is saved, webhook creates subscription after confirmation
+    const setupIntent = await stripe.setupIntents.create({
       customer: customerId,
-      items: [{ price: priceId }],
-      payment_behavior: 'default_incomplete',
-      payment_settings: { save_default_payment_method: 'on_subscription' },
-      expand: ['latest_invoice.payment_intent'],
-    });
-
-    // Get invoice ID and retrieve it explicitly
-    const rawInvoice: any = subscription.latest_invoice;
-    const invoiceId = typeof rawInvoice === 'string' ? rawInvoice : rawInvoice?.id;
-
-    if (!invoiceId) throw new Error('No invoice on subscription');
-
-    // Retrieve invoice explicitly with payment_intent expanded
-    const invoice: any = await stripe.invoices.retrieve(invoiceId, {
-      expand: ['payment_intent'],
-    });
-
-    let clientSecret: string | null = null;
-    let paymentIntentId: string | null = null;
-
-    if (invoice.payment_intent && typeof invoice.payment_intent === 'object') {
-      clientSecret = invoice.payment_intent.client_secret ?? null;
-      paymentIntentId = invoice.payment_intent.id ?? null;
-    } else if (typeof invoice.payment_intent === 'string') {
-      const pi = await stripe.paymentIntents.retrieve(invoice.payment_intent);
-      clientSecret = pi.client_secret ?? null;
-      paymentIntentId = pi.id;
-    }
-
-    // If still no payment_intent, the invoice needs to be paid to generate one
-    if (!clientSecret) {
-      // Get payment intent via subscription's pending_setup_intent or create directly
-      const pi = await stripe.paymentIntents.create({
-        amount: Math.round(amountToSave * 100),
-        currency: 'usd',
-        customer: customerId,
-        setup_future_usage: 'off_session',
-        metadata: { subscriptionId: subscription.id, invoiceId, userId: user.id, planType: exactDbPlanName },
-      });
-      clientSecret = pi.client_secret!;
-      paymentIntentId = pi.id;
-    }
-
-    const currentPeriodEnd = subscription.current_period_end
-      ? new Date(subscription.current_period_end * 1000)
-      : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-
-    // Upsert mailbox subscription
-    const existingSub = await prisma.mailboxSubscription.findFirst({ where: { userId: user.id } });
-    if (existingSub) {
-      await prisma.mailboxSubscription.update({
-        where: { id: existingSub.id },
-        data: { planType: exactDbPlanName, stripeSubscriptionId: subscription.id, currentPeriodEnd, status: 'PENDING_PAYMENT' },
-      });
-    } else {
-      await prisma.mailboxSubscription.create({
-        data: { userId: user.id, tenant_id: tenant?.id ?? null, planType: exactDbPlanName, stripeSubscriptionId: subscription.id, currentPeriodEnd, status: 'PENDING_PAYMENT' },
-      });
-    }
-
-    await prisma.mailboxTransaction.create({
-      data: {
+      usage: 'off_session',
+      metadata: {
         userId: user.id,
-        amount: amountToSave,
-        description: exactDbPlanName === 'Digital Basic' ? 'SUSCRIPCION BUZON BASICO' : 'SUSCRIPCION BUZON PREMIUM',
-        stripePaymentId: paymentIntentId ?? subscription.id,
-        status: 'PENDIENTE',
+        planType: exactDbPlanName,
+        priceId,
+        tenantId: tenant?.id ?? '',
       },
     });
 
-    return NextResponse.json({ clientSecret, subscriptionId: subscription.id, ephemeralKey: ephemeralKey.secret, customerId });
+    return NextResponse.json({
+      clientSecret: setupIntent.client_secret,
+      ephemeralKey: ephemeralKey.secret,
+      customerId,
+    });
 
   } catch (error: any) {
     console.error('[checkout-mobile]', error);
