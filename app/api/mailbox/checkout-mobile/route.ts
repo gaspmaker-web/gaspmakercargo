@@ -95,6 +95,8 @@ export async function POST(req: Request) {
       console.error('[checkout-mobile] No invoice ID on subscription', subscription.id);
       return NextResponse.json({ error: 'No se pudo obtener la invoice' }, { status: 500 });
     }
+// Finalize the draft invoice to trigger payment_intent creation
+await stripe.invoices.finalizeInvoice(invoiceId);
 
     const invoice: any = await stripe.invoices.retrieve(invoiceId, {
       expand: ['payment_intent'],
