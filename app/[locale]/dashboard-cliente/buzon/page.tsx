@@ -77,8 +77,8 @@ export default async function BuzonPage({ params: { locale } }: Props) {
   });
 
   return (
-    <div className="min-h-screen bg-transparent py-6 px-4 sm:px-6 lg:px-8 font-sans tabular-nums text-gray-800 tracking-normal">
-      <div className="max-w-4xl mx-auto space-y-4 pt-2">
+   <div className="min-h-screen bg-transparent py-6 px-4 sm:px-6 lg:px-8 font-sans tabular-nums text-gray-800 tracking-normal">
+  <div className="max-w-4xl mx-auto space-y-4 pt-12">
 
         {/* BANNERS DE ALERTA DEL TITULAR PRINCIPAL */}
         {isKycMissing && (
