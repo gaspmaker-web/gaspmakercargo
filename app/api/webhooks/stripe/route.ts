@@ -134,7 +134,7 @@ if (subscription) {
             },
           });
 
-          console.log(\`✅ Suscripción mailbox creada desde app móvil: \${subscription.id}\`);
+          console.log("✅ Suscripción mailbox creada desde app móvil: " + subscription.id);
         } catch (err: any) {
           console.error('❌ Error creando suscripción desde SetupIntent:', err);
         }
