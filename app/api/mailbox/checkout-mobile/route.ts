@@ -83,6 +83,8 @@ export async function POST(req: Request) {
       items: [{ price: priceId }],
       payment_behavior: 'default_incomplete',
       payment_settings: { save_default_payment_method: 'on_subscription' },
+      collection_method: 'send_invoice',
+      days_until_due: 0,
     });
 
     const invoiceId = typeof subscription.latest_invoice === 'string'
