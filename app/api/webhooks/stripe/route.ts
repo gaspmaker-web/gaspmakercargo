@@ -78,6 +78,30 @@ if (subscription) {
     }
 
 
+
+    // ==================================================================
+    // 💳 PAGO MANUAL PI DESDE APP MÓVIL (payment_intent.succeeded)
+    // ==================================================================
+    if (event.type === 'payment_intent.succeeded') {
+      const pi = event.data.object as any;
+      const { subscriptionId, userId } = pi.metadata || {};
+      if (subscriptionId && subscriptionId.startsWith('sub_')) {
+        try {
+          await prisma.mailboxSubscription.updateMany({
+            where: { stripeSubscriptionId: subscriptionId },
+            data: { status: 'ACTIVE', updatedAt: new Date() },
+          });
+          await prisma.mailboxTransaction.updateMany({
+            where: { stripePaymentId: pi.id },
+            data: { status: 'COMPLETADO' },
+          });
+          console.log('✅ Suscripción activada por PI manual:', subscriptionId, pi.id);
+        } catch (e: any) {
+          console.error('❌ Error activando suscripción:', e.message);
+        }
+      }
+    }
+
     // ==================================================================
     // NUEVA SUSCRIPCIÓN MAILBOX DESDE APP MÓVIL (SetupIntent)
     // ==================================================================
