@@ -4,44 +4,89 @@ import { NextResponse } from "next/server";
 // 👇 VACUNA 1: Forzar modo dinámico (Vital para Stripe)
 export const dynamic = 'force-dynamic';
 
-// GET: Listar tarjetas guardadas (🔥 AHORA ENRIQUECIDAS CON STRIPE 🔥)
+// GET: Listar tarjetas — sincroniza Stripe → BD local → devuelve todo
 export async function GET(req: Request) {
-  // 👇 VACUNA 2: Imports dentro de la función (Lazy Loading)
   const { auth } = await import("@/auth");
   const prisma = (await import("@/lib/prisma")).default;
-  const { stripe } = await import("@/lib/stripe"); // 🔥 IMPORTAMOS STRIPE AQUÍ TAMBIÉN
+  const { stripe } = await import("@/lib/stripe");
 
   const session = await auth();
   const mobileUser = await getMobileUser(req);
   const userId = session?.user?.id || mobileUser?.id;
   if (!userId) return NextResponse.json({ message: "No autorizado" }, { status: 401 });
 
-  const rawCards = await prisma.paymentMethod.findMany({
-    where: { userId: userId },
-    orderBy: { isDefault: 'desc' } // Muestra la predeterminada primero
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { stripeCustomerId: true }
   });
 
-  // 🔥 NIVEL ENTERPRISE: Cruzamos con Stripe para extraer el país (country)
-  const cardsWithCountry = await Promise.all(
-    rawCards.map(async (card) => {
-      try {
-        if (!card.stripePaymentMethodId) return { ...card, country: null };
-        const stripePm = await stripe.paymentMethods.retrieve(card.stripePaymentMethodId);
-        return {
-          ...card,
-          country: stripePm.card?.country || null
-        };
-      } catch (error) {
-        console.error(`Error consultando Stripe para la tarjeta ${card.id}:`, error);
-        return { ...card, country: null };
+  if (!user?.stripeCustomerId) {
+    return NextResponse.json({ cards: [] });
+  }
+
+  let stripePms: any[] = [];
+  try {
+    const list = await stripe.paymentMethods.list({
+      customer: user.stripeCustomerId,
+      type: 'card',
+    });
+    stripePms = list.data;
+  } catch (e) {
+    console.error('Error listando PMs de Stripe:', e);
+    const local = await prisma.paymentMethod.findMany({
+      where: { userId },
+      orderBy: { isDefault: 'desc' }
+    });
+    return NextResponse.json({ cards: local });
+  }
+
+  if (stripePms.length === 0) {
+    await prisma.paymentMethod.deleteMany({ where: { userId } });
+    return NextResponse.json({ cards: [] });
+  }
+
+  const customer = await stripe.customers.retrieve(user.stripeCustomerId) as any;
+  const defaultPmId = customer?.invoice_settings?.default_payment_method || null;
+
+  for (const pm of stripePms) {
+    if (!pm.card) continue;
+    await prisma.paymentMethod.upsert({
+      where: { stripePaymentMethodId: pm.id },
+      update: {
+        brand: pm.card.brand,
+        last4: pm.card.last4,
+        expMonth: pm.card.exp_month,
+        expYear: pm.card.exp_year,
+        isDefault: pm.id === defaultPmId,
+      },
+      create: {
+        userId,
+        stripePaymentMethodId: pm.id,
+        brand: pm.card.brand,
+        last4: pm.card.last4,
+        expMonth: pm.card.exp_month,
+        expYear: pm.card.exp_year,
+        isDefault: pm.id === defaultPmId,
+        isBackup: false,
       }
-    })
-  );
+    });
+  }
 
-  // Devolvemos las tarjetas ya con el país incluido
-  return NextResponse.json({ cards: cardsWithCountry });
+  const stripeIds = stripePms.map(pm => pm.id);
+  await prisma.paymentMethod.deleteMany({
+    where: {
+      userId,
+      stripePaymentMethodId: { notIn: stripeIds }
+    }
+  });
+
+  const cards = await prisma.paymentMethod.findMany({
+    where: { userId },
+    orderBy: { isDefault: 'desc' }
+  });
+
+  return NextResponse.json({ cards });
 }
-
 // POST: Guardar referencia de tarjeta nueva y forzarla para los cobros automáticos de la suscripción
 export async function POST(req: Request) {
   try {
