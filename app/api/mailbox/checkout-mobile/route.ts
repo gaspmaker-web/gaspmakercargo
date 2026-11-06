@@ -73,17 +73,6 @@ for (const sub of incompleteSubs.data) {
   await stripe.subscriptions.cancel(sub.id);
 }
 
-// If upgrading: cancel existing active subscription
-const currentSub = await prisma.mailboxSubscription.findFirst({
-  where: { userId: user.id, status: 'ACTIVE' },
-});
-if (currentSub?.stripeSubscriptionId) {
-  try {
-    await stripe.subscriptions.cancel(currentSub.stripeSubscriptionId);
-  } catch (e) {
-    // ignore if already cancelled
-  }
-}
 
     await stripe.customers.update(customerId, {
       invoice_settings: { default_payment_method: '' as any },

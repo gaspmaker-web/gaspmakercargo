@@ -95,6 +95,19 @@ if (subscription) {
             where: { stripePaymentId: pi.id },
             data: { status: 'COMPLETADO' },
           });
+                   // Cancel any other active subscription (upgrade case)
+          const otherSubs = await prisma.mailboxSubscription.findMany({
+            where: { userId, status: 'ACTIVE', NOT: { stripeSubscriptionId: subscriptionId } },
+          });
+          for (const old of otherSubs) {
+            if (old.stripeSubscriptionId) {
+              try { await stripe.subscriptions.cancel(old.stripeSubscriptionId); } catch {}
+            }
+            await prisma.mailboxSubscription.update({
+              where: { id: old.id },
+              data: { status: 'CANCELLED', updatedAt: new Date() },
+            });
+          }
           console.log('✅ Suscripción activada por PI manual:', subscriptionId, pi.id);
         } catch (e: any) {
           console.error('❌ Error activando suscripción:', e.message);
