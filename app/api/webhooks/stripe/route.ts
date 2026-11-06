@@ -80,40 +80,36 @@ if (subscription) {
 
 
     // ==================================================================
-    // 💳 PAGO MANUAL PI DESDE APP MÓVIL (payment_intent.succeeded)
+    // ==================================================================
+    // 💳 PAGO DESDE APP MÓVIL (payment_intent.succeeded)
+    // El checkout-mobile NO toca la DB — solo el webhook activa la suscripción
     // ==================================================================
     if (event.type === 'payment_intent.succeeded') {
       const pi = event.data.object as any;
-      const { subscriptionId, userId } = pi.metadata || {};
-      if (subscriptionId && subscriptionId.startsWith('sub_')) {
+      const { subscriptionId, planType, userId, tenantId, amountCents } = pi.metadata || {};
+      if (subscriptionId && subscriptionId.startsWith('sub_') && userId && planType) {
         try {
-          await prisma.mailboxSubscription.updateMany({
-            where: { stripeSubscriptionId: subscriptionId },
-            data: { status: 'ACTIVE', updatedAt: new Date() },
-          });
-          await prisma.mailboxTransaction.updateMany({
-            where: { stripePaymentId: pi.id },
-            data: { status: 'COMPLETADO' },
-          });
-                   // Cancel any other active subscription (upgrade case)
-          const otherSubs = await prisma.mailboxSubscription.findMany({
-            where: { userId, status: 'ACTIVE', NOT: { stripeSubscriptionId: subscriptionId } },
-          });
-          for (const old of otherSubs) {
-            if (old.stripeSubscriptionId) {
-              try { await stripe.subscriptions.cancel(old.stripeSubscriptionId); } catch {}
-            }
-            await prisma.mailboxSubscription.update({
-              where: { id: old.id },
-              data: { status: 'CANCELLED', updatedAt: new Date() },
-            });
+          const amount = amountCents ? parseInt(amountCents) / 100 : (planType === 'Digital Basic' ? 7.99 : 14.99);
+          const currentPeriodEnd = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+          const existingActiveSub = await prisma.mailboxSubscription.findFirst({ where: { userId, status: 'ACTIVE' } });
+          if (existingActiveSub?.stripeSubscriptionId && existingActiveSub.stripeSubscriptionId !== subscriptionId) {
+            try { await stripe.subscriptions.cancel(existingActiveSub.stripeSubscriptionId); } catch {}
+            await prisma.mailboxSubscription.update({ where: { id: existingActiveSub.id }, data: { status: 'CANCELLED', updatedAt: new Date() } });
           }
-          console.log('✅ Suscripción activada por PI manual:', subscriptionId, pi.id);
+          const existing = await prisma.mailboxSubscription.findFirst({ where: { userId } });
+          if (existing) {
+            await prisma.mailboxSubscription.update({ where: { id: existing.id }, data: { planType, stripeSubscriptionId: subscriptionId, currentPeriodEnd, status: 'ACTIVE', updatedAt: new Date() } });
+          } else {
+            await prisma.mailboxSubscription.create({ data: { userId, tenant_id: tenantId || null, planType, stripeSubscriptionId: subscriptionId, currentPeriodEnd, status: 'ACTIVE' } });
+          }
+          await prisma.mailboxTransaction.create({ data: { userId, amount, description: planType === 'Digital Basic' ? 'SUSCRIPCION BUZON BASICO' : 'SUSCRIPCION BUZON PREMIUM', stripePaymentId: pi.id, status: 'COMPLETADO' } });
+          console.log('✅ Suscripción activada:', subscriptionId, planType, pi.id);
         } catch (e: any) {
           console.error('❌ Error activando suscripción:', e.message);
         }
       }
     }
+
 
     // ==================================================================
     // NUEVA SUSCRIPCIÓN MAILBOX DESDE APP MÓVIL (SetupIntent)
