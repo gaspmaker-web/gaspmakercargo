@@ -3,16 +3,16 @@ import { NextResponse } from "next/server";
 // 👇 VACUNA 1: Forzar modo dinámico
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
-    // 👇 VACUNA 2: Imports dentro de la función (Lazy Loading)
     const { auth } = await import("@/auth");
     const prisma = (await import("@/lib/prisma")).default;
+    const { getMobileUser } = await import("@/lib/getMobileUser");
 
     const session = await auth();
-    if (!session?.user?.id) return NextResponse.json({ message: "No autorizado" }, { status: 401 });
-
-    const userId = session.user.id;
+    const mobileUser = await getMobileUser(req);
+    const userId = session?.user?.id || mobileUser?.id;
+    if (!userId) return NextResponse.json({ message: "No autorizado" }, { status: 401 });
 
     // 1. Pickup Requests (Logística Local)
     const localRequests = await prisma.pickupRequest.findMany({
