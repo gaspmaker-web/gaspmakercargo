@@ -80,13 +80,14 @@ const stripe = await getTenantStripe(process.env.TENANT_SLUG || 'gaspmaker');
 
     // 3. CREAMOS SUSCRIPCIÓN EN STRIPE
     console.log("💳 3. Creando Suscripción...");
-    const subscription = await stripe.subscriptions.create({
-      customer: customerId,
-      items: [{ price: priceId }], 
-      payment_behavior: 'default_incomplete',
-      payment_settings: { save_default_payment_method: 'on_subscription' }, 
-      expand: ['latest_invoice.payment_intent'], 
-    });
+   const subscription: any = await stripe.subscriptions.create({
+  customer: customerId,
+  items: [{ price: priceId }],
+  payment_behavior: 'default_incomplete',
+  payment_settings: { save_default_payment_method: 'on_subscription' },
+  collection_method: 'send_invoice',
+  days_until_due: 0,
+});
 
    // 4. EXTRAEMOS DATOS SEGUROS
     const sub: any = subscription; // Bypass temporal para TypeScript
@@ -133,16 +134,7 @@ const stripe = await getTenantStripe(process.env.TENANT_SLUG || 'gaspmaker');
         });
     }
 
-    console.log("📝 Creando transacción...");
-    await prisma.mailboxTransaction.create({
-        data: {
-            userId: session.user.id,
-            amount: amountToSave, 
-            description: exactDbPlanName === "Digital Basic" ? "SUSCRIPCIÓN BUZÓN BÁSICO" : "SUSCRIPCIÓN BUZÓN PREMIUM",
-            stripePaymentId: paymentIntent.id,
-            status: "PENDIENTE" 
-        }
-    });
+  
 
     console.log("✅ 5. Todo guardado correctamente. Abriendo modal.");
     return NextResponse.json({ clientSecret, subscriptionId: subscription.id });
