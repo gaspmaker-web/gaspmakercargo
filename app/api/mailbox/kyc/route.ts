@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import prisma from '@/lib/prisma';
-import { uploadToR2 } from '@/lib/r2';
 
 export async function POST(req: Request) {
   try {
@@ -13,21 +12,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
-    const formData = await req.formData();
-    const additionalDataString = formData.get('additionalData') as string;
-    let parsedData: any[] = [];
-    
-    if (additionalDataString) {
-      parsedData = JSON.parse(additionalDataString);
-    }
+    const body = await req.json();
+    const { form1583Url, id1Url, id2Url, additionalData = [] } = body;
 
-       const subscription = await prisma.mailboxSubscription.findUnique({
+    const subscription = await prisma.mailboxSubscription.findUnique({
       where: { userId },
-      include: {
-        _count: {
-          select: { additionalRecipients: true } 
-        }
-      }
+      include: { _count: { select: { additionalRecipients: true } } }
     });
 
     if (!subscription) {
@@ -35,73 +25,48 @@ export async function POST(req: Request) {
     }
 
     const currentCount = subscription._count.additionalRecipients;
-    const newCount = parsedData.length;
-    const totalProjected = currentCount + newCount; 
+    const newCount = additionalData.length;
+    const totalProjected = currentCount + newCount;
 
     if (subscription.planType === "Digital Basic" && totalProjected > 1) {
-      return NextResponse.json({ 
-        error: `Límite excedido. Tu plan Digital Basic solo permite 1 persona adicional. (Ya tienes ${currentCount} registradas).` 
-      }, { status: 403 }); 
-    }
-
-    if (subscription.planType === "Premium Cargo" && totalProjected > 5) {
-      return NextResponse.json({ 
-        error: `Límite excedido. Tu plan Premium Cargo permite hasta 5 personas adicionales. (Ya tienes ${currentCount} registradas).` 
+      return NextResponse.json({
+        error: `Límite excedido. Tu plan Digital Basic solo permite 1 persona adicional. (Ya tienes ${currentCount} registradas).`
       }, { status: 403 });
     }
 
-    const primaryForm = formData.get('primary_form1583') as File | null;
-    const primaryId1 = formData.get('primary_id1') as File | null;
-    const primaryId2 = formData.get('primary_id2') as File | null;
-
-    const uploadFile = async (file: File, folder: string) => {
-      const bytes = await file.arrayBuffer();
-      const buffer = Buffer.from(bytes);
-      const safeName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, '');
-      return await uploadToR2(buffer, `${folder}/${Date.now()}-${safeName}`, file.type);
-    };
+    if (subscription.planType === "Premium Cargo" && totalProjected > 5) {
+      return NextResponse.json({
+        error: `Límite excedido. Tu plan Premium Cargo permite hasta 5 personas adicionales. (Ya tienes ${currentCount} registradas).`
+      }, { status: 403 });
+    }
 
     const updateData: any = {};
 
-    if (primaryForm && primaryId1 && primaryId2) {
-      updateData.uspsForm1583Url = await uploadFile(primaryForm, 'kyc_documents');
-      updateData.primaryIdUrl = await uploadFile(primaryId1, 'kyc_documents');
-      updateData.secondaryIdUrl = await uploadFile(primaryId2, 'kyc_documents');
-      updateData.status = 'PENDING_USPS'; 
-      updateData.rejectionReason = null;  
+    if (form1583Url && id1Url && id2Url) {
+      updateData.uspsForm1583Url = form1583Url;
+      updateData.primaryIdUrl = id1Url;
+      updateData.secondaryIdUrl = id2Url;
+      updateData.status = 'PENDING_USPS';
+      updateData.rejectionReason = null;
     }
 
-    let additionalRecipientsData: any[] = [];
-    
-    if (parsedData.length > 0) {
-      for (const person of parsedData) {
-        const formFile = formData.get(`add_${person.id}_form1583`) as File;
-        const id1File = formData.get(`add_${person.id}_id1`) as File;
-        const id2File = formData.get(`add_${person.id}_id2`) as File;
-
-        if (formFile && id1File && id2File) {
-          additionalRecipientsData.push({
-            fullName: person.fullName,
-            uspsForm1583Url: await uploadFile(formFile, 'kyc_documents'),
-            primaryIdUrl: await uploadFile(id1File, 'kyc_documents'),
-            secondaryIdUrl: await uploadFile(id2File, 'kyc_documents'),
-            status: 'PENDING_USPS'
-          });
-        }
-      }
-    }
-
-    if (additionalRecipientsData.length > 0) {
+    if (additionalData.length > 0) {
       updateData.additionalRecipients = {
-        create: additionalRecipientsData
+        create: additionalData.map((p: any) => ({
+          fullName: p.fullName,
+          uspsForm1583Url: p.form1583Url,
+          primaryIdUrl: p.id1Url,
+          secondaryIdUrl: p.id2Url,
+          status: 'PENDING_USPS'
+        }))
       };
     }
 
     if (Object.keys(updateData).length === 0) {
-       return NextResponse.json({ error: "No se enviaron documentos válidos para actualizar." }, { status: 400 });
+      return NextResponse.json({ error: "No se enviaron documentos válidos para actualizar." }, { status: 400 });
     }
 
-        await prisma.mailboxSubscription.update({
+    await prisma.mailboxSubscription.update({
       where: { userId },
       data: updateData
     });
