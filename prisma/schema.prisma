@@ -307,7 +307,7 @@ model MailboxTransaction {
   amount          Float
   description     String
   status          String   @default("COMPLETED")
-  stripePaymentId String?
+  stripePaymentId String? @unique
   userId          String
   user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

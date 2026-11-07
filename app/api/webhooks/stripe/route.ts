@@ -60,13 +60,15 @@ const subscription = await prisma.mailboxSubscription.findFirst({
   select: { userId: true, planType: true }
 });
 if (subscription) {
-  await prisma.mailboxTransaction.create({
-    data: {
+  await prisma.mailboxTransaction.upsert({
+    where: { stripePaymentId: (invoice.payment_intent as string) ?? invoice.id },
+    update: {},
+    create: {
       userId: subscription.userId,
       amount: invoice.amount_paid / 100,
-      description: subscription.planType?.includes('799') ? 'SUSCRIPCIÓN BUZÓN BÁSICO' : 'SUSCRIPCIÓN BUZÓN PREMIUM',
+      description: subscription.planType === 'Digital Basic' ? 'SUSCRIPCION BUZON BASICO' : 'SUSCRIPCION BUZON PREMIUM',
       status: 'COMPLETADO',
-      stripePaymentId: invoice.payment_intent as string,
+      stripePaymentId: (invoice.payment_intent as string) ?? invoice.id,
     }
   })
 }
@@ -102,7 +104,7 @@ if (subscription) {
           } else {
             await prisma.mailboxSubscription.create({ data: { userId, tenant_id: tenantId || null, planType, stripeSubscriptionId: subscriptionId, currentPeriodEnd, status: 'ACTIVE' } });
           }
-          await prisma.mailboxTransaction.create({ data: { userId, amount, description: planType === 'Digital Basic' ? 'SUSCRIPCION BUZON BASICO' : 'SUSCRIPCION BUZON PREMIUM', stripePaymentId: pi.id, status: 'COMPLETADO' } });
+          await prisma.mailboxTransaction.upsert({ where: { stripePaymentId: pi.id }, update: {}, create: { userId, amount, description: planType === 'Digital Basic' ? 'SUSCRIPCION BUZON BASICO' : 'SUSCRIPCION BUZON PREMIUM', stripePaymentId: pi.id, status: 'COMPLETADO' } });
           console.log('✅ Suscripción activada:', subscriptionId, planType, pi.id);
         } catch (e: any) {
           console.error('❌ Error activando suscripción:', e.message);
