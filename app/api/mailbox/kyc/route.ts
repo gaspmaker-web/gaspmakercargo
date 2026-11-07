@@ -5,8 +5,11 @@ import { uploadToR2 } from '@/lib/r2';
 
 export async function POST(req: Request) {
   try {
+    const { getMobileUser } = await import("@/lib/getMobileUser");
     const session = await auth();
-    if (!session?.user?.id) {
+    const mobileUser = await getMobileUser(req);
+    const userId = session?.user?.id || mobileUser?.id;
+    if (!userId) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
     }
 
@@ -18,8 +21,8 @@ export async function POST(req: Request) {
       parsedData = JSON.parse(additionalDataString);
     }
 
-    const subscription = await prisma.mailboxSubscription.findUnique({
-      where: { userId: session.user.id },
+       const subscription = await prisma.mailboxSubscription.findUnique({
+      where: { userId },
       include: {
         _count: {
           select: { additionalRecipients: true } 
@@ -98,8 +101,8 @@ export async function POST(req: Request) {
        return NextResponse.json({ error: "No se enviaron documentos válidos para actualizar." }, { status: 400 });
     }
 
-    await prisma.mailboxSubscription.update({
-      where: { userId: session.user.id },
+        await prisma.mailboxSubscription.update({
+      where: { userId },
       data: updateData
     });
 
