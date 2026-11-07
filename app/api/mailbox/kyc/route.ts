@@ -1,4 +1,4 @@
-cd /Users/gerardosoler/Proyectos/recogida-de-paquetes-miami && git add app/api/mailbox/kyc/route.ts && git commit -m "fix(kyc): clone request before getMobileUser to preserve formData body" && git pushimport { NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import prisma from '@/lib/prisma';
 import { uploadToR2 } from '@/lib/r2';
