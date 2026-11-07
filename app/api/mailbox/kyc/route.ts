@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+cd /Users/gerardosoler/Proyectos/recogida-de-paquetes-miami && git add app/api/mailbox/kyc/route.ts && git commit -m "fix(kyc): clone request before getMobileUser to preserve formData body" && git pushimport { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import prisma from '@/lib/prisma';
 import { uploadToR2 } from '@/lib/r2';
@@ -7,7 +7,7 @@ export async function POST(req: Request) {
   try {
     const { getMobileUser } = await import("@/lib/getMobileUser");
     const session = await auth();
-    const mobileUser = await getMobileUser(req);
+    const mobileUser = await getMobileUser(req.clone());
     const userId = session?.user?.id || mobileUser?.id;
     if (!userId) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 });
