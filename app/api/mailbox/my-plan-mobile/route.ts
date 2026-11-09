@@ -17,7 +17,7 @@ export async function GET(req: Request) {
   try {
     const user = await getUserFromToken(req);
     if (!user?.id) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
-    const sub = await prisma.mailboxSubscription.findFirst({ where: { userId: user.id, status: 'ACTIVE' }, select: { planType: true, status: true } });
+    const sub = await prisma.mailboxSubscription.findFirst({ where: { userId: user.id, status: { in: ['ACTIVE', 'active'] } }, select: { planType: true, status: true } });
     return NextResponse.json({ success: true, plan: sub?.planType ?? null, status: sub?.status ?? null });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
