@@ -19,9 +19,18 @@ export async function GET(req: Request) {
     if (!user?.id) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     const sub = await prisma.mailboxSubscription.findFirst({
       where: { userId: user.id, status: { in: ['ACTIVE', 'active', 'PENDING_USPS'] } },
-      select: { planType: true, status: true }
+      select: { planType: true, status: true, uspsForm1583Url: true, primaryIdUrl: true, secondaryIdUrl: true, rejectionReason: true }
     });
-    return NextResponse.json({ success: true, plan: sub?.planType ?? null, status: sub?.status ?? null });
+    const hasPrimaryDocs = !!(sub?.uspsForm1583Url && sub?.primaryIdUrl && sub?.secondaryIdUrl);
+    const isCorrectionMode = sub?.status === 'REJECTED';
+    return NextResponse.json({ 
+      success: true, 
+      plan: sub?.planType ?? null, 
+      status: sub?.status ?? null,
+      hasPrimaryDocs,
+      isCorrectionMode,
+      rejectionReason: sub?.rejectionReason ?? null
+    });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
