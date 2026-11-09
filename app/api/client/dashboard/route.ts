@@ -90,6 +90,12 @@ export async function GET(req: Request) {
       return { id: p.id, gmcTrackingNumber: p.gmcTrackingNumber, carrierTrackingNumber: p.carrierTrackingNumber, status: p.status, description: p.description, weightLbs: p.weightLbs, createdAt: p.createdAt, courier: p.courier, storageFee, handlingFee, isBlocked, invoiceUrl: p.invoiceUrl ?? null, photoUrlMiami: p.photoUrlMiami ?? null };
     });
 
+    const shippingAddresses = await prisma.address.findMany({
+      where: { userId: user.id },
+      orderBy: [{ isDefault: 'desc' }, { createdAt: 'desc' }],
+      select: { id: true, fullName: true, address: true, city: true, cityZip: true, country: true, countryCode: true, phone: true, isDefault: true },
+    });
+
     const shipments = await prisma.consolidatedShipment.findMany({
       where: { userId: user.id }, orderBy: { createdAt: 'desc' }, take: 20,
       select: { id: true, gmcShipmentNumber: true, status: true, selectedCourier: true, finalTrackingNumber: true, createdAt: true, totalAmount: true, packages: { select: { id: true } } }
@@ -125,6 +131,7 @@ export async function GET(req: Request) {
     const totalHandlingFees = parseFloat(packagesWithFees.reduce((s, p) => s + p.handlingFee, 0).toFixed(2));
 
     return NextResponse.json({
+      shippingAddresses,
       user: { ...dbUser, miamiAddress: { recipient: dbUser.name, address: locker.address || '1861 NW 22nd St', city: locker.city || 'Miami, FL 33142', country: locker.country || 'United States', phone: locker.phone || '786-282-0763' } },
       packages: packagesWithFees.slice(0, 20),
       shipments: shipments.map(s => ({ ...s, packagesCount: s.packages.length })),
