@@ -54,8 +54,7 @@ export async function POST(req: Request) {
     }
 
     // Solo permitimos si es el dueño o es Admin
-    if (existingPackage.userId !== session.user.id && session.user.role !== 'ADMIN') {
-        console.error(`❌ [API update-invoice] Usuario ${session.user.id} intentó editar paquete ajeno.`);
+    if (existingPackage.userId !== userId && userRole !== 'ADMIN') {
         return NextResponse.json({ message: 'No tienes permiso para modificar este paquete' }, { status: 403 });
     }
 
