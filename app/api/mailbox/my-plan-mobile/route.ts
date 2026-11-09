@@ -18,7 +18,7 @@ export async function GET(req: Request) {
     const user = await getUserFromToken(req);
     if (!user?.id) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     const sub = await prisma.mailboxSubscription.findFirst({
-      where: { userId: user.id, status: { in: ['ACTIVE', 'active', 'PENDING_USPS'] } },
+      where: { userId: user.id, status: { in: ['ACTIVE', 'active', 'PENDING_USPS', 'REJECTED'] } },
       select: { planType: true, status: true, uspsForm1583Url: true, primaryIdUrl: true, secondaryIdUrl: true, rejectionReason: true, user: { select: { suiteNo: true } } }
     });
     const hasPrimaryDocs = !!(sub?.uspsForm1583Url && sub?.primaryIdUrl && sub?.secondaryIdUrl);
