@@ -80,14 +80,14 @@ export async function GET(req: Request) {
     const allPackages = await prisma.package.findMany({
       where: { userId: user.id, consolidatedShipmentId: null },
       orderBy: { createdAt: 'desc' }, take: 50,
-      select: { id: true, gmcTrackingNumber: true, status: true, description: true, weightLbs: true, createdAt: true, courier: true, lengthIn: true, widthIn: true, heightIn: true, storagePaidUntil: true }
+      select: { id: true, gmcTrackingNumber: true, carrierTrackingNumber: true, status: true, description: true, weightLbs: true, createdAt: true, courier: true, lengthIn: true, widthIn: true, heightIn: true, storagePaidUntil: true, invoiceUrl: true, photoUrlMiami: true }
     });
 
     const packagesWithFees = allPackages.map(p => {
       const storageFee = calculateStorageFee({ createdAt: new Date(p.createdAt), storagePaidUntil: p.storagePaidUntil ? new Date(p.storagePaidUntil) : null, lengthIn: p.lengthIn, widthIn: p.widthIn, heightIn: p.heightIn });
       const handlingFee = calculateHandlingFee(p.weightLbs);
       const isBlocked = storageFee >= 5;
-      return { id: p.id, gmcTrackingNumber: p.gmcTrackingNumber, status: p.status, description: p.description, weightLbs: p.weightLbs, createdAt: p.createdAt, courier: p.courier, storageFee, handlingFee, isBlocked };
+      return { id: p.id, gmcTrackingNumber: p.gmcTrackingNumber, carrierTrackingNumber: p.carrierTrackingNumber, status: p.status, description: p.description, weightLbs: p.weightLbs, createdAt: p.createdAt, courier: p.courier, storageFee, handlingFee, isBlocked, invoiceUrl: p.invoiceUrl ?? null, photoUrlMiami: p.photoUrlMiami ?? null };
     });
 
     const shipments = await prisma.consolidatedShipment.findMany({

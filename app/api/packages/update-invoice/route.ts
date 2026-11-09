@@ -9,10 +9,25 @@ export async function POST(req: Request) {
     const prisma = (await import('@/lib/prisma')).default;
     const { auth } = await import('@/auth');
 
-    // 1. Verificar sesión
-    const session = await auth();
-    if (!session || !session.user?.id) {
-      return NextResponse.json({ message: 'No autorizado' }, { status: 401 });
+    // 1. Verificar sesión (web NextAuth o mobile Bearer JWT)
+    const { jwtVerify } = await import('jose');
+    const req2 = req as any;
+    const authHeader = req2.headers?.get?.('authorization') ?? '';
+    let userId: string | null = null;
+    let userRole: string = 'CLIENTE';
+
+    if (authHeader.startsWith('Bearer ')) {
+      try {
+        const secret = new TextEncoder().encode(process.env.NEXTAUTH_SECRET ?? '');
+        const { payload } = await jwtVerify(authHeader.slice(7), secret);
+        userId = ((payload as any).id ?? (payload as any).userId) as string;
+        userRole = (payload as any).role ?? 'CLIENTE';
+      } catch { return NextResponse.json({ message: 'No autorizado' }, { status: 401 }); }
+    } else {
+      const session = await auth();
+      if (!session?.user?.id) return NextResponse.json({ message: 'No autorizado' }, { status: 401 });
+      userId = session.user.id;
+      userRole = session.user.role ?? 'CLIENTE';
     }
 
     // 2. Obtener datos del cuerpo
