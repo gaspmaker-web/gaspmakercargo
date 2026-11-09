@@ -17,10 +17,11 @@ export async function GET(req: Request) {
   try {
     const user = await getUserFromToken(req);
     if (!user?.id) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
-    const allSubs = await prisma.mailboxSubscription.findMany({ where: { userId: user.id }, select: { planType: true, status: true } });
-    console.log("ALL SUBS FOR USER:", user.id, JSON.stringify(allSubs));
-    const sub = allSubs.find((s: any) => s.status === 'ACTIVE' || s.status === 'active');
-    return NextResponse.json({ success: true, plan: sub?.planType ?? null, status: sub?.status ?? null, debug: allSubs });
+    const sub = await prisma.mailboxSubscription.findFirst({
+      where: { userId: user.id, status: { in: ['ACTIVE', 'active', 'PENDING_USPS'] } },
+      select: { planType: true, status: true }
+    });
+    return NextResponse.json({ success: true, plan: sub?.planType ?? null, status: sub?.status ?? null });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
