@@ -1,91 +1,73 @@
-import { NextResponse } from "next/server";
+// recogida-de-paquetes-miami/app/api/pre-alert/route.ts
+// Replace the full file with this content
 
-// 👇 VACUNA 1: Forzar modo dinámico (Para que Vercel ignore esto en el Build)
-export const dynamic = 'force-dynamic';
+import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@/auth';
+import { prisma } from '@/lib/prisma';
+import { jwtVerify } from 'jose';
 
-export async function POST(req: Request) {
+function generateLockerNumber(prefix: string): string {
+  const ts = Date.now().toString(36).toUpperCase();
+  const rand = Math.random().toString(36).substring(2, 6).toUpperCase();
+  return `${prefix}-${ts}-${rand}`;
+}
+
+async function getUser(req: NextRequest) {
+  // Mobile: Bearer JWT
+  const auth_header = req.headers.get('authorization') ?? '';
+  if (auth_header.startsWith('Bearer ')) {
+    const token = auth_header.slice(7);
+    try {
+      const secret = new TextEncoder().encode(process.env.JWT_SECRET ?? process.env.NEXTAUTH_SECRET ?? '');
+      const { payload } = await jwtVerify(token, secret);
+      const userId = ((payload as any).userId ?? (payload as any).id) as string;
+      if (!userId) return null;
+      return prisma.user.findUnique({ where: { id: userId } });
+    } catch { return null; }
+  }
+  // Web: NextAuth session
+  const session = await auth();
+  if (!session?.user?.email) return null;
+  return prisma.user.findUnique({ where: { email: session.user.email } });
+}
+
+export async function POST(req: NextRequest) {
   try {
-    // 👇 VACUNA 2: Imports dentro de la función (Lazy Loading)
-    const prisma = (await import("@/lib/prisma")).default;
-    const { auth } = await import("@/auth");
-    const { generateLockerNumber } = await import('@/lib/utils');
+    const user = await getUser(req);
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    // 1. Autenticación: Verificar que el usuario está logueado
-    const session = await auth();
-    if (!session?.user?.id) {
-        return NextResponse.json({ message: "No autorizado. Por favor inicia sesión." }, { status: 401 });
-    }
-    // 🏢 Tenant filter
-    const { getTenant } = await import('@/lib/tenant');
-    const tenant = await getTenant();
+    const body = await req.json() as { trackingNumber: string; carrier?: string; description: string; value?: string; invoiceUrl?: string };
+    const { trackingNumber, carrier, description, value, invoiceUrl } = body;
 
-    const body = await req.json();
-    const {
-      trackingNumber, // Viene del input "Número de Tracking"
-      carrier,        // Viene de los botones (AMAZON, UPS, FEDEX...)
-      description,    // Descripción del artículo
-      value,          // Valor declarado en USD
-      invoiceUrl,     // URL de la imagen/pdf subida a Cloudinary
-    } = body;
-
-    // 2. Validaciones Básicas
     if (!trackingNumber || !description) {
-      return NextResponse.json({ message: "El número de tracking y la descripción son obligatorios." }, { status: 400 });
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // 3. Generar Tracking Interno (GMC)
-    // Usamos el prefijo 'PRE' para identificar que aún no ha llegado a bodega
-    const gmcTrackingNumber = generateLockerNumber ? generateLockerNumber('PRE') : `PRE-${Math.floor(100000 + Math.random() * 900000)}`;
-
-    // 4. Guardar en Base de Datos (Con los nuevos campos del Schema)
-    const newPackage = await prisma.package.create({
+    const pkg = await prisma.package.create({
       data: {
-        userId: session.user.id, 
-        tenant_id: tenant?.id || null,  // ← AÑADIR
-        status: "PRE_ALERTA",
-        
-        // Datos de Rastreo Externo
-        carrierTrackingNumber: trackingNumber.toUpperCase(), 
-        
-        // Datos Internos
-        gmcTrackingNumber: gmcTrackingNumber,
-        
-        // Información del Producto
-        description: description,
-        courier: carrier,                               // <--- NUEVO: Guardamos el Transportista
-        declaredValue: value ? parseFloat(value) : 0,   // <--- NUEVO: Guardamos el Valor ($)
-        
-        // Documentación
-        invoiceUrl: invoiceUrl || null,
-        
-        // Inicializamos dimensiones en 0 (se llenan al recibir en bodega)
+        userId: user.id,
+        status: 'PRE_ALERTA',
+        carrierTrackingNumber: (trackingNumber as string).toUpperCase(),
+        gmcTrackingNumber: generateLockerNumber('PRE'),
+        description: description as string,
+        courier: (carrier as string) ?? 'OTHER',
+        declaredValue: parseFloat(value ?? '0') || 0,
+        invoiceUrl: invoiceUrl ?? null,
         weightLbs: 0,
         lengthIn: 0,
         widthIn: 0,
         heightIn: 0,
-        
-        // Timestamps
-        createdAt: new Date(),
-        updatedAt: new Date()
       },
     });
 
-    return NextResponse.json({ 
-        success: true,
-        message: "Pre-Alerta registrada exitosamente.",
-        packageId: newPackage.id,
-        tracking: newPackage.gmcTrackingNumber
-    }, { status: 201 });
-
-  } catch (error: any) {
-    console.error("Error al registrar pre-alerta:", error);
-    
-    // Manejo de error si el tracking ya existe (P2002 es código de duplicado en Prisma)
-    if (error.code === 'P2002') {
-        return NextResponse.json({ message: "Este número de tracking ya ha sido pre-alertado." }, { status: 409 });
+    return NextResponse.json({ success: true, id: pkg.id, gmcTrackingNumber: pkg.gmcTrackingNumber });
+  } catch (err: unknown) {
+    // Duplicate tracking number
+    if ((err as { code?: string })?.code === 'P2002') {
+      return NextResponse.json({ error: 'Tracking number already exists' }, { status: 409 });
     }
-
-    return NextResponse.json({ message: "Error interno del servidor." }, { status: 500 });
+    console.error('[pre-alert]', err);
+    return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }
 
