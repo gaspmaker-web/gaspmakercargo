@@ -34,7 +34,7 @@ export async function POST(req: Request) {
 
     let shippingAddressStr = '';
     if (shippingAddressId) {
-      const addr = await prisma.shippingAddress.findUnique({ where: { id: shippingAddressId } });
+      const addr = await prisma.address.findUnique({ where: { id: shippingAddressId } });
       if (addr) shippingAddressStr = `${addr.fullName} | ${addr.address}, ${addr.cityZip || addr.city}, ${addr.country} | Tel: ${addr.phone || 'N/A'}`;
     }
 
