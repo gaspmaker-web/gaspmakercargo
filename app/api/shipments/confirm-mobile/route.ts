@@ -40,7 +40,7 @@ export async function POST(req: Request) {
 
     const shipment = await prisma.consolidatedShipment.create({
       data: {
-        user: { connect: { id: user.id } }, serviceType: typeMap[serviceType] || 'CONSOLIDATION', status: 'PAGADO',
+        user: { connect: { id: user.id } }, gmcShipmentNumber: `MOB-${Date.now().toString().slice(-6)}`, serviceType: typeMap[serviceType] || 'CONSOLIDATION', status: 'PAGADO',
         paymentId: paymentIntentId, selectedCourier: selectedCourier || null, courierService: courierService || null,
         totalAmount: Number(totalPaid), shippingAddress: shippingAddressStr || null,
         easypostRateId: easypostRateId || null, easypostShipmentId: easypostShipmentId || null,
