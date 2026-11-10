@@ -22,7 +22,7 @@ export async function POST(req: Request) {
 
     const session = await auth();
     const mobileUser = await getMobileUser(req);
-    const userId = userId || mobileUser?.id;
+    const userId = session?.user?.id || mobileUser?.id;
     const userEmail = (session?.user?.email || mobileUser?.email) ?? '';
     const userName = (session?.user?.name || mobileUser?.name) ?? 'Cliente';
     const userLangResolved = (session?.user as any)?.language || 'en';
