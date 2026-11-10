@@ -7,9 +7,11 @@ export async function getMobileUser(req: Request): Promise<{ id: string; email: 
     const token = authHeader.slice(7);
     const secret = new TextEncoder().encode(process.env.NEXTAUTH_SECRET || 'secret');
     const { payload } = await jwtVerify(token, secret);
+    console.log('[getMobileUser] payload:', JSON.stringify(payload));
     if (!payload.id) return null;
     return { id: payload.id as string, email: payload.email as string, name: payload.name as string, role: payload.role as string };
-  } catch {
+  } catch (e) {
+    console.error('[getMobileUser] JWT error:', e);
     return null;
   }
 }

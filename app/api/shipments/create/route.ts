@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getMobileUser } from "@/lib/getMobileUser";
 
 // --- Tarifas ---
 const STORAGE_FREE_DAYS = 30;
@@ -20,7 +21,12 @@ export async function POST(req: Request) {
     } = await import('@/lib/notifications');
 
     const session = await auth();
-    if (!session?.user?.id) {
+    const mobileUser = await getMobileUser(req);
+    const userId = userId || mobileUser?.id;
+    const userEmail = (session?.user?.email || mobileUser?.email) ?? '';
+    const userName = (session?.user?.name || mobileUser?.name) ?? 'Cliente';
+    const userLangResolved = (session?.user as any)?.language || 'en';
+    if (!userId) {
         return NextResponse.json({ message: "No autorizado" }, { status: 401 });
     }
 
@@ -68,7 +74,7 @@ const {
     // 🚚 CASO 1: RECOGIDA EN BODEGA (PICKUP)
     // =======================================================================
     if (type === 'WAREHOUSE_PICKUP') {
-        const packages = await prisma.package.findMany({ where: { id: { in: packageIds }, userId: session.user.id, ...tenantFilter } });
+        const packages = await prisma.package.findMany({ where: { id: { in: packageIds }, userId: userId, ...tenantFilter } });
         
         let calculatedTotal = 0;
         
@@ -114,7 +120,7 @@ const {
 
         const pickupShipment = await prisma.consolidatedShipment.create({
     data: {
-        userId: session.user.id,
+        userId: userId,
         tenant_id: tenant?.id || null,  // ← AÑADIR
         gmcShipmentNumber: `PICKUP-${Date.now().toString().slice(-6)}`,
         status: 'PENDIENTE_PAGO',
@@ -145,7 +151,7 @@ const {
     // =======================================================================
     
     const packagesToConsolidate = await prisma.package.findMany({ 
-       where: { id: { in: packageIds }, userId: session.user.id, ...tenantFilter } 
+       where: { id: { in: packageIds }, userId: userId, ...tenantFilter } 
     });
 
     let normalBoxesCount = 0;
@@ -182,7 +188,7 @@ const {
     }
 
     const user = await prisma.user.findUnique({
-        where: { id: session.user.id },
+        where: { id: userId },
         select: { countryCode: true }
     });
 
@@ -205,7 +211,7 @@ const {
 
 const shipment = await prisma.consolidatedShipment.create({
     data: {
-        userId: session.user.id,
+        userId: userId,
         tenant_id: tenant?.id || null,
         gmcShipmentNumber: shipmentNumber,
         status: initialStatus,
@@ -249,21 +255,21 @@ const shipment = await prisma.consolidatedShipment.create({
     // 🔔 NOTIFICACIONES
     // =========================================================================
     try {
-        const userLang = (session.user as any).language || 'en';
+        const userLang = userLangResolved;
         
         if (finalServiceType === 'CONSOLIDATION' || finalServiceType === 'OCEAN_CONSOLIDATION' || finalServiceType === 'LOCAL_DELIVERY') {
             console.log("🔄 Enviando email de Solicitud de Consolidación / Delivery / Ocean...");
             
             await sendConsolidationRequestEmail(
-                session.user.email || '', 
-                session.user.name || 'Cliente', 
+                userEmail, 
+                userName, 
                 packageIds.length, 
                 shipment.gmcShipmentNumber,
                 userLang
             );
 
             await sendAdminConsolidationAlert(
-                session.user.name || 'Cliente', 
+                userName, 
                 packageIds.length, 
                 shipment.gmcShipmentNumber
             );
@@ -275,8 +281,8 @@ const shipment = await prisma.consolidatedShipment.create({
             const typeLabel = packageIds.length > 1 ? "Consolidación Pagada" : "Envío Individual";
             
             await sendPaymentReceiptEmail(
-                session.user.email || '', 
-                session.user.name || 'Cliente', 
+                userEmail, 
+                userName, 
                 `Envío Internacional (${selectedCourier})`, 
                 safeTotal,
                 shipment.gmcShipmentNumber, 
