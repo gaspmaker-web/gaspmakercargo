@@ -239,6 +239,7 @@ model Address {
   city        String?
   state       String?
   zip         String?
+  county      String?
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
