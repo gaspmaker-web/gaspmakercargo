@@ -21,6 +21,7 @@ export async function POST(req: Request) {
       city,    // <--- Nueva pieza
       state,   // <--- Nueva pieza
       zip,     // <--- Nueva pieza
+      county,
       cityZip, 
       country, 
       phone 
@@ -41,8 +42,8 @@ export async function POST(req: Request) {
         city: city || null,
         state: state || null,
         zip: zip || null,
-        
-        cityZip, // Mantenemos este para compatibilidad
+        county: county || null,
+        cityZip,
         country,
         isDefault,
         userId: userId
