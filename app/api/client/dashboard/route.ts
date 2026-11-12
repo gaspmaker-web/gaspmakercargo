@@ -93,7 +93,7 @@ export async function GET(req: Request) {
     const shippingAddresses = await prisma.address.findMany({
       where: { userId: user.id },
       orderBy: [{ isDefault: 'desc' }, { createdAt: 'desc' }],
-      select: { id: true, fullName: true, address: true, city: true, cityZip: true, country: true, countryCode: true, phone: true, isDefault: true },
+      select: { id: true, fullName: true, address: true, city: true, state: true, zip: true, county: true, cityZip: true, country: true, countryCode: true, phone: true, isDefault: true },
     });
 
     const shipments = await prisma.consolidatedShipment.findMany({
