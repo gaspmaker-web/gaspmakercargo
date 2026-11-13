@@ -8,6 +8,19 @@ export async function POST(req: Request) {
     // 👇 VACUNA 2: Lazy Loading
     const { auth } = await import("@/auth");
     const prisma = (await import("@/lib/prisma")).default;
+    const { jwtVerify } = await import("jose");
+
+    // Soporte para Bearer token (app móvil)
+    async function getUserFromToken(request: Request) {
+      const authHeader = request.headers.get("authorization");
+      if (!authHeader?.startsWith("Bearer ")) return null;
+      const token = authHeader.slice(7);
+      const secret = new TextEncoder().encode(process.env.NEXTAUTH_SECRET || "secret");
+      try {
+        const { payload } = await jwtVerify(token, secret);
+        return payload as any;
+      } catch { return null; }
+    }
     const { customAlphabet } = await import("nanoid");
     
     // 🔥 CORRECCIÓN 1: Importamos 'getT' para las traducciones
