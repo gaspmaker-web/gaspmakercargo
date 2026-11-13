@@ -35,7 +35,8 @@ export async function POST(req: Request) {
     const nanoid = customAlphabet('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ', 8);
 
     const session = await auth();
-    if (!session?.user?.id) return NextResponse.json({ message: "No autorizado." }, { status: 401 });
+    const mobileUser = !session?.user?.id ? await getUserFromToken(req) : null;
+    if (!session?.user?.id && !mobileUser?.id) return NextResponse.json({ message: "No autorizado." }, { status: 401 });
     
     // 1. Obtener datos del Body
     const body = await req.json();
@@ -48,9 +49,9 @@ export async function POST(req: Request) {
     } = body;
 
     // 2. Lógica de Usuario vs Admin
-    const userRole = session.user.role;
+    const userRole = session?.user?.role || mobileUser?.role || 'CLIENT';
     const isAdmin = userRole === 'ADMIN' || userRole === 'WAREHOUSE';
-    const userId = (isAdmin && targetUserId) ? targetUserId : session.user.id;
+    const userId = (isAdmin && targetUserId) ? targetUserId : (session?.user?.id || mobileUser?.id);
 
     if (!packageIds || packageIds.length === 0) {
       return NextResponse.json({ message: "Selecciona al menos un paquete." }, { status: 400 });
