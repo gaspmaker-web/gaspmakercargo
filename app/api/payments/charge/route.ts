@@ -71,8 +71,8 @@ easypostShipmentId,
         return NextResponse.json({ message: "Usuario no configurado para pagos" }, { status: 400 });
     }
 
-    const savedCard = await prisma.paymentMethod.findUnique({ 
-        where: { id: paymentMethodId } 
+    const savedCard = await prisma.paymentMethod.findFirst({ 
+        where: { OR: [{ id: paymentMethodId }, { stripePaymentMethodId: paymentMethodId }], userId: userId }
     });
 
     if (!savedCard) {
