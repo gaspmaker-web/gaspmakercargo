@@ -72,7 +72,7 @@ export async function POST(req: Request) {
       where: {
   id: { in: packageIds },
   userId: userId,
-  status: isAdmin ? undefined : "RECIBIDO_MIAMI",
+  status: isAdmin ? undefined : { in: ["RECIBIDO_MIAMI","EN_ALMACEN","RECEIVED","PRE_ALERTADO","PRE_ALERTA","PENDIENTE","RECIBIDO","EN_BODEGA","DISPONIBLE"] },
   tenant_id: tenant?.id || undefined,
 },
         select: { id: true, weightLbs: true, description: true, gmcTrackingNumber: true }

@@ -32,7 +32,7 @@ export default function ConsolidateShipmentPage() {
         const invRes = await fetch('/api/user/history');
         if (invRes.ok) {
           const data = await invRes.json();
-          const ready = data.requests ? data.requests.filter((r: any) => r.status === 'RECIBIDO_MIAMI') : [];
+          const ready = data.requests ? data.requests.filter((r: any) => ['RECIBIDO_MIAMI','EN_ALMACEN','RECEIVED','PRE_ALERTADO','PRE_ALERTA','PENDIENTE','RECIBIDO','EN_BODEGA','DISPONIBLE'].includes(r.status)) : [];
           setInventory(ready);
         }
       } catch (e) { console.error(e); }
