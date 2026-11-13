@@ -130,7 +130,7 @@ export async function GET(req: Request) {
     const totalStorageFees = parseFloat(packagesWithFees.reduce((s, p) => s + p.storageFee, 0).toFixed(2));
     const totalHandlingFees = parseFloat(packagesWithFees.reduce((s, p) => s + p.handlingFee, 0).toFixed(2));
 
-    const pendingConsolidations = shipments.filter(s => s.status === 'PENDIENTE_PAGO' && (s.totalAmount || 0) === 0);
+    const pendingConsolidations = shipments.filter(s => s.status === 'PENDIENTE_PAGO' && s.serviceType === 'CONSOLIDATION');
 
     return NextResponse.json({
       shippingAddresses,
