@@ -98,7 +98,7 @@ export async function GET(req: Request) {
 
     const shipments = await prisma.consolidatedShipment.findMany({
       where: { userId: user.id }, orderBy: { createdAt: 'desc' }, take: 20,
-      select: { id: true, gmcShipmentNumber: true, status: true, selectedCourier: true, finalTrackingNumber: true, createdAt: true, totalAmount: true, packages: { select: { id: true } } }
+      select: { id: true, gmcShipmentNumber: true, status: true, selectedCourier: true, finalTrackingNumber: true, createdAt: true, totalAmount: true, weightLbs: true, lengthIn: true, widthIn: true, heightIn: true, serviceType: true, destinationCountryCode: true, packages: { select: { id: true } } }
     });
 
     // Referral stats
