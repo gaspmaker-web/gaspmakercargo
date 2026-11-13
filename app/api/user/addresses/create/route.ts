@@ -18,9 +18,9 @@ export async function POST(req: Request) {
     const { 
       fullName, 
       address, 
-      city,    // <--- Nueva pieza
-      state,   // <--- Nueva pieza
-      zip,     // <--- Nueva pieza
+      city,
+      state,
+      zip,
       county,
       cityZip, 
       country, 

@@ -11,7 +11,7 @@ export async function GET() {
     const tenantId = await getTenantId(slug);
     
     if (!tenantId) {
-      return NextResponse.json({ processing_fee_pct: 0.044, insurance_pct: 0.03 });
+      return NextResponse.json({ processing_fee_pct: 0.044, stripe_fixed_fee: 0.30, insurance_pct: 0.03 });
     }
 
     const rates = await getTenantRates(tenantId);
@@ -26,6 +26,7 @@ const oceanCountries = Object.entries(rates)
 
 return NextResponse.json({
   processing_fee_pct: Number(rates['processing_fee_pct'] ?? 0.044),
+  stripe_fixed_fee: Number(rates['stripe_fixed_fee'] ?? 0.30),
   insurance_pct: Number(rates['insurance_pct'] ?? 0.03),
   handling_standard: Number(rates['handling_standard'] ?? 0.60),
   handling_vip: Number(rates['handling_vip'] ?? 0.50),
@@ -65,7 +66,8 @@ local_pallet_box_truck_6: Number(rates['local_pallet_box_truck_6'] ?? 350),
 } catch (error) {
     console.error('Error loading public rates:', error);
     return NextResponse.json({ 
-      processing_fee_pct: 0.044, 
+           processing_fee_pct: 0.044,
+      stripe_fixed_fee: 0.30,
       insurance_pct: 0.03,
       air_countries: [],
       ocean_countries: [],

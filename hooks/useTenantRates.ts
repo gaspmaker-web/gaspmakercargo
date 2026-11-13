@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 
 interface TenantRatesPublic {
   processing_fee_pct: number;
+  stripe_fixed_fee: number;
   insurance_pct: number;
   handling_standard: number;
   handling_vip: number;
@@ -42,6 +43,7 @@ local_pallet_box_truck_5: number;
 
 const DEFAULT_RATES: TenantRatesPublic = {
   processing_fee_pct: 0.044,
+  stripe_fixed_fee: 0.30,
   insurance_pct: 0.03,
   handling_standard: 0.60,
   handling_vip: 0.50,
