@@ -130,13 +130,16 @@ export async function GET(req: Request) {
     const totalStorageFees = parseFloat(packagesWithFees.reduce((s, p) => s + p.storageFee, 0).toFixed(2));
     const totalHandlingFees = parseFloat(packagesWithFees.reduce((s, p) => s + p.handlingFee, 0).toFixed(2));
 
+    const pendingConsolidations = shipments.filter(s => s.status === 'PENDIENTE_PAGO' && (s.totalAmount || 0) === 0);
+
     return NextResponse.json({
       shippingAddresses,
       user: { ...dbUser, miamiAddress: { recipient: dbUser.name, address: locker.address || '1861 NW 22nd St', city: locker.city || 'Miami, FL 33142', country: locker.country || 'United States', phone: locker.phone || '786-282-0763' } },
       packages: packagesWithFees.slice(0, 20),
       shipments: shipments.map(s => ({ ...s, packagesCount: s.packages.length })),
+      pendingConsolidations: pendingConsolidations.map(s => ({ ...s, packagesCount: s.packages.length })),
       pickups, notifications, referrals: { count: referralCount, earned: referralEarned },
-      summary: { packagesInMiami, inTransit, atDestination, pendingPickups, unreadNotifications: notifications.length, blockedPackages, totalStorageFees, totalHandlingFees, totalDebt: parseFloat(totalDebt.toFixed(2)), hasDebt: totalDebt > 0 }
+      summary: { packagesInMiami, inTransit, atDestination, pendingPickups, unreadNotifications: notifications.length, blockedPackages, totalStorageFees, totalHandlingFees, totalDebt: parseFloat(totalDebt.toFixed(2)), hasDebt: totalDebt > 0, pendingConsolidationsCount: pendingConsolidations.length }
     });
   } catch (err) {
     console.error('[client/dashboard]', err);
