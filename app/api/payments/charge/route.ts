@@ -15,7 +15,20 @@ export async function POST(req: Request) {
     const { sendPaymentReceiptEmail, sendAdminPaymentAlert, sendNotification, getT } = await import("@/lib/notifications");
 
     const session = await auth();
-    if (!session?.user?.id) return NextResponse.json({ message: "No autorizado" }, { status: 401 });
+    let userId = session?.user?.id;
+    if (!userId) {
+      const authHeader = req.headers.get('authorization') || req.headers.get('Authorization');
+      if (authHeader?.startsWith('Bearer ')) {
+        const { jwtVerify } = await import("jose");
+        const tk = authHeader.slice(7);
+        const secret = new TextEncoder().encode(process.env.NEXTAUTH_SECRET || "secret");
+        try {
+          const { payload } = await jwtVerify(tk, secret);
+          userId = (payload as any).id || (payload as any).userId;
+        } catch {}
+      }
+    }
+    if (!userId) return NextResponse.json({ message: "No autorizado" }, { status: 401 });
 
     const { 
         amountNet, 
@@ -50,7 +63,7 @@ easypostShipmentId,
     }
 
     const user = await prisma.user.findUnique({ 
-        where: { id: session.user.id },
+        where: { id: userId },
         select: { id: true, name: true, stripeCustomerId: true, walletBalance: true, referredBy: true, referralRewardPaid: true, email: true, countryCode: true }
     });
 
@@ -122,7 +135,7 @@ serverSubtotal = tenantIdLocal ? (await getTenantRateLocal(tenantIdLocal, rateKe
 
             if (Math.abs(clientTotal - serverTotal) > 0.50) {
                 console.warn(
-                    `🚨 PRECIO MANIPULADO — usuario: ${session.user.id} | ` +
+                    `🚨 PRECIO MANIPULADO — usuario: ${userId} | ` +
                     `cliente envió: $${clientTotal} | servidor calculó: $${serverTotal} | ` +
                     `weightLbs: ${wLbs} | distanceMiles: ${dMiles} | vehicle: ${vehicle} | pallets: ${pCount}`
                 );
@@ -535,7 +548,7 @@ const STRIPE_FIXED_FEE = 0.30;
 
         try {
             const existingSub = await prisma.mailboxSubscription.findFirst({
-                where: { userId: session.user.id }
+                where: { userId: userId }
             });
 
             if (existingSub) {
@@ -551,7 +564,7 @@ const STRIPE_FIXED_FEE = 0.30;
             } else {
                 await prisma.mailboxSubscription.create({
                     data: {
-                        userId: session.user.id,
+                        userId: userId,
                         planType: exactDbPlanName,
                         stripeSubscriptionId: paymentIntent.id,
                         currentPeriodEnd: currentPeriodEnd,
@@ -562,7 +575,7 @@ const STRIPE_FIXED_FEE = 0.30;
 
             await prisma.mailboxTransaction.create({
                 data: {
-                    userId: session.user.id,
+                    userId: userId,
                     amount: originalAmount,
                     description: exactDbPlanName === "Digital Basic" ? "SUSCRIPCIÓN BUZÓN BÁSICO" : "SUSCRIPCIÓN BUZÓN PREMIUM",
                     stripePaymentId: paymentIntent.id,
