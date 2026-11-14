@@ -488,7 +488,6 @@ const STRIPE_FIXED_FEE = 0.30;
         const billsArr = Array.isArray(billIds) ? billIds : billIds.split(',');
         
         for (const bId of billsArr) {
-            console.log('🔄 Updating consolidation:', bId, 'to PAGADO');
             const pkgCount = await prisma.package.count({ where: { consolidatedShipmentId: bId } });
             const shipment = await prisma.consolidatedShipment.findUnique({ where: { id: bId } });
             const isDoc = pkgCount === 1 && (shipment?.weightLbs || 0) <= 0.5;
@@ -501,7 +500,6 @@ await prisma.$executeRaw`
                     "updatedAt" = NOW()
                 WHERE id = ${bId}
             `;
-            console.log('✅ Raw SQL executed for:', bId);
         }
     }
 
