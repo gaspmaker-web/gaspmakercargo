@@ -55,6 +55,8 @@ export async function POST(req: Request) {
     const packages = await prisma.package.findMany({
       where: { id: { in: packageIds }, userId }
     });
+    console.log('pay-pickup packageIds:', packageIds);
+console.log('pay-pickup found packages:', packages.length);
 
     if (packages.length === 0) {
       return NextResponse.json({ message: "Packages not found." }, { status: 404 });
@@ -172,13 +174,39 @@ export async function POST(req: Request) {
       });
     } catch {}
 
+        // Create the pickup appointment with PAGADO status
+    const { getTenant } = await import('@/lib/tenant');
+    const tenant = await getTenant();
+    
+    const pickupShipment = await prisma.consolidatedShipment.create({
+      data: {
+        userId,
+        tenant_id: tenant?.id || null,
+        gmcShipmentNumber: `PICKUP-${Date.now().toString().slice(-6)}`,
+        status: 'PAGADO',
+        destinationCountryCode: 'USA',
+        serviceType: 'PICKUP',
+        courierService: scheduledDate && scheduledTime ? `Cita: ${scheduledDate} ${scheduledTime}` : 'Warehouse Pickup',
+        totalAmount: grandTotal,
+        subtotalAmount: grandTotal,
+        paymentId: paymentIntent.id,
+        weightLbs: packages.reduce((acc, p) => acc + (Number(p.weightLbs) || 0), 0),
+        packages: { connect: packageIds.map((id: string) => ({ id })) }
+      }
+    });
+
+    await prisma.package.updateMany({
+      where: { id: { in: packageIds } },
+      data: { status: 'PENDIENTE_RETIRO' }
+    });
+
     return NextResponse.json({
       success: true,
       message: "Payment successful. Pickup scheduled.",
       amountCharged: grandTotal,
-      paymentIntentId: paymentIntent.id
+      paymentIntentId: paymentIntent.id,
+      shipmentId: pickupShipment.id
     });
-
   } catch (error: any) {
     console.error("❌ Error in pay-pickup:", error);
     return NextResponse.json({ message: error.message || "Server error" }, { status: 500 });
