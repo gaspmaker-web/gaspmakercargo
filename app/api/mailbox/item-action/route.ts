@@ -2,13 +2,25 @@ import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import prisma from '@/lib/prisma';
 import { getTenantStripe } from '@/lib/tenant-stripe';
+import { jwtVerify } from 'jose';
 
+async function getUserFromRequest(req: Request) {
+  const authHeader = req.headers.get('authorization');
+  if (authHeader?.startsWith('Bearer ')) {
+    const token = authHeader.slice(7);
+    const secret = new TextEncoder().encode(process.env.NEXTAUTH_SECRET || 'secret');
+    try { const { payload } = await jwtVerify(token, secret); return { id: (payload as any).id } as any; }
+    catch { return null; }
+  }
+  const session = await auth();
+  return session?.user ?? null;
+}
 
 export async function POST(req: Request) {
   try {
-    const session = await auth();
     const stripe = await getTenantStripe(process.env.TENANT_SLUG || 'gaspmaker');
-    if (!session?.user?.id) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    const sessionUser = await getUserFromRequest(req);
+    if (!sessionUser?.id) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
     const { mailItemId, action } = await req.json();
 
@@ -19,7 +31,7 @@ export async function POST(req: Request) {
     const [mailItem, user] = await Promise.all([
       prisma.mailItem.findUnique({ where: { id: mailItemId } }),
       prisma.user.findUnique({ 
-        where: { id: session.user.id },
+        where: { id: sessionUser.id },
         include: { mailboxSubscription: true } 
       })
     ]);
@@ -34,7 +46,7 @@ const tenantId = await getTenantId(tenantSlug);
 const scanPrice = tenantId ? Math.round(((await getTenantRate(tenantId, 'mailbox_scan_per_envelope')) ?? 1.50) * 100) : 150;
 const shredPrice = tenantId ? Math.round(((await getTenantRate(tenantId, 'mailbox_shred_per_envelope')) ?? 0.50) * 100) : 50;
 
-    if (!mailItem || mailItem.userId !== session.user.id || !user || !sub) {
+    if (!mailItem || mailItem.userId !== sessionUser.id || !user || !sub) {
       return NextResponse.json({ error: "Sobre no encontrado" }, { status: 404 });
     }
 
