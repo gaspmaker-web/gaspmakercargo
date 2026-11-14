@@ -482,30 +482,29 @@ const STRIPE_FIXED_FEE = 0.30;
             }
         }
 
-        // --- Bloque de Facturas/Consolidaciones (SHIPs) ---
+    }
 
-        // --- Bloque de Facturas/Consolidaciones (SHIPs) ---
-        if (billIds) {
-            const billsArr = Array.isArray(billIds) ? billIds : billIds.split(',');
-            
-            for (const bId of billsArr) {
-                const pkgCount = await prisma.package.count({ where: { consolidatedShipmentId: bId } });
-                const shipment = await prisma.consolidatedShipment.findUnique({ where: { id: bId } });
-                const isDoc = pkgCount === 1 && (shipment?.weightLbs || 0) <= 0.5;
+    // --- Bloque de Facturas/Consolidaciones (SHIPs) ---
+    if (billIds && !billDetails) {
+        const billsArr = Array.isArray(billIds) ? billIds : billIds.split(',');
+        
+        for (const bId of billsArr) {
+            const pkgCount = await prisma.package.count({ where: { consolidatedShipmentId: bId } });
+            const shipment = await prisma.consolidatedShipment.findUnique({ where: { id: bId } });
+            const isDoc = pkgCount === 1 && (shipment?.weightLbs || 0) <= 0.5;
 
-                await prisma.consolidatedShipment.update({
-                    where: { id: bId },
-                    data: {
-                        status: 'PAGADO', 
-                        paymentId: paymentIntent.id,
-                        shippingAddress: shippingAddress || undefined,
-                        totalAmount: Number((totalToCharge / billsArr.length).toFixed(2)),
-               serviceType: isDoc ? "DOCUMENT" : (packageServiceType || undefined),
-                        easypostRateId: easypostRateId || undefined,
-                        easypostShipmentId: easypostShipmentId || undefined,
-                    }
-                });
-            }
+            await prisma.consolidatedShipment.update({
+                where: { id: bId },
+                data: {
+                    status: 'PAGADO',
+                    paymentId: paymentIntent.id,
+                    shippingAddress: shippingAddress || undefined,
+                    totalAmount: Number((totalToCharge / billsArr.length).toFixed(2)),
+                    serviceType: isDoc ? "DOCUMENT" : (packageServiceType || undefined),
+                    easypostRateId: easypostRateId || undefined,
+                    easypostShipmentId: easypostShipmentId || undefined,
+                }
+            });
         }
     }
 
