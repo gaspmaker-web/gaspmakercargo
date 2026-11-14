@@ -485,6 +485,7 @@ const STRIPE_FIXED_FEE = 0.30;
     }
 
     // --- Bloque de Facturas/Consolidaciones (SHIPs) ---
+        console.log('🔍 billIds:', billIds, 'billDetails:', billDetails, 'packageIds:', packageIds);
     if (billIds && !billDetails) {
         const billsArr = Array.isArray(billIds) ? billIds : billIds.split(',');
         
