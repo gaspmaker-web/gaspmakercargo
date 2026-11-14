@@ -144,9 +144,14 @@ export async function GET(req: Request) {
       packages: packagesWithFees.slice(0, 20),
       shipments: shipments.map(s => ({ ...s, packagesCount: s.packages.length })),
       pendingConsolidations: pendingConsolidations.map(s => ({ ...s, packagesCount: s.packages.length })),
-      pickups, notifications, mailItems, referrals: { count: referralCount, earned: referralEarned },
+      pickups, notifications, mailItems, mailboxPlan: mailboxSub?.planType ?? null, referrals: { count: referralCount, earned: referralEarned },
       summary: { packagesInMiami, inTransit, atDestination, pendingPickups, unreadNotifications: notifications.length, blockedPackages, totalStorageFees, totalHandlingFees, totalDebt: parseFloat(totalDebt.toFixed(2)), hasDebt: totalDebt > 0, pendingConsolidationsCount: pendingConsolidations.length, unreadMailItems: mailItems.filter(m => m.status === 'UNREAD').length }
     });
+    const mailboxSub = await prisma.mailboxSubscription.findFirst({
+  where: { userId: user.id, status: 'ACTIVE' },
+  select: { planType: true },
+  orderBy: { createdAt: 'desc' },
+});
   } catch (err) {
     console.error('[client/dashboard]', err);
     return NextResponse.json({ error: 'Error interno' }, { status: 500 });
