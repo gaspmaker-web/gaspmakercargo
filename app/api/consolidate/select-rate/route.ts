@@ -42,10 +42,10 @@ export async function POST(req: Request) {
     const updated = await prisma.consolidatedShipment.update({
       where: { id: consolidationId },
       data: {
-        selectedCourier: carrier,
+             selectedCourier: carrier,
         courierService: service,
         totalAmount: parseFloat(price),
-        status: 'PENDIENTE_PAGO',
+        ...(consolidation.status !== 'PAGADO' ? { status: 'PENDIENTE_PAGO' } : {}),
       }
     });
 
