@@ -1,11 +1,24 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { auth } from "@/auth";
+import { jwtVerify } from "jose";
+
+async function getUserFromRequest(req: Request) {
+  const authHeader = req.headers.get('authorization');
+  if (authHeader?.startsWith('Bearer ')) {
+    const token = authHeader.slice(7);
+    const secret = new TextEncoder().encode(process.env.NEXTAUTH_SECRET || 'secret');
+    try { const { payload } = await jwtVerify(token, secret); return { id: (payload as any).id } as any; }
+    catch { return null; }
+  }
+  const session = await auth();
+  return session?.user ?? null;
+}
 
 export async function POST(req: Request) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
+    const sessionUser = await getUserFromRequest(req);
+    if (!sessionUser?.id) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 // 🏢 Tenant filter
@@ -21,7 +34,7 @@ const tenant = await getTenant();
     // 1. Creamos la solicitud de Recogida y conectamos los sobres (MailItems)
     const pickupRequest = await prisma.mailPickupRequest.create({
       data: {
-        userId: session.user.id,
+        userId: sessionUser.id,
         tenant_id: tenant?.id || null,  // ← AÑADIR
         scheduledDate: new Date(scheduledDate),
         scheduledTime: scheduledTime,
