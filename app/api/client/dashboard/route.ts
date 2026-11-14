@@ -122,6 +122,12 @@ export async function GET(req: Request) {
       select: { id: true, title: true, message: true, createdAt: true, type: true }
     });
 
+    const mailItems = await prisma.mailItem.findMany({
+      where: { userId: user.id, status: { notIn: ['SHREDDED', 'MOVED_TO_CARGO'] } },
+      orderBy: { receivedAt: 'desc' }, take: 20,
+      select: { id: true, senderName: true, envelopeImageUrl: true, scannedDocUrl: true, status: true, receivedAt: true, weightOz: true }
+    });
+
     const packagesInMiami = packagesWithFees.filter(p => ['RECIBIDO','EN_BODEGA','DISPONIBLE'].includes(p.status)).length;
     const inTransit = shipments.filter(s => ['EN_CAMINO','EN_REPARTO','EN_RUTA'].includes(s.status)).length;
     const atDestination = shipments.filter(s => s.status === 'EN_DESTINO').length;
@@ -138,8 +144,8 @@ export async function GET(req: Request) {
       packages: packagesWithFees.slice(0, 20),
       shipments: shipments.map(s => ({ ...s, packagesCount: s.packages.length })),
       pendingConsolidations: pendingConsolidations.map(s => ({ ...s, packagesCount: s.packages.length })),
-      pickups, notifications, referrals: { count: referralCount, earned: referralEarned },
-      summary: { packagesInMiami, inTransit, atDestination, pendingPickups, unreadNotifications: notifications.length, blockedPackages, totalStorageFees, totalHandlingFees, totalDebt: parseFloat(totalDebt.toFixed(2)), hasDebt: totalDebt > 0, pendingConsolidationsCount: pendingConsolidations.length }
+      pickups, notifications, mailItems, referrals: { count: referralCount, earned: referralEarned },
+      summary: { packagesInMiami, inTransit, atDestination, pendingPickups, unreadNotifications: notifications.length, blockedPackages, totalStorageFees, totalHandlingFees, totalDebt: parseFloat(totalDebt.toFixed(2)), hasDebt: totalDebt > 0, pendingConsolidationsCount: pendingConsolidations.length, unreadMailItems: mailItems.filter(m => m.status === 'UNREAD').length }
     });
   } catch (err) {
     console.error('[client/dashboard]', err);
