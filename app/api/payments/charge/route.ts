@@ -493,19 +493,15 @@ const STRIPE_FIXED_FEE = 0.30;
             const shipment = await prisma.consolidatedShipment.findUnique({ where: { id: bId } });
             const isDoc = pkgCount === 1 && (shipment?.weightLbs || 0) <= 0.5;
 
-const updatedShipment = await prisma.consolidatedShipment.update({
-                where: { id: bId },
-                data: {
-                    status: 'PAGADO',
-                    paymentId: paymentIntent.id,
-                    shippingAddress: shippingAddress || undefined,
-                    totalAmount: Number((totalToCharge / billsArr.length).toFixed(2)),
-                    ...(isDoc ? { serviceType: 'DOCUMENT' } : packageServiceType ? { serviceType: packageServiceType } : {}),
-                    easypostRateId: easypostRateId || undefined,
-                    easypostShipmentId: easypostShipmentId || undefined,
-                }
-            });
-            console.log('✅ Updated:', updatedShipment.id, 'status now:', updatedShipment.status);
+await prisma.$executeRaw`
+                UPDATE "ConsolidatedShipment"
+                SET status = 'PAGADO',
+                    "paymentId" = ${paymentIntent.id},
+                    "totalAmount" = ${Number((totalToCharge / billsArr.length).toFixed(2))},
+                    "updatedAt" = NOW()
+                WHERE id = ${bId}
+            `;
+            console.log('✅ Raw SQL executed for:', bId);
         }
     }
 
