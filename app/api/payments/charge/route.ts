@@ -484,12 +484,11 @@ const STRIPE_FIXED_FEE = 0.30;
 
     }
 
-    // --- Bloque de Facturas/Consolidaciones (SHIPs) ---
-        console.log('🔍 billIds:', billIds, 'billDetails:', billDetails, 'packageIds:', packageIds);
-    if (billIds && !billDetails) {
+     if (billIds && !billDetails) {
         const billsArr = Array.isArray(billIds) ? billIds : billIds.split(',');
         
         for (const bId of billsArr) {
+            console.log('🔄 Updating consolidation:', bId, 'to PAGADO');
             const pkgCount = await prisma.package.count({ where: { consolidatedShipmentId: bId } });
             const shipment = await prisma.consolidatedShipment.findUnique({ where: { id: bId } });
             const isDoc = pkgCount === 1 && (shipment?.weightLbs || 0) <= 0.5;
@@ -506,6 +505,7 @@ const STRIPE_FIXED_FEE = 0.30;
                     easypostShipmentId: easypostShipmentId || undefined,
                 }
             });
+            console.log('✅ Consolidation updated successfully');
         }
     }
 
