@@ -33,9 +33,10 @@ export async function POST(req: Request) {
     const typeMap: Record<string, string> = { AERIAL: 'CONSOLIDATION', OCEAN: 'OCEAN_CONSOLIDATION', LOCAL: 'LOCAL_DELIVERY' };
 
     let shippingAddressStr = '';
+    let destinationCountryCode = 'US';
     if (shippingAddressId) {
       const addr = await prisma.address.findUnique({ where: { id: shippingAddressId } });
-      if (addr) shippingAddressStr = `${addr.fullName} | ${addr.address}, ${addr.cityZip || addr.city}, ${addr.country} | Tel: ${addr.phone || 'N/A'}`;
+      if (addr) { shippingAddressStr = `${addr.fullName} | ${addr.address}, ${addr.cityZip || addr.city}, ${addr.country} | Tel: ${addr.phone || 'N/A'}`; if (addr.countryCode) destinationCountryCode = addr.countryCode; else if (addr.country) destinationCountryCode = addr.country; }
     }
 
     const shipment = await prisma.consolidatedShipment.create({
@@ -43,7 +44,7 @@ export async function POST(req: Request) {
         user: { connect: { id: user.id } }, gmcShipmentNumber: `MOB-${Date.now().toString().slice(-6)}`, serviceType: typeMap[serviceType] || 'CONSOLIDATION', status: 'PAGADO',
         paymentId: paymentIntentId, selectedCourier: selectedCourier || null, courierService: courierService || null,
         totalAmount: Number(totalPaid), shippingAddress: shippingAddressStr || null,
-        easypostRateId: easypostRateId || null, easypostShipmentId: easypostShipmentId || null,
+        easypostRateId: easypostRateId || null, easypostShipmentId: easypostShipmentId || null, destinationCountryCode: destinationCountryCode,
         packages: { connect: packageIds.map((id: string) => ({ id })) },
       },
     });
