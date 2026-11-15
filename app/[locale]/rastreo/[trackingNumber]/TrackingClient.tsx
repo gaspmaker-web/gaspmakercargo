@@ -23,6 +23,25 @@ export default function TrackingClient({ pkg, from }: TrackingClientProps) {
   const proofOfDeliveryPhoto = pkg.deliveryPhotoUrl || "/placeholder-delivery.jpg";
 
   // --- LÓGICA INTELIGENTE DE DESTINO ---
+  const COUNTRY_DISPLAY: Record<string, { flag: string; name: string }> = {
+    US: { flag: '🇺🇸', name: 'United States' }, BB: { flag: '🇧🇧', name: 'Barbados' },
+    TT: { flag: '🇹🇹', name: 'Trinidad and Tobago' }, JM: { flag: '🇯🇲', name: 'Jamaica' },
+    GY: { flag: '🇬🇾', name: 'Guyana' }, SR: { flag: '🇸🇷', name: 'Suriname' },
+    LC: { flag: '🇱🇨', name: 'Saint Lucia' }, VC: { flag: '🇻🇨', name: 'St. Vincent' },
+    GD: { flag: '🇬🇩', name: 'Grenada' }, AG: { flag: '🇦🇬', name: 'Antigua' },
+    DM: { flag: '🇩🇲', name: 'Dominica' }, KN: { flag: '🇰🇳', name: 'St. Kitts' },
+    CU: { flag: '🇨🇺', name: 'Cuba' }, DO: { flag: '🇩🇴', name: 'Dominican Republic' },
+    HT: { flag: '🇭🇹', name: 'Haiti' }, PR: { flag: '🇵🇷', name: 'Puerto Rico' },
+    MX: { flag: '🇲🇽', name: 'Mexico' }, CO: { flag: '🇨🇴', name: 'Colombia' },
+    VE: { flag: '🇻🇪', name: 'Venezuela' },
+  };
+  const getCountryDisplay = (code: string) => {
+    const upper = code.toUpperCase();
+    const entry = COUNTRY_DISPLAY[upper];
+    if (entry) return `${entry.flag} ${entry.name}`;
+    return code;
+  };
+
   let destinationName = pkg.user?.country;
 
   if (!destinationName && pkg.courierService?.toLowerCase().includes('barbados')) {
@@ -184,7 +203,7 @@ export default function TrackingClient({ pkg, from }: TrackingClientProps) {
                             <MapPin size={12}/> Destino
                         </p>
                         <p className="font-bold text-gray-800 text-lg leading-tight capitalize">
-                            {destinationName}
+                            {getCountryDisplay(destinationName || '')}
                         </p>
                         <p className="text-gray-500 text-xs font-mono mt-0.5">
                             Casillero: {pkg.user?.suiteNo}

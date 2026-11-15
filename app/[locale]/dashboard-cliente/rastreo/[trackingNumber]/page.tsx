@@ -112,6 +112,35 @@ export default async function RastreoPage({ params }: { params: { trackingNumber
     itemData.user?.countryCode ||      
     t('defaultDestination');           
 
+  const COUNTRY_DISPLAY: Record<string, { flag: string; name: string }> = {
+    US: { flag: '🇺🇸', name: 'United States' },
+    BB: { flag: '🇧🇧', name: 'Barbados' },
+    TT: { flag: '🇹🇹', name: 'Trinidad and Tobago' },
+    JM: { flag: '🇯🇲', name: 'Jamaica' },
+    GY: { flag: '🇬🇾', name: 'Guyana' },
+    SR: { flag: '🇸🇷', name: 'Suriname' },
+    LC: { flag: '🇱🇨', name: 'Saint Lucia' },
+    VC: { flag: '🇻🇨', name: 'St. Vincent' },
+    GD: { flag: '🇬🇩', name: 'Grenada' },
+    AG: { flag: '🇦🇬', name: 'Antigua' },
+    DM: { flag: '🇩🇲', name: 'Dominica' },
+    KN: { flag: '🇰🇳', name: 'St. Kitts' },
+    CU: { flag: '🇨🇺', name: 'Cuba' },
+    DO: { flag: '🇩🇴', name: 'Dominican Republic' },
+    HT: { flag: '🇭🇹', name: 'Haiti' },
+    PR: { flag: '🇵🇷', name: 'Puerto Rico' },
+    MX: { flag: '🇲🇽', name: 'Mexico' },
+    CO: { flag: '🇨🇴', name: 'Colombia' },
+    VE: { flag: '🇻🇪', name: 'Venezuela' },
+  };
+
+  const getCountryDisplay = (code: string) => {
+    const upper = code.toUpperCase();
+    const entry = COUNTRY_DISPLAY[upper];
+    if (entry) return `${entry.flag} ${entry.name}`;
+    return code;
+  };
+
   const getStatusDisplay = (st: string) => {
       if (st.includes('ENTREGADO')) return { title: t('statusDelivered'), color: 'bg-green-600', text: 'text-green-700', bgL: 'bg-green-100', icon: <Home size={36} /> };
       if (st.includes('DESTINO') || st.includes('ADUANA')) return { title: t('statusDestination'), color: 'bg-blue-600', text: 'text-blue-700', bgL: 'bg-blue-100', icon: <MapPin size={36} /> };
@@ -177,7 +206,7 @@ export default async function RastreoPage({ params }: { params: { trackingNumber
                     <ArrowRight size={20} className="text-gray-300 w-1/3 text-center" />
                     <div className="text-center truncate w-1/3">
                         <p className="text-xs text-gray-500 font-medium">{t('destination')}</p>
-                        <p className="font-bold text-gray-900 truncate capitalize" title={destination}>{destination}</p>
+                        <p className="font-bold text-gray-900 truncate" title={destination}>{getCountryDisplay(destination)}</p>
                     </div>
                 </div>
             </div>
