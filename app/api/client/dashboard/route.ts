@@ -98,7 +98,7 @@ export async function GET(req: Request) {
 
     const shipments = await prisma.consolidatedShipment.findMany({
       where: { userId: user.id }, orderBy: { createdAt: 'desc' }, take: 20,
-      select: { id: true, gmcShipmentNumber: true, status: true, selectedCourier: true, finalTrackingNumber: true, createdAt: true, totalAmount: true, weightLbs: true, lengthIn: true, widthIn: true, heightIn: true, serviceType: true, destinationCountryCode: true, extraCharges: true, declaredValue: true, packages: { select: { id: true, serviceType: true, description: true, weightLbs: true, carrierTrackingNumber: true } } }
+      select: { id: true, gmcShipmentNumber: true, status: true, selectedCourier: true, finalTrackingNumber: true, createdAt: true, totalAmount: true, weightLbs: true, lengthIn: true, widthIn: true, heightIn: true, serviceType: true, destinationCountryCode: true, extraCharges: true, declaredValue: true, packages: { select: { id: true, serviceType: true, description: true, weightLbs: true, carrierTrackingNumber: true, gmcTrackingNumber: true, courier: true, createdAt: true } } }
     });
 
     // Referral stats
@@ -129,7 +129,8 @@ export async function GET(req: Request) {
     });
 
     const packagesInMiami = packagesWithFees.filter(p => ['RECIBIDO','EN_BODEGA','DISPONIBLE'].includes(p.status)).length;
-    const inTransit = shipments.filter(s => ['EN_CAMINO','EN_REPARTO','EN_RUTA','LISTO_PARA_ENVIO','PAGADO','DESPACHADO','ENVIADO','EN_TRANSITO'].includes(s.status)).length;
+    const inTransitShipments = shipments.filter(s => ['EN_CAMINO','EN_REPARTO','EN_RUTA','LISTO_PARA_ENVIO','PAGADO','DESPACHADO','ENVIADO','EN_TRANSITO'].includes(s.status));
+    const inTransit = inTransitShipments.reduce((sum, s) => sum + s.packages.length, 0);
     const atDestination = shipments.filter(s => s.status === 'EN_DESTINO').length;
     const pendingPickups = pickups.filter(p => ['PENDIENTE','PAGADO','ACEPTADO'].includes(p.status)).length;
     const blockedPackages = packagesWithFees.filter(p => p.isBlocked).length;
