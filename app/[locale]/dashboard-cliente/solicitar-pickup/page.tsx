@@ -417,17 +417,25 @@ const b2bLogoUrl = searchParams.get('logoUrl');
 
   // 🔥 ESTIMADO DE ENVÍO INTERNACIONAL
 useEffect(() => {
-    if (!calcWeight) return;
+    if (!calcWeight || serviceType !== 'SHIPPING') return;
     setLoadingEstimate(true);
-    const totalLength = inventory.reduce((max: number, p: any) => Math.max(max, p.lengthIn || 0), 0);
-const totalWidth  = inventory.reduce((max: number, p: any) => Math.max(max, p.widthIn  || 0), 0);
-const totalHeight = inventory.reduce((sum: number, p: any) => sum + (p.heightIn || 0), 0);
-fetch(`/api/tenant/shipping-estimate?weight=${calcWeight}&length=${totalLength}&width=${totalWidth}&height=${totalHeight}`)
+
+    // Buscar paquetes en bodega con dimensiones reales
+    fetch('/api/packages/en-almacen')
+        .then(r => r.json())
+        .then(data => {
+            const pkgs = data.packages || [];
+            const totalLength = pkgs.reduce((max: number, p: any) => Math.max(max, p.lengthIn || 0), 0);
+            const totalWidth  = pkgs.reduce((max: number, p: any) => Math.max(max, p.widthIn  || 0), 0);
+            const totalHeight = pkgs.reduce((sum: number, p: any) => sum + (p.heightIn || 0), 0);
+            const realWeight  = pkgs.reduce((sum: number, p: any) => sum + (p.weightLbs || 0), 0) || calcWeight;
+            return fetch(`/api/tenant/shipping-estimate?weight=${realWeight}&length=${totalLength}&width=${totalWidth}&height=${totalHeight}`);
+        })
         .then(r => r.json())
         .then(data => setShippingEstimate(data.estimate))
         .catch(() => setShippingEstimate(null))
         .finally(() => setLoadingEstimate(false));
-}, [calcWeight, inventory]);
+}, [calcWeight, serviceType]);
 
 const calculateComplexRoute = async (origin: string, destination: string, currentStops?: Stop[]) => {
     if (!isLoaded || typeof google === 'undefined' || !origin) return;
