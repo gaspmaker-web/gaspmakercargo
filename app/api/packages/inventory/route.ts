@@ -57,12 +57,15 @@ const packages = await prisma.package.findMany({
       },
       orderBy: { updatedAt: 'desc' },
       select: {
-        id: true,
-        description: true,
-        weightLbs: true,
-        gmcTrackingNumber: true,
-        status: true,
-        createdAt: true,
+  id: true,
+  description: true,
+  weightLbs: true,
+  lengthIn: true,
+  widthIn: true,
+  heightIn: true,
+  gmcTrackingNumber: true,
+  status: true,
+  createdAt: true,
         consolidatedShipment: {
             select: {
                 totalAmount: true,

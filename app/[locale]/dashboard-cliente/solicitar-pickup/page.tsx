@@ -419,7 +419,10 @@ const b2bLogoUrl = searchParams.get('logoUrl');
 useEffect(() => {
     if (!calcWeight) return;
     setLoadingEstimate(true);
-    fetch(`/api/tenant/shipping-estimate?weight=${calcWeight}`)
+    const totalLength = inventory.reduce((max: number, p: any) => Math.max(max, p.lengthIn || 0), 0);
+const totalWidth  = inventory.reduce((max: number, p: any) => Math.max(max, p.widthIn  || 0), 0);
+const totalHeight = inventory.reduce((sum: number, p: any) => sum + (p.heightIn || 0), 0);
+fetch(`/api/tenant/shipping-estimate?weight=${calcWeight}&length=${totalLength}&width=${totalWidth}&height=${totalHeight}`)
         .then(r => r.json())
         .then(data => setShippingEstimate(data.estimate))
         .catch(() => setShippingEstimate(null))
