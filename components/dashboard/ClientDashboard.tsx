@@ -145,11 +145,15 @@ useEffect(() => {
         setShippingEstimate(null);
         return;
     }
-    fetch(`/api/tenant/shipping-estimate?weight=${totalSelectedWeight}`)
+    // 📦 Usar dimensiones reales de los paquetes seleccionados
+    const maxLength = selectedPackagesData.reduce((max: number, p: any) => Math.max(max, Number(p.lengthIn) || 0), 0);
+    const maxWidth  = selectedPackagesData.reduce((max: number, p: any) => Math.max(max, Number(p.widthIn)  || 0), 0);
+    const sumHeight = selectedPackagesData.reduce((sum: number, p: any) => sum + (Number(p.heightIn) || 0), 0);
+    fetch(`/api/tenant/shipping-estimate?weight=${totalSelectedWeight}&length=${maxLength}&width=${maxWidth}&height=${sumHeight}`)
         .then(r => r.json())
         .then(data => setShippingEstimate(data.estimate))
         .catch(() => setShippingEstimate(null));
-}, [totalSelectedWeight, isPickupModalOpen]);
+}, [totalSelectedWeight, isPickupModalOpen, selectedPackagesData]);
  // =========================================================================
   // 🚚 ACCIÓN 1: CONSOLIDAR / LOCAL DELIVERY / OCEAN
   // =========================================================================
