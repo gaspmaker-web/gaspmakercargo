@@ -427,7 +427,7 @@ fetch(`/api/tenant/shipping-estimate?weight=${calcWeight}&length=${totalLength}&
         .then(data => setShippingEstimate(data.estimate))
         .catch(() => setShippingEstimate(null))
         .finally(() => setLoadingEstimate(false));
-}, [calcWeight]);
+}, [calcWeight, inventory]);
 
 const calculateComplexRoute = async (origin: string, destination: string, currentStops?: Stop[]) => {
     if (!isLoaded || typeof google === 'undefined' || !origin) return;
