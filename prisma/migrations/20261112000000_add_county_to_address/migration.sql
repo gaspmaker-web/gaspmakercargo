@@ -1,0 +1,1 @@
+ALTER TABLE "Address" ADD COLUMN IF NOT EXISTS "county" TEXT;
