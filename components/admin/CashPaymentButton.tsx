@@ -44,12 +44,36 @@ export default function CashPaymentButton({
   const [loadingDetails, setLoadingDetails] = useState(false);
   const [paid, setPaid] = useState(false);
   const [staffName, setStaffName] = useState('');
+  const [undoing, setUndoing] = useState(false);
+  const [showUndoConfirm, setShowUndoConfirm] = useState(false);
 
   useEffect(() => {
     if (autoOpen) {
       loadDetails();
     }
   }, [autoOpen]);
+
+  async function handleUndo() {
+    setUndoing(true);
+    try {
+      const res = await fetch('/api/admin/consolidations/undo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ shipmentId }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Error');
+      alert(`✅ Envío cancelado. ${data.packagesReleased} paquete(s) liberados al almacén.`);
+      setShowModal(false);
+      onClose?.();
+      window.location.reload();
+    } catch (e: any) {
+      alert('❌ Error: ' + e.message);
+    } finally {
+      setUndoing(false);
+      setShowUndoConfirm(false);
+    }
+  }
 
   async function loadDetails() {
     setLoadingDetails(true);
@@ -294,7 +318,20 @@ export default function CashPaymentButton({
             </div>
 
             {/* Footer */}
-            <div className="p-4 bg-gray-50 border-t flex justify-between items-center gap-3">
+            <div className="p-4 bg-gray-50 border-t flex flex-col gap-3">
+              {showUndoConfirm ? (
+                <div className="bg-red-50 border border-red-200 rounded-xl p-3 flex gap-2">
+                  <button onClick={handleUndo} disabled={undoing} className="flex-1 bg-red-600 text-white py-2 rounded-lg font-bold text-sm hover:bg-red-700 disabled:opacity-50">
+                    {undoing ? 'Deshaciendo...' : 'Sí, deshacer envío'}
+                  </button>
+                  <button onClick={() => setShowUndoConfirm(false)} className="flex-1 bg-gray-100 text-gray-700 py-2 rounded-lg font-bold text-sm">No, volver</button>
+                </div>
+              ) : (
+                <button onClick={() => setShowUndoConfirm(true)} className="w-full border border-red-200 text-red-600 py-2 rounded-xl font-bold text-sm hover:bg-red-50 transition">
+                  ↩️ Deshacer Envío
+                </button>
+              )}
+              <div className="flex justify-between items-center gap-3">
               <button onClick={() => setShowModal(false)} className="px-4 py-2 text-gray-600 font-bold text-sm hover:bg-gray-100 rounded-lg">
                 Cancel
               </button>
@@ -306,6 +343,7 @@ export default function CashPaymentButton({
                 {loading ? <Loader2 size={16} className="animate-spin" /> : <Printer size={16} />}
                 {loading ? 'Processing...' : deliverOnly ? 'Confirm Delivery & Print' : 'Confirm & Print Receipt'}
               </button>
+              </div>
             </div>
           </div>
         </div>
