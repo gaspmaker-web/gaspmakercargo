@@ -41,7 +41,7 @@ export async function POST(req: Request) {
 
     const shipment = await prisma.consolidatedShipment.create({
       data: {
-        user: { connect: { id: user.id } }, gmcShipmentNumber: `MOB-${Date.now().toString().slice(-6)}`, serviceType: typeMap[serviceType] || 'CONSOLIDATION', status: 'PAGADO',
+        user: { connect: { id: user.id } }, gmcShipmentNumber: `GMC-SHIP-${Math.floor(100000 + Math.random() * 900000)}`, serviceType: typeMap[serviceType] || 'CONSOLIDATION', status: 'EN_PROCESO_ENVIO',
         paymentId: paymentIntentId, selectedCourier: selectedCourier || null, courierService: courierService || null,
         totalAmount: Number(totalPaid), shippingAddress: shippingAddressStr || null,
         easypostRateId: easypostRateId || null, easypostShipmentId: easypostShipmentId || null, destinationCountryCode: destinationCountryCode,
@@ -51,7 +51,7 @@ export async function POST(req: Request) {
 
     await prisma.package.updateMany({
       where: { id: { in: packageIds } },
-      data: { status: 'LISTO_PARA_ENVIO', stripePaymentId: paymentIntentId, shippingAddress: shippingAddressStr || null, shippingTotalPaid: Number(totalPaid) / packageIds.length, selectedCourier: selectedCourier || null, courierService: courierService || null, easypostRateId: easypostRateId || null, easypostShipmentId: easypostShipmentId || null },
+      data: { status: 'EN_PROCESO_ENVIO',stripePaymentId: paymentIntentId, shippingAddress: shippingAddressStr || null, shippingTotalPaid: Number(totalPaid) / packageIds.length, selectedCourier: selectedCourier || null, courierService: courierService || null, easypostRateId: easypostRateId || null, easypostShipmentId: easypostShipmentId || null },
     });
 
     return NextResponse.json({ success: true, shipmentId: shipment.id });
