@@ -10,6 +10,7 @@ import {
 
 // IMPORTAMOS EL COMPONENTE DE SPLIT
 import PickupSplitPanel from '@/components/admin/PickupSplitPanel';
+import CancelPickupButton from '@/components/admin/CancelPickupButton';
 
 // 🔥 DICCIONARIO DE VEHÍCULOS PARA EL ADMIN
 const VEHICLE_NAMES: Record<string, string> = {
@@ -65,6 +66,13 @@ export default async function PickupRequestDetailPage({ params }: { params: { id
             gmcTracking={req.id.slice(0,8).toUpperCase()}
              />
            </div>
+
+                {/* Cancel Pickup */}
+                <CancelPickupButton 
+                  pickupId={req.id} 
+                  status={req.status} 
+                  totalPaid={req.totalPaid || 0} 
+                />
 
                 {/* 1.1 Si es DELIVERY, mostramos Tracking en Vivo */}
                 {isDelivery && req.tookanLink && (
