@@ -27,7 +27,7 @@ export async function POST(req: Request) {
     if (refund && pickup.stripePaymentId && (pickup.totalPaid || 0) > 0) {
       try {
         const Stripe = (await import('stripe')).default;
-        const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2024-06-20' });
+        const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2024-06-20' as any });
         const pi = await stripe.paymentIntents.retrieve(pickup.stripePaymentId);
         if (pi.status === 'succeeded') {
           const ref = await stripe.refunds.create({ payment_intent: pickup.stripePaymentId });
