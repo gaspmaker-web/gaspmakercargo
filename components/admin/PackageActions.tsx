@@ -114,6 +114,7 @@ export default function PackageActions({ pkg, locale, onDeliverStore }: PackageA
   const isGaspMaker = pkg.selectedCourier?.toUpperCase().includes('GASP') ||
                       pkg.selectedCourier?.toUpperCase().includes('MAKER');
   const isStorePickup = pkg.status === 'PENDIENTE_RETIRO' ||
+  console.log('PKG:', pkg.gmcTrackingNumber, '| status:', pkg.status, '| selectedCourier:', pkg.selectedCourier, '| courier:', pkg.courier, '| isReadyToShip:', isReadyToShip, '| isGaspMaker:', isGaspMaker);
                         pkg.selectedCourier === 'CLIENTE_RETIRO' ||
                         pkg.isStorePickup === true ||
                         trackingString.toUpperCase().startsWith('PICKUP');
