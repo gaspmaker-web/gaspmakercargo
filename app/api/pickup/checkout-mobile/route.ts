@@ -96,7 +96,7 @@ export async function POST(req: Request) {
     const ephemeralKey = await stripe.ephemeralKeys.create({ customer: customerId }, { apiVersion: '2023-10-16' });
     const stopsSummary = Array.isArray(body.extraStops) ? body.extraStops.map((s: any) => s.address).join(' → ') : (body.extraStops ?? '');
     const pi = await stripe.paymentIntents.create({
-      amount: amountCents, currency: 'usd', customer: customerId, setup_future_usage: 'off_session',
+      amount: amountCents, currency: 'usd', customer: customerId, setup_future_usage: 'off_session', payment_method_types: ['card', 'link'],
       description: `GMC Local Delivery — ${isPallet ? `${pCount} pallet(s)` : `${wLbs} lbs`}`,
       metadata: {
         userId: user.id, serviceType: 'DELIVERY', cargoType: body.cargoType ?? '',
