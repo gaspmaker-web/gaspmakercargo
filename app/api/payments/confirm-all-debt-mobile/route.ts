@@ -37,21 +37,16 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "Payment not completed" }, { status: 400 });
     }
 
-    const { shipmentIds: shipRaw, packageIds: pkgRaw } = pi.metadata;
-    const shipmentIds = shipRaw ? shipRaw.split(',').filter(Boolean) : [];
-    const packageIds  = pkgRaw  ? pkgRaw.split(',').filter(Boolean)  : [];
-
-    if (shipmentIds.length > 0) {
-      await prisma.consolidatedShipment.updateMany({
-        where: { id: { in: shipmentIds } },
-        data:  { status: 'PAGADO' },
-      });
-    }
+    const { packageIds: pkgRaw } = pi.metadata;
+    const packageIds = pkgRaw ? pkgRaw.split(',').filter(Boolean) : [];
 
     if (packageIds.length > 0) {
       await prisma.package.updateMany({
         where: { id: { in: packageIds } },
-        data:  { status: 'PAGADO', storageDebt: 0 },
+        data: {
+          storageDebt: 0,
+          storagePaidUntil: new Date(),
+        },
       });
     }
 

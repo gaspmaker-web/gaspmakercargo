@@ -29,9 +29,9 @@ export async function POST(req: Request) {
     }
     if (!userId) return NextResponse.json({ message: "No autorizado" }, { status: 401 });
 
-    const { shipmentIds, packageIds, totalAmount } = await req.json();
+    const { packageIds, totalAmount } = await req.json();
 
-    if (!shipmentIds?.length || !totalAmount) {
+    if (!packageIds?.length || !totalAmount) {
       return NextResponse.json({ message: "Missing required fields." }, { status: 400 });
     }
 
@@ -63,11 +63,10 @@ export async function POST(req: Request) {
       amount:      amountCents,
       currency:    'usd',
       customer:    customerId,
-      description: `Total debt payment — $${totalAmount.toFixed(2)}`,
+      description: `Storage debt payment — $${totalAmount.toFixed(2)}`,
       metadata: {
-        type:        'ALL_DEBT_PAYMENT',
-        shipmentIds: shipmentIds.join(','),
-        packageIds:  Array.isArray(packageIds) ? packageIds.join(',') : '',
+        type:       'STORAGE_DEBT_PAYMENT',
+        packageIds: packageIds.join(','),
         userId,
       },
     });
