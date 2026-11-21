@@ -134,8 +134,9 @@ select: { id: true, gmcShipmentNumber: true, status: true, selectedCourier: true
     const atDestination = shipments.filter(s => s.status === 'EN_DESTINO').length;
     const pendingPickups = pickups.filter(p => ['PENDIENTE','PAGADO','ACEPTADO'].includes(p.status)).length;
     const blockedPackages = packagesWithFees.filter(p => p.isBlocked).length;
-    const totalStorageFees = parseFloat(packagesWithFees.reduce((s, p) => s + p.storageFee, 0).toFixed(2));
-    const totalHandlingFees = parseFloat(packagesWithFees.reduce((s, p) => s + p.handlingFee, 0).toFixed(2));
+    const blockedPkgs = packagesWithFees.filter(p => p.isBlocked);
+    const totalStorageFees = parseFloat(blockedPkgs.reduce((s, p) => s + p.storageFee, 0).toFixed(2));
+    const totalHandlingFees = parseFloat(blockedPkgs.reduce((s, p) => s + p.handlingFee, 0).toFixed(2));
 
         const pendingConsolidations = shipments.filter(s => s.status === 'PENDIENTE_PAGO' && (s.serviceType === 'CONSOLIDATION' || (s.totalAmount || 0) === 0));
 
