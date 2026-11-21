@@ -41,10 +41,12 @@ export async function POST(req: Request) {
 
     // 🔥 Sumar extraCharges (hazmat, EEI, container) al precio del courier
     const extra = (consolidation.extraCharges as any) || {};
-    const configs = await prisma.globalConfig.findMany();
-    const getRate = (key: string, fallback: number) => {
-      const c = configs.find((r: any) => r.key === key);
-      return c ? parseFloat(c.value) : fallback;
+    const { getTenantRates } = await import('@/lib/tenant-rates');
+    const tenantId = (consolidation as any).tenant_id || null;
+    const tenantRates = tenantId ? await getTenantRates(tenantId) : {};
+    const getRate = (key: string, fallback: number): number => {
+      const val = (tenantRates as any)[key] ?? fallback;
+      return parseFloat(String(val));
     };
 
     let extraTotal = 0;
