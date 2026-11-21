@@ -97,6 +97,7 @@ export async function POST(req: Request) {
     const stopsSummary = Array.isArray(body.extraStops) ? body.extraStops.map((s: any) => s.address).join(' → ') : (body.extraStops ?? '');
     const pi = await stripe.paymentIntents.create({
       amount: amountCents, currency: 'usd', customer: customerId, setup_future_usage: 'off_session',
+      payment_method_types: ['card'],
       description: `GMC Local Delivery — ${isPallet ? `${pCount} pallet(s)` : `${wLbs} lbs`}`,
       metadata: {
         userId: user.id, serviceType: 'DELIVERY', cargoType: body.cargoType ?? '',
