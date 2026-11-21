@@ -80,14 +80,14 @@ export async function GET(req: Request) {
     const allPackages = await prisma.package.findMany({
       where: { userId: user.id, consolidatedShipmentId: null },
       orderBy: { createdAt: 'desc' }, take: 50,
-      select: { id: true, gmcTrackingNumber: true, carrierTrackingNumber: true, status: true, description: true, weightLbs: true, createdAt: true, courier: true, lengthIn: true, widthIn: true, heightIn: true, storagePaidUntil: true, invoiceUrl: true, photoUrlMiami: true, deliveryPhotoUrl: true, deliverySignature: true }
+      select: { id: true, gmcTrackingNumber: true, carrierTrackingNumber: true, status: true, description: true, weightLbs: true, createdAt: true, courier: true, lengthIn: true, widthIn: true, heightIn: true, storagePaidUntil: true, invoiceUrl: true, photoUrlMiami: true, deliveryPhotoUrl: true, deliverySignature: true, extraCharges: true }
     });
 
     const packagesWithFees = allPackages.map(p => {
       const storageFee = calculateStorageFee({ createdAt: new Date(p.createdAt), storagePaidUntil: p.storagePaidUntil ? new Date(p.storagePaidUntil) : null, lengthIn: p.lengthIn, widthIn: p.widthIn, heightIn: p.heightIn });
       const handlingFee = calculateHandlingFee(p.weightLbs);
       const isBlocked = storageFee >= 5;
-      return { id: p.id, gmcTrackingNumber: p.gmcTrackingNumber, carrierTrackingNumber: p.carrierTrackingNumber, status: p.status, description: p.description, weightLbs: p.weightLbs, lengthIn: p.lengthIn ?? null, widthIn: p.widthIn ?? null, heightIn: p.heightIn ?? null, createdAt: p.createdAt, courier: p.courier, storageFee, handlingFee, isBlocked, invoiceUrl: p.invoiceUrl ?? null, photoUrlMiami: p.photoUrlMiami ?? null, deliveryPhotoUrl: p.deliveryPhotoUrl ?? null, deliverySignature: p.deliverySignature ?? null };
+      return { id: p.id, gmcTrackingNumber: p.gmcTrackingNumber, carrierTrackingNumber: p.carrierTrackingNumber, status: p.status, description: p.description, weightLbs: p.weightLbs, lengthIn: p.lengthIn ?? null, widthIn: p.widthIn ?? null, heightIn: p.heightIn ?? null, createdAt: p.createdAt, courier: p.courier, storageFee, handlingFee, isBlocked, invoiceUrl: p.invoiceUrl ?? null, photoUrlMiami: p.photoUrlMiami ?? null, deliveryPhotoUrl: p.deliveryPhotoUrl ?? null, deliverySignature: p.deliverySignature ?? null, extraCharges: p.extraCharges ?? null };
     });
 
     const shippingAddresses = await prisma.address.findMany({
