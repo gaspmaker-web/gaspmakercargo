@@ -39,12 +39,36 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "Not found." }, { status: 404 });
     }
 
+    // 🔥 Sumar extraCharges (hazmat, EEI, container) al precio del courier
+    const extra = (consolidation.extraCharges as any) || {};
+    const configs = await prisma.globalConfig.findMany();
+    const getRate = (key: string, fallback: number) => {
+      const c = configs.find((r: any) => r.key === key);
+      return c ? parseFloat(c.value) : fallback;
+    };
+
+    let extraTotal = 0;
+    if (extra.hazmatPrepFee)         extraTotal += getRate('hazmat_prep_fee', 120);
+    if (extra.hazmatShippingLineFee) extraTotal += getRate('hazmat_shipping_line_fee', 180);
+    if (extra.airHazmat)             extraTotal += getRate('air_hazmat_fee', 275);
+    if (extra.eei)                   extraTotal += getRate('eei_fee', 40);
+    if (extra.containerFee)          extraTotal += parseFloat(extra.containerFee) || 0;
+
+    const courierPrice = parseFloat(price);
+    const finalTotal = parseFloat((courierPrice + extraTotal).toFixed(2));
+
     const updated = await prisma.consolidatedShipment.update({
       where: { id: consolidationId },
       data: {
-             selectedCourier: carrier,
+        selectedCourier: carrier,
         courierService: service,
-        totalAmount: parseFloat(price),
+        totalAmount: finalTotal,
+        extraCharges: {
+          ...extra,
+          courierBase: courierPrice,
+          extraChargesTotal: extraTotal,
+          grandTotal: finalTotal,
+        },
         ...(consolidation.status !== 'PAGADO' ? { status: 'PENDIENTE_PAGO' } : {}),
       }
     });
