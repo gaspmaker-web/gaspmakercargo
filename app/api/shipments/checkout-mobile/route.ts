@@ -41,7 +41,7 @@ export async function POST(req: Request) {
     const amountCents = Math.round(Number(totalPaid) * 100);
 
     const pi = await stripe.paymentIntents.create({
-      amount: amountCents, currency: 'usd', customer: customerId, setup_future_usage: 'off_session',
+      amount: amountCents, currency: 'usd', customer: customerId,
       description: `GMC ${typeLabel[serviceType] || 'Shipment'} — ${packageIds.join(', ')}`,
       metadata: { userId: user.id, packageIds: packageIds.join(','), serviceType: serviceType || 'AERIAL', selectedCourier: selectedCourier || '', courierService: courierService || '', easypostRateId: easypostRateId || '', easypostShipmentId: easypostShipmentId || '', shippingAddressId: shippingAddressId || '', totalPaid: String(totalPaid) },
     });
