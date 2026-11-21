@@ -152,7 +152,7 @@ select: { id: true, gmcShipmentNumber: true, status: true, selectedCourier: true
       shipments: shipments.map(s => ({ ...s, packagesCount: s.packages.length })),
       pendingConsolidations: pendingConsolidations.map(s => ({ ...s, packagesCount: s.packages.length })),
       pickups, notifications, mailItems, mailboxPlan: mailboxSub?.planType ?? null, referrals: { count: referralCount, earned: referralEarned },
-      summary: { packagesInMiami, inTransit, atDestination, pendingPickups, unreadNotifications: notifications.length, blockedPackages, totalStorageFees, totalHandlingFees, totalDebt: parseFloat(totalDebt.toFixed(2)), hasDebt: totalDebt > 0, pendingConsolidationsCount: pendingConsolidations.length, unreadMailItems: mailItems.filter(m => m.status === 'UNREAD').length }
+      summary: { packagesInMiami, inTransit, atDestination, pendingPickups, unreadNotifications: notifications.length, blockedPackages, totalStorageFees, totalHandlingFees, totalDebt: parseFloat((totalDebt + totalStorageFees + totalHandlingFees).toFixed(2)), hasDebt: (totalDebt + totalStorageFees + totalHandlingFees) > 0, pendingConsolidationsCount: pendingConsolidations.length, unreadMailItems: mailItems.filter(m => m.status === 'UNREAD').length }
     });
 
   } catch (err) {
