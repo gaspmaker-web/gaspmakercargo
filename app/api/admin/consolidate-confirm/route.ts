@@ -36,10 +36,33 @@ export async function POST(req: Request) {
         containerFee
     } = await req.json();
 
+    // 🔥 Leer extraCharges de los paquetes incluidos y mergear con lo que el admin marcó
+    const consolidationWithPkgs = await prisma.consolidatedShipment.findUnique({
+        where: { id: consolidationId },
+        include: { packages: { select: { extraCharges: true } } }
+    });
+    const pkgExtraCharges = (consolidationWithPkgs?.packages || []).reduce((acc: any, pkg: any) => {
+        const ec = pkg.extraCharges as any;
+        if (!ec) return acc;
+        return {
+            hazmatPrepFee: acc.hazmatPrepFee || !!ec.hazmatPrepFee,
+            hazmatShippingLineFee: acc.hazmatShippingLineFee || !!ec.hazmatShippingLineFee,
+            airHazmat: acc.airHazmat || !!ec.airHazmat,
+            eei: acc.eei || !!ec.eei,
+            containerFee: acc.containerFee || ec.containerFee || 0,
+            containerType: acc.containerType || ec.containerType || null,
+        };
+    }, { hazmatPrepFee: false, hazmatShippingLineFee: false, airHazmat: false, eei: false, containerFee: 0, containerType: null });
+
+    const mergedExtraCharges = {
+        ...pkgExtraCharges,
+        ...(extraCharges || {}),
+    };
+
     let updateData: any = {
         totalAmount: 0,
         status: "PENDIENTE_PAGO",
-        extraCharges: extraCharges || null
+        extraCharges: mergedExtraCharges
     };
 
     if (isAura && auraPieces && auraPieces.length > 0) {
