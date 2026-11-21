@@ -64,18 +64,21 @@ export async function POST(req: Request) {
     const originCoords = await geocode(pickupStop?.address  ?? '');
     const destCoords   = await geocode(dropoffStop?.address ?? '');
     const pickupDate   = m.pickupDate ? new Date(m.pickupDate) : new Date();
+    const originAddr   = pickupStop?.address ?? '';
 
     const newRequest = await prisma.pickupRequest.create({
       data: {
         userId:          user.id,
         serviceType:     'DELIVERY',
-        originAddress:   pickupStop?.address  ?? '',
+        originAddress:   originAddr,
+        originCity:      originAddr,
+        description:     m.notes || 'Local Delivery',
+        contactPhone:    m.contactPhone ?? '',
         dropOffAddress:  dropoffStop?.address ?? null,
+        dropOffCity:     dropoffStop?.address ?? null,
         dropOffContact:  dropoffStop?.contact ?? null,
         dropOffPhone:    dropoffStop?.phone   ?? null,
         pickupDate,
-        contactPhone:    m.contactPhone ?? '',
-        description:     m.notes        || null,
         weightInfo:      m.weightTier   || null,
         weightLbs,
         distanceMiles,
@@ -95,7 +98,7 @@ export async function POST(req: Request) {
     });
 
     try {
-      await sendPaymentReceiptEmail(user.email, user.name ?? 'Cliente', 'Local Delivery', totalPaid, newRequest.id, `Ruta: ${pickupStop?.address ?? ''} → ${dropoffStop?.address ?? ''}`);
+      await sendPaymentReceiptEmail(user.email, user.name ?? 'Cliente', 'Local Delivery', totalPaid, newRequest.id, `Ruta: ${originAddr} → ${dropoffStop?.address ?? ''}`);
       await sendAdminPaymentAlert(user.name ?? 'Cliente', totalPaid, 'Local Delivery (Mobile)', newRequest.id);
       await sendNotification({ userId: user.id, title: JSON.stringify({ key: 'pickupConfirmedTitle' }), message: JSON.stringify({ key: 'pickupConfirmedBody', date: pickupDate.toLocaleDateString() }), type: 'SUCCESS' });
     } catch (e) { console.error('[pickup/confirm-mobile] notification error:', e); }
