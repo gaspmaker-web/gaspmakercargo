@@ -105,17 +105,35 @@ if (subscription) {
             await prisma.mailboxSubscription.create({ data: { userId, tenant_id: tenantId || null, planType, stripeSubscriptionId: subscriptionId, currentPeriodEnd, status: 'ACTIVE' } });
           }
           await prisma.mailboxTransaction.upsert({ where: { stripePaymentId: pi.id }, update: {}, create: { userId, amount, description: planType === 'Digital Basic' ? 'SUSCRIPCION BUZON BASICO' : 'SUSCRIPCION BUZON PREMIUM', stripePaymentId: pi.id, status: 'COMPLETADO' } });
-          console.log('✅ Suscripción activada:', subscriptionId, planType, pi.id);
+               console.log('✅ Suscripción activada:', subscriptionId, planType, pi.id);
         } catch (e: any) {
           console.error('❌ Error activando suscripción:', e.message);
         }
       }
+
+      // ── SHOPPER ORDER ────────────────────────────────────────────────
+      const { type: piType, orderId: piOrderId } = pi.metadata || {};
+      if (piType === 'SHOPPER_ORDER' && piOrderId) {
+        try {
+          await prisma.shopperOrder.update({
+            where: { id: piOrderId },
+            data: {
+              status: 'PAID',
+              stripePaymentId: pi.id,
+              updatedAt: new Date(),
+            },
+          });
+          console.log(`✅ ShopperOrder ${piOrderId} marcado PAID`);
+        } catch (e: any) {
+          console.error('❌ Error actualizando ShopperOrder:', e.message);
+        }
+      }
+      // ─────────────────────────────────────────────────────────────────
     }
 
 
     // ==================================================================
     // NUEVA SUSCRIPCIÓN MAILBOX DESDE APP MÓVIL (SetupIntent)
-    // ==================================================================
     if (event.type === 'setup_intent.succeeded') {
       const setupIntent = event.data.object as any;
       const { userId, planType, priceId, tenantId } = setupIntent.metadata || {};
