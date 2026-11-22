@@ -184,6 +184,7 @@ model PickupRequest {
   processingFee    Float?   @default(0.0)
   totalPaid        Float?   @default(0.0)
   stripePaymentId  String?
+  cancelReason     String?
   weightInfo       String?
   volumeInfo       String?
   photoPickupUrl   String?
@@ -324,6 +325,7 @@ model ShopperOrder {
   stripeFee        Float         @default(0)
   totalAmount      Float         @default(0)
   stripePaymentId  String?
+  cancelReason     String?
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
   serviceType      String        @default("PERSONAL_SHOPPER")
