@@ -24,7 +24,7 @@ export async function POST(req: Request) {
 
     await prisma.shopperOrder.update({
       where: { id: orderId },
-      data: { status: "CANCELLED", updatedAt: new Date() },
+      data: { status: "CANCELLED", cancelReason: reason || null, updatedAt: new Date() },
     });
 
     // Notify client
