@@ -198,8 +198,9 @@ export default async function PickupRequestDetailPage({ params }: { params: { id
                                 <div key={idx} className="relative pl-8 mb-6">
                                     <div className="absolute left-0 top-1 w-3 h-3 bg-yellow-500 rounded-full border-2 border-white shadow-sm -ml-[5px]"></div>
                                     <p className="text-xs font-bold text-gray-400 uppercase mb-1">Stop {String.fromCharCode(66 + idx)}</p>
-                                    <p className="font-medium text-gray-800">{stop.address || stop}</p>
-                                    {stop.description && <p className="text-xs text-gray-500 mt-0.5">{stop.description}</p>}
+                                    <p className="font-medium text-gray-800">{typeof stop === 'string' ? stop : (stop.address || '—')}</p>
+                                    {typeof stop !== 'string' && stop.description && <p className="text-xs text-gray-500 mt-0.5">{stop.description}</p>}
+                                    {typeof stop !== 'string' && stop.phone && <p className="text-xs text-gray-400 mt-0.5">📞 {stop.phone}</p>}
                                 </div>
                             ))}
 
