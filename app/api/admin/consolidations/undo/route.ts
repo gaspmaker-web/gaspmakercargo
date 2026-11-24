@@ -32,7 +32,7 @@ export async function POST(req: Request) {
       // Liberar paquetes — quitar consolidación y volver a disponible
       prisma.package.updateMany({
         where: { id: { in: packageIds } },
-        data: { consolidatedShipmentId: null, status: 'EN_ALMACEN' },
+        data: { consolidatedShipmentId: null, status: 'EN_ALMACEN', storageDebt: 0 },
       }),
       // Cancelar el shipment
       prisma.consolidatedShipment.update({
