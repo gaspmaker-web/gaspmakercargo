@@ -25,7 +25,7 @@ export async function POST(req: Request) {
     const userId = session?.user?.id || mobileUser?.id;
     const userEmail = (session?.user?.email || mobileUser?.email) ?? '';
     const userName = (session?.user?.name || mobileUser?.name) ?? 'Cliente';
-    const userLangResolved = (session?.user as any)?.language || 'en';
+    const userLangResolved = (session?.user as any)?.preferredLocale || (session?.user as any)?.language || 'en';
     if (!userId) {
         return NextResponse.json({ message: "No autorizado" }, { status: 401 });
     }

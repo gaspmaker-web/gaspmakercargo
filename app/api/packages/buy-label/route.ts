@@ -192,7 +192,7 @@ if (pkg.consolidatedShipmentId) {
                 pkg.gmcTrackingNumber || pkg.id, // ID interno (GMC)
                 finalCourier, // Transportista (ej. FedEx, USPS)
                 trackingNumber, // Tracking oficial
-                (pkg.user as any).language || 'es'
+                (pkg.user as any).preferredLocale || (pkg.user as any).language || 'es'
             );
 
             // 2. Notificación interna en su campanita web

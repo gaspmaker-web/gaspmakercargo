@@ -87,7 +87,7 @@ if (duplicate) {
 
       // 🔔 NOTIFICAR AL CLIENTE (PRE-ALERTA PROCESADA)
       if (updatedPackage.user?.email) {
-          const userLang = (updatedPackage.user as any).language || 'en';
+          const userLang = (updatedPackage.user as any).preferredLocale || (updatedPackage.user as any).language || 'en';
           const t = getT(userLang);
 
           await sendPackageReceivedEmail(
@@ -147,7 +147,7 @@ if (duplicate) {
 
       // 🔔 NOTIFICAR AL CLIENTE (PAQUETE NUEVO)
       if (newPackage.user?.email) {
-          const userLang = (newPackage.user as any).language || 'en';
+          const userLang = (newPackage.user as any).preferredLocale || (newPackage.user as any).language || 'en';
           const t = getT(userLang);
 
           await sendPackageReceivedEmail(

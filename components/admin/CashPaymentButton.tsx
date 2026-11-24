@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { DollarSign, Loader2, X, User, Package, Calendar, Clock, Printer } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { DollarSign, Loader2, X, User, Package, Calendar, Printer, RotateCcw } from 'lucide-react';
 import ConsolidationScanner from './ConsolidationScanner';
 
 interface PackageItem {
@@ -26,17 +26,106 @@ interface ShipmentDetails {
   packages: PackageItem[];
 }
 
+// Inline signature canvas — no external dependency needed
+function SignatureCanvas({ onSave, onClear }: { onSave: (dataUrl: string) => void; onClear: () => void }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const drawing = useRef(false);
+  const hasStrokes = useRef(false);
+
+  function getPos(e: React.MouseEvent | React.TouchEvent) {
+    const canvas = canvasRef.current!;
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    if ('touches' in e) {
+      return {
+        x: (e.touches[0].clientX - rect.left) * scaleX,
+        y: (e.touches[0].clientY - rect.top) * scaleY,
+      };
+    }
+    return {
+      x: (e.clientX - rect.left) * scaleX,
+      y: (e.clientY - rect.top) * scaleY,
+    };
+  }
+
+  function startDraw(e: React.MouseEvent | React.TouchEvent) {
+    e.preventDefault();
+    const ctx = canvasRef.current!.getContext('2d')!;
+    const { x, y } = getPos(e);
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    drawing.current = true;
+    hasStrokes.current = true;
+  }
+
+  function draw(e: React.MouseEvent | React.TouchEvent) {
+    e.preventDefault();
+    if (!drawing.current) return;
+    const ctx = canvasRef.current!.getContext('2d')!;
+    ctx.lineWidth = 2.5;
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = '#1e3a5f';
+    const { x, y } = getPos(e);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+  }
+
+  function endDraw(e: React.MouseEvent | React.TouchEvent) {
+    e.preventDefault();
+    drawing.current = false;
+    if (hasStrokes.current) {
+      onSave(canvasRef.current!.toDataURL('image/png'));
+    }
+  }
+
+  function clear() {
+    const canvas = canvasRef.current!;
+    const ctx = canvas.getContext('2d')!;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    hasStrokes.current = false;
+    onClear();
+  }
+
+  return (
+    <div className="relative">
+      <canvas
+        ref={canvasRef}
+        width={600}
+        height={160}
+        className="w-full border-2 border-dashed border-gray-300 rounded-xl bg-white touch-none cursor-crosshair"
+        style={{ height: 160 }}
+        onMouseDown={startDraw}
+        onMouseMove={draw}
+        onMouseUp={endDraw}
+        onMouseLeave={endDraw}
+        onTouchStart={startDraw}
+        onTouchMove={draw}
+        onTouchEnd={endDraw}
+      />
+      <button
+        type="button"
+        onClick={clear}
+        className="absolute top-2 right-2 text-xs text-gray-400 hover:text-red-500 flex items-center gap-1"
+      >
+        <RotateCcw size={12} /> Clear
+      </button>
+    </div>
+  );
+}
+
 export default function CashPaymentButton({
-    shipmentId,
-    shipmentNumber,
-    autoOpen = false,
-    deliverOnly = false,
-    onClose}: {
-    shipmentId: string;
-    shipmentNumber: string;
-    autoOpen?: boolean;
-    deliverOnly?: boolean;
-    onClose?: () => void;
+  shipmentId,
+  shipmentNumber,
+  autoOpen = false,
+  deliverOnly = false,
+  onClose,
+}: {
+  shipmentId: string;
+  shipmentNumber: string;
+  autoOpen?: boolean;
+  deliverOnly?: boolean;
+  onClose?: () => void;
 }) {
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -46,11 +135,10 @@ export default function CashPaymentButton({
   const [staffName, setStaffName] = useState('');
   const [undoing, setUndoing] = useState(false);
   const [showUndoConfirm, setShowUndoConfirm] = useState(false);
+  const [signatureDataUrl, setSignatureDataUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    if (autoOpen) {
-      loadDetails();
-    }
+    if (autoOpen) loadDetails();
   }, [autoOpen]);
 
   async function handleUndo() {
@@ -96,13 +184,26 @@ export default function CashPaymentButton({
       const res = await fetch('/api/admin/consolidations/cash-payment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ shipmentId }),
+        body: JSON.stringify({
+          shipmentId,
+          deliverySignature: signatureDataUrl ?? undefined,
+        }),
       });
       if (res.ok) {
         setPaid(true);
         const printWindow = window.open('', '_blank');
         if (printWindow && details) {
           const date = details.courierService?.replace('Cita: ', '') || '';
+          const sigHtml = signatureDataUrl
+            ? `<div class="section">
+                <div class="label">Recipient Signature</div>
+                <div style="border:1px solid #e5e7eb; border-radius:8px; padding:12px; background:#fff; margin-top:6px;">
+                  <img src="${signatureDataUrl}" style="max-width:100%; height:80px; object-fit:contain;" />
+                </div>
+                <div style="font-size:11px; color:#6b7280; margin-top:4px;">✍️ Signed upon pickup — ${new Date().toLocaleString('en-US')}</div>
+               </div>`
+            : '';
+
           printWindow.document.write(`
             <!DOCTYPE html>
             <html>
@@ -129,41 +230,31 @@ export default function CashPaymentButton({
                 <p style="margin:5px 0; font-size:12px;">1861 NW 22nd St, Miami, FL 33142</p>
                 <p style="margin:0; font-size:12px;">info@gaspmakercargo.com</p>
               </div>
-
               <div style="text-align:center; margin-bottom:15px;">
                 <div class="paid-stamp">✓ PAID - CASH</div>
               </div>
-
               <div class="section">
                 <div class="label">Receipt #</div>
                 <div class="value">${details.gmcShipmentNumber}</div>
               </div>
-
               <div class="section">
                 <div class="label">Date</div>
                 <div class="value">${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
               </div>
-
               <div class="section">
                 <div class="label">Pickup Appointment</div>
                 <div class="value">${date}</div>
               </div>
-
               <div class="section" style="background:#f9fafb; padding:12px; border-radius:8px;">
                 <div class="label">Client</div>
                 <div class="value">${details.user.name}</div>
                 <div style="font-size:12px; color:#666;">${details.user.email}</div>
                 <div style="font-size:12px; color:#666;">Suite: ${details.user.suiteNo} | Tel: ${details.user.phone}</div>
               </div>
-
               <div class="section">
                 <div class="label">Packages (${details.packages.length})</div>
                 <table>
-                  <tr>
-                    <th>Tracking</th>
-                    <th>Description</th>
-                    <th>Weight</th>
-                  </tr>
+                  <tr><th>Tracking</th><th>Description</th><th>Weight</th></tr>
                   ${details.packages.map(pkg => `
                     <tr>
                       <td style="font-family:monospace; font-size:11px;">${pkg.gmcTrackingNumber}</td>
@@ -173,11 +264,10 @@ export default function CashPaymentButton({
                   `).join('')}
                 </table>
               </div>
-
               <div class="total">TOTAL PAID: $${details.totalAmount?.toFixed(2)}</div>
               <div style="text-align:right; font-size:12px; color:#666;">Payment Method: CASH</div>
               <div style="text-align:right; font-size:12px; color:#666;">Delivered by: ${staffName}</div>
-
+              ${sigHtml}
               <div class="footer">
                 <p>Thank you for your business!</p>
                 <p>gaspmakercargo.com</p>
@@ -228,7 +318,7 @@ export default function CashPaymentButton({
               </button>
             </div>
 
-            <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+            <div className="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
 
               {/* Client Info */}
               <div className="bg-gray-50 rounded-xl p-4 flex items-start gap-3">
@@ -240,7 +330,7 @@ export default function CashPaymentButton({
                 </div>
               </div>
 
-              {/* Appointment */}
+              {/* Appointment + Packages */}
               <div className="flex gap-4">
                 <div className="bg-blue-50 rounded-xl p-3 flex-1 flex items-center gap-2">
                   <Calendar size={16} className="text-blue-500" />
@@ -248,8 +338,8 @@ export default function CashPaymentButton({
                     <p className="text-xs text-gray-400">Appointment</p>
                     <p className="font-bold text-sm">
                       {details.courierService === 'Recogida en Tienda'
-                          ? 'Store Pickup'
-                          : details.courierService?.replace('Cita: ', '')}
+                        ? 'Store Pickup'
+                        : details.courierService?.replace('Cita: ', '')}
                     </p>
                   </div>
                 </div>
@@ -276,7 +366,7 @@ export default function CashPaymentButton({
                 </div>
               </div>
 
-              {/* 🔥 BARCODE SCANNER — verifica paquetes antes de entregar */}
+              {/* Scanner */}
               <div className="border-t border-gray-100 pt-3">
                 <p className="text-xs font-bold text-gray-400 uppercase mb-2">Verify Before Delivery</p>
                 <ConsolidationScanner
@@ -304,7 +394,7 @@ export default function CashPaymentButton({
                   Delivered By (Staff):
                 </label>
                 <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16}/>
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                   <input
                     type="text"
                     placeholder="Your name..."
@@ -313,6 +403,23 @@ export default function CashPaymentButton({
                     onChange={(e) => setStaffName(e.target.value)}
                   />
                 </div>
+              </div>
+
+              {/* ── RECIPIENT SIGNATURE ── */}
+              <div className="border border-gray-200 rounded-xl p-4 bg-gray-50">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs font-bold text-gray-400 uppercase">Recipient Signature</p>
+                  {signatureDataUrl && (
+                    <span className="text-xs text-green-600 font-semibold">✓ Signed</span>
+                  )}
+                </div>
+                <SignatureCanvas
+                  onSave={(dataUrl) => setSignatureDataUrl(dataUrl)}
+                  onClear={() => setSignatureDataUrl(null)}
+                />
+                <p className="text-xs text-gray-400 mt-2 text-center">
+                  Client signs above to confirm receipt of packages
+                </p>
               </div>
 
             </div>
@@ -332,17 +439,17 @@ export default function CashPaymentButton({
                 </button>
               )}
               <div className="flex justify-between items-center gap-3">
-              <button onClick={() => setShowModal(false)} className="px-4 py-2 text-gray-600 font-bold text-sm hover:bg-gray-100 rounded-lg">
-                Cancel
-              </button>
-              <button
-                onClick={handleConfirmCash}
-                disabled={loading || !staffName.trim()}
-                className="flex-1 bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50"
-              >
-                {loading ? <Loader2 size={16} className="animate-spin" /> : <Printer size={16} />}
-                {loading ? 'Processing...' : deliverOnly ? 'Confirm Delivery & Print' : 'Confirm & Print Receipt'}
-              </button>
+                <button onClick={() => setShowModal(false)} className="px-4 py-2 text-gray-600 font-bold text-sm hover:bg-gray-100 rounded-lg">
+                  Cancel
+                </button>
+                <button
+                  onClick={handleConfirmCash}
+                  disabled={loading || !staffName.trim()}
+                  className="flex-1 bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  {loading ? <Loader2 size={16} className="animate-spin" /> : <Printer size={16} />}
+                  {loading ? 'Processing...' : deliverOnly ? 'Confirm Delivery & Print' : 'Confirm & Print Receipt'}
+                </button>
               </div>
             </div>
           </div>

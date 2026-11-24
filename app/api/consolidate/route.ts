@@ -135,7 +135,7 @@ export async function POST(req: Request) {
     if (shipment.status === "SOLICITUD_CONSOLIDACION" && userData?.email) {
         
         // 🔥 CORRECCIÓN 3: Detección de idioma y uso de diccionario
-        const userLang = (userData as any).language || 'en'; // Fallback a Inglés
+       const userLang = (userData as any).preferredLocale || (userData as any).language || 'en';
         const t = getT(userLang);
 
         // 1. Email al Cliente (Ahora pasa el idioma userLang)

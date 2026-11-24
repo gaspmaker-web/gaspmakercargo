@@ -31,8 +31,8 @@ export async function sendPushNotification(userId: string, title: string, messag
       body: JSON.stringify({
         app_id: appId,
         include_external_user_ids: [userId], // 👈 El ID del cliente en Supabase/Prisma
-        headings: { en: title, es: title },
-        contents: { en: message, es: message },
+       headings: { en: title, es: title, pt: title, fr: title },
+contents: { en: message, es: message, pt: message, fr: message },
         
         // 🔥 Redirección blindada hacia el iPhone/Safari 🔥
         url: finalUrl, 

@@ -10,7 +10,7 @@ export async function POST(req: Request) {
     }
 
     const prisma = (await import('@/lib/prisma')).default;
-    const { shipmentId, staffName } = await req.json();
+    const { shipmentId, staffName, deliverySignature } = await req.json();
 
     try {
         const shipment = await prisma.consolidatedShipment.findUnique({
@@ -24,7 +24,6 @@ export async function POST(req: Request) {
 
         const cashPaymentId = `CASH-${Date.now()}`;
 
-        // Marcar shipment como PAGADO y ENTREGADO en un solo paso
         await prisma.consolidatedShipment.update({
             where: { id: shipmentId },
             data: {
@@ -34,7 +33,6 @@ export async function POST(req: Request) {
             }
         });
 
-        // Actualizar todos los paquetes
         await prisma.package.updateMany({
             where: { consolidatedShipmentId: shipmentId },
             data: {
@@ -42,7 +40,7 @@ export async function POST(req: Request) {
                 shippingTotalPaid: shipment.totalAmount || 0,
                 stripePaymentId: cashPaymentId,
                 deliveredBy: staffName || 'Staff',
-                deliverySignature: 'ENTREGA_TIENDA',
+                deliverySignature: deliverySignature ?? 'ENTREGA_TIENDA',
             }
         });
 

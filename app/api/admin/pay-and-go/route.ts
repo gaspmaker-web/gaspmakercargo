@@ -122,7 +122,7 @@ export async function POST(req: Request) {
             `${body.receiverCity}, ${body.receiverCountry}`,
             parseFloat(body.price),
             body.paymentMethod === 'CARD' ? 'Tarjeta (POS)' : 'Efectivo',
-            (user as any).language || 'es' // Selecciona su idioma o español por defecto
+            (user as any).preferredLocale || (user as any).language || 'es' // Selecciona su idioma o español por defecto
         );
 
         // 2. Notificación en la campanita del panel web

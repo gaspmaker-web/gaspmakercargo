@@ -129,7 +129,7 @@ export async function POST(req: Request) {
     // =========================================================================
     if (updatedRecord && updatedRecord.user && updatedRecord.user.email) {
       try {
-        const userLang = (updatedRecord.user as any).language || 'en';
+        const userLang = (updatedRecord.user as any).preferredLocale || (updatedRecord.user as any).language || 'en';
         const t = getT(userLang);
 
         console.log(`📧 Enviando notificación de despacho a ${updatedRecord.user.email} (${userLang})...`);
