@@ -648,6 +648,25 @@ if (showOcean && oceanCountries.includes(targetCountryCode)) {
 }
 
 // ==========================================
+// 7b. LITE BARBADOS — Last Mile
+// ==========================================
+if (targetCountryCode === 'BB') {
+    const liteAirPerLb = rate('lite_air_per_lb', 'BB', 0);
+    const liteDeliveryFlat = rate('lite_delivery_flat', 'BB', 0);
+    if (liteAirPerLb > 0) {
+        const litePrice = parseFloat(((chargeableWeight * liteAirPerLb) + liteDeliveryFlat).toFixed(2));
+        rawRates.push({
+            id: 'GMC-BB-LITE',
+            carrier: 'Gasp Maker Cargo',
+            service: 'Barbados Lite — Last Mile (All Inclusive)',
+            price: litePrice,
+            days: '5-7 days',
+            logo: gmcLogo,
+        });
+    }
+}
+
+// ==========================================
 // 8. FILTRO Y LIMPIEZA FINAL
 // ==========================================
 rawRates = rawRates.filter(r => {

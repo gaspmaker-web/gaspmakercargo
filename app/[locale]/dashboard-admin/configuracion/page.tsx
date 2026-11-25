@@ -643,6 +643,41 @@ const internationalCountries = Array.from(new Set(
                   </div>
                 </div>
               </div>
+            {/* 🏝️ LITE BARBADOS — Last Mile */}
+              {code === 'BB' && (
+                <>
+                  <p className="text-xs font-bold text-purple-700 uppercase tracking-wider mb-3 mt-4">
+                    🏝️ Lite Barbados — Last Mile
+                  </p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs text-purple-600 font-bold block mb-1">Air Rate ($/lb) — All inclusive</label>
+                      <div className="flex items-center gap-1">
+                        <span className="text-gray-400 text-sm">$</span>
+                        <input
+                          type="number" step="0.01"
+                          value={getRate('lite_air_per_lb', code) || 7}
+                          onChange={e => setRate('lite_air_per_lb', code, parseFloat(e.target.value) || 0)}
+                          className="w-full border border-purple-200 rounded-lg px-2 py-1.5 text-sm bg-white"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-xs text-purple-600 font-bold block mb-1">Delivery Flat (whole island)</label>
+                      <div className="flex items-center gap-1">
+                        <span className="text-gray-400 text-sm">$</span>
+                        <input
+                          type="number" step="0.01"
+                          value={getRate('lite_delivery_flat', code) || 10}
+                          onChange={e => setRate('lite_delivery_flat', code, parseFloat(e.target.value) || 0)}
+                          className="w-full border border-purple-200 rounded-lg px-2 py-1.5 text-sm bg-white"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-xs text-purple-500 mt-2">✅ Includes broker fee, duties & taxes. Partner handles island delivery.</p>
+                </>
+              )}
             </td>
           </tr>
         )}
