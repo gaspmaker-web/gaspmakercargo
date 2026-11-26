@@ -11,6 +11,8 @@ export default function ConsolidationCard({ request }: { request: any }) {
   // Estado del Modal
   const [showModal, setShowModal] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isUndoing, setIsUndoing] = useState(false);
+  const [showUndoConfirm, setShowUndoConfirm] = useState(false);
 
   // =================================================================
   // ✈️ ESTADO PARA AÉREO (Un solo bulto global)
@@ -245,6 +247,29 @@ export default function ConsolidationCard({ request }: { request: any }) {
     description: pkg.description || null,
     weightLbs: pkg.weightLbs || null,
   }));
+
+  const handleUndo = async () => {
+    setIsUndoing(true);
+    try {
+      const res = await fetch('/api/admin/consolidations/undo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ shipmentId: request.id }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setShowModal(false);
+        router.refresh();
+      } else {
+        alert(data.error || 'Error al deshacer');
+      }
+    } catch (e) {
+      alert('Error de conexión');
+    } finally {
+      setIsUndoing(false);
+      setShowUndoConfirm(false);
+    }
+  };
 
   return (
     <>
@@ -581,6 +606,21 @@ export default function ConsolidationCard({ request }: { request: any }) {
                       </div>
                     )}
                   </div>
+                )}
+
+                {showUndoConfirm ? (
+                  <div className="bg-red-50 border border-red-200 rounded-xl p-3 flex gap-2 mt-2">
+                    <button onClick={handleUndo} disabled={isUndoing} className="flex-1 bg-red-600 text-white py-2 rounded-lg font-bold text-sm hover:bg-red-700 disabled:opacity-50">
+                      {isUndoing ? 'Deshaciendo...' : 'Sí, cancelar envío'}
+                    </button>
+                    <button onClick={() => setShowUndoConfirm(false)} className="flex-1 bg-gray-100 text-gray-700 py-2 rounded-lg font-bold text-sm">
+                      No, volver
+                    </button>
+                  </div>
+                ) : (
+                  <button onClick={() => setShowUndoConfirm(true)} className="w-full border border-red-200 text-red-600 py-2 rounded-xl font-bold text-sm hover:bg-red-50 transition mt-2">
+                    ↩️ Cancelar Envío
+                  </button>
                 )}
 
                 <button
