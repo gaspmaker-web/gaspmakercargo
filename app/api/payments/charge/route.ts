@@ -417,6 +417,7 @@ const STRIPE_FIXED_FEE = 0.30;
                 where: { id: currentTargetId },
                 data: {
                     status: 'PAGADO', 
+                    paidAt: new Date(),
                     paymentId: paymentIntent.id,
                     selectedCourier: selectedCourier || undefined, 
                     courierService: courierService || undefined,   
@@ -508,6 +509,7 @@ await prisma.$executeRaw`
             where: { id: pickupId },
             data: {
                 status: 'PAGADO',
+                paidAt: new Date(),
                 subtotal: Number(impliedSubtotal.toFixed(2)),
                 processingFee: Number(feeAmount.toFixed(2)),
                 totalPaid: Number(totalToCharge.toFixed(2)),

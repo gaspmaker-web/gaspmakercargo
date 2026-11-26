@@ -76,8 +76,8 @@ haceSieteDias.setHours(0, 0, 0, 0);
     prisma.consolidatedShipment.aggregate({
     _sum: { totalAmount: true },
     where: { 
-        updatedAt: { gte: haceSieteDias },
-        status: { in: ['ENVIADO', 'SHIPPED', 'ENTREGADO', 'PAGADO'] },
+        paidAt: { gte: haceSieteDias },
+        status: { in: ['PAGADO', 'LISTO_PARA_ENVIO', 'ENVIADO', 'SHIPPED', 'ENTREGADO'] },
         ...tenantFilter 
     }
 }),

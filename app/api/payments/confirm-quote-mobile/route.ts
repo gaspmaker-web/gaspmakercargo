@@ -46,6 +46,7 @@ export async function POST(req: Request) {
         courierService:  service,
         totalAmount:     parseFloat(price),
         status:          'PAGADO',
+        paidAt:          new Date(),
       },
     });
 

@@ -25,7 +25,7 @@ export async function POST(req: Request) {
     // Confirmar pago
     await prisma.consolidatedShipment.update({
       where: { id: consolidationId },
-      data: { status: 'PAGADO' }
+      data: { status: 'PAGADO', paidAt: new Date() }
     });
 
     // Notificar al cliente

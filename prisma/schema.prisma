@@ -158,6 +158,7 @@ model ConsolidatedShipment {
   lat                    Float?
   lng                    Float?
   chargeConsolidationFee Boolean   @default(false)
+  paidAt                 DateTime?
   tenant                 Tenant?   @relation(fields: [tenant_id], references: [id])
   user                   User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   packages               Package[]

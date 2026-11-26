@@ -42,7 +42,7 @@ export async function POST(req: Request) {
 
     await prisma.consolidatedShipment.update({
       where: { id: shipmentId },
-      data: { status: 'PAGADO' },
+      data: { status: 'PAGADO', paidAt: new Date() },
     });
 
     if (packageIds.length > 0) {
