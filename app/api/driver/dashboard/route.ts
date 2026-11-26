@@ -23,7 +23,7 @@ export async function GET(req: Request) {
 
   const dbDriver = await prisma.user.findUnique({
     where: { id: driverId },
-    select: { countryCode: true, name: true, image: true }
+      select: { countryCode: true, name: true, image: true, email: true }
   });
   const zone = dbDriver?.countryCode || 'US';
 
@@ -62,10 +62,14 @@ export async function GET(req: Request) {
     take: 20,
   });
 
+    const isMainDriver = dbDriver?.email === 'driver@gaspmakercargo.com';
   const activeConsolidations = await prisma.consolidatedShipment.findMany({
     where: {
       status: { in: ['EN_REPARTO', 'OUT_FOR_DELIVERY', 'EN_CAMINO', 'EN_RUTA'] },
-      OR: [...packageOrConditions, { destinationCountryCode: zone }],
+      OR: [
+        ...(isMainDriver ? [{ serviceType: 'LOCAL_DELIVERY' }] : []),
+        { destinationCountryCode: zone, serviceType: { not: 'LOCAL_DELIVERY' } },
+      ],
       NOT: { OR: [{ selectedCourier: { contains: 'UPS', mode: 'insensitive' } }, { selectedCourier: { contains: 'DHL', mode: 'insensitive' } }, { selectedCourier: { contains: 'FEDEX', mode: 'insensitive' } }] }
     },
     include: { user: { select: { name: true, address: true } }, packages: true },
