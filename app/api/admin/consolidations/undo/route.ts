@@ -21,7 +21,7 @@ export async function POST(req: Request) {
 
     if (!shipment) return NextResponse.json({ error: 'Shipment no encontrado' }, { status: 404 });
 
-    const undoableStatuses = ['PENDIENTE_PAGO', 'PENDIENTE', 'PAGADO', 'LISTO_PARA_ENVIO', 'CREATED', 'SOLICITUD_CONSOLIDACION'];
+    const undoableStatuses = ['PENDIENTE_PAGO', 'PENDIENTE', 'PAGADO', 'LISTO_PARA_ENVIO', 'CREATED', 'SOLICITUD_CONSOLIDACION', 'PENDIENTE_ZELLE'];
     if (!undoableStatuses.includes(shipment.status)) {
       return NextResponse.json({ error: `No se puede deshacer un envío con status "${shipment.status}"` }, { status: 400 });
     }
