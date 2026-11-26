@@ -17,12 +17,26 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
   const driver = await getDriverFromToken(req);
   if (!driver) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
 
+  // 1. Buscar en PickupRequest (con extraStops, originAddress, dropOffAddress intactos)
   const task = await prisma.pickupRequest.findUnique({
     where: { id: params.id },
     include: { user: { select: { name: true, phone: true } } }
   });
 
-  if (!task) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  if (task) return NextResponse.json(task);
 
-  return NextResponse.json(task);
+  // 2. ConsolidatedShipment: sale de GMC → entrega en shippingAddress
+  const shipment = await prisma.consolidatedShipment.findUnique({
+    where: { id: params.id },
+    include: { user: { select: { name: true, phone: true } } }
+  });
+
+  if (!shipment) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+
+  return NextResponse.json({
+    ...shipment,
+    originAddress: 'GMC Central Warehouse',
+    dropOffAddress: shipment.shippingAddress,
+    extraStops: [],
+  });
 }
