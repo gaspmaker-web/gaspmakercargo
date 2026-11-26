@@ -509,7 +509,6 @@ await prisma.$executeRaw`
             where: { id: pickupId },
             data: {
                 status: 'PAGADO',
-                paidAt: new Date(),
                 subtotal: Number(impliedSubtotal.toFixed(2)),
                 processingFee: Number(feeAmount.toFixed(2)),
                 totalPaid: Number(totalToCharge.toFixed(2)),
