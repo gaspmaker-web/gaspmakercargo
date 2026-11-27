@@ -69,7 +69,7 @@ export async function GET(req: Request) {
       status: { in: ['EN_REPARTO', 'OUT_FOR_DELIVERY', 'EN_CAMINO', 'EN_RUTA'] },
       OR: [
         ...(isMainDriver ? [{ serviceType: 'LOCAL_DELIVERY' }] : []),
-        { destinationCountryCode: zone, serviceType: { not: 'LOCAL_DELIVERY' } },
+        { destinationCountryCode: zone.toLowerCase(), serviceType: { not: 'LOCAL_DELIVERY' } },
       ],
       NOT: { OR: [{ selectedCourier: { contains: 'UPS', mode: 'insensitive' } }, { selectedCourier: { contains: 'DHL', mode: 'insensitive' } }, { selectedCourier: { contains: 'FEDEX', mode: 'insensitive' } }] }
     },
