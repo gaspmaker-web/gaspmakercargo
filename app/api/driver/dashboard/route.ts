@@ -63,7 +63,7 @@ export async function GET(req: Request) {
     take: 20,
   });
 
-    const isMainDriver = dbDriver?.email === 'driver@gaspmakercargo.com';
+    
   const activeConsolidations = await prisma.consolidatedShipment.findMany({
     where: {
       status: { in: ['EN_REPARTO', 'OUT_FOR_DELIVERY', 'EN_CAMINO', 'EN_RUTA'] },
