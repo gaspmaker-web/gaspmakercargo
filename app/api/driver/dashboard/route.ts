@@ -25,6 +25,8 @@ export async function GET(req: Request) {
   });
   const zone = dbDriver?.countryCode || 'US';
   const isMiamiDriver = zone.toUpperCase() === 'US';
+    const isMainDriver = dbDriver?.email === 'driver@gaspmakercargo.com';
+  console.log('DRIVER DEBUG:', { zone, isMiamiDriver, isMainDriver, email: dbDriver?.email });
 
   // Oportunidades disponibles
   let availableTasks: any[] = [];
