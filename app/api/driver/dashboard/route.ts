@@ -16,16 +16,15 @@ async function getDriverFromToken(req: Request) {
 export async function GET(req: Request) {
   const driver = await getDriverFromToken(req);
   if (!driver) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
-
+  
   const driverId = driver.id;
-  const driverZone = driver.countryCode || 'US';
-  const isMiamiDriver = driverZone.toUpperCase() === 'US';
 
   const dbDriver = await prisma.user.findUnique({
     where: { id: driverId },
-      select: { countryCode: true, name: true, image: true, email: true }
+    select: { countryCode: true, name: true, image: true, email: true }
   });
   const zone = dbDriver?.countryCode || 'US';
+  const isMiamiDriver = zone.toUpperCase() === 'US';
 
   // Oportunidades disponibles
   let availableTasks: any[] = [];
